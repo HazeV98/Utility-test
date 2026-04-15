@@ -3,173 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Utility</title>
-
-    <script>
-        const APP_VERSION = "1.4"; 
-        if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
-            if ('caches' in window) caches.keys().then((names) => names.forEach(name => caches.delete(name)));
-            if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach(r => r.unregister()));
-            localStorage.setItem('app_version_cache', APP_VERSION);
-            window.location.reload(true);
-        }
-    </script>
-
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const datiImportati = urlParams.get('dati');
-        const codiceImportato = urlParams.get('codice');
-        if (datiImportati || codiceImportato) {
-            if (datiImportati) localStorage.setItem('myTurniApp', datiImportati);
-            if (codiceImportato) localStorage.setItem('auth_rotazioni', codiceImportato);
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-    </script>
-
-    <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
-    
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-512.png">
+    <title>Utility - Bacheca Cambi</title>
     <meta name="theme-color" content="#0056b3">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
 
     <style>
-        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #dc3545; }
+        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #dc3545; --warning: #ffc107; --info: #17a2b8;}
         body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: flex-start; margin-top: 10px; margin-bottom: 30px; position: relative; }
-        .header-side { flex: 1; display: flex; align-items: center; }
-        .header-side.right { justify-content: flex-end; }
-        .header-center { display: flex; flex-direction: column; align-items: center; flex: 2; }
-        h2 { margin: 0; color: var(--primary); font-size: 30px; font-weight: bold; text-align: center; user-select: none; -webkit-user-select: none; cursor: pointer; }
-        #install-btn { display: none; background-color: var(--success); color: white; border: none; padding: 8px 14px; font-size: 13px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); white-space: nowrap; animation: pulse 2s infinite; }
-        .btn-login { background-color: #ea4335; color: white; border: none; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none; }
-        .btn-header-alt { background-color: var(--primary); color: white; border: none; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none; }
-        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); } 50% { transform: scale(1.05); box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4); } 100% { transform: scale(1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); } }
+        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
         
-        /* DASHBOARD SETTIMANALE */
-        .dashboard-settimanale { display: flex; gap: 10px; width: 100%; max-width: 400px; overflow-x: auto; padding: 10px 5px; margin-bottom: 20px; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; }
-        .day-card { flex: 0 0 95px; background: white; padding: 12px 8px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; cursor: pointer; border: 2px solid transparent; scroll-snap-align: start; transition: 0.2s; position: relative;}
-        .day-card.today { border-color: var(--success); background: #f0fff4; }
-        .day-card .date { font-size: 10px; color: #888; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
-        .day-card .shift { font-weight: 800; font-size: 18px; color: var(--primary); }
-        .day-card .info { font-size: 9px; color: #666; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .day-card:active { transform: scale(0.95); background: #f8f9fa; }
+        /* MENU LATERALE UNIFICATO */
+        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 5999; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 6000; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
+        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; text-transform: none; }
+        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
 
-        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 400px; }
-        .menu-btn { background-color: var(--primary); color: white; border: none; padding: 18px; font-size: 18px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s ease; text-align: center; text-decoration: none; display: block; font-weight: 500; }
-        .menu-btn:active { transform: translateY(2px); opacity: 0.9; }
-
-        /* STILI MODALI */
-        #editModal, #altroModal, #imageModal, #profileModal, #authModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
-        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 100%; max-width: 380px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; max-height: 90vh; overflow-y: auto; }
-        .btn-modal { border: none; border-radius: 12px; padding: 15px; cursor: pointer; font-weight: bold; font-size: 15px; width: 100%; margin-top: 10px; color: white; }
-        .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white;}
+        .view-container { width: 100%; max-width: 400px; display: none; flex-direction: column; gap: 15px; text-align: center; }
         
-        .color-circle { width: 35px; height: 35px; border-radius: 50%; display: inline-block; margin: 5px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .color-circle.selected { border: 3px solid #32325d; transform: scale(1.1); }
-        .color-yellow { background: #f1c40f; } .color-orange { background: #fd7e14; } .color-red { background: #f5365c; } .color-pink { background: #e83e8c; } 
-        .color-purple { background: #8965e0; } .color-blue { background: #5e72e4; } .color-teal { background: #11cdef; } .color-green { background: #2dce89; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; margin-bottom: 15px; position: relative; }
+        .card-suggested { background: #fffff8; border: 2px solid var(--warning); padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; margin-bottom: 15px; position: relative;}
+        .card-suggested::before { content: "✨ MATCH PERFETTO"; position: absolute; top: -10px; right: 15px; background: var(--warning); color: #fff; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 10px; }
+
+        .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; transition: opacity 0.2s; margin-top: 10px; }
+        .btn-action:active { opacity: 0.8; }
+        
+        .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white; text-transform: uppercase;}
+        .input-field::placeholder { text-transform: none; }
+        .suggested-header { font-size: 14px; font-weight: bold; color: #856404; text-align: left; margin-bottom: 10px; margin-top: 5px; text-transform: none;}
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; max-height: 90vh; overflow-y: auto;}
+        
+        .tabs { display: flex; background: #e9ecef; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 12px; text-align: center; font-weight: bold; color: #666; cursor: pointer; background: transparent; border: none; transition: 0.2s; }
+        .tab-btn.active { background: var(--primary); color: white; }
+
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 4px; }
+        .badge-primo { background: #cce5ff; color: #004085; }
+        .badge-mezzo { background: #d4edda; color: #155724; }
+        .badge-terzo { background: #f8d7da; color: #721c24; }
+        .badge-riposo { background: #e2e3e5; color: #383d41; }
+
+        .contact-actions { display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 10px;}
+        .action-icon { background: #e9ecef; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px; color: var(--text-color); cursor: pointer;}
     </style>
 </head>
 <body>
 
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3 style="margin:0; color:white;">Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+        </div>
+        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
+        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
+        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">🔄 Bacheca Turni</a>
+        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link">🕒 Orari Navigazione</a>
+        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
+        <a href="link.html" class="sidebar-link">🔗 Link</a>
+        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
+        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
+        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+    </div>
+
     <div class="header">
-        <div class="header-side">
-            <button id="btnOpenLogin" class="btn-login" onclick="document.getElementById('authModal').style.display='flex'">☁️ Login</button>
-            <button id="btnOpenProfile" class="btn-header-alt" onclick="document.getElementById('profileModal').style.display='flex'">👤 Profilo</button>
+        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
+        <h2>🔄 Cambi Turno</h2>
+        <div style="width: 50px;"></div>
+    </div>
+
+    <div id="view-no-auth" class="view-container">
+        <div class="card" style="text-align: center;">
+            <h3 style="color: var(--danger);">Accesso Richiesto</h3>
+            <p style="color: #666; font-size: 15px; line-height: 1.5; text-transform: none;">Per accedere alla bacheca scambi devi effettuare il login tramite la Home page.</p>
+            <button class="btn-action" style="background-color: var(--primary);" onclick="window.location.href='index.html'">Torna alla Home</button>
         </div>
-        <div class="header-center">
-            <h2 id="main-title">Utility</h2>
-            <div id="user-status" style="font-size: 11px; color: var(--success); font-weight: bold; display: none; margin-top: 4px;"></div>
-        </div>
-        <div class="header-side right">
-            <button id="install-btn">Installa</button>
-            <div id="icona-bacheca" style="position: relative; cursor: pointer; margin-left: 15px;" onclick="window.location.href='bacheca_utility.html'">
-                <span style="font-size: 26px;">📢</span>
-                <div id="badge-messaggi" style="display: none; position: absolute; top: -5px; right: -8px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: bold; width: 18px; height: 18px; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">0</div>
+    </div>
+
+    <div id="view-main" class="view-container">
+        <button class="btn-action" style="margin-top: 0; margin-bottom: 10px;" onclick="apriModaleAnnuncio()">+ Nuovo Scambio</button>
+        
+        <div class="card" style="padding: 15px; margin-bottom: 15px;">
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Filtra Mansione:</label>
+                    <select id="filtroMansione" class="input-field" style="margin-bottom: 0; text-transform: none;" onchange="caricaBacheca()">
+                        <option value="Tutte">Tutte le mansioni</option>
+                        <option value="Marinaio">Marinaio</option>
+                        <option value="Preposto al comando">Preposto al comando</option>
+                        <option value="Comandante">Comandante</option>
+                        <option value="Timoniere">Timoniere</option>
+                        <option value="Marinaio polivalente">Marinaio polivalente</option>
+                        <option value="Direttore di macchina">Direttore di macchina</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Filtra Data:</label>
+                    <input type="date" id="filtroData" class="input-field" style="margin-bottom: 0; text-transform: none;" onchange="caricaBacheca()">
+                </div>
             </div>
         </div>
-    </div>
-
-    <div id="dashboard-settimanale" class="dashboard-settimanale"></div>
-
-    <div class="menu-grid">
-        <a href="calendario.html" class="menu-btn">📅 Calendario Turni</a>
-        <a href="dati_calendario.html" class="menu-btn">📊 Statistiche e Ore</a>
-        <a href="turni.html" class="menu-btn">🔄 Ricerca Turni e Corse</a>
-        <a href="bacheca_turni.html" class="menu-btn">🔄 Bacheca Scambi</a> 
-        <a href="rubrica.html" class="menu-btn">📞 Rubrica Colleghi</a>
-        <a href="rotazione_ferie.html" class="menu-btn">🌴 Rotazione Ferie</a>
-        <a href="orari.html" class="menu-btn">🕒 Orari Navigazione</a>
-        <a href="rotazioni.html" id="rotazioni-btn" class="menu-btn" style="display:none;">👥 Rotazioni</a>
-        <a href="documenti.html" class="menu-btn">📄 Documenti</a>
-        <a href="link.html" class="menu-btn">🔗 Link Utili</a>
-        <a href="contatti.html" class="menu-btn">📇 Numeri Utili</a>
-        <a href="buoni.html" class="menu-btn">🍝 Buoni Pasto</a>
-        <a href="dds.html" class="menu-btn">📂 Archivio DDS</a>
-        <a href="guida.html" class="menu-btn" style="background-color: #6c757d;">📖 Guida all'uso</a>
         
-        <a href="admin.html" id="secret-btn" class="menu-btn" style="display:none;">🔒 Admin Panel</a>
+        <div id="suggeriti-bacheca-container" style="display: none; border-bottom: 2px dashed #ddd; padding-bottom: 15px; margin-bottom: 15px;">
+            <div class="suggested-header">✨ Suggeriti per te (Offrono ciò che cerchi)</div>
+            <div id="suggeriti-bacheca"></div>
+        </div>
+
+        <div id="lista-annunci"></div>
     </div>
 
-    <div id="editModal" onclick="if(event.target.id==='editModal') chiudiEdit()">
+    <div id="profileModal" class="modal-overlay" onclick="chiudiSeSfondo(event, 'profileModal')" style="z-index: 5010;">
         <div class="modal-content">
-            <h3 id="modalDate" style="margin-top:0;">Data</h3>
-            
-            <div id="infoTurniArea" style="font-size:0.9em; margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:10px; text-align:left; color:#525f7f; display:none;"></div>
-            
-            <button id="btnVisualizzaTurno" class="btn-modal" style="background: transparent; color: var(--primary); border: 2px solid var(--primary); margin-bottom: 10px; display: none;" onclick="apriImmagineTurno()">🖼️ Mostra Immagine Turno</button>
-            
-            <input type="text" id="singleTurnoSelect" class="input-field" placeholder="Inserisci il turno (es. FER)" oninput="this.value = this.value.toUpperCase(); document.getElementById('btnSalvaCambio').disabled=false;">
-            
-            <button id="btnSalvaCambio" class="btn-modal" style="background: #32325d" onclick="salvaCambioSingolo()" disabled>Salva Cambio</button>
-            <button class="btn-modal" style="background: #adb5bd;" onclick="resetGiornoSingolo()">Ripristina Originale</button>
-            <button class="btn-modal" style="background: #11cdef;" onclick="apriAltroModal()">Altro (Note, Straord, Colore...)</button>
-            <button class="btn-modal" style="background: #f8f9fa; color: #525f7f; border: 1px solid #ddd;" onclick="chiudiEdit()">Chiudi</button>
+            <span id="btnCloseProfileModal" style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f; display:none;" onclick="chiudiModaleProfilo()">&times;</span>
+            <h3 style="margin-top: 5px; color: #32325d; text-align: center; text-transform: none;">I Tuoi Dati</h3>
+            <p style="font-size: 13px; color: #666; text-align: center; text-transform: none;">Questi dati verranno mostrati nei tuoi annunci.</p>
+            <input type="text" id="regNome" class="input-field" placeholder="Nome" style="text-transform: capitalize;">
+            <input type="text" id="regCognome" class="input-field" placeholder="Cognome" style="text-transform: capitalize;">
+            <input type="text" id="regMatricola" class="input-field" placeholder="Matricola" style="text-transform: uppercase;">
+            <input type="tel" id="regTelefono" class="input-field" placeholder="Telefono (per WhatsApp)" style="text-transform: none;">
+            <select id="regMansione" class="input-field" style="text-transform: none;">
+                <option value="">-- Seleziona Mansione --</option>
+                <option value="Marinaio">Marinaio</option>
+                <option value="Preposto al comando">Preposto al comando</option>
+                <option value="Comandante">Comandante</option>
+                <option value="Timoniere">Timoniere</option>
+                <option value="Marinaio polivalente">Marinaio polivalente</option>
+                <option value="Direttore di macchina">Direttore di macchina</option>
+            </select>
+            <button id="btnSalvaProfilo" class="btn-action" onclick="salvaProfilo()">Salva Dati</button>
         </div>
     </div>
 
-    <div id="altroModal" onclick="if(event.target.id==='altroModal') chiudiAltroModal()">
+    <div id="adModal" class="modal-overlay" onclick="chiudiSeSfondo(event, 'adModal')">
         <div class="modal-content">
-            <h3 style="margin-top:0;">Altre Opzioni</h3>
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: left;">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('adModal').style.display='none'">&times;</span>
+            <h3 style="margin-top: 5px; color: #32325d; text-transform: none;">Crea Annuncio</h3>
+            
+            <div class="tabs">
+                <button id="tab-ad-turno" class="tab-btn active" onclick="switchAdTab('turno')">Cambio Turno</button>
+                <button id="tab-ad-riposo" class="tab-btn" onclick="switchAdTab('riposo')">Cambio Riposo</button>
+            </div>
+
+            <div id="form-ad-turno">
+                <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Data del cambio:</label>
+                <input type="date" id="adDataTurno" class="input-field" style="text-transform: none;" onchange="verificaTurno()">
                 
-                <label style="display: flex; align-items: center; font-size: 14px; margin-bottom: 10px; cursor: pointer;">
-                    <input type="checkbox" id="checkSospesoRiposoAltro" style="width: 20px; height: 20px; margin-right: 10px;"> Sospeso Riposo
-                </label>
-                <label style="display: flex; align-items: center; font-size: 14px; margin-bottom: 10px; cursor: pointer;">
-                    <input type="checkbox" id="checkNebbiaAltro" style="width: 20px; height: 20px; margin-right: 10px;"> 🌫️ Indennità Nebbia
-                </label>
-                <label style="display: flex; align-items: center; font-size: 14px; margin-bottom: 10px; cursor: pointer;">
-                    <input type="checkbox" id="checkBuonoPastoAltro" style="width: 20px; height: 20px; margin-right: 10px;"> 🍝 Buono Pasto Utilizzato
-                </label>
-                <label style="display: flex; align-items: center; font-size: 14px; margin-bottom: 10px; cursor: pointer;">
-                    <input type="checkbox" id="checkStraordinarioAltro" style="width: 20px; height: 20px; margin-right: 10px;" onchange="toggleStraordinarioAltro()"> ⏱️ Straordinario
-                </label>
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Cedo:</label>
+                        <select id="adCedoTurno" class="input-field" style="text-transform: none;">
+                            <option value="primo">Primo</option>
+                            <option value="mezzo">Mezzo</option>
+                            <option value="terzo">Terzo</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Cerco:</label>
+                        <select id="adCercoTurno" class="input-field" style="text-transform: none;">
+                            <option value="primo">Primo</option>
+                            <option value="mezzo">Mezzo</option>
+                            <option value="terzo">Terzo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px dashed #ccc; margin: 15px 0;">
                 
-                <div id="straordinarioInputsAltro" style="display: none; gap: 10px; margin-bottom: 10px;">
-                    <input type="number" id="oreStraordAltro" placeholder="Ore" class="input-field" style="margin:0;">
-                    <input type="number" id="minutiStraordAltro" placeholder="Min" class="input-field" style="margin:0;">
+                <label style="font-size: 11px; font-weight: bold; color: var(--primary); text-transform: none;">Codice Turno Ceduto:</label>
+                <input type="text" id="adCodiceTurno" class="input-field" placeholder="es. 1C01, 1B01 ecc..." oninput="this.value = this.value.toUpperCase(); verificaTurno()">
+                
+                <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none; display: block; margin-top: 5px;">Info Turno (Facoltativo):</label>
+                
+                <div style="display: flex; gap: 10px;">
+                    <input type="time" id="adOraInizio" class="input-field" placeholder="Ora Inizio" style="flex:1; text-transform: none;">
+                    <input type="text" id="adLuogoInizio" class="input-field" placeholder="Luogo Inizio" style="flex:2; text-transform: none;">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <input type="time" id="adOraFine" class="input-field" placeholder="Ora Fine" style="flex:1; text-transform: none;">
+                    <input type="text" id="adLuogoFine" class="input-field" placeholder="Luogo Fine" style="flex:2; text-transform: none;">
                 </div>
                 
-                <textarea id="notaAltro" placeholder="Note..." class="input-field" style="min-height: 60px;"></textarea>
+                <input type="hidden" id="adChiaveEsatta">
+                <input type="hidden" id="adDataAttivaDb">
             </div>
 
-            <div style="text-align: center; margin-bottom: 15px;">
-                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreAltro('#f1c40f', this)"></div>
-                <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreAltro('#fd7e14', this)"></div>
-                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreAltro('#f5365c', this)"></div>
-                <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreAltro('#e83e8c', this)"></div>
-                <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreAltro('#8965e0', this)"></div>
-                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreAltro('#5e72e4', this)"></div>
-                <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreAltro('#11cdef', this)"></div>
-                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreAltro('#2dce89', this)"></div>
+            <div id="form-ad-riposo" style="display: none;">
+                <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Cerco Riposo il giorno:</label>
+                <input type="date" id="adDataRiposo" class="input-field" style="text-transform: none;">
+                
+                <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Giorni in cui posso restituirlo (Facoltativo):</label>
+                <input type="date" id="adDataRestituzione1" class="input-field" style="margin-bottom: 5px; text-transform: none;">
+                <input type="date" id="adDataRestituzione2" class="input-field" style="text-transform: none;">
+                <p style="font-size: 10px; color: #999; margin-top: 0; text-transform: none;">Puoi lasciare vuoto se vuoi concordarlo in chat.</p>
             </div>
 
-            <button class="btn-modal" style="background: #32325d" onclick="salvaAltro()">Salva</button>
-            <button class="btn-modal" style="background: #f8f9fa; color: #525f7f; border: 1px solid #ddd;" onclick="chiudiAltroModal()">Annulla</button>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+            <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none; display: block;">Note (Facoltative):</label>
+            <textarea id="adNote" class="input-field" placeholder="Es. Cerco solo mattina, flessibile sull'orario..." style="text-transform: none; resize: vertical; min-height: 60px;"></textarea>
+
+            <button id="btnPubblica" class="btn-action" onclick="pubblicaAnnuncio()">Pubblica Annuncio</button>
+            <button class="btn-action" style="background: #e9ecef; color: #32325d; margin-top: 10px;" onclick="apriModaleProfilo()">👤 I Miei Dati</button>
         </div>
     </div>
 
@@ -187,119 +231,103 @@
         <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #11cdef; color: white; border: none; padding: 12px 24px; border-radius: 20px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 10001;">📥 Scarica</button>
     </div>
 
-    <div id="profileModal">
-        <div class="modal-content">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('profileModal').style.display='none'">&times;</span>
-            <h3 style="margin-top: 5px; color: #32325d; text-align: center;">Profilo Utente</h3>
-            <div id="adminBadge">🛠️ Account Amministratore</div>
-            <div id="profileStrikes">⚠️ Revoche rubrica usate: <b id="strikeCount">0</b> su 3</div>
-            <input type="text" id="profileEmail" class="input-field" disabled style="background: #f8f9fa;">
-            <input type="text" id="profileNome" class="input-field" placeholder="Nome">
-            <input type="text" id="profileCognome" class="input-field" placeholder="Cognome">
-            <input type="text" id="profileSoprannome" class="input-field" placeholder="Soprannome (Facoltativo)">
-            <select id="profileMansione" class="input-field">
-                <option value="">-- Seleziona Mansione --</option>
-                <option value="Marinaio">Marinaio</option>
-                <option value="Preposto al comando">Preposto al comando</option>
-                <option value="Comandante">Comandante</option>
-                <option value="Timoniere">Timoniere</option>
-                <option value="Marinaio polivalente">Marinaio polivalente</option>
-                <option value="Direttore di macchina">Direttore di macchina</option>
-            </select>
-            <input type="text" id="profileMatricola" class="input-field" placeholder="Matricola">
-            <input type="tel" id="profileTelefono" class="input-field" placeholder="Telefono">
-            <button id="btnSalvaProfilo" class="btn-modal" style="background: var(--success);" onclick="salvaProfilo()">Salva Modifiche</button>
-            <button class="btn-modal" style="background: #525f7f;" onclick="logout()">Esci (Logout)</button>
-        </div>
-    </div>
-
-    <div id="authModal">
-        <div class="modal-content" style="text-align: center;">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('authModal').style.display='none'">&times;</span>
-            <h3 style="margin-top: 5px; color: #32325d;">Backup Cloud</h3>
-            <input type="email" id="emailInput" placeholder="Email" class="input-field">
-            <input type="password" id="passwordInput" placeholder="Password" class="input-field">
-            <div id="authError" style="color: var(--danger); font-size: 12px; margin-bottom: 10px; font-weight: bold; display: none;"></div>
-            <div style="text-align: right; margin-bottom: 15px;"><a href="#" onclick="recuperaPassword(); return false;" style="font-size: 12px; color: #0056b3; font-weight: bold;">Password dimenticata?</a></div>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <button class="btn-modal" style="background: #32325d; margin:0;" onclick="loginEmail()">Accedi</button>
-                <button class="btn-modal" style="background: #11cdef; margin:0;" onclick="registraEmail()">Registrati</button>
-            </div>
-            <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 15px 0;">
-            <button class="btn-modal" style="background: #ea4335; margin:0;" onclick="loginGoogle()">☁️ Accedi con Google</button>
-        </div>
-    </div>
+    <div id="error-box" style="display: none; padding: 20px; color: red; text-align: center; width: 100%;"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, where, addDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", storageBucket: "utility-haze.firebasestorage.app", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const provider = new GoogleAuthProvider();
 
-        // --- CORE LOGICA TURNI (Equivalente al Calendario Ufficiale) ---
-        const DATA_INIZIO_NUOVI_TURNI = "2026-03-28";
-        const LISTA_FILE_INFO = ["info_turni_2026-03-02.json", "info_turni_2026-03-28.json"];
-        const LISTA_FILE_ROT = ["rotazioni_2026-03-02.json", "rotazioni_2026-03-28.json"];
-        
-        let state = JSON.parse(localStorage.getItem('myTurniApp')) || { variazioni: {}, setupStep: 0, dbCache: {}, rotCache: {} };
-        if (!state.variazioni) state.variazioni = {};
-        
-        let localDbCache = {}; 
-        let localRotCache = {};
-        let dbInUso = null;
-        let dataAttivaDb = "";
-        let selectedDate = ""; 
-        let tempColoreAltro = "";
+        let currentUser = null;
+        let userDataPrivate = {};
+        let myAnnunciAttivi = []; 
+        const isAdmin = localStorage.getItem('dev_mode_active') === 'true';
+
         let currentImagePath = "";
         let imgBaseFallback = "";
         let pzInstance = null;
 
-        const stringToNum = (s) => Math.floor(Date.UTC(s.split('-')[0], s.split('-')[1]-1, s.split('-')[2]) / 86400000);
-        const dateToLocalISO = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
-        const creaDataSicura = (s) => new Date(s.split('-')[0], s.split('-')[1] - 1, s.split('-')[2], 12, 0, 0);
+        const svgWa = `<svg viewBox="0 0 24 24" width="22" height="22" fill="#25D366"><path d="M12.031 0C5.385 0 .018 5.366.018 12.012c0 2.125.553 4.197 1.603 6.012L.05 24l6.115-1.604c1.745.965 3.738 1.474 5.866 1.474 6.646 0 12.013-5.366 12.013-12.012S18.677 0 12.031 0zm-.018 21.84c-1.796 0-3.553-.483-5.093-1.396l-.365-.216-3.791.994.996-3.697-.238-.377a9.98 9.98 0 0 1-1.528-5.337C1.994 6.452 6.444 2.016 12.013 2.016c2.705 0 5.247 1.053 7.158 2.966 1.91 1.912 2.964 4.456 2.964 7.165 0 5.564-4.45 10.003-10.012 10.003l-.11-.31zm5.503-7.534c-.302-.151-1.785-.881-2.062-.981-.277-.101-.479-.151-.68.151-.202.302-.781.981-.957 1.182-.176.202-.353.226-.655.075-.302-.151-1.275-.47-2.428-1.503-.896-.803-1.501-1.794-1.677-2.096-.176-.302-.019-.465.132-.616.136-.136.302-.353.453-.53.151-.176.202-.302.302-.504.101-.202.05-.378-.025-.53-.075-.151-.68-1.64-.932-2.245-.245-.59-.495-.51-.68-.52-.176-.01-.378-.01-.58-.01-.202 0-.53.076-.807.378-.277.302-1.058 1.034-1.058 2.52 0 1.487 1.083 2.924 1.234 3.125.151.202 2.132 3.255 5.163 4.561 2.222.956 2.87.805 3.373.68.591-.148 1.785-.73 2.037-1.435.252-.705.252-1.31.176-1.435-.075-.126-.277-.202-.58-.353z"/></svg>`;
+        const svgCamera = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm8 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg>`;
+        const svgShare = `<svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg>`;
 
+        // Funzioni per l'apertura e la chiusura del menù laterale
+        window.apriMenuLaterale = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; };
+        window.chiudiMenuLaterale = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; };
+        
+        function nascondiTutto() { document.querySelectorAll('.view-container').forEach(e => e.style.display='none'); }
+
+        // --- FUNZIONE PER CHIUDERE MODALI CLICCANDO FUORI ---
+        window.chiudiSeSfondo = function(event, modalId) {
+            if (event.target.id === modalId) {
+                document.getElementById(modalId).style.display = 'none';
+            }
+        };
+
+        // Ritorna la data di oggi formattata locale senza i problemi del fuso orario UTC
+        function getOggiLocale() {
+            const d = new Date();
+            return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+        }
+
+        // --- MOTORE LOGICA DB COME IN CALENDARIO.HTML ---
+        const LISTA_FILE_INFO = ["info_turni_2026-03-02.json", "info_turni_2026-03-28.json"];
+        let localDbCache = {};
+        
         async function precaricaTuttiDB() {
             for (let file of LISTA_FILE_INFO) {
                 const match = file.match(/\d{4}-\d{2}-\d{2}/);
-                if (match) { try { const res = await fetch(file + "?v=" + Date.now()); if (res.ok) localDbCache[match[0]] = await res.json(); } catch(e) {} }
-            }
-            for (let file of LISTA_FILE_ROT) {
-                const match = file.match(/\d{4}-\d{2}-\d{2}/);
-                if (match) { try { const res = await fetch(file + "?v=" + Date.now()); if (res.ok) localRotCache[match[0]] = await res.json(); } catch(e) {} }
+                const dataInizio = match ? match[0] : null;
+                if (dataInizio) {
+                    try {
+                        const res = await fetch(file + "?v=" + new Date().getTime());
+                        if (res.ok) {
+                            localDbCache[dataInizio] = await res.json();
+                        }
+                    } catch(e) { console.warn("Impossibile caricare " + file); }
+                }
             }
         }
+
+        let dbInUso = null;
+        let dataAttivaDb = "";
 
         function caricaDbCorrenteSincrono(dateStr) {
             const dateChiavi = Object.keys(localDbCache).sort();
             if (dateChiavi.length === 0) return null;
+            
             const dSelezionata = stringToNum(dateStr);
             let dataTrovata = dateChiavi[0];
             let dbTrovato = localDbCache[dataTrovata];
+
             for (let i = dateChiavi.length - 1; i >= 0; i--) { 
-                if (dSelezionata >= stringToNum(dateChiavi[i])) { dataTrovata = dateChiavi[i]; dbTrovato = localDbCache[dateChiavi[i]]; break; } 
+                if (dSelezionata >= stringToNum(dateChiavi[i])) { 
+                    dataTrovata = dateChiavi[i];
+                    dbTrovato = localDbCache[dateChiavi[i]];
+                    break;
+                } 
             }
+            
             dbInUso = dbTrovato;
             dataAttivaDb = dataTrovata;
             return { db: dbTrovato, dataDb: dataTrovata };
         }
 
-        function getRotazionePerData(dateStr) {
-            const dateChiavi = Object.keys(localRotCache).sort();
-            if (dateChiavi.length === 0) return null;
-            const dSelezionata = stringToNum(dateStr);
-            let rotTrovata = localRotCache[dateChiavi[0]];
-            for (let i = dateChiavi.length - 1; i >= 0; i--) {
-                if (dSelezionata >= stringToNum(dateChiavi[i])) {
-                    rotTrovata = localRotCache[dateChiavi[i]];
-                    break;
-                }
-            }
-            return rotTrovata;
+        function stringToNum(s) { 
+            if(!s) return 0; 
+            let p = s.split('-'); 
+            return Math.floor(Date.UTC(p[0], p[1]-1, p[2]) / 86400000); 
+        }
+
+        function creaDataSicura(dataStr) { 
+            if(!dataStr) return new Date(); 
+            let p = dataStr.split('-'); 
+            return new Date(p[0], p[1] - 1, p[2], 12, 0, 0); 
         }
 
         function trovaChiaveEsatta(db, codiceBase, dateStr) {
@@ -308,15 +336,16 @@
             
             let matchB = codiceBase.match(/^([1-9])B(\d{2})$/);
             if (matchB) {
-                let linea = matchB[1], finale = matchB[2];
+                let linea = matchB[1]; let finale = matchB[2];
                 let letteraPilota = (linea === '1' || linea === '2') ? 'C' : 'P';
                 let regex = new RegExp(`^${linea}[A-Z]${finale}$`);
                 let trovati = Object.keys(db).filter(k => regex.test(k));
-                if (trovati.length > 0) codiciDaCercare.push(...trovati); else codiciDaCercare.push(`${linea}${letteraPilota}${finale}`);
+                if (trovati.length > 0) codiciDaCercare.push(...trovati);
+                else codiciDaCercare.push(`${linea}${letteraPilota}${finale}`);
             } else {
                 let match50 = codiceBase.match(/^([A-Z0-9]+?)(\d{2})$/);
                 if (match50) {
-                    let pref = match50[1], num = parseInt(match50[2], 10);
+                    let pref = match50[1]; let num = parseInt(match50[2], 10);
                     if (num >= 50) codiciDaCercare.push(pref + String(num - 50).padStart(2, '0'));
                 }
             }
@@ -327,18 +356,20 @@
 
             for (let codCercato of codiciDaCercare) {
                 let keys = Object.keys(db).filter(k => k === codCercato || k.startsWith(codCercato + "_"));
-                let exactMatch = null, genericMatch = null;
+                let exactMatch = null; let genericMatch = null;
                 for (let k of keys) {
                     if (k === codCercato) { genericMatch = k; continue; }
                     let suffix = k.substring(codCercato.length + 1); 
                     if (suffix.includes("-")) {
                         let parts = suffix.split("-");
                         if (parts.length === 2 && dayMap[parts[0]] && dayMap[parts[1]]) {
-                            let start = dayMap[parts[0]], end = dayMap[parts[1]];
+                            let start = dayMap[parts[0]]; let end = dayMap[parts[1]];
                             if (start <= end) { if (targetDay >= start && targetDay <= end) exactMatch = k; } 
                             else { if (targetDay >= start || targetDay <= end) exactMatch = k; }
                         }
-                    } else { if (dayMap[suffix] && dayMap[suffix] === targetDay) exactMatch = k; }
+                    } else {
+                        if (dayMap[suffix] && dayMap[suffix] === targetDay) exactMatch = k;
+                    }
                 }
                 if (exactMatch) return exactMatch;
                 if (genericMatch) return genericMatch;
@@ -349,279 +380,487 @@
         function formatTimeForInput(timeStr) {
             if (!timeStr) return "";
             let parts = timeStr.replace('.', ':').split(':');
-            if (parts.length >= 2) return `${parts[0].trim().padStart(2, '0')}:${parts[1].trim().padStart(2, '0')}`;
+            if (parts.length >= 2) {
+                let h = parts[0].trim().padStart(2, '0');
+                let m = parts[1].trim().padStart(2, '0');
+                return `${h}:${m}`;
+            }
             return timeStr;
         }
 
-        // --- CALCOLO ROTAZIONI ---
-        function isGiornoRiposoBase(curr, cfg) {
-            if (!cfg.riposoStart) return false;
-            let ref = stringToNum(cfg.riposoStart);
-            if (cfg.depositoAttivo === 'disp_det') return (((curr - ref) % 6 + 6) % 6 === 0);
-            let pos = ((curr - ref + 6) % 15 + 15) % 15;
-            return (pos === 6 || pos === 13 || pos === 14);
-        }
-
-        function isGiornoRiposo(dStr) {
-            if (state.variazioni[dStr] === "RI" || state.variazioni[dStr] === "RIPOSO" || state.variazioni[dStr] === "AL") return true;
-            let cfg = (state.history && stringToNum(dStr) < stringToNum(DATA_INIZIO_NUOVI_TURNI)) ? state.history : state;
-            return isGiornoRiposoBase(stringToNum(dStr), cfg);
-        }
-
-        function getTurnoGiorno(dStr) {
-            if (state.variazioni[dStr]) return state.variazioni[dStr];
-            if (isGiornoRiposo(dStr)) return "RI";
-            let curr = stringToNum(dStr);
-            let cfgBase = (state.history && curr < stringToNum(DATA_INIZIO_NUOVI_TURNI)) ? state.history : state;
-            if (!cfgBase || !cfgBase.depositoAttivo || cfgBase.depositoAttivo.startsWith('disp_')) return "DISP";
+        // --- Inizializzazione Panzoom ---
+        document.addEventListener('DOMContentLoaded', async function() {
             
-            const currentRotRules = getRotazionePerData(dStr);
-            if (!currentRotRules || !currentRotRules[cfgBase.depositoAttivo]) return "DISP";
-            let rotList = currentRotRules[cfgBase.depositoAttivo];
-
-            let activeCfg = (state.futureConfig && curr >= stringToNum(state.futureConfig.dataInizio)) 
-                ? { start: state.futureConfig.dataInizio, idx: state.futureConfig.turnoIndex } 
-                : { start: cfgBase.rotazioneStart, idx: cfgBase.turnoIndex };
-            if(!activeCfg.start) return "DISP";
-            
-            let refRot = stringToNum(activeCfg.start), w = 0;
-            if (curr >= refRot) { for (let j = refRot; j < curr; j++) { if (!isGiornoRiposoBase(j, cfgBase)) w++; } }
-            else { for (let j = curr; j < refRot; j++) { if (!isGiornoRiposoBase(j, cfgBase)) w--; } }
-            
-            let expanded = [];
-            rotList.forEach(t => { if(t.includes('+')) { expanded.push(t.split('+')[0].trim(), t.split('+')[1].trim()); } else { expanded.push(t, t); }});
-            let idxExp = (activeCfg.idx * 2 + w) % expanded.length;
-            if (idxExp < 0) idxExp += expanded.length;
-            return expanded[idxExp];
-        }
-
-        window.disegnaDashboard = () => {
-            const container = document.getElementById('dashboard-settimanale');
-            if (!state.riposoStart) { container.innerHTML = `<a href="calendario.html" class="menu-btn" style="width:100%; background:var(--success)">Configura Calendario</a>`; return; }
-            container.innerHTML = "";
-            let oggi = new Date();
-            for (let i = 0; i < 7; i++) {
-                let d = new Date(oggi); d.setDate(oggi.getDate() + i);
-                let dStr = dateToLocalISO(d);
-                let t = getTurnoGiorno(dStr);
-                let isToday = i === 0;
-                let colorBg = (state.colori && state.colori[dStr]) ? state.colori[dStr] : "";
-                
-                let card = document.createElement('div');
-                card.className = `day-card ${isToday ? 'today' : ''}`;
-                card.onclick = () => window.gestisciInterazione(dStr);
-                if(colorBg) card.style.borderTop = `5px solid ${colorBg}`;
-                
-                card.innerHTML = `<div class="date">${isToday ? 'Oggi' : d.toLocaleDateString('it-IT', {weekday:'short', day:'numeric'})}</div><div class="shift">${t}</div>`;
-                container.appendChild(card);
-            }
-        };
-
-        // --- GESTIONE INTERAZIONI MODALI (Copia Esatta) ---
-        window.gestisciInterazione = (date) => {
-            selectedDate = date;
-            document.getElementById('modalDate').innerText = new Date(date).toLocaleDateString('it-IT', {weekday: 'long', day:'numeric', month:'long', year:'numeric'}).toUpperCase();
-            
-            let baseTurno = getTurnoGiorno(date);
-            document.getElementById('singleTurnoSelect').value = state.variazioni[date] || "";
-            document.getElementById('singleTurnoSelect').placeholder = `Originale: ${baseTurno}`;
-            document.getElementById('btnSalvaCambio').disabled = true;
-
-            const infoArea = document.getElementById('infoTurniArea');
-            infoArea.style.display = 'block'; infoArea.innerHTML = "";
-
-            let noteHtml = (state.note && state.note[date]) ? `<div style="background:#fff3cd; color:#856404; padding:8px; border-radius:8px; margin-bottom:10px; font-size:13px; border-left:3px solid #ffc107;"><b>Note:</b> ${state.note[date]}</div>` : "";
-            let straordHtml = (state.straordinario && state.straordinario[date]) ? `<div style="background:#cce5ff; color:#004085; padding:8px; border-radius:8px; margin-bottom:10px; font-size:13px; border-left:3px solid #0056b3;"><b>Straordinario:</b> ${state.straordinario[date].ore}h ${state.straordinario[date].minuti}m</div>` : "";
-            let sospesoHtml = (state.sospesoRiposo && state.sospesoRiposo[date]) ? `<div style="background:#f8d7da; color:#721c24; padding:8px; border-radius:8px; margin-bottom:10px; font-size:13px; border-left:3px solid #dc3545;"><b>Sospeso Riposo</b></div>` : "";
-            let nebbiaHtml = (state.nebbia && state.nebbia[date]) ? `<div style="background:#e2e3e5; color:#383d41; padding:8px; border-radius:8px; margin-bottom:10px; font-size:13px; border-left:3px solid #6c757d;">🌫️ Indennità Nebbia</div>` : "";
-            let pastoHtml = (state.buonoPasto && state.buonoPasto[date]) ? `<div style="background:#d4edda; color:#155724; padding:8px; border-radius:8px; margin-bottom:10px; font-size:13px; border-left:3px solid #28a745;">🍝 Buono Pasto</div>` : "";
-
-            let turnoDaCercare = state.variazioni[date] || baseTurno;
-            let isRiposo = (turnoDaCercare === 'RI' || turnoDaCercare === 'RIPOSO' || turnoDaCercare === 'AL' || turnoDaCercare === 'DISP' || turnoDaCercare === 'NESSUN TURNO');
-
-            if (isRiposo) {
-                infoArea.innerHTML = `${noteHtml}${straordHtml}${sospesoHtml}${nebbiaHtml}${pastoHtml}<div style="font-size:16px; font-weight:bold; color:var(--text-color); text-align:center; margin:10px 0;">🏖️ ${turnoDaCercare}</div>`;
-                document.getElementById('btnVisualizzaTurno').style.display = 'none';
-            } else {
-                caricaDbCorrenteSincrono(date);
-                let chiaveEsatta = trovaChiaveEsatta(dbInUso, turnoDaCercare, date);
-                let dettagli = dbInUso ? dbInUso[chiaveEsatta] : null;
-
-                if (dettagli) {
-                    let dHTML = `${noteHtml}${straordHtml}${sospesoHtml}${nebbiaHtml}${pastoHtml}
-                        <div style="font-size:15px; font-weight:bold; color:var(--primary); margin-bottom:8px;">Turno: ${chiaveEsatta}</div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><b>Inizio:</b> ${formatTimeForInput(dettagli.inizio)}</span><span><b>Fine:</b> ${formatTimeForInput(dettagli.fine)}</span></div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:12px; color:#666;"><span><b>Da:</b> ${dettagli.luogoInizio}</span><span><b>A:</b> ${dettagli.luogoFine}</span></div>`;
-                    if(dettagli.varianti && dettagli.varianti.length > 0) dHTML += `<div style="font-size:11px; color:#d39e00; background:#fff3cd; padding:5px; border-radius:5px; margin-top:5px;">⚠️ Varianti presenti! Controlla l'immagine.</div>`;
-                    infoArea.innerHTML = dHTML;
-                } else {
-                    infoArea.innerHTML = `${noteHtml}${straordHtml}${sospesoHtml}${nebbiaHtml}${pastoHtml}<strong>Turno:</strong> ${turnoDaCercare} (Dettagli non trovati)`;
-                }
-                document.getElementById('btnVisualizzaTurno').style.display = 'block';
-            }
-
-            // Setup Altro Modal con i dati corretti salvati
-            document.getElementById('checkSospesoRiposoAltro').checked = !!(state.sospesoRiposo && state.sospesoRiposo[date]);
-            document.getElementById('checkNebbiaAltro').checked = !!(state.nebbia && state.nebbia[date]);
-            document.getElementById('checkBuonoPastoAltro').checked = !!(state.buonoPasto && state.buonoPasto[date]);
-            document.getElementById('notaAltro').value = (state.note && state.note[date]) ? state.note[date] : "";
-            
-            if (state.straordinario && state.straordinario[date]) {
-                document.getElementById('checkStraordinarioAltro').checked = true;
-                document.getElementById('straordinarioInputsAltro').style.display = 'flex';
-                document.getElementById('oreStraordAltro').value = state.straordinario[date].ore || ""; 
-                document.getElementById('minutiStraordAltro').value = state.straordinario[date].minuti || "";
-            } else {
-                document.getElementById('checkStraordinarioAltro').checked = false;
-                document.getElementById('straordinarioInputsAltro').style.display = 'none';
-                document.getElementById('oreStraordAltro').value = ""; 
-                document.getElementById('minutiStraordAltro').value = "";
-            }
-            
-            document.querySelectorAll('.color-circle').forEach(c => c.classList.remove('selected'));
-            tempColoreAltro = (state.colori && state.colori[date]) ? state.colori[date] : "";
-            if (tempColoreAltro) { let colEl = document.querySelector(`.color-circle[data-color="${tempColoreAltro}"]`); if (colEl) colEl.classList.add('selected'); }
-
-            document.getElementById('editModal').style.display = 'flex';
-        };
-
-        window.chiudiEdit = () => document.getElementById('editModal').style.display = 'none';
-        window.apriAltroModal = () => { document.getElementById('editModal').style.display = 'none'; document.getElementById('altroModal').style.display = 'flex'; };
-        window.chiudiAltroModal = () => { document.getElementById('altroModal').style.display = 'none'; document.getElementById('editModal').style.display = 'flex'; };
-
-        window.toggleStraordinarioAltro = () => {
-            document.getElementById('straordinarioInputsAltro').style.display = document.getElementById('checkStraordinarioAltro').checked ? 'flex' : 'none';
-        };
-
-        window.salvaCambioSingolo = () => { let val = document.getElementById('singleTurnoSelect').value.trim().toUpperCase(); if(val) state.variazioni[selectedDate] = val; window.salvaERicarica(); };
-        window.resetGiornoSingolo = () => { delete state.variazioni[selectedDate]; window.salvaERicarica(); };
-
-        // SALVATAGGIO FUNZIONI "ALTRO" ESATTO
-        window.salvaAltro = () => {
-            if(!state.note) state.note = {}; if(!state.sospesoRiposo) state.sospesoRiposo = {}; 
-            if(!state.straordinario) state.straordinario = {}; if(!state.colori) state.colori = {};
-            if(!state.nebbia) state.nebbia = {}; if(!state.buonoPasto) state.buonoPasto = {};
-
-            if(document.getElementById('checkSospesoRiposoAltro').checked) state.sospesoRiposo[selectedDate] = true; else delete state.sospesoRiposo[selectedDate];
-            if(document.getElementById('checkNebbiaAltro').checked) state.nebbia[selectedDate] = true; else delete state.nebbia[selectedDate];
-            if(document.getElementById('checkBuonoPastoAltro').checked) state.buonoPasto[selectedDate] = true; else delete state.buonoPasto[selectedDate];
-
-            let valNote = document.getElementById('notaAltro').value.trim();
-            if(valNote) state.note[selectedDate] = valNote; else delete state.note[selectedDate];
-            
-            if(document.getElementById('checkStraordinarioAltro').checked) {
-                let ore = parseInt(document.getElementById('oreStraordAltro').value) || 0, min = parseInt(document.getElementById('minutiStraordAltro').value) || 0;
-                if(ore > 0 || min > 0) state.straordinario[selectedDate] = {ore, minuti: min}; else delete state.straordinario[selectedDate];
-            } else { delete state.straordinario[selectedDate]; }
-            
-            if(tempColoreAltro) state.colori[selectedDate] = tempColoreAltro; else delete state.colori[selectedDate];
-            
-            window.salvaERicarica();
-        };
-
-        window.selezionaColoreAltro = (color, el) => {
-            if (el.classList.contains('selected')) { el.classList.remove('selected'); tempColoreAltro = ""; }
-            else { document.querySelectorAll('.color-circle').forEach(c => c.classList.remove('selected')); el.classList.add('selected'); tempColoreAltro = color; }
-        };
-
-        window.salvaERicarica = async () => {
-            state.lastUpdate = Date.now();
-            localStorage.setItem('myTurniApp', JSON.stringify(state));
-            const user = auth.currentUser;
-            if (user) { let st = {...state}; delete st.dbCache; delete st.rotCache; await setDoc(doc(db, "utenti", user.uid), st, { merge: true }); }
-            location.reload();
-        };
-
-        // --- IMMAGINI E ZOOM ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            await precaricaTuttiDB();
-            window.disegnaDashboard();
+            await precaricaTuttiDB(); // Scarica i DB di base immediatamente come Calendario!
 
             const imgElem = document.getElementById('turnoImage');
             if (typeof Panzoom !== 'undefined') {
                 pzInstance = Panzoom(imgElem, { maxScale: 5, minScale: 1 });
                 document.getElementById('imageFlexContainer').addEventListener('wheel', pzInstance.zoomWithWheel);
-                let isPinching = false, lastTap = 0; 
-                imgElem.addEventListener('touchstart', e => { if(e.touches.length > 1) isPinching = true; });
-                imgElem.addEventListener('touchend', e => {
-                    if (isPinching) { if (e.touches.length === 0) setTimeout(() => isPinching = false, 300); return; }
-                    let ct = Date.now(); if (ct - lastTap < 300 && ct - lastTap > 0) { if(pzInstance.getScale() < 1.1) pzInstance.zoom(1.75, {animate: true}); else pzInstance.reset({animate:true}); if (e.cancelable) e.preventDefault(); }
-                    lastTap = ct;
+                
+                function eseguiZoomToggle(e) {
+                    if (!pzInstance) return;
+                    let currentScale = pzInstance.getScale();
+                    if (currentScale < 1.1) { 
+                        pzInstance.zoom(1.75, { animate: true }); 
+                    } else { 
+                        pzInstance.reset({ animate: true }); 
+                    }
+                }
+                
+                let lastTap = 0; 
+                let isPinching = false;
+                imgElem.addEventListener('touchstart', function(e) { 
+                    if (e.touches.length > 1) { isPinching = true; } 
                 });
-                imgElem.addEventListener('dblclick', () => { if(pzInstance.getScale() < 1.1) pzInstance.zoom(1.75, {animate: true}); else pzInstance.reset({animate:true}); });
+                imgElem.addEventListener('touchend', function(e) {
+                    if (isPinching) { 
+                        if (e.touches.length === 0) { setTimeout(() => isPinching = false, 300); } 
+                        return; 
+                    }
+                    let currentTime = new Date().getTime(); 
+                    let tapLength = currentTime - lastTap;
+                    if (tapLength < 300 && tapLength > 0) { 
+                        eseguiZoomToggle(e); 
+                        if (e.cancelable) e.preventDefault(); 
+                    }
+                    lastTap = currentTime;
+                });
+                imgElem.addEventListener('dblclick', function(e) { eseguiZoomToggle(e); });
             }
         });
 
-        window.apriImmagineTurno = () => {
-            let baseTurno = state.variazioni[selectedDate] || getTurnoGiorno(selectedDate);
-            let codicePulito = baseTurno.toUpperCase().trim();
-            caricaDbCorrenteSincrono(selectedDate);
-            let dataAttiva = dataAttivaDb || "2026-03-02";
-            let chiaveTrovata = trovaChiaveEsatta(dbInUso, codicePulito, selectedDate);
+        onAuthStateChanged(auth, async (user) => {
+            try {
+                nascondiTutto();
+                if (user) {
+                    currentUser = user;
+                    await checkStato();
+                } else {
+                    document.getElementById('view-no-auth').style.display = 'flex';
+                }
+            } catch(err) {
+                document.getElementById('error-box').innerHTML = "Errore di connessione o lettura dati: " + err.message;
+                document.getElementById('error-box').style.display = 'block';
+            }
+        });
 
-            if (chiaveTrovata && chiaveTrovata !== codicePulito && dbInUso && dbInUso[chiaveTrovata]) { currentImagePath = `turni_${dataAttiva}/${chiaveTrovata}.jpg`; imgBaseFallback = `turni_${dataAttiva}/${codicePulito}.jpg`; } 
-            else { currentImagePath = `turni_${dataAttiva}/${codicePulito}.jpg`; imgBaseFallback = ""; }
+        async function checkStato() {
+            try {
+                const utenteRef = doc(db, "utenti", currentUser.uid);
+                const utenteSnap = await getDoc(utenteRef);
+                if (utenteSnap.exists()) userDataPrivate = utenteSnap.data();
+
+                const ok = userDataPrivate.nome && userDataPrivate.cognome && userDataPrivate.matricola && userDataPrivate.mansione && userDataPrivate.telefono;
+                
+                nascondiTutto();
+                document.getElementById('view-main').style.display = 'flex';
+
+                if (!ok) {
+                    apriModaleProfilo(); // Forza apertura
+                    document.getElementById('btnCloseProfileModal').style.display = 'none'; // Nascondi X se non è completo
+                    return;
+                }
+
+                document.getElementById('filtroMansione').value = userDataPrivate.mansione || "Tutte";
+                
+                const today = getOggiLocale(); // Evita i bug di fuso orario!
+                
+                let qCleanup = isAdmin ? collection(db, "bacheca_turni") : query(collection(db, "bacheca_turni"), where("uid", "==", currentUser.uid));
+                const adsSnap = await getDocs(qCleanup);
+                myAnnunciAttivi = [];
+                
+                adsSnap.forEach(d => {
+                    const a = d.data();
+                    if(a.data_scambio > today) {
+                        if (a.uid === currentUser.uid) myAnnunciAttivi.push(a);
+                    } else {
+                        deleteDoc(doc(db, "bacheca_turni", d.id)).catch(e => {});
+                    }
+                });
+
+                window.caricaBacheca();
+            } catch (error) { console.error(error); }
+        }
+
+        window.apriModaleProfilo = function() {
+            // Rimossa la chiusura del modale adModal: ora si apre in sovraimpressione!
+            
+            document.getElementById('regNome').value = userDataPrivate.nome || "";
+            document.getElementById('regCognome').value = userDataPrivate.cognome || "";
+            document.getElementById('regMatricola').value = userDataPrivate.matricola || "";
+            document.getElementById('regTelefono').value = userDataPrivate.telefono || "";
+            document.getElementById('regMansione').value = userDataPrivate.mansione || "";
+            
+            // Mostra la X solo se ha già i dati minimi salvati
+            const ok = userDataPrivate.nome && userDataPrivate.cognome && userDataPrivate.matricola && userDataPrivate.mansione && userDataPrivate.telefono;
+            document.getElementById('btnCloseProfileModal').style.display = ok ? 'block' : 'none';
+
+            document.getElementById('profileModal').style.display = 'flex';
+        }
+
+        window.chiudiModaleProfilo = function() {
+            document.getElementById('profileModal').style.display = 'none';
+        }
+
+        window.salvaProfilo = async function() {
+            const n = document.getElementById('regNome').value.trim();
+            const c = document.getElementById('regCognome').value.trim();
+            const mat = document.getElementById('regMatricola').value.trim();
+            const tel = document.getElementById('regTelefono').value.trim();
+            const man = document.getElementById('regMansione').value;
+
+            if(!n || !c || !mat || !tel || !man) return alert("Compila tutti i campi per usare la bacheca.");
+            
+            document.getElementById('btnSalvaProfilo').innerText = "⏳ Salvataggio...";
+            try {
+                await setDoc(doc(db, "utenti", currentUser.uid), { nome: n, cognome: c, matricola: mat, telefono: tel, mansione: man }, { merge: true });
+                document.getElementById('btnSalvaProfilo').innerText = "Salva Dati";
+                chiudiModaleProfilo();
+                checkStato();
+            } catch(e) { alert("Errore"); document.getElementById('btnSalvaProfilo').innerText = "Salva Dati"; }
+        };
+
+        let adTypeSelezionato = 'turno';
+        
+        window.apriModaleAnnuncio = async function() {
+            document.getElementById('adModal').style.display = 'flex';
+            switchAdTab('turno');
+            
+            let todayStr = getOggiLocale();
+            document.getElementById('adDataTurno').value = todayStr;
+            
+            svuotaCampiTurno();
+            document.getElementById('adCodiceTurno').value = "";
+            document.getElementById('adDataRiposo').value = "";
+            document.getElementById('adDataRestituzione1').value = ""; 
+            document.getElementById('adDataRestituzione2').value = "";
+            document.getElementById('adNote').value = "";
+
+            verificaTurno(); 
+        };
+
+        window.switchAdTab = function(type) {
+            adTypeSelezionato = type;
+            document.getElementById('tab-ad-turno').classList.remove('active');
+            document.getElementById('tab-ad-riposo').classList.remove('active');
+            document.getElementById('tab-ad-'+type).classList.add('active');
+            document.getElementById('form-ad-turno').style.display = type === 'turno' ? 'block' : 'none';
+            document.getElementById('form-ad-riposo').style.display = type === 'riposo' ? 'block' : 'none';
+        };
+
+        function svuotaCampiTurno() {
+            document.getElementById('adOraInizio').value = ""; document.getElementById('adOraFine').value = "";
+            document.getElementById('adLuogoInizio').value = ""; document.getElementById('adLuogoFine').value = "";
+            document.getElementById('adChiaveEsatta').value = ""; document.getElementById('adDataAttivaDb').value = "";
+        }
+
+        window.verificaTurno = function() {
+            let dateStr = document.getElementById('adDataTurno').value;
+            if(!dateStr) dateStr = getOggiLocale();
+            
+            caricaDbCorrenteSincrono(dateStr); // Cerca sincrono nella cache
+
+            const codiceBase = document.getElementById('adCodiceTurno').value.trim().toUpperCase();
+            
+            if (!codiceBase || !dbInUso) {
+                svuotaCampiTurno();
+                return;
+            }
+
+            let chiaveTrovata = trovaChiaveEsatta(dbInUso, codiceBase, dateStr); 
+            let dettagli = dbInUso[chiaveTrovata];
+
+            if (dettagli) {
+                if(dettagli.inizio) document.getElementById('adOraInizio').value = formatTimeForInput(dettagli.inizio);
+                if(dettagli.fine) document.getElementById('adOraFine').value = formatTimeForInput(dettagli.fine);
+                
+                if(dettagli.luogoInizio) document.getElementById('adLuogoInizio').value = dettagli.luogoInizio;
+                if(dettagli.luogoFine) document.getElementById('adLuogoFine').value = dettagli.luogoFine;
+                
+                document.getElementById('adChiaveEsatta').value = chiaveTrovata;
+                document.getElementById('adDataAttivaDb').value = dataAttivaDb;
+            } else {
+                svuotaCampiTurno();
+            }
+        };
+
+        window.pubblicaAnnuncio = async function() {
+            const btn = document.getElementById('btnPubblica');
+            let payload = {
+                uid: currentUser.uid,
+                nome: userDataPrivate.nome, cognome: userDataPrivate.cognome, 
+                mansione: userDataPrivate.mansione, matricola: userDataPrivate.matricola, telefono: userDataPrivate.telefono,
+                timestamp: new Date().getTime(), tipo_annuncio: adTypeSelezionato,
+                note: document.getElementById('adNote').value.trim()
+            };
+
+            if (adTypeSelezionato === 'turno') {
+                const dataT = document.getElementById('adDataTurno').value;
+                if(!dataT) return alert("Inserisci la data del turno.");
+                
+                const codiceT = document.getElementById('adCodiceTurno').value.trim().toUpperCase();
+                if(!codiceT) return alert("Devi inserire il codice del turno che stai cedendo.");
+
+                payload.data_scambio = dataT;
+                payload.cerco = document.getElementById('adCercoTurno').value;
+                payload.cedo = document.getElementById('adCedoTurno').value;
+                payload.codice_turno = codiceT;
+                payload.ora_inizio = document.getElementById('adOraInizio').value;
+                payload.ora_fine = document.getElementById('adOraFine').value;
+                payload.luogo_inizio = document.getElementById('adLuogoInizio').value;
+                payload.luogo_fine = document.getElementById('adLuogoFine').value;
+                
+                payload.chiave_esatta = document.getElementById('adChiaveEsatta').value;
+                payload.data_attiva_db = document.getElementById('adDataAttivaDb').value;
+            } else {
+                const dataR = document.getElementById('adDataRiposo').value;
+                if(!dataR) return alert("Inserisci la data.");
+                payload.data_scambio = dataR; payload.cerco = 'riposo'; payload.cedo = 'riposo';
+                let res = [];
+                const d1 = document.getElementById('adDataRestituzione1').value;
+                const d2 = document.getElementById('adDataRestituzione2').value;
+                if(d1) res.push(d1); if(d2) res.push(d2);
+                payload.restituzione = res;
+            }
+
+            btn.innerText = "⏳ Pubblicazione...";
+            try {
+                await addDoc(collection(db, "bacheca_turni"), payload);
+                document.getElementById('adModal').style.display = 'none';
+                btn.innerText = "Pubblica Annuncio";
+                checkStato();
+            } catch(e) { alert("Errore"); btn.innerText = "Pubblica Annuncio"; }
+        };
+
+        function formattaData(isoStr) {
+            if(!isoStr) return "";
+            const d = new Date(isoStr);
+            return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        // --- Logica Immagine Perfettamente Identica a Calendario ---
+        window.apriImmagineTurno = function(codiceTurno, dataScambio) {
+            if (!codiceTurno || !dataScambio) {
+                alert("Dati mancanti per aprire l'immagine.");
+                return;
+            }
+            
+            let codicePulito = codiceTurno.toUpperCase().trim();
+            caricaDbCorrenteSincrono(dataScambio); // Inizializza dbInUso e dataAttivaDb localmente
+
+            let dataAttiva = dataAttivaDb || "2026-03-02"; // Fallback di sicurezza 
+            let chiaveTrovata = trovaChiaveEsatta(dbInUso, codicePulito, dataScambio);
+
+            if (chiaveTrovata && chiaveTrovata !== codicePulito && dbInUso && dbInUso[chiaveTrovata]) { 
+                currentImagePath = `turni_${dataAttiva}/${chiaveTrovata}.jpg`; 
+                imgBaseFallback = `turni_${dataAttiva}/${codicePulito}.jpg`; 
+            } else { 
+                currentImagePath = `turni_${dataAttiva}/${codicePulito}.jpg`; 
+                imgBaseFallback = ""; 
+            }
             
             let imgElement = document.getElementById('turnoImage');
             imgElement.onerror = window.erroreImmagine; 
             imgElement.src = currentImagePath; 
-            if (pzInstance) pzInstance.reset();
+            if (pzInstance) { pzInstance.reset(); } 
             document.getElementById('imageModal').style.display = 'block'; 
         };
 
-        window.erroreImmagine = () => { 
+        window.erroreImmagine = function() { 
             let imgElement = document.getElementById('turnoImage'); 
-            if (imgBaseFallback) { currentImagePath = imgBaseFallback; imgElement.src = imgBaseFallback; imgBaseFallback = ""; } 
-            else { imgElement.onerror = null; alert("L'immagine del turno non è stata trovata."); chiudiImageModal(); } 
+            if (imgBaseFallback) { 
+                currentImagePath = imgBaseFallback; 
+                imgElement.src = imgBaseFallback; 
+                imgBaseFallback = ""; 
+            } else { 
+                imgElement.onerror = null; 
+                alert("L'immagine del turno non è stata trovata nel database."); 
+                chiudiImageModal(); 
+            } 
         };
 
-        window.chiudiImageModalSeSfondo = (e) => { if(e.target.id==='imageModal' || e.target.id==='imageFlexContainer') window.chiudiImageModal(); };
-        window.chiudiImageModal = () => document.getElementById('imageModal').style.display='none';
-        window.scaricaImmagineTurno = () => { if (!currentImagePath) return; const a = document.createElement('a'); a.href = currentImagePath; a.download = currentImagePath.split('/').pop(); document.body.appendChild(a); a.click(); document.body.removeChild(a); };
-
-        // --- AUTH E PROFILO ---
-        window.loginGoogle = () => signInWithPopup(auth, provider);
-        window.loginEmail = async () => { try { await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passwordInput').value); } catch(e) { document.getElementById('authError').innerText="Email o Password errata."; document.getElementById('authError').style.display='block'; } };
-        window.registraEmail = () => createUserWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passwordInput').value);
-        window.logout = () => { signOut(auth); location.reload(); };
-
-        onAuthStateChanged(auth, async (user) => {
-            const btnLogin = document.getElementById('btnOpenLogin'); const btnProfile = document.getElementById('btnOpenProfile');
-            if (user) {
-                btnLogin.style.display = 'none'; btnProfile.style.display = 'block';
-                document.getElementById('user-status').innerHTML = `☁️ Online`; document.getElementById('user-status').style.display='block';
-                const docSnap = await getDoc(doc(db, "utenti", user.uid));
-                if (docSnap.exists()) {
-                    let cloudData = docSnap.data();
-                    if(cloudData.lastUpdate > state.lastUpdate) { state = cloudData; localStorage.setItem('myTurniApp', JSON.stringify(state)); window.disegnaDashboard(); }
-                    document.getElementById('profileNome').value = state.nome || ''; document.getElementById('profileCognome').value = state.cognome || '';
-                    document.getElementById('profileSoprannome').value = state.soprannome || ''; document.getElementById('profileMansione').value = state.mansione || '';
-                    document.getElementById('profileMatricola').value = state.matricola || ''; document.getElementById('profileTelefono').value = state.telefono || '';
-                    if (state.depositoAttivo?.includes('nove')) document.getElementById('rotazioni-btn').style.display = 'block';
-                }
-            } else { btnLogin.style.display = 'block'; }
-        });
-
-        window.salvaProfilo = async () => {
-            const u = auth.currentUser; if(!u) return;
-            const data = { nome: document.getElementById('profileNome').value, cognome: document.getElementById('profileCognome').value, soprannome: document.getElementById('profileSoprannome').value, mansione: document.getElementById('profileMansione').value, matricola: document.getElementById('profileMatricola').value, telefono: document.getElementById('profileTelefono').value };
-            await setDoc(doc(db, "utenti", u.uid), data, { merge: true });
-            alert("Profilo Salvato!"); document.getElementById('profileModal').style.display='none';
+        window.chiudiImageModal = function() {
+            document.getElementById('imageModal').style.display = 'none';
+            document.getElementById('turnoImage').removeAttribute('src');
+            if (pzInstance) { pzInstance.reset(); }
         };
 
-        window.controllaNotificheBacheca = async () => {
+        window.chiudiImageModalSeSfondo = function(event) {
+            if (event.target.id === 'imageModal' || event.target.id === 'imageFlexContainer') chiudiImageModal();
+        };
+        
+        window.scaricaImmagineTurno = function() { 
+            if (!currentImagePath) return; 
+            const a = document.createElement('a'); 
+            a.href = currentImagePath; 
+            a.download = currentImagePath.split('/').pop(); 
+            document.body.appendChild(a); 
+            a.click(); 
+            document.body.removeChild(a); 
+        };
+
+        window.caricaBacheca = async function() {
+            const containerRes = document.getElementById('lista-annunci');
+            const containerSug = document.getElementById('suggeriti-bacheca');
+            const divSugContainer = document.getElementById('suggeriti-bacheca-container');
+            
+            const fMan = document.getElementById('filtroMansione').value;
+            const fData = document.getElementById('filtroData').value;
+            const today = getOggiLocale(); // Risolve il bug fuso orario visivo
+
+            containerRes.innerHTML = "<p style='color:#666;'>Caricamento annunci in corso...</p>";
+            containerSug.innerHTML = "";
+
             try {
-                const ultimoAccesso = parseInt(localStorage.getItem('ultimo_accesso_bacheca')) || 0;
-                const snap = await getDocs(collection(db, "bacheca_utility"));
-                let messaggiNonLetti = 0;
-                snap.forEach(d => { if (d.data().timestamp > ultimoAccesso) messaggiNonLetti++; });
-                if (messaggiNonLetti > 0) {
-                    const badge = document.getElementById('badge-messaggi');
-                    badge.innerText = messaggiNonLetti; badge.style.display = 'flex';
-                }
-            } catch (e) {}
+                let q = fMan === "Tutte" ? query(collection(db, "bacheca_turni")) : query(collection(db, "bacheca_turni"), where("mansione", "==", fMan));
+                const snap = await getDocs(q);
+                let annunci = [];
+                snap.forEach(doc => {
+                    const a = doc.data(); a.id = doc.id;
+                    if(a.data_scambio > today) annunci.push(a);
+                });
+
+                if(fData) annunci = annunci.filter(a => a.data_scambio === fData);
+                annunci.sort((a,b) => a.data_scambio.localeCompare(b.data_scambio));
+
+                containerRes.innerHTML = "";
+                let suggeriti = 0;
+
+                annunci.forEach(a => {
+                    const isMe = a.uid === currentUser.uid;
+                    const canDelete = isMe || isAdmin; // Logica ADMIN integrata
+                    
+                    let isSuggested = false;
+                    if (!isMe) {
+                        isSuggested = myAnnunciAttivi.some(mio => {
+                            if(mio.data_scambio === a.data_scambio && mio.cerco === a.cedo) return true;
+                            return false;
+                        });
+                    }
+                    if (isSuggested) suggeriti++;
+
+                    const showWa = !isMe && a.telefono; 
+                    const itemClass = isSuggested ? "card-suggested" : "card";
+                    const numClean = (a.telefono||"").replace(/\s+/g, '');
+                    const dateFormatted = formattaData(a.data_scambio);
+
+                    let corpoHTML = "";
+                    if (a.tipo_annuncio === 'turno') {
+                        
+                        let infoTurnoHTML = "";
+                        if (a.ora_inizio || a.luogo_inizio) {
+                            infoTurnoHTML = `
+                                <div style="font-size: 11px; color: #555; margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid var(--primary);">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                        <span><b>Inizio:</b> ${a.ora_inizio || '--:--'}</span>
+                                        <span><b>Fine:</b> ${a.ora_fine || '--:--'}</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span><b>Da:</b> ${a.luogo_inizio || '--'}</span>
+                                        <span><b>A:</b> ${a.luogo_fine || '--'}</span>
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        let btnImmagine = "";
+                        if (a.codice_turno) {
+                            let codBase = a.codice_turno.toUpperCase();
+                            let isRiposo = (codBase === 'RI' || codBase === 'RIPOSO' || codBase === 'AL' || codBase === 'DISP' || codBase === 'NESSUN TURNO');
+                            
+                            if (!isRiposo) {
+                                btnImmagine = `<div style="margin-top: 10px;"><button onclick="apriImmagineTurno('${a.codice_turno}', '${a.data_scambio}')" style="background:transparent; border:1px solid var(--primary); color:var(--primary); padding:6px 12px; border-radius:12px; font-size:12px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:5px; width: 100%; justify-content: center;">${svgCamera} Mostra Immagine Turno</button></div>`;
+                            }
+                        }
+
+                        corpoHTML = `
+                            <div style="font-size: 13px; font-weight: bold; margin-bottom: 5px;">📅 ${dateFormatted}</div>
+                            <div><span class="badge badge-${a.cerco}">CERCA: ${a.cerco.toUpperCase()}</span></div>
+                            <div style="margin-top: 4px;"><span class="badge badge-${a.cedo}">CEDE: ${a.cedo.toUpperCase()} ${a.codice_turno ? '('+a.codice_turno+')' : ''}</span></div>
+                            ${infoTurnoHTML}
+                            ${btnImmagine}
+                        `;
+                    } else {
+                        let restStr = a.restituzione && a.restituzione.length > 0 ? a.restituzione.map(formattaData).join(' o ') : "Da concordare";
+                        corpoHTML = `
+                            <div style="font-size: 13px; font-weight: bold; margin-bottom: 5px;">📅 CERCA RIPOSO IL: ${dateFormatted}</div>
+                            <div style="margin-top: 4px;"><span class="badge badge-riposo">RESTITUISCE: ${restStr}</span></div>
+                        `;
+                    }
+                    
+                    let noteHTML = "";
+                    if (a.note) {
+                        noteHTML = `<div style="font-size: 12px; color: #555; background: #fff3cd; padding: 8px; border-radius: 6px; margin-top: 8px; border-left: 3px solid var(--warning);"><b>Note:</b> ${a.note}</div>`;
+                    }
+
+                    // Creazione sequenziale dei bottoni laterali
+                    let actionsHTML = "";
+                    
+                    if (showWa) {
+                        actionsHTML += `<a href="https://wa.me/39${numClean}" target="_blank" class="action-icon" style="background:transparent;" title="Contatta su WhatsApp">${svgWa}</a>`;
+                    }
+                    
+                    if (isMe) {
+                        // Creazione stringa messaggio per condivisione
+                        let shareText = "";
+                        if (a.tipo_annuncio === 'turno') {
+                            shareText = `Cedo per il giorno ${dateFormatted} il turno ${a.codice_turno || ''}`;
+                            if (a.ora_inizio && a.luogo_inizio && a.ora_fine && a.luogo_fine) {
+                                shareText += ` che monta alle ore ${a.ora_inizio} presso ${a.luogo_inizio} e termina alle ore ${a.ora_fine} presso ${a.luogo_fine}.`;
+                            } else {
+                                shareText += `.`;
+                            }
+                            shareText += ` Cerco ${a.cerco}.`;
+                            if (a.note) shareText += ` Note: ${a.note}.`;
+                            shareText += ` condiviso da Utility https://utility-haze.web.app/bacheca_turni.html`;
+                        } else {
+                            shareText = `Cerco riposo per il giorno ${dateFormatted}`;
+                            if (a.note) shareText += ` Note: ${a.note}.`;
+                            shareText += ` condiviso da Utility https://utility-haze.web.app/bacheca_turni.html`;
+                        }
+                        
+                        const encodedShare = encodeURIComponent(shareText);
+                        
+                        actionsHTML += `<a href="https://wa.me/?text=${encodedShare}" target="_blank" class="action-icon" style="background:#25D366; color:white; border:none;" title="Condividi su WhatsApp">${svgShare}</a>`;
+                    }
+                    
+                    if (canDelete) {
+                        actionsHTML += `<button onclick="cancellaAnnuncio('${a.id}')" class="action-icon" style="background:var(--danger); color:white; border:none; padding:8px; width:auto; height:auto; font-size: 16px;">🗑️</button>`;
+                    }
+
+                    const html = `
+                        <div class="${itemClass}">
+                            <div style="display:flex; justify-content: space-between;">
+                                <div style="flex: 1;">
+                                    <div style="font-weight:bold; color:var(--text-color); margin-bottom: 2px;">${a.cognome} ${a.nome}</div>
+                                    <div style="font-size:11px; color:#666; margin-bottom: 8px;">${a.mansione} | Mat: ${a.matricola} | Tel: ${a.telefono}</div>
+                                    ${corpoHTML}
+                                    ${noteHTML}
+                                </div>
+                                <div class="contact-actions" style="flex-direction:column; justify-content:center; padding-left: 10px;">
+                                    ${actionsHTML}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    if (isSuggested) containerSug.innerHTML += html;
+                    else containerRes.innerHTML += html;
+                });
+
+                divSugContainer.style.display = suggeriti > 0 ? 'block' : 'none';
+                if (annunci.length === 0) containerRes.innerHTML = "<p style='color:#666;'>Nessun annuncio in bacheca.</p>";
+
+            } catch(e) { containerRes.innerHTML = "<p>Errore caricamento bacheca: " + e.message + "</p>"; }
+        }
+
+        window.cancellaAnnuncio = async function(id) {
+            if(!confirm("Vuoi cancellare questo annuncio?")) return;
+            await deleteDoc(doc(db, "bacheca_turni", id));
+            checkStato();
         };
-        window.controllaNotificheBacheca();
+
     </script>
 </body>
 </html>
