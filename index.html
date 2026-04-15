@@ -6,7 +6,7 @@
     <title>Utility</title>
 
     <script>
-        const APP_VERSION = "1.2"; 
+        const APP_VERSION = "1.3"; 
         if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
             if ('caches' in window) caches.keys().then((names) => names.forEach(name => caches.delete(name)));
             if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach(r => r.unregister()));
@@ -50,7 +50,7 @@
         
         /* DASHBOARD SETTIMANALE */
         .dashboard-settimanale { display: flex; gap: 10px; width: 100%; max-width: 400px; overflow-x: auto; padding: 10px 5px; margin-bottom: 20px; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; }
-        .day-card { flex: 0 0 95px; background: white; padding: 12px 8px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; cursor: pointer; border: 2px solid transparent; scroll-snap-align: start; transition: 0.2s; }
+        .day-card { flex: 0 0 95px; background: white; padding: 12px 8px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; cursor: pointer; border: 2px solid transparent; scroll-snap-align: start; transition: 0.2s; position: relative;}
         .day-card.today { border-color: var(--success); background: #f0fff4; }
         .day-card .date { font-size: 10px; color: #888; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
         .day-card .shift { font-weight: 800; font-size: 18px; color: var(--primary); }
@@ -65,6 +65,7 @@
         #editModal, #altroModal, #imageModal, #profileModal, #authModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
         .modal-content { background: white; padding: 25px; border-radius: 20px; width: 100%; max-width: 380px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; max-height: 90vh; overflow-y: auto; }
         .btn-modal { border: none; border-radius: 12px; padding: 15px; cursor: pointer; font-weight: bold; font-size: 15px; width: 100%; margin-top: 10px; color: white; }
+        .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white;}
         
         .color-circle { width: 35px; height: 35px; border-radius: 50%; display: inline-block; margin: 5px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .color-circle.selected { border: 3px solid #32325d; transform: scale(1.1); }
@@ -117,8 +118,11 @@
         <div class="modal-content">
             <h3 id="modalDate" style="margin-top:0;">Data</h3>
             <div id="infoTurniArea" style="font-size:0.9em; margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:10px; text-align:left; color:#525f7f; display:none;"></div>
-            <button id="btnVisualizzaTurno" class="btn-modal" style="background: #2dce89; display: none;" onclick="apriImmagineTurno()">Mostra Immagine Turno</button>
+            
+            <button id="btnVisualizzaTurno" class="btn-modal" style="background: transparent; color: var(--primary); border: 2px solid var(--primary); margin-bottom: 10px; display: none;" onclick="apriImmagineTurno()">🖼️ Mostra Immagine Turno</button>
+            
             <input type="text" id="singleTurnoSelect" class="input-field" placeholder="Inserisci il turno (es. FER)" oninput="this.value = this.value.toUpperCase(); document.getElementById('btnSalvaCambio').disabled=false;">
+            
             <button id="btnSalvaCambio" class="btn-modal" style="background: #32325d" onclick="salvaCambioSingolo()" disabled>Salva Cambio</button>
             <button class="btn-modal" style="background: #adb5bd;" onclick="resetGiornoSingolo()">Ripristina Originale</button>
             <button class="btn-modal" style="background: #11cdef;" onclick="apriAltroModal()">Altro (Note, Straord, Colore...)</button>
@@ -153,11 +157,18 @@
         </div>
     </div>
 
-    <div id="imageModal" style="display:none;" onclick="if(event.target.id==='imageModal'||event.target.id==='imageFlexContainer') chiudiImageModal()">
-        <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%;">
-            <img id="turnoImage" src="" style="max-width: 90%; max-height: 80vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-            <button class="btn-modal" style="width:auto; padding:10px 20px; background:#11cdef;" onclick="chiudiImageModal()">Chiudi</button>
+    <div id="imageModal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); overflow: hidden; backdrop-filter: blur(5px);" onclick="chiudiImageModalSeSfondo(event)">
+        <div style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; font-size: 35px; color: white; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10001;" onclick="chiudiImageModal()">&times;</div>
+        
+        <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px; padding-bottom: 80px; position: relative;">
+            <img id="turnoImage" src="" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain;">
+            
+            <div id="imageBanner" style="position: relative; z-index: 10001; margin-top: 15px; background: rgba(0,0,0,0.7); color: #fff; padding: 10px 20px; border-radius: 12px; font-size: 13px; text-align: center; max-width: 90%; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                ⚠️ Controllare sempre i turni ufficiali e la presenza di eventuali varianti ai turni.
+            </div>
         </div>
+        
+        <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #11cdef; color: white; border: none; padding: 12px 24px; border-radius: 20px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 10001;">📥 Scarica</button>
     </div>
 
     <div id="profileModal">
@@ -214,38 +225,111 @@
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
-        // --- CORE LOGICA TURNI (Sincronizzata con calendario.html) ---
-        const VERSIONE_TURNI = "1.0.1";
+        // --- CORE LOGICA TURNI (Sincronizzata con calendario) ---
         const DATA_INIZIO_NUOVI_TURNI = "2026-03-28";
+        const LISTA_FILE_INFO = ["info_turni_2026-03-02.json", "info_turni_2026-03-28.json"];
+        const LISTA_FILE_ROT = ["rotazioni_2026-03-02.json", "rotazioni_2026-03-28.json"];
+        
         let state = JSON.parse(localStorage.getItem('myTurniApp')) || { variazioni: {}, setupStep: 0, dbCache: {}, rotCache: {} };
+        if (!state.variazioni) state.variazioni = {};
+        
         let localDbCache = {}; 
+        let localRotCache = {};
+        let dbInUso = null;
+        let dataAttivaDb = "";
         let selectedDate = ""; 
         let tempColoreAltro = "";
+        let currentImagePath = "";
+        let imgBaseFallback = "";
+        let pzInstance = null;
 
         const stringToNum = (s) => Math.floor(Date.UTC(s.split('-')[0], s.split('-')[1]-1, s.split('-')[2]) / 86400000);
         const dateToLocalISO = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
         const creaDataSicura = (s) => new Date(s.split('-')[0], s.split('-')[1] - 1, s.split('-')[2], 12, 0, 0);
 
-        async function caricaDatiEsterni() {
-            const files = ["info_turni_2026-03-02.json", "info_turni_2026-03-28.json", "rotazioni_2026-03-02.json", "rotazioni_2026-03-28.json"];
-            for (let f of files) {
-                try {
-                    const res = await fetch(f + "?v=" + Date.now());
-                    if (res.ok) {
-                        const data = await res.json();
-                        const date = f.match(/\d{4}-\d{2}-\d{2}/)[0];
-                        if (f.startsWith('info')) state.dbCache[date] = data;
-                        if (f.startsWith('rot')) state.rotCache[date] = data;
-                    }
-                } catch(e){}
+        async function precaricaTuttiDB() {
+            for (let file of LISTA_FILE_INFO) {
+                const match = file.match(/\d{4}-\d{2}-\d{2}/);
+                if (match) { try { const res = await fetch(file + "?v=" + Date.now()); if (res.ok) localDbCache[match[0]] = await res.json(); } catch(e) {} }
+            }
+            for (let file of LISTA_FILE_ROT) {
+                const match = file.match(/\d{4}-\d{2}-\d{2}/);
+                if (match) { try { const res = await fetch(file + "?v=" + Date.now()); if (res.ok) localRotCache[match[0]] = await res.json(); } catch(e) {} }
             }
         }
 
+        function caricaDbCorrenteSincrono(dateStr) {
+            const dateChiavi = Object.keys(localDbCache).sort();
+            if (dateChiavi.length === 0) return null;
+            const dSelezionata = stringToNum(dateStr);
+            let dataTrovata = dateChiavi[0];
+            let dbTrovato = localDbCache[dataTrovata];
+            for (let i = dateChiavi.length - 1; i >= 0; i--) { 
+                if (dSelezionata >= stringToNum(dateChiavi[i])) { dataTrovata = dateChiavi[i]; dbTrovato = localDbCache[dateChiavi[i]]; break; } 
+            }
+            dbInUso = dbTrovato;
+            dataAttivaDb = dataTrovata;
+            return { db: dbTrovato, dataDb: dataTrovata };
+        }
+
+        function trovaChiaveEsatta(db, codiceBase, dateStr) {
+            if (!db || !codiceBase) return codiceBase;
+            let codiciDaCercare = [codiceBase];
+            
+            let matchB = codiceBase.match(/^([1-9])B(\d{2})$/);
+            if (matchB) {
+                let linea = matchB[1], finale = matchB[2];
+                let letteraPilota = (linea === '1' || linea === '2') ? 'C' : 'P';
+                let regex = new RegExp(`^${linea}[A-Z]${finale}$`);
+                let trovati = Object.keys(db).filter(k => regex.test(k));
+                if (trovati.length > 0) codiciDaCercare.push(...trovati); else codiciDaCercare.push(`${linea}${letteraPilota}${finale}`);
+            } else {
+                let match50 = codiceBase.match(/^([A-Z0-9]+?)(\d{2})$/);
+                if (match50) {
+                    let pref = match50[1], num = parseInt(match50[2], 10);
+                    if (num >= 50) codiciDaCercare.push(pref + String(num - 50).padStart(2, '0'));
+                }
+            }
+
+            let targetDay = creaDataSicura(dateStr).getDay(); 
+            targetDay = targetDay === 0 ? 7 : targetDay; 
+            const dayMap = { "LUN": 1, "MAR": 2, "MER": 3, "GIO": 4, "VEN": 5, "SAB": 6, "DOM": 7 };
+
+            for (let codCercato of codiciDaCercare) {
+                let keys = Object.keys(db).filter(k => k === codCercato || k.startsWith(codCercato + "_"));
+                let exactMatch = null, genericMatch = null;
+                for (let k of keys) {
+                    if (k === codCercato) { genericMatch = k; continue; }
+                    let suffix = k.substring(codCercato.length + 1); 
+                    if (suffix.includes("-")) {
+                        let parts = suffix.split("-");
+                        if (parts.length === 2 && dayMap[parts[0]] && dayMap[parts[1]]) {
+                            let start = dayMap[parts[0]], end = dayMap[parts[1]];
+                            if (start <= end) { if (targetDay >= start && targetDay <= end) exactMatch = k; } 
+                            else { if (targetDay >= start || targetDay <= end) exactMatch = k; }
+                        }
+                    } else { if (dayMap[suffix] && dayMap[suffix] === targetDay) exactMatch = k; }
+                }
+                if (exactMatch) return exactMatch;
+                if (genericMatch) return genericMatch;
+            }
+            return codiceBase; 
+        }
+
+        function formatTimeForInput(timeStr) {
+            if (!timeStr) return "";
+            let parts = timeStr.replace('.', ':').split(':');
+            if (parts.length >= 2) return `${parts[0].trim().padStart(2, '0')}:${parts[1].trim().padStart(2, '0')}`;
+            return timeStr;
+        }
+
+        // --- CALCOLO ROTAZIONI ---
         function isGiornoRiposo(dStr) {
             if (state.variazioni[dStr] === "RI" || state.variazioni[dStr] === "RIPOSO" || state.variazioni[dStr] === "AL") return true;
-            let cfg = (state.history && stringToNum(dStr) < stringToNum(DATA_INIZIO_NUOVI_TURNI)) ? state.history : state;
-            if (!cfg.riposoStart) return false;
-            let curr = stringToNum(dStr), ref = stringToNum(cfg.riposoStart);
+            let curr = stringToNum(dStr);
+            let cfg = (state.history && curr < stringToNum(DATA_INIZIO_NUOVI_TURNI)) ? state.history : state;
+            if (!cfg || !cfg.riposoStart) return false;
+            let ref = stringToNum(cfg.riposoStart);
             if (cfg.depositoAttivo === 'disp_det') return (((curr - ref) % 6 + 6) % 6 === 0);
             let pos = ((curr - ref + 6) % 15 + 15) % 15;
             return (pos === 6 || pos === 13 || pos === 14);
@@ -256,17 +340,19 @@
             if (isGiornoRiposo(dStr)) return "RI";
             let curr = stringToNum(dStr);
             let cfg = (state.history && curr < stringToNum(DATA_INIZIO_NUOVI_TURNI)) ? state.history : state;
-            if (!cfg.depositoAttivo || cfg.depositoAttivo.startsWith('disp_')) return "DISP";
+            if (!cfg || !cfg.depositoAttivo || cfg.depositoAttivo.startsWith('disp_')) return "DISP";
             
-            const dateChiavi = Object.keys(state.rotCache || {}).sort();
+            const dateChiavi = Object.keys(localRotCache).sort();
             let rotList = [];
-            for (let i = dateChiavi.length - 1; i >= 0; i--) { if (curr >= stringToNum(dateChiavi[i])) { rotList = state.rotCache[dateChiavi[i]][cfg.depositoAttivo] || []; break; } }
+            for (let i = dateChiavi.length - 1; i >= 0; i--) { if (curr >= stringToNum(dateChiavi[i])) { rotList = localRotCache[dateChiavi[i]][cfg.depositoAttivo] || []; break; } }
             if (rotList.length === 0) return "DISP";
 
             let activeCfg = (state.futureConfig && curr >= stringToNum(state.futureConfig.dataInizio)) ? { start: state.futureConfig.dataInizio, idx: state.futureConfig.turnoIndex } : { start: cfg.rotazioneStart, idx: cfg.turnoIndex };
             if(!activeCfg.start) return "DISP";
+            
             let refRot = stringToNum(activeCfg.start), w = 0;
             if (curr >= refRot) { for (let j = refRot; j < curr; j++) { if (!isGiornoRiposo(dateToLocalISO(creaDataSicura(dateToLocalISO(new Date(j * 86400000)))))) w++; } }
+            else { for (let j = curr; j < refRot; j++) { if (!isGiornoRiposo(dateToLocalISO(creaDataSicura(dateToLocalISO(new Date(j * 86400000)))))) w--; } }
             
             let expanded = [];
             rotList.forEach(t => { if(t.includes('+')) { expanded.push(t.split('+')[0].trim(), t.split('+')[1].trim()); } else { expanded.push(t, t); }});
@@ -285,74 +371,180 @@
                 let dStr = dateToLocalISO(d);
                 let t = getTurnoGiorno(dStr);
                 let isToday = i === 0;
+                let colorBg = (state.colori && state.colori[dStr]) ? state.colori[dStr] : "";
+                
                 let card = document.createElement('div');
                 card.className = `day-card ${isToday ? 'today' : ''}`;
                 card.onclick = () => window.gestisciInterazione(dStr);
+                if(colorBg) card.style.borderTop = `5px solid ${colorBg}`;
+                
                 card.innerHTML = `<div class="date">${isToday ? 'Oggi' : d.toLocaleDateString('it-IT', {weekday:'short', day:'numeric'})}</div><div class="shift">${t}</div>`;
                 container.appendChild(card);
             }
         };
 
-        // --- INTERAZIONI ---
-        window.gestisciInterazione = async (date) => {
+        // --- GESTIONE INTERAZIONI MODALE ---
+        window.gestisciInterazione = (date) => {
             selectedDate = date;
-            document.getElementById('modalDate').innerText = new Date(date).toLocaleDateString('it-IT', {day:'numeric', month:'long'});
-            let t = getTurnoGiorno(date);
-            document.getElementById('infoTurniArea').innerHTML = `<strong>Turno attuale:</strong> ${t}`;
-            document.getElementById('infoTurniArea').style.display = "block";
-            document.getElementById('singleTurnoSelect').value = "";
+            document.getElementById('modalDate').innerText = new Date(date).toLocaleDateString('it-IT', {weekday: 'long', day:'numeric', month:'long', year:'numeric'}).toUpperCase();
+            
+            let baseTurno = getTurnoGiorno(date);
+            document.getElementById('singleTurnoSelect').value = state.variazioni[date] || "";
+            document.getElementById('singleTurnoSelect').placeholder = `Originale: ${baseTurno}`;
             document.getElementById('btnSalvaCambio').disabled = true;
+
+            const infoArea = document.getElementById('infoTurniArea');
+            infoArea.style.display = 'block'; infoArea.innerHTML = "";
+
+            let noteHtml = (state.note && state.note[date]) ? `<div style="background:#fff3cd; color:#856404; padding:8px; border-radius:8px; margin-bottom:10px; font-size:13px; border-left:3px solid #ffc107;"><b>Note:</b> ${state.note[date]}</div>` : "";
+            let straordHtml = (state.straordinari && state.straordinari[date]) ? `<div style="background:#cce5ff; color:#004085; padding:8px; border-radius:8px; margin-bottom:10px; font-size:13px; border-left:3px solid #0056b3;"><b>Straordinario:</b> ${state.straordinari[date].ore}h ${state.straordinari[date].minuti}m</div>` : "";
+            let sospesoHtml = (state.sospesoRiposo && state.sospesoRiposo[date]) ? `<div style="background:#f8d7da; color:#721c24; padding:8px; border-radius:8px; margin-bottom:10px; font-size:13px; border-left:3px solid #dc3545;"><b>Sospeso Riposo</b></div>` : "";
+
+            let turnoDaCercare = state.variazioni[date] || baseTurno;
+            let isRiposo = (turnoDaCercare === 'RI' || turnoDaCercare === 'RIPOSO' || turnoDaCercare === 'AL' || turnoDaCercare === 'DISP' || turnoDaCercare === 'NESSUN TURNO');
+
+            if (isRiposo) {
+                infoArea.innerHTML = `${noteHtml}${straordHtml}${sospesoHtml}<div style="font-size:16px; font-weight:bold; color:var(--text-color); text-align:center; margin:10px 0;">🏖️ ${turnoDaCercare}</div>`;
+                document.getElementById('btnVisualizzaTurno').style.display = 'none';
+            } else {
+                caricaDbCorrenteSincrono(date);
+                let chiaveEsatta = trovaChiaveEsatta(dbInUso, turnoDaCercare, date);
+                let dettagli = dbInUso ? dbInUso[chiaveEsatta] : null;
+
+                if (dettagli) {
+                    let dHTML = `${noteHtml}${straordHtml}${sospesoHtml}
+                        <div style="font-size:15px; font-weight:bold; color:var(--primary); margin-bottom:8px;">Turno: ${chiaveEsatta}</div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><b>Inizio:</b> ${formatTimeForInput(dettagli.inizio)}</span><span><b>Fine:</b> ${formatTimeForInput(dettagli.fine)}</span></div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:12px; color:#666;"><span><b>Da:</b> ${dettagli.luogoInizio}</span><span><b>A:</b> ${dettagli.luogoFine}</span></div>`;
+                    if(dettagli.varianti && dettagli.varianti.length > 0) dHTML += `<div style="font-size:11px; color:#d39e00; background:#fff3cd; padding:5px; border-radius:5px; margin-top:5px;">⚠️ Varianti presenti! Controlla l'immagine.</div>`;
+                    infoArea.innerHTML = dHTML;
+                } else {
+                    infoArea.innerHTML = `${noteHtml}${straordHtml}${sospesoHtml}<strong>Turno:</strong> ${turnoDaCercare} (Dettagli non trovati)`;
+                }
+                document.getElementById('btnVisualizzaTurno').style.display = 'block';
+            }
+
+            // Setup Altro Modal
+            document.getElementById('checkSospesoRiposoAltro').checked = !!(state.sospesoRiposo && state.sospesoRiposo[date]);
+            document.getElementById('notaAltro').value = (state.note && state.note[date]) ? state.note[date] : "";
+            if (state.straordinari && state.straordinari[date]) {
+                document.getElementById('checkStraordinarioAltro').checked = true;
+                document.getElementById('straordinarioInputsAltro').style.display = 'flex';
+                document.getElementById('oreStraordAltro').value = state.straordinari[date].ore || ""; document.getElementById('minutiStraordAltro').value = state.straordinari[date].minuti || "";
+            } else {
+                document.getElementById('checkStraordinarioAltro').checked = false;
+                document.getElementById('straordinarioInputsAltro').style.display = 'none';
+                document.getElementById('oreStraordAltro').value = ""; document.getElementById('minutiStraordAltro').value = "";
+            }
+            
+            document.querySelectorAll('.color-circle').forEach(c => c.classList.remove('selected'));
+            tempColoreAltro = (state.colori && state.colori[date]) ? state.colori[date] : "";
+            if (tempColoreAltro) { let colEl = document.querySelector(`.color-circle[data-color="${tempColoreAltro}"]`); if (colEl) colEl.classList.add('selected'); }
+
             document.getElementById('editModal').style.display = 'flex';
-            document.getElementById('btnVisualizzaTurno').style.display = (t!=='RI' && t!=='DISP') ? 'block' : 'none';
         };
 
         window.chiudiEdit = () => document.getElementById('editModal').style.display = 'none';
         window.apriAltroModal = () => { document.getElementById('editModal').style.display = 'none'; document.getElementById('altroModal').style.display = 'flex'; };
         window.chiudiAltroModal = () => { document.getElementById('altroModal').style.display = 'none'; document.getElementById('editModal').style.display = 'flex'; };
 
-        window.salvaCambioSingolo = () => {
-            let val = document.getElementById('singleTurnoSelect').value.trim().toUpperCase();
-            if(val) state.variazioni[selectedDate] = val;
+        window.salvaCambioSingolo = () => { let val = document.getElementById('singleTurnoSelect').value.trim().toUpperCase(); if(val) state.variazioni[selectedDate] = val; window.salvaERicarica(); };
+        window.resetGiornoSingolo = () => { delete state.variazioni[selectedDate]; window.salvaERicarica(); };
+
+        window.salvaAltro = () => {
+            if(!state.note) state.note = {}; if(!state.sospesoRiposo) state.sospesoRiposo = {}; if(!state.straordinari) state.straordinari = {}; if(!state.colori) state.colori = {};
+            if(document.getElementById('checkSospesoRiposoAltro').checked) state.sospesoRiposo[selectedDate] = true; else delete state.sospesoRiposo[selectedDate];
+            let valNote = document.getElementById('notaAltro').value.trim();
+            if(valNote) state.note[selectedDate] = valNote; else delete state.note[selectedDate];
+            if(document.getElementById('checkStraordinarioAltro').checked) {
+                let ore = parseInt(document.getElementById('oreStraordAltro').value) || 0, min = parseInt(document.getElementById('minutiStraordAltro').value) || 0;
+                if(ore > 0 || min > 0) state.straordinari[selectedDate] = {ore, minuti: min}; else delete state.straordinari[selectedDate];
+            } else { delete state.straordinari[selectedDate]; }
+            if(tempColoreAltro) state.colori[selectedDate] = tempColoreAltro; else delete state.colori[selectedDate];
             window.salvaERicarica();
         };
 
-        window.resetGiornoSingolo = () => { delete state.variazioni[selectedDate]; window.salvaERicarica(); };
+        window.selezionaColoreAltro = (color, el) => {
+            if (el.classList.contains('selected')) { el.classList.remove('selected'); tempColoreAltro = ""; }
+            else { document.querySelectorAll('.color-circle').forEach(c => c.classList.remove('selected')); el.classList.add('selected'); tempColoreAltro = color; }
+        };
 
         window.salvaERicarica = async () => {
             state.lastUpdate = Date.now();
             localStorage.setItem('myTurniApp', JSON.stringify(state));
             const user = auth.currentUser;
-            if (user) await setDoc(doc(db, "utenti", user.uid), state, { merge: true });
+            if (user) { let st = {...state}; delete st.dbCache; delete st.rotCache; await setDoc(doc(db, "utenti", user.uid), st, { merge: true }); }
             location.reload();
         };
 
-        // --- AUTH & PROFILE ---
-        window.loginGoogle = () => signInWithPopup(auth, provider);
-        window.loginEmail = async () => {
-            try { await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passwordInput').value); }
-            catch(e) { document.getElementById('authError').innerText="Email o Password errata."; document.getElementById('authError').style.display='block'; }
+        // --- IMMAGINI E ZOOM ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            await precaricaTuttiDB();
+            window.disegnaDashboard();
+
+            const imgElem = document.getElementById('turnoImage');
+            if (typeof Panzoom !== 'undefined') {
+                pzInstance = Panzoom(imgElem, { maxScale: 5, minScale: 1 });
+                document.getElementById('imageFlexContainer').addEventListener('wheel', pzInstance.zoomWithWheel);
+                let isPinching = false, lastTap = 0; 
+                imgElem.addEventListener('touchstart', e => { if(e.touches.length > 1) isPinching = true; });
+                imgElem.addEventListener('touchend', e => {
+                    if (isPinching) { if (e.touches.length === 0) setTimeout(() => isPinching = false, 300); return; }
+                    let ct = Date.now(); if (ct - lastTap < 300 && ct - lastTap > 0) { if(pzInstance.getScale() < 1.1) pzInstance.zoom(1.75, {animate: true}); else pzInstance.reset({animate:true}); if (e.cancelable) e.preventDefault(); }
+                    lastTap = ct;
+                });
+                imgElem.addEventListener('dblclick', () => { if(pzInstance.getScale() < 1.1) pzInstance.zoom(1.75, {animate: true}); else pzInstance.reset({animate:true}); });
+            }
+        });
+
+        window.apriImmagineTurno = () => {
+            let baseTurno = state.variazioni[selectedDate] || getTurnoGiorno(selectedDate);
+            let codicePulito = baseTurno.toUpperCase().trim();
+            caricaDbCorrenteSincrono(selectedDate);
+            let dataAttiva = dataAttivaDb || "2026-03-02";
+            let chiaveTrovata = trovaChiaveEsatta(dbInUso, codicePulito, selectedDate);
+
+            if (chiaveTrovata && chiaveTrovata !== codicePulito && dbInUso && dbInUso[chiaveTrovata]) { currentImagePath = `turni_${dataAttiva}/${chiaveTrovata}.jpg`; imgBaseFallback = `turni_${dataAttiva}/${codicePulito}.jpg`; } 
+            else { currentImagePath = `turni_${dataAttiva}/${codicePulito}.jpg`; imgBaseFallback = ""; }
+            
+            let imgElement = document.getElementById('turnoImage');
+            imgElement.onerror = window.erroreImmagine; 
+            imgElement.src = currentImagePath; 
+            if (pzInstance) pzInstance.reset();
+            document.getElementById('imageModal').style.display = 'block'; 
         };
+
+        window.erroreImmagine = () => { 
+            let imgElement = document.getElementById('turnoImage'); 
+            if (imgBaseFallback) { currentImagePath = imgBaseFallback; imgElement.src = imgBaseFallback; imgBaseFallback = ""; } 
+            else { imgElement.onerror = null; alert("L'immagine del turno non è stata trovata."); chiudiImageModal(); } 
+        };
+
+        window.chiudiImageModalSeSfondo = (e) => { if(e.target.id==='imageModal' || e.target.id==='imageFlexContainer') window.chiudiImageModal(); };
+        window.chiudiImageModal = () => document.getElementById('imageModal').style.display='none';
+        window.scaricaImmagineTurno = () => { if (!currentImagePath) return; const a = document.createElement('a'); a.href = currentImagePath; a.download = currentImagePath.split('/').pop(); document.body.appendChild(a); a.click(); document.body.removeChild(a); };
+
+        // --- AUTH E PROFILO ---
+        window.loginGoogle = () => signInWithPopup(auth, provider);
+        window.loginEmail = async () => { try { await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passwordInput').value); } catch(e) { document.getElementById('authError').innerText="Email o Password errata."; document.getElementById('authError').style.display='block'; } };
         window.registraEmail = () => createUserWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passwordInput').value);
         window.logout = () => { signOut(auth); location.reload(); };
 
         onAuthStateChanged(auth, async (user) => {
-            const btnLogin = document.getElementById('btnOpenLogin');
-            const btnProfile = document.getElementById('btnOpenProfile');
+            const btnLogin = document.getElementById('btnOpenLogin'); const btnProfile = document.getElementById('btnOpenProfile');
             if (user) {
                 btnLogin.style.display = 'none'; btnProfile.style.display = 'block';
                 document.getElementById('user-status').innerHTML = `☁️ Online`; document.getElementById('user-status').style.display='block';
                 const docSnap = await getDoc(doc(db, "utenti", user.uid));
                 if (docSnap.exists()) {
                     let cloudData = docSnap.data();
-                    if(cloudData.lastUpdate > state.lastUpdate) { state = cloudData; localStorage.setItem('myTurniApp', JSON.stringify(state)); }
-                    document.getElementById('profileNome').value = state.nome || '';
-                    document.getElementById('profileCognome').value = state.cognome || '';
-                    document.getElementById('profileSoprannome').value = state.soprannome || '';
+                    if(cloudData.lastUpdate > state.lastUpdate) { state = cloudData; localStorage.setItem('myTurniApp', JSON.stringify(state)); window.disegnaDashboard(); }
+                    document.getElementById('profileNome').value = state.nome || ''; document.getElementById('profileCognome').value = state.cognome || '';
+                    document.getElementById('profileSoprannome').value = state.soprannome || ''; document.getElementById('profileMansione').value = state.mansione || '';
+                    document.getElementById('profileMatricola').value = state.matricola || ''; document.getElementById('profileTelefono').value = state.telefono || '';
                     if (state.depositoAttivo?.includes('nove')) document.getElementById('rotazioni-btn').style.display = 'block';
                 }
             } else { btnLogin.style.display = 'block'; }
-            await caricaDatiEsterni();
-            window.disegnaDashboard();
         });
 
         window.salvaProfilo = async () => {
@@ -362,17 +554,19 @@
             alert("Profilo Salvato!"); document.getElementById('profileModal').style.display='none';
         };
 
-        // --- IMMAGINI ---
-        window.apriImmagineTurno = () => {
-            let t = getTurnoGiorno(selectedDate);
-            let img = document.getElementById('turnoImage');
-            const dateChiavi = Object.keys(state.dbCache || {}).sort();
-            let dataAttiva = dateChiavi[0];
-            for (let i = dateChiavi.length - 1; i >= 0; i--) { if (stringToNum(selectedDate) >= stringToNum(dateChiavi[i])) { dataAttiva = dateChiavi[i]; break; } }
-            img.src = `turni_${dataAttiva}/${t}.jpg`;
-            document.getElementById('imageModal').style.display='flex';
+        window.controllaNotificheBacheca = async () => {
+            try {
+                const ultimoAccesso = parseInt(localStorage.getItem('ultimo_accesso_bacheca')) || 0;
+                const snap = await getDocs(collection(db, "bacheca_utility"));
+                let messaggiNonLetti = 0;
+                snap.forEach(d => { if (d.data().timestamp > ultimoAccesso) messaggiNonLetti++; });
+                if (messaggiNonLetti > 0) {
+                    const badge = document.getElementById('badge-messaggi');
+                    badge.innerText = messaggiNonLetti; badge.style.display = 'flex';
+                }
+            } catch (e) {}
         };
-        window.chiudiImageModal = () => document.getElementById('imageModal').style.display='none';
+        window.controllaNotificheBacheca();
     </script>
 </body>
 </html>
