@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Utility</title>
+
+    <script>
+        const APP_VERSION = "1.2"; 
+        if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
+            if ('caches' in window) caches.keys().then((names) => names.forEach(name => caches.delete(name)));
+            if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach(r => r.unregister()));
+            localStorage.setItem('app_version_cache', APP_VERSION);
+            window.location.reload(true);
+        }
+    </script>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const datiImportati = urlParams.get('dati');
+        const codiceImportato = urlParams.get('codice');
+        if (datiImportati || codiceImportato) {
+            if (datiImportati) localStorage.setItem('myTurniApp', datiImportati);
+            if (codiceImportato) localStorage.setItem('auth_rotazioni', codiceImportato);
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    </script>
+
+    <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <meta name="theme-color" content="#0056b3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <style>
+        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #dc3545; }
+        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: flex-start; margin-top: 10px; margin-bottom: 30px; position: relative; }
+        .header-side { flex: 1; display: flex; align-items: center; }
+        .header-side.right { justify-content: flex-end; }
+        .header-center { display: flex; flex-direction: column; align-items: center; flex: 2; }
+        h2 { margin: 0; color: var(--primary); font-size: 30px; font-weight: bold; text-align: center; user-select: none; -webkit-user-select: none; cursor: pointer; }
+        #install-btn { display: none; background-color: var(--success); color: white; border: none; padding: 8px 14px; font-size: 13px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); white-space: nowrap; animation: pulse 2s infinite; }
+        .btn-login { background-color: #ea4335; color: white; border: none; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none; }
+        .btn-header-alt { background-color: var(--primary); color: white; border: none; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none; }
+        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); } 50% { transform: scale(1.05); box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4); } 100% { transform: scale(1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); } }
+        
+        /* DASHBOARD SETTIMANALE */
+        .dashboard-settimanale { display: flex; gap: 10px; width: 100%; max-width: 400px; overflow-x: auto; padding: 10px 5px; margin-bottom: 20px; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; }
+        .day-card { flex: 0 0 95px; background: white; padding: 12px 8px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; cursor: pointer; border: 2px solid transparent; scroll-snap-align: start; transition: 0.2s; }
+        .day-card.today { border-color: var(--success); background: #f0fff4; }
+        .day-card .date { font-size: 10px; color: #888; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+        .day-card .shift { font-weight: 800; font-size: 18px; color: var(--primary); }
+        .day-card .info { font-size: 9px; color: #666; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .day-card:active { transform: scale(0.95); background: #f8f9fa; }
+
+        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 400px; }
+        .menu-btn { background-color: var(--primary); color: white; border: none; padding: 18px; font-size: 18px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s ease; text-align: center; text-decoration: none; display: block; font-weight: 500; }
+        .menu-btn:active { transform: translateY(2px); opacity: 0.9; }
+
+        /* STILI MODALI (CALENDARIO) */
+        #editModal, #altroModal, #imageModal, #profileModal, #authModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
+        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 100%; max-width: 380px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; max-height: 90vh; overflow-y: auto; }
+        .btn-modal { border: none; border-radius: 12px; padding: 15px; cursor: pointer; font-weight: bold; font-size: 15px; width: 100%; margin-top: 10px; color: white; }
+        
+        .color-circle { width: 35px; height: 35px; border-radius: 50%; display: inline-block; margin: 5px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .color-circle.selected { border: 3px solid #32325d; transform: scale(1.1); }
+        .color-yellow { background: #f1c40f; } .color-orange { background: #fd7e14; } .color-red { background: #f5365c; } .color-pink { background: #e83e8c; } 
+        .color-purple { background: #8965e0; } .color-blue { background: #5e72e4; } .color-teal { background: #11cdef; } .color-green { background: #2dce89; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-side">
+            <button id="btnOpenLogin" class="btn-login" onclick="document.getElementById('authModal').style.display='flex'">☁️ Login</button>
+            <button id="btnOpenProfile" class="btn-header-alt" onclick="document.getElementById('profileModal').style.display='flex'">👤 Profilo</button>
+        </div>
+        <div class="header-center">
+            <h2 id="main-title">Utility</h2>
+            <div id="user-status" style="font-size: 11px; color: var(--success); font-weight: bold; display: none; margin-top: 4px;"></div>
+        </div>
+        <div class="header-side right">
+            <button id="install-btn">Installa</button>
+            <div id="icona-bacheca" style="position: relative; cursor: pointer; margin-left: 15px;" onclick="window.location.href='bacheca_utility.html'">
+                <span style="font-size: 26px;">📢</span>
+                <div id="badge-messaggi" style="display: none; position: absolute; top: -5px; right: -8px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: bold; width: 18px; height: 18px; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard-settimanale" class="dashboard-settimanale"></div>
+
+    <div class="menu-grid">
+        <a href="calendario.html" class="menu-btn">📅 Calendario Turni</a>
+        <a href="dati_calendario.html" class="menu-btn">📊 Statistiche e Ore</a>
+        <a href="turni.html" class="menu-btn">🔄 Ricerca Turni e Corse</a>
+        <a href="bacheca_turni.html" class="menu-btn">🔄 Bacheca Scambi</a> 
+        <a href="rubrica.html" class="menu-btn">📞 Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="menu-btn">🌴 Rotazione Ferie</a>
+        <a href="orari.html" class="menu-btn">🕒 Orari Navigazione</a>
+        <a href="rotazioni.html" id="rotazioni-btn" class="menu-btn" style="display:none;">👥 Rotazioni</a>
+        <a href="documenti.html" class="menu-btn">📄 Documenti</a>
+        <a href="link.html" class="menu-btn">🔗 Link Utili</a>
+        <a href="contatti.html" class="menu-btn">📇 Numeri Utili</a>
+        <a href="buoni.html" class="menu-btn">🍝 Buoni Pasto</a>
+        <a href="dds.html" class="menu-btn">📂 Archivio DDS</a>
+        <a href="guida.html" class="menu-btn" style="background-color: #6c757d;">📖 Guida all'uso</a>
+        
+        <a href="admin.html" id="secret-btn" class="menu-btn" style="display:none;">🔒 Admin Panel</a>
+    </div>
+
+    <div id="editModal" onclick="if(event.target.id==='editModal') chiudiEdit()">
+        <div class="modal-content">
+            <h3 id="modalDate" style="margin-top:0;">Data</h3>
+            <div id="infoTurniArea" style="font-size:0.9em; margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:10px; text-align:left; color:#525f7f; display:none;"></div>
+            <button id="btnVisualizzaTurno" class="btn-modal" style="background: #2dce89; display: none;" onclick="apriImmagineTurno()">Mostra Immagine Turno</button>
+            <input type="text" id="singleTurnoSelect" class="input-field" placeholder="Inserisci il turno (es. FER)" oninput="this.value = this.value.toUpperCase(); document.getElementById('btnSalvaCambio').disabled=false;">
+            <button id="btnSalvaCambio" class="btn-modal" style="background: #32325d" onclick="salvaCambioSingolo()" disabled>Salva Cambio</button>
+            <button class="btn-modal" style="background: #adb5bd;" onclick="resetGiornoSingolo()">Ripristina Originale</button>
+            <button class="btn-modal" style="background: #11cdef;" onclick="apriAltroModal()">Altro (Note, Straord, Colore...)</button>
+            <button class="btn-modal" style="background: #f8f9fa; color: #525f7f; border: 1px solid #ddd;" onclick="chiudiEdit()">Chiudi</button>
+        </div>
+    </div>
+
+    <div id="altroModal" onclick="if(event.target.id==='altroModal') chiudiAltroModal()">
+        <div class="modal-content">
+            <h3 style="margin-top:0;">Altre Opzioni</h3>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                <label style="display: flex; align-items: center; font-size: 14px; margin-bottom: 10px; cursor: pointer;">
+                    <input type="checkbox" id="checkSospesoRiposoAltro" style="width: 20px; height: 20px; margin-right: 10px;"> Sospeso Riposo
+                </label>
+                <label style="display: flex; align-items: center; font-size: 14px; margin-bottom: 10px; cursor: pointer;">
+                    <input type="checkbox" id="checkStraordinarioAltro" style="width: 20px; height: 20px; margin-right: 10px;" onchange="document.getElementById('straordinarioInputsAltro').style.display=this.checked?'flex':'none'"> Straordinario
+                </label>
+                <div id="straordinarioInputsAltro" style="display: none; gap: 10px; margin-bottom: 10px;">
+                    <input type="number" id="oreStraordAltro" placeholder="Ore" class="input-field" style="margin:0;">
+                    <input type="number" id="minutiStraordAltro" placeholder="Min" class="input-field" style="margin:0;">
+                </div>
+                <textarea id="notaAltro" placeholder="Note..." class="input-field" style="min-height: 60px;"></textarea>
+            </div>
+            <div style="text-align: center; margin-bottom: 15px;">
+                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreAltro('#f1c40f', this)"></div>
+                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreAltro('#f5365c', this)"></div>
+                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreAltro('#5e72e4', this)"></div>
+                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreAltro('#2dce89', this)"></div>
+            </div>
+            <button class="btn-modal" style="background: #32325d" onclick="salvaAltro()">Salva</button>
+            <button class="btn-modal" style="background: #f8f9fa; color: #525f7f; border: 1px solid #ddd;" onclick="chiudiAltroModal()">Annulla</button>
+        </div>
+    </div>
+
+    <div id="imageModal" style="display:none;" onclick="if(event.target.id==='imageModal'||event.target.id==='imageFlexContainer') chiudiImageModal()">
+        <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%;">
+            <img id="turnoImage" src="" style="max-width: 90%; max-height: 80vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <button class="btn-modal" style="width:auto; padding:10px 20px; background:#11cdef;" onclick="chiudiImageModal()">Chiudi</button>
+        </div>
+    </div>
+
+    <div id="profileModal">
+        <div class="modal-content">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('profileModal').style.display='none'">&times;</span>
+            <h3 style="margin-top: 5px; color: #32325d; text-align: center;">Profilo Utente</h3>
+            <div id="adminBadge">🛠️ Account Amministratore</div>
+            <div id="profileStrikes">⚠️ Revoche rubrica usate: <b id="strikeCount">0</b> su 3</div>
+            <input type="text" id="profileEmail" class="input-field" disabled style="background: #f8f9fa;">
+            <input type="text" id="profileNome" class="input-field" placeholder="Nome">
+            <input type="text" id="profileCognome" class="input-field" placeholder="Cognome">
+            <input type="text" id="profileSoprannome" class="input-field" placeholder="Soprannome (Facoltativo)">
+            <select id="profileMansione" class="input-field">
+                <option value="">-- Seleziona Mansione --</option>
+                <option value="Marinaio">Marinaio</option>
+                <option value="Preposto al comando">Preposto al comando</option>
+                <option value="Comandante">Comandante</option>
+                <option value="Timoniere">Timoniere</option>
+                <option value="Marinaio polivalente">Marinaio polivalente</option>
+                <option value="Direttore di macchina">Direttore di macchina</option>
+            </select>
+            <input type="text" id="profileMatricola" class="input-field" placeholder="Matricola">
+            <input type="tel" id="profileTelefono" class="input-field" placeholder="Telefono">
+            <button id="btnSalvaProfilo" class="btn-modal" style="background: var(--success);" onclick="salvaProfilo()">Salva Modifiche</button>
+            <button class="btn-modal" style="background: #525f7f;" onclick="logout()">Esci (Logout)</button>
+        </div>
+    </div>
+
+    <div id="authModal">
+        <div class="modal-content" style="text-align: center;">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('authModal').style.display='none'">&times;</span>
+            <h3 style="margin-top: 5px; color: #32325d;">Backup Cloud</h3>
+            <input type="email" id="emailInput" placeholder="Email" class="input-field">
+            <input type="password" id="passwordInput" placeholder="Password" class="input-field">
+            <div id="authError" style="color: var(--danger); font-size: 12px; margin-bottom: 10px; font-weight: bold; display: none;"></div>
+            <div style="text-align: right; margin-bottom: 15px;"><a href="#" onclick="recuperaPassword(); return false;" style="font-size: 12px; color: #0056b3; font-weight: bold;">Password dimenticata?</a></div>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button class="btn-modal" style="background: #32325d; margin:0;" onclick="loginEmail()">Accedi</button>
+                <button class="btn-modal" style="background: #11cdef; margin:0;" onclick="registraEmail()">Registrati</button>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 15px 0;">
+            <button class="btn-modal" style="background: #ea4335; margin:0;" onclick="loginGoogle()">☁️ Accedi con Google</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", storageBucket: "utility-haze.firebasestorage.app", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        // --- CORE LOGICA TURNI (Sincronizzata con calendario.html) ---
+        const VERSIONE_TURNI = "1.0.1";
+        const DATA_INIZIO_NUOVI_TURNI = "2026-03-28";
+        let state = JSON.parse(localStorage.getItem('myTurniApp')) || { variazioni: {}, setupStep: 0, dbCache: {}, rotCache: {} };
+        let localDbCache = {}; 
+        let selectedDate = ""; 
+        let tempColoreAltro = "";
+
+        const stringToNum = (s) => Math.floor(Date.UTC(s.split('-')[0], s.split('-')[1]-1, s.split('-')[2]) / 86400000);
+        const dateToLocalISO = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+        const creaDataSicura = (s) => new Date(s.split('-')[0], s.split('-')[1] - 1, s.split('-')[2], 12, 0, 0);
+
+        async function caricaDatiEsterni() {
+            const files = ["info_turni_2026-03-02.json", "info_turni_2026-03-28.json", "rotazioni_2026-03-02.json", "rotazioni_2026-03-28.json"];
+            for (let f of files) {
+                try {
+                    const res = await fetch(f + "?v=" + Date.now());
+                    if (res.ok) {
+                        const data = await res.json();
+                        const date = f.match(/\d{4}-\d{2}-\d{2}/)[0];
+                        if (f.startsWith('info')) state.dbCache[date] = data;
+                        if (f.startsWith('rot')) state.rotCache[date] = data;
+                    }
+                } catch(e){}
+            }
+        }
+
+        function isGiornoRiposo(dStr) {
+            if (state.variazioni[dStr] === "RI" || state.variazioni[dStr] === "RIPOSO" || state.variazioni[dStr] === "AL") return true;
+            let cfg = (state.history && stringToNum(dStr) < stringToNum(DATA_INIZIO_NUOVI_TURNI)) ? state.history : state;
+            if (!cfg.riposoStart) return false;
+            let curr = stringToNum(dStr), ref = stringToNum(cfg.riposoStart);
+            if (cfg.depositoAttivo === 'disp_det') return (((curr - ref) % 6 + 6) % 6 === 0);
+            let pos = ((curr - ref + 6) % 15 + 15) % 15;
+            return (pos === 6 || pos === 13 || pos === 14);
+        }
+
+        function getTurnoGiorno(dStr) {
+            if (state.variazioni[dStr]) return state.variazioni[dStr];
+            if (isGiornoRiposo(dStr)) return "RI";
+            let curr = stringToNum(dStr);
+            let cfg = (state.history && curr < stringToNum(DATA_INIZIO_NUOVI_TURNI)) ? state.history : state;
+            if (!cfg.depositoAttivo || cfg.depositoAttivo.startsWith('disp_')) return "DISP";
+            
+            const dateChiavi = Object.keys(state.rotCache || {}).sort();
+            let rotList = [];
+            for (let i = dateChiavi.length - 1; i >= 0; i--) { if (curr >= stringToNum(dateChiavi[i])) { rotList = state.rotCache[dateChiavi[i]][cfg.depositoAttivo] || []; break; } }
+            if (rotList.length === 0) return "DISP";
+
+            let activeCfg = (state.futureConfig && curr >= stringToNum(state.futureConfig.dataInizio)) ? { start: state.futureConfig.dataInizio, idx: state.futureConfig.turnoIndex } : { start: cfg.rotazioneStart, idx: cfg.turnoIndex };
+            if(!activeCfg.start) return "DISP";
+            let refRot = stringToNum(activeCfg.start), w = 0;
+            if (curr >= refRot) { for (let j = refRot; j < curr; j++) { if (!isGiornoRiposo(dateToLocalISO(creaDataSicura(dateToLocalISO(new Date(j * 86400000)))))) w++; } }
+            
+            let expanded = [];
+            rotList.forEach(t => { if(t.includes('+')) { expanded.push(t.split('+')[0].trim(), t.split('+')[1].trim()); } else { expanded.push(t, t); }});
+            let idxExp = (activeCfg.idx * 2 + w) % expanded.length;
+            if (idxExp < 0) idxExp += expanded.length;
+            return expanded[idxExp];
+        }
+
+        window.disegnaDashboard = () => {
+            const container = document.getElementById('dashboard-settimanale');
+            if (!state.riposoStart) { container.innerHTML = `<a href="calendario.html" class="menu-btn" style="width:100%; background:var(--success)">Configura Calendario</a>`; return; }
+            container.innerHTML = "";
+            let oggi = new Date();
+            for (let i = 0; i < 7; i++) {
+                let d = new Date(oggi); d.setDate(oggi.getDate() + i);
+                let dStr = dateToLocalISO(d);
+                let t = getTurnoGiorno(dStr);
+                let isToday = i === 0;
+                let card = document.createElement('div');
+                card.className = `day-card ${isToday ? 'today' : ''}`;
+                card.onclick = () => window.gestisciInterazione(dStr);
+                card.innerHTML = `<div class="date">${isToday ? 'Oggi' : d.toLocaleDateString('it-IT', {weekday:'short', day:'numeric'})}</div><div class="shift">${t}</div>`;
+                container.appendChild(card);
+            }
+        };
+
+        // --- INTERAZIONI ---
+        window.gestisciInterazione = async (date) => {
+            selectedDate = date;
+            document.getElementById('modalDate').innerText = new Date(date).toLocaleDateString('it-IT', {day:'numeric', month:'long'});
+            let t = getTurnoGiorno(date);
+            document.getElementById('infoTurniArea').innerHTML = `<strong>Turno attuale:</strong> ${t}`;
+            document.getElementById('infoTurniArea').style.display = "block";
+            document.getElementById('singleTurnoSelect').value = "";
+            document.getElementById('btnSalvaCambio').disabled = true;
+            document.getElementById('editModal').style.display = 'flex';
+            document.getElementById('btnVisualizzaTurno').style.display = (t!=='RI' && t!=='DISP') ? 'block' : 'none';
+        };
+
+        window.chiudiEdit = () => document.getElementById('editModal').style.display = 'none';
+        window.apriAltroModal = () => { document.getElementById('editModal').style.display = 'none'; document.getElementById('altroModal').style.display = 'flex'; };
+        window.chiudiAltroModal = () => { document.getElementById('altroModal').style.display = 'none'; document.getElementById('editModal').style.display = 'flex'; };
+
+        window.salvaCambioSingolo = () => {
+            let val = document.getElementById('singleTurnoSelect').value.trim().toUpperCase();
+            if(val) state.variazioni[selectedDate] = val;
+            window.salvaERicarica();
+        };
+
+        window.resetGiornoSingolo = () => { delete state.variazioni[selectedDate]; window.salvaERicarica(); };
+
+        window.salvaERicarica = async () => {
+            state.lastUpdate = Date.now();
+            localStorage.setItem('myTurniApp', JSON.stringify(state));
+            const user = auth.currentUser;
+            if (user) await setDoc(doc(db, "utenti", user.uid), state, { merge: true });
+            location.reload();
+        };
+
+        // --- AUTH & PROFILE ---
+        window.loginGoogle = () => signInWithPopup(auth, provider);
+        window.loginEmail = async () => {
+            try { await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passwordInput').value); }
+            catch(e) { document.getElementById('authError').innerText="Email o Password errata."; document.getElementById('authError').style.display='block'; }
+        };
+        window.registraEmail = () => createUserWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passwordInput').value);
+        window.logout = () => { signOut(auth); location.reload(); };
+
+        onAuthStateChanged(auth, async (user) => {
+            const btnLogin = document.getElementById('btnOpenLogin');
+            const btnProfile = document.getElementById('btnOpenProfile');
+            if (user) {
+                btnLogin.style.display = 'none'; btnProfile.style.display = 'block';
+                document.getElementById('user-status').innerHTML = `☁️ Online`; document.getElementById('user-status').style.display='block';
+                const docSnap = await getDoc(doc(db, "utenti", user.uid));
+                if (docSnap.exists()) {
+                    let cloudData = docSnap.data();
+                    if(cloudData.lastUpdate > state.lastUpdate) { state = cloudData; localStorage.setItem('myTurniApp', JSON.stringify(state)); }
+                    document.getElementById('profileNome').value = state.nome || '';
+                    document.getElementById('profileCognome').value = state.cognome || '';
+                    document.getElementById('profileSoprannome').value = state.soprannome || '';
+                    if (state.depositoAttivo?.includes('nove')) document.getElementById('rotazioni-btn').style.display = 'block';
+                }
+            } else { btnLogin.style.display = 'block'; }
+            await caricaDatiEsterni();
+            window.disegnaDashboard();
+        });
+
+        window.salvaProfilo = async () => {
+            const u = auth.currentUser; if(!u) return;
+            const data = { nome: document.getElementById('profileNome').value, cognome: document.getElementById('profileCognome').value, soprannome: document.getElementById('profileSoprannome').value, mansione: document.getElementById('profileMansione').value, matricola: document.getElementById('profileMatricola').value, telefono: document.getElementById('profileTelefono').value };
+            await setDoc(doc(db, "utenti", u.uid), data, { merge: true });
+            alert("Profilo Salvato!"); document.getElementById('profileModal').style.display='none';
+        };
+
+        // --- IMMAGINI ---
+        window.apriImmagineTurno = () => {
+            let t = getTurnoGiorno(selectedDate);
+            let img = document.getElementById('turnoImage');
+            const dateChiavi = Object.keys(state.dbCache || {}).sort();
+            let dataAttiva = dateChiavi[0];
+            for (let i = dateChiavi.length - 1; i >= 0; i--) { if (stringToNum(selectedDate) >= stringToNum(dateChiavi[i])) { dataAttiva = dateChiavi[i]; break; } }
+            img.src = `turni_${dataAttiva}/${t}.jpg`;
+            document.getElementById('imageModal').style.display='flex';
+        };
+        window.chiudiImageModal = () => document.getElementById('imageModal').style.display='none';
+    </script>
+</body>
+</html>
