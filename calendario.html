@@ -1189,10 +1189,32 @@
 
     // --- CORE ---
     const VERSIONE_TURNI = "1.0.1"; 
-    let VERSIONE_FERIE = "1.0.0"; 
+    let VERSIONE_FERIE = "1.0.0"; // Aggiornata dinamicamente da JSON
     const DATA_INIZIO_NUOVI_TURNI = "2026-03-28"; 
     
     const AVVISO_VARIANTI = true;
+    
+    const RESET_DOPO_AGGIORNAMENTO = {
+        rot_fnove: false,
+        spez_fnove: false,
+        rot_proma: true,
+        spez_proma: false,
+        rot_szaccaria: false,
+        spez_szaccaria: false,
+        rot_lido: false,
+        spez_lido: false,
+        rot_linea14: false,
+        rot_linea14_mb: true,
+        rot_linea13: false,
+        rot_17sn: false,
+        rot_17tr: false,
+        rot_linea12: true,
+        tc_spez_fnove: false,
+        tc_spez_szaccaria: false,
+        tc_spez_lido: false,
+        tc_rot_17sn: false,
+        tc_rot_17tr: false
+    };
 
     let state = JSON.parse(localStorage.getItem('myTurniApp')) || { 
         version: "0", 
@@ -1240,33 +1262,50 @@
         return dataObj.getDate() + ' ' + mese.charAt(0).toUpperCase() + mese.slice(1); 
     }
     
+    // ----------------------------------------------------
+    // MOTORE DI SALVATAGGIO CLOUD AGGIORNATO (ANTI-RACE CONDITION)
+    // ----------------------------------------------------
     function salvaLocal(timestampManuale = null) { 
-        state.lastUpdate = timestampManuale || new Date().getTime(); 
+        state.lastUpdate = timestampManuale || new Date().getTime(); // Marca temporale!
         let copiaDati = JSON.parse(JSON.stringify(state)); 
         delete copiaDati.dbCache; 
         delete copiaDati.rotCache; 
         delete copiaDati.dispCache; 
+        
+        // Salvataggio sul telefono
         localStorage.setItem('myTurniApp', JSON.stringify(copiaDati)); 
+
+        // Invio al cloud
         if (typeof window.syncToCloud === 'function') { 
             window.syncToCloud(copiaDati); 
         }
     }
 
+    // Nuova funzione per fermare il bug della ricarica
     function salvaERicarica(timestampManuale = null) {
-        state.lastUpdate = timestampManuale || new Date().getTime();
+        state.lastUpdate = timestampManuale || new Date().getTime(); // Marca temporale!
         let copiaDati = JSON.parse(JSON.stringify(state));
         delete copiaDati.dbCache;
         delete copiaDati.rotCache;
         delete copiaDati.dispCache;
+
         localStorage.setItem('myTurniApp', JSON.stringify(copiaDati));
-        document.body.style.opacity = '0.6';
+        document.body.style.opacity = '0.6'; // Feedback visivo
+
         if (typeof window.syncToCloud === 'function' && window.utenteLoggato) {
+            // Aspetta che il Cloud riceva il dato (o scade dopo 800ms se offline) per evitare il bounce-back
             Promise.race([
                 window.syncToCloud(copiaDati),
                 new Promise(resolve => setTimeout(resolve, 800))
-            ]).then(() => { location.reload(); });
-        } else { location.reload(); }
+            ]).then(() => {
+                location.reload();
+            });
+        } else {
+            location.reload();
+        }
     }
+    // ----------------------------------------------------
+
 
     function estraiDataDaNome(nome) { 
         const match = nome.match(/\d{4}-\d{2}-\d{2}/); 
@@ -1285,52 +1324,94 @@
 
     function trovaChiaveEsatta(db, codiceBase, dateStr) {
         if (!db || !codiceBase) return codiceBase;
+        
         let codiciDaCercare = [codiceBase];
+        
+        // Regola 1: Linee da 1 a 9 con B (es. 1B01, 4B01)
         let matchB = codiceBase.match(/^([1-9])B(\d{2})$/);
         if (matchB) {
-            let linea = matchB[1]; let finale = matchB[2];
+            let linea = matchB[1];
+            let finale = matchB[2];
             let letteraPilota = (linea === '1' || linea === '2') ? 'C' : 'P';
+            
+            // Cerca prima nel DB se esiste la versione con la lettera corretta 
             let regex = new RegExp(`^${linea}[A-Z]${finale}$`);
             let trovati = Object.keys(db).filter(k => regex.test(k));
-            if (trovati.length > 0) codiciDaCercare.push(...trovati);
-            else codiciDaCercare.push(`${linea}${letteraPilota}${finale}`);
+            if (trovati.length > 0) {
+                codiciDaCercare.push(...trovati);
+            } else {
+                // Fallback usando la regola esplicita C o P
+                codiciDaCercare.push(`${linea}${letteraPilota}${finale}`);
+            }
         } else {
+            // Regola 2: Per TUTTO IL RESTO vale la regola del +50 (es. 1251 -> 1201, M254 -> M204)
             let match50 = codiceBase.match(/^([A-Z0-9]+?)(\d{2})$/);
             if (match50) {
-                let pref = match50[1]; let num = parseInt(match50[2], 10);
-                if (num >= 50) codiciDaCercare.push(pref + String(num - 50).padStart(2, '0'));
+                let pref = match50[1];
+                let num = parseInt(match50[2], 10);
+                if (num >= 50) {
+                    let numPilota = String(num - 50).padStart(2, '0');
+                    codiciDaCercare.push(pref + numPilota);
+                }
             }
         }
+
         let giornoIdx = creaDataSicura(dateStr).getDay(); 
         let targetDay = giornoIdx === 0 ? 7 : giornoIdx; 
         const dayMap = { "LUN": 1, "MAR": 2, "MER": 3, "GIO": 4, "VEN": 5, "SAB": 6, "DOM": 7 };
+
         for (let codCercato of codiciDaCercare) {
             let keys = Object.keys(db).filter(k => k === codCercato || k.startsWith(codCercato + "_"));
-            let exactMatch = null; let genericMatch = null;
+            
+            let exactMatch = null;
+            let genericMatch = null;
+
             for (let k of keys) {
-                if (k === codCercato) { genericMatch = k; continue; }
+                if (k === codCercato) {
+                    genericMatch = k;
+                    continue;
+                }
+                
                 let suffix = k.substring(codCercato.length + 1); 
+                
                 if (suffix.includes("-")) {
                     let parts = suffix.split("-");
                     if (parts.length === 2 && dayMap[parts[0]] && dayMap[parts[1]]) {
-                        let start = dayMap[parts[0]]; let end = dayMap[parts[1]];
-                        if (start <= end) { if (targetDay >= start && targetDay <= end) exactMatch = k; }
-                        else { if (targetDay >= start || targetDay <= end) exactMatch = k; }
+                        let start = dayMap[parts[0]];
+                        let end = dayMap[parts[1]];
+                        
+                        if (start <= end) { 
+                            if (targetDay >= start && targetDay <= end) exactMatch = k;
+                        } else { 
+                            if (targetDay >= start || targetDay <= end) exactMatch = k;
+                        }
                     }
-                } else { if (dayMap[suffix] && dayMap[suffix] === targetDay) exactMatch = k; }
+                } else {
+                    if (dayMap[suffix] && dayMap[suffix] === targetDay) {
+                        exactMatch = k;
+                    }
+                }
             }
             if (exactMatch) return exactMatch;
             if (genericMatch) return genericMatch;
         }
+        
         return codiceBase; 
     }
+ 
 
     function getRotazionePerData(dateStr) {
         const dSelezionata = stringToNum(dateStr);
         const dateChiavi = Object.keys(state.rotCache || {}).sort();
         if (dateChiavi.length === 0) return null;
+        
         let rotCorrente = state.rotCache[dateChiavi[0]]; 
-        for (let i = dateChiavi.length - 1; i >= 0; i--) { if (dSelezionata >= stringToNum(dateChiavi[i])) { rotCorrente = state.rotCache[dateChiavi[i]]; break; } }
+        for (let i = dateChiavi.length - 1; i >= 0; i--) { 
+            if (dSelezionata >= stringToNum(dateChiavi[i])) { 
+                rotCorrente = state.rotCache[dateChiavi[i]]; 
+                break; 
+            } 
+        }
         return rotCorrente;
     }
 
@@ -1338,8 +1419,14 @@
         const dSelezionata = stringToNum(dateStr);
         const dateChiavi = Object.keys(state.dispCache || {}).sort();
         if (dateChiavi.length === 0) return null;
+        
         let dispCorrente = state.dispCache[dateChiavi[0]]; 
-        for (let i = dateChiavi.length - 1; i >= 0; i--) { if (dSelezionata >= stringToNum(dateChiavi[i])) { dispCorrente = state.dispCache[dateChiavi[i]]; break; } }
+        for (let i = dateChiavi.length - 1; i >= 0; i--) { 
+            if (dSelezionata >= stringToNum(dateChiavi[i])) { 
+                dispCorrente = state.dispCache[dateChiavi[i]]; 
+                break; 
+            } 
+        }
         return dispCorrente;
     }
 
@@ -1356,9 +1443,11 @@
         let titleEl = document.querySelector('.fc-toolbar-title');
         let meseTesto = titleEl ? titleEl.innerText.replace(/ /g, "_") : "Calendario";
         const originalWidth = element.style.width;
+        
         element.style.width = '700px';
         calendar.setOption('height', 960); 
         calendar.updateSize();
+        
         const opt = {
             margin: [10, 5, 10, 5], 
             filename: `Turni_${meseTesto}.pdf`,
@@ -1366,8 +1455,10 @@
             html2canvas: { scale: 2, useCORS: true, windowWidth: 800 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
+        
         const buttons = document.querySelectorAll('.fc-button'); 
         buttons.forEach(b => b.style.display = 'none');
+        
         setTimeout(() => {
             html2pdf().set(opt).from(element).save().then(() => {
                 buttons.forEach(b => b.style.display = ''); 
@@ -1378,7 +1469,6 @@
         }, 300);
     }
 
-    // --- NUOVA FUNZIONE CARICAMENTO DATI DINAMICI DA MAPPA ---
     async function caricaDatiEsterniDinamici() {
         try {
             const nocache = "?v=" + new Date().getTime();
@@ -1389,19 +1479,23 @@
 
             // 1. Ferie
             if (albero.includes("rotazione_ferie.json")) {
-                const resFerie = await fetch("rotazione_ferie.json" + nocache);
-                if (resFerie.ok) {
-                    const datiFerie = await resFerie.json();
-                    if (datiFerie.versione) VERSIONE_FERIE = datiFerie.versione;
-                    ROT_FERIE_INV = datiFerie.invernali || [];
-                    ROT_FERIE_EST = datiFerie.estive || [];
-                }
+                try {
+                    const resFerie = await fetch("rotazione_ferie.json" + nocache);
+                    if (resFerie.ok) {
+                        const datiFerie = await resFerie.json();
+                        if (datiFerie.versione) VERSIONE_FERIE = datiFerie.versione;
+                        ROT_FERIE_INV = datiFerie.invernali || [];
+                        ROT_FERIE_EST = datiFerie.estive || [];
+                    }
+                } catch (e) { console.error("Errore ferie", e); }
             }
 
             // 2. Varianti
-            if (albero.includes("presenza_varianti.json")) {
-                const resVar = await fetch("presenza_varianti.json" + nocache);
-                if (resVar.ok) variantiData = await resVar.json();
+            if (AVVISO_VARIANTI && albero.includes("presenza_varianti.json")) {
+                try {
+                    const resVar = await fetch("presenza_varianti.json" + nocache);
+                    if (resVar.ok) variantiData = await resVar.json();
+                } catch (e) { console.error("Errore varianti", e); }
             }
 
             // 3. Cache Dati (Info, Rotazioni, Disponibili)
@@ -1413,51 +1507,117 @@
                 const dataInizio = estraiDataDaNome(file);
                 if (!dataInizio) continue;
 
-                if (file.startsWith("info_turni_")) {
-                    const res = await fetch(file + nocache);
-                    if (res.ok) state.dbCache[dataInizio] = await res.json();
-                } else if (file.startsWith("rotazioni_")) {
-                    const res = await fetch(file + nocache);
-                    if (res.ok) state.rotCache[dataInizio] = await res.json();
-                } else if (file.startsWith("turni_disp_")) {
-                    const res = await fetch(file + nocache);
-                    if (res.ok) state.dispCache[dataInizio] = await res.json();
-                }
+                try {
+                    if (file.startsWith("info_turni_")) {
+                        const res = await fetch(file + nocache);
+                        if (res.ok) state.dbCache[dataInizio] = await res.json();
+                    } else if (file.startsWith("rotazioni_")) {
+                        const res = await fetch(file + nocache);
+                        if (res.ok) state.rotCache[dataInizio] = await res.json();
+                    } else if (file.startsWith("turni_disp_")) {
+                        const res = await fetch(file + nocache);
+                        if (res.ok) state.dispCache[dataInizio] = await res.json();
+                    }
+                } catch(e) { console.error("Errore caricamento " + file, e); }
             }
             salvaLocal();
         } catch (e) { console.error("Errore caricamento dinamico", e); }
     }
 
     document.addEventListener('DOMContentLoaded', async function() {
-        // Carica dinamicamente invece degli array hardcoded
+        
+        // Attendi prima il caricamento dei file, per aggiornare VERSIONE_FERIE
         await caricaDatiEsterniDinamici();
 
-        if (!state.ferie) state.ferie = { version: VERSIONE_FERIE, scambi: {} };
-        else if (state.ferie.version !== VERSIONE_FERIE) {
+        // --- CONTROLLO AGGIORNAMENTO FERIE ---
+        if (!state.ferie) {
+            state.ferie = { version: VERSIONE_FERIE, scambi: {} };
+        } else if (state.ferie.version !== VERSIONE_FERIE) {
+            // Controlla se l'utente aveva effettivamente configurato le ferie
             let avevaConfigurato = state.ferie.baseAnno !== undefined;
             state.ferie = { version: VERSIONE_FERIE, scambi: {} };
-            salvaLocal(new Date().getTime() + 5000);
-            if (avevaConfigurato) alert("⚠️ Aggiornamento Rotazione Ferie: reinserire gruppo base.");
+            let boost = new Date().getTime() + 5000;
+            salvaLocal(boost);
+            // Mostra l'avviso SOLO se aveva già dei dati inseriti da resettare
+            if (avevaConfigurato) {
+                alert("⚠️ Aggiornamento Rotazione Ferie: Le sequenze delle ferie programmate sono state modificate in una nuova versione. È necessario reinserire il gruppo base e gli eventuali scambi.");
+            }
+        }
+        
+        const imgElem = document.getElementById('turnoImage');
+        if (typeof Panzoom !== 'undefined') {
+            pzInstance = Panzoom(imgElem, { maxScale: 5, minScale: 1 });
+            document.getElementById('imageFlexContainer').addEventListener('wheel', pzInstance.zoomWithWheel);
+            
+            function eseguiZoomToggle(e) {
+                if (!pzInstance) return;
+                let currentScale = pzInstance.getScale();
+                if (currentScale < 1.1) { 
+                    pzInstance.zoom(1.75, { animate: true }); 
+                } else { 
+                    pzInstance.reset({ animate: true }); 
+                }
+            }
+            
+            let lastTap = 0; 
+            let isPinching = false;
+            imgElem.addEventListener('touchstart', function(e) { 
+                if (e.touches.length > 1) { isPinching = true; } 
+            });
+            imgElem.addEventListener('touchend', function(e) {
+                if (isPinching) { 
+                    if (e.touches.length === 0) { setTimeout(() => isPinching = false, 300); } 
+                    return; 
+                }
+                let currentTime = new Date().getTime(); 
+                let tapLength = currentTime - lastTap;
+                if (tapLength < 300 && tapLength > 0) { 
+                    eseguiZoomToggle(e); 
+                    if (e.cancelable) e.preventDefault(); 
+                }
+                lastTap = currentTime;
+            });
+            imgElem.addEventListener('dblclick', function(e) { eseguiZoomToggle(e); });
         }
 
-        if (!state.depositoAttivo) { document.getElementById('welcomeModal').style.display = 'block'; } 
-        else if (state.version !== VERSIONE_TURNI) {
-            if (state.depositoAttivo.startsWith('disp_') || !RESET_DOPO_AGGIORNAMENTO[state.depositoAttivo]) {
-                state.version = VERSIONE_TURNI; salvaLocal(new Date().getTime() + 5000); 
-                aggiornaUI(); inizializzaCalendario();
+        if (!state.depositoAttivo) { 
+            document.getElementById('welcomeModal').style.display = 'block'; 
+        } else if (state.version !== VERSIONE_TURNI) {
+            const deveResettare = RESET_DOPO_AGGIORNAMENTO[state.depositoAttivo] !== false;
+            if (state.depositoAttivo.startsWith('disp_') || !deveResettare) {
+                state.version = VERSIONE_TURNI; 
+                let boost = new Date().getTime() + 5000;
+                salvaLocal(boost); 
+                aggiornaUI(); 
+                inizializzaCalendario();
             } else {
                 const dataLimiteObj = new Date(DATA_INIZIO_NUOVI_TURNI); 
                 const dataMenoUnoObj = new Date(dataLimiteObj);
                 dataMenoUnoObj.setDate(dataMenoUnoObj.getDate() - 1);
+                
                 document.getElementById('welcomeTitle').innerText = "Aggiornamento Turni";
-                document.getElementById('welcomeDesc').innerText = `Dal ${formattaData(DATA_INIZIO_NUOVI_TURNI)} nuova rotazione.`;
+                document.getElementById('welcomeDesc').innerText = `Il calendario rimarrà invariato fino al ${formattaData(dataMenoUnoObj.toISOString().split('T')[0])}. Dal ${formattaData(DATA_INIZIO_NUOVI_TURNI)} inizierà la nuova rotazione.`;
                 document.getElementById('depotSelectMain').style.display = 'none';
                 document.getElementById('btnConfRot').disabled = false;
                 document.getElementById('btnConfRot').style.background = 'var(--turno)';
                 document.getElementById('btnConfRot').innerText = "Avvia Aggiornamento";
                 document.getElementById('welcomeModal').style.display = 'block';
             }
-        } else { aggiornaUI(); inizializzaCalendario(); checkGuida(); }
+        } else {
+            aggiornaUI(); 
+            inizializzaCalendario(); 
+            checkGuida();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('oggi') === 'true') {
+                let dObj = new Date(); 
+                let todayStr = dateToLocalISO(dObj);
+                setTimeout(() => gestisciInterazione(todayStr), 300);
+                
+                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.replaceState({path: newUrl}, '', newUrl);
+            }
+        }
         
         document.getElementById('depotSelectMain').addEventListener('change', () => {
             document.getElementById('btnConfRot').disabled = false; 
@@ -1466,182 +1626,1114 @@
     });
 
     function confermaRotazione() {
-        if (!state.depositoAttivo) { state.depositoAttivo = document.getElementById('depotSelectMain').value; state.setupStep = 1; } 
-        else if (state.version !== VERSIONE_TURNI) { state.history = { riposoStart: state.riposoStart, rotazioneStart: state.turnoIndex, depositoAttivo: state.depositoAttivo, tcPattern: state.tcPattern }; }
-        state.version = VERSIONE_TURNI; document.getElementById('welcomeModal').style.display = 'none';
-        if (!state.riposoStart || state.setupStep < 3) { aggiornaUI(); inizializzaCalendario(); checkGuida(); salvaLocal(new Date().getTime() + 5000); } 
-        else { avviaRiconfigurazioneAggiornamento(); }
+        if (!state.depositoAttivo) { 
+            state.depositoAttivo = document.getElementById('depotSelectMain').value; 
+            state.setupStep = 1; 
+        } else if (state.version !== VERSIONE_TURNI) { 
+            state.history = { 
+                riposoStart: state.riposoStart, 
+                rotazioneStart: state.turnoIndex, 
+                depositoAttivo: state.depositoAttivo, 
+                tcPattern: state.tcPattern 
+            }; 
+        }
+        
+        state.version = VERSIONE_TURNI; 
+        document.getElementById('welcomeModal').style.display = 'none';
+        
+        if (!state.riposoStart || state.setupStep < 3) { 
+            aggiornaUI(); 
+            inizializzaCalendario(); 
+            checkGuida(); 
+            let boost = new Date().getTime() + 5000;
+            salvaLocal(boost); 
+        } else { 
+            avviaRiconfigurazioneAggiornamento(); 
+        }
     }
 
-    function tornaAllaRotazione() { state.setupStep = 0; state.depositoAttivo = null; salvaERicarica(); }
-    function checkGuida() { if (state.setupStep === 1) { document.getElementById('stepTitle').innerText = "Passo 2"; document.getElementById('stepDesc').innerText = "Seleziona un riposo singolo."; document.getElementById('btnConfirmDate').style.display = "none"; document.getElementById('btnBackStep').style.display = "block"; document.getElementById('btnCloseStep').style.display = "block"; document.getElementById('btnCloseStep').innerText = "Seleziona"; document.getElementById('stepModal').style.display = 'block'; } }
-    function abilitaSalvataggio() { document.getElementById('btnSalvaCambio').disabled = false; }
+    function tornaAllaRotazione() { 
+        state.setupStep = 0; 
+        state.depositoAttivo = null; 
+        salvaERicarica(); 
+    }
+
+    function checkGuida() {
+        if (state.setupStep === 1) {
+            document.getElementById('stepTitle').innerText = "Passo 2"; 
+            document.getElementById('stepDesc').innerText = "Seleziona nel calendario uno dei tuoi riposi singoli";
+            document.getElementById('btnConfirmDate').style.display = "none"; 
+            document.getElementById('btnBackStep').style.display = "block"; 
+            document.getElementById('btnCloseStep').style.display = "block"; 
+            document.getElementById('btnCloseStep').innerText = "Seleziona";
+            document.getElementById('stepModal').style.display = 'block';
+        }
+    }
+
+    function abilitaSalvataggio() { 
+        document.getElementById('btnSalvaCambio').disabled = false; 
+    }
 
     async function gestisciInterazione(date) {
         selectedDate = date;
-        if (state.setupStep === 1) { document.getElementById('stepDateDisplay').innerText = formattaData(date); document.getElementById('stepDesc').innerText = "È un riposo?"; document.getElementById('btnConfirmDate').style.display = "block"; document.getElementById('btnBackStep').style.display = "none"; document.getElementById('btnCloseStep').style.display = "block"; document.getElementById('stepModal').style.display = 'block'; } 
-        else {
+        if (state.setupStep === 1) {
+            document.getElementById('stepDateDisplay').innerText = formattaData(date); 
+            document.getElementById('stepDesc').innerText = "È un tuo giorno di riposo?";
+            document.getElementById('btnConfirmDate').style.display = "block"; 
+            document.getElementById('btnBackStep').style.display = "none"; 
+            document.getElementById('btnCloseStep').style.display = "block"; 
+            document.getElementById('btnCloseStep').innerText = "Chiudi";
+            document.getElementById('stepModal').style.display = 'block';
+        } else {
             document.getElementById('modalDate').innerText = formattaData(date);
-            let areaVarianti = document.getElementById('avvisoVariantiArea'); areaVarianti.style.display = 'none'; 
-            if (AVVISO_VARIANTI && variantiData && variantiData.hasOwnProperty(date)) { let lineeData = variantiData[date]; areaVarianti.innerHTML = "⚠️ Attenzione varianti service: " + (lineeData || "tutte"); areaVarianti.style.display = 'block'; }
+            let areaVarianti = document.getElementById('avvisoVariantiArea'); 
+            areaVarianti.style.display = 'none'; 
+            
+            if (AVVISO_VARIANTI && variantiData && variantiData.hasOwnProperty(date)) {
+                let lineeData = variantiData[date];
+                let isEmpty = (Array.isArray(lineeData) && lineeData.length === 0) || (typeof lineeData === 'string' && lineeData.trim() === '') || !lineeData;
+                
+                if (isEmpty) { 
+                    areaVarianti.innerHTML = "⚠️ Attenzione: nella data selezionata sono presenti varianti per il servizio, verificare le DDS su spriss."; 
+                } else { 
+                    let linee = Array.isArray(lineeData) ? lineeData.join(", ") : lineeData; 
+                    areaVarianti.innerHTML = "⚠️ Attenzione: nella data selezionata sono presenti varianti per le linee: " + linee; 
+                }
+                areaVarianti.style.display = 'block';
+            }
+            
+            let infoArea = document.getElementById('infoTurniArea'); 
             let turniCalc = calcolaTurni();
             let turnoCorrenteObj = turniCalc.find(e => e.start === date && !e.title.includes('FERIE') && e.title !== 'FEP');
             let nomeTurnoCompleto = turnoCorrenteObj ? turnoCorrenteObj.title : "Nessun turno";
             let nomeTurnoPulito = nomeTurnoCompleto.replace(/ 🌫️| ⏱️| 📝|\(Sospeso\)| 🍝| 💸/g, '').trim();
+            let codiceBase = nomeTurnoPulito.toUpperCase();
+            
             document.getElementById('singleTurnoSelect').style.display = 'block';
             let htmlInfo = `<strong>Turno attuale:</strong> ${nomeTurnoPulito} ${state.variazioni[date] ? '(Modificato)' : ''}`;
+
+            try {
+                const ddsList = await new Promise((resolve) => {
+                    const reqDB = indexedDB.open("UtilityDB");
+                    reqDB.onsuccess = (e) => {
+                        const db = e.target.result; 
+                        if (!db.objectStoreNames.contains("archivio_dds")) { 
+                            db.close(); 
+                            resolve([]); 
+                            return; 
+                        }
+                        const tx = db.transaction("archivio_dds", "readonly"); 
+                        const store = tx.objectStore("archivio_dds");
+                        const reqAll = store.getAll(); 
+                        reqAll.onsuccess = () => { 
+                            const res = reqAll.result; 
+                            db.close(); 
+                            resolve(res); 
+                        };
+                        reqAll.onerror = () => { 
+                            db.close(); 
+                            resolve([]); 
+                        };
+                    };
+                    reqDB.onerror = () => resolve([]);
+                });
+                
+                const validDDS = ddsList.filter(item => item.dateValidita && item.dateValidita.includes(date));
+                validDDS.forEach(item => { 
+                    htmlInfo += `<br><span style="color: #d63384; font-weight: bold;">DDS: "${item.titolo}"</span>`; 
+                });
+            } catch (e) { 
+                console.error("Errore lettura DDS per modal", e); 
+            }
+            
+            if (state.variazioni[date]) {
+                let tempVar = state.variazioni[date]; 
+                delete state.variazioni[date];
+                let turniSenzaVariazioni = calcolaTurni();
+                let turnoOrigObj = turniSenzaVariazioni.find(e => e.start === date && !e.title.includes('FERIE') && e.title !== 'FEP');
+                let origPulito = turnoOrigObj ? turnoOrigObj.title.replace(/ 🌫️| ⏱️| 📝|\(Sospeso\)| 🍝| 💸/g, '').trim() : "Nessun turno";
+                htmlInfo += `<br><span style="font-size: 0.9em; color: #8898aa;"><b>Turno originale:</b> ${origPulito}</span>`;
+                state.variazioni[date] = tempVar;
+                
+                if (localStorage.getItem('auth_rotazioni')) {
+                    let turnoAttualePulito = tempVar.replace(/ 🌫️| ⏱️| 📝|\(Sospeso\)| 🍝| 💸/g, '').trim().toUpperCase();
+                    let parts = date.split('-'); 
+                    let anno = parts[0]; 
+                    let meseIdx = parseInt(parts[1], 10) - 1; 
+                    let giornoNum = parseInt(parts[2], 10).toString(); 
+                    const mesiNomi = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
+                    let meseNome = mesiNomi[meseIdx]; 
+                    let urlRotazioni = `rotazioni/rotazioni_${meseNome}_${anno}.json?v=${new Date().getTime()}`;
+                    
+                    htmlInfo += `<div id="proprietario-turno-container" style="font-size: 0.9em; color: var(--turno); margin-top: 5px;"><i>Ricerca titolare in corso...</i></div>`;
+                    
+                    fetch(urlRotazioni).then(res => { 
+                        if (!res.ok) throw new Error("File non trovato"); 
+                        return res.json(); 
+                    }).then(rotData => {
+                            let trovati = [];
+                            
+                            // Traduzione codici marinaio per cercare nelle rotazioni
+                            let tCercatoClean = turnoAttualePulito.replace(/\s+/g, '');
+                            let codiciDaCercareArray = [tCercatoClean];
+                            
+                            // Applica la nuova regola esclusiva a prova di bomba
+                            let matchB_rot = tCercatoClean.match(/^([1-9])B(\d{2})$/);
+                            if (matchB_rot) {
+                                let l = matchB_rot[1]; let f = matchB_rot[2];
+                                let letteraPilota = (l === '1' || l === '2') ? 'C' : 'P';
+                                
+                                let regex = new RegExp(`^${l}[A-Z]${f}$`);
+                                let dbMatches = Object.keys(dbCorrente).filter(k => regex.test(k));
+                                if(dbMatches.length > 0) codiciDaCercareArray.push(...dbMatches);
+                                else codiciDaCercareArray.push(`${l}${letteraPilota}${f}`, `${l}C${f}`, `${l}P${f}`);
+                            } else {
+                                let match50_rot = tCercatoClean.match(/^([A-Z0-9]+?)(\d{2})$/);
+                                if (match50_rot) {
+                                    let p = match50_rot[1]; let n = parseInt(match50_rot[2], 10);
+                                    if (n >= 50) codiciDaCercareArray.push(p + String(n - 50).padStart(2, '0'));
+                                }
+                            }
+                            
+                            // Utilizza la ricerca ampliata
+                            for (let rotName in rotData) {
+                                let dipendenti = rotData[rotName];
+                                for (let nome in dipendenti) {
+                                    let tAssegnato = dipendenti[nome][giornoNum];
+                                    if (tAssegnato) {
+                                        let tClean = tAssegnato.toUpperCase().replace(/\s+/g, '');
+                                        // Cerca nell'array dei codici validi
+                                        if (codiciDaCercareArray.includes(tClean)) {
+                                            trovati.push(nome.split(" - ").join(" e "));
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            let container = document.getElementById('proprietario-turno-container');
+                            if (container) {
+                                if (trovati.length > 0) {
+                                    container.innerHTML = `<b>👥:</b> ${trovati.join(", ")}`;
+                                } else {
+                                    container.innerHTML = ``; // Lascia vuoto se non trova nessuno
+                                }
+                            }
+                        }).catch(e => { 
+                        let container = document.getElementById('proprietario-turno-container'); 
+                        if (container) container.innerHTML = ``; 
+                    });
+                }
+            }
+            
             const dateChiavi = Object.keys(state.dbCache || {}).sort(); 
-            let dbCorrente = {}; let dataAttiva = dateChiavi[0] || "2026-03-02";
+            let dbCorrente = {}; 
+            let dataAttiva = dateChiavi[0] || "2026-03-02";
             const dSelezionata = stringToNum(date);
-            for (let i = dateChiavi.length - 1; i >= 0; i--) { if (dSelezionata >= stringToNum(dateChiavi[i])) { dbCorrente = state.dbCache[dateChiavi[i]]; dataAttiva = dateChiavi[i]; break; } }
-            let chiaveTrovata = trovaChiaveEsatta(dbCorrente, nomeTurnoPulito.toUpperCase(), date); 
+            
+            for (let i = dateChiavi.length - 1; i >= 0; i--) { 
+                if (dSelezionata >= stringToNum(dateChiavi[i])) { 
+                    dbCorrente = state.dbCache[dateChiavi[i]]; 
+                    dataAttiva = dateChiavi[i]; 
+                    break; 
+                } 
+            }
+            
+            let chiaveTrovata = trovaChiaveEsatta(dbCorrente, codiceBase, date); 
             let dettagli = dbCorrente[chiaveTrovata];
-            if (dettagli) { htmlInfo += `<hr><b>Inizio:</b> ${dettagli.inizio} (${dettagli.luogoInizio})<br><b>Fine:</b> ${dettagli.fine} (${dettagli.luogoFine})`; }
-            document.getElementById('infoTurniArea').innerHTML = htmlInfo; document.getElementById('infoTurniArea').style.display = "block"; popolaCambio();
+            
+            if (dettagli) { 
+                htmlInfo += `<hr style="margin:10px 0; border:0; border-top:1px solid #eee;">`; 
+                htmlInfo += `<b>Inizio:</b> ${dettagli.inizio} (${dettagli.luogoInizio})<br><b>Fine:</b> ${dettagli.fine} (${dettagli.luogoFine})`; 
+            }
+            
+            if (state.nebbia[date] || state.straordinario[date] || state.sospesoRiposo[date] || state.note[date] || state.buonoPasto[date] || state.permessoSP[date]) {
+                htmlInfo += `<hr style="margin:10px 0; border:0; border-top:1px solid #eee;">`;
+                if (state.sospesoRiposo[date]) htmlInfo += `<div style="margin-bottom: 5px;"><b>Riposo:</b> Sospeso</div>`;
+                if (state.nebbia[date]) htmlInfo += `<div style="margin-bottom: 5px;">🌫️ <b>Indennità Nebbia:</b> Presente</div>`;
+                if (state.buonoPasto[date]) htmlInfo += `<div style="margin-bottom: 5px;">🍝 <b>Buono Pasto:</b> Utilizzato</div>`;
+                if (state.straordinario[date]) htmlInfo += `<div style="margin-bottom: 5px;">⏱️ <b>Straordinario:</b> ${state.straordinario[date].ore}h ${state.straordinario[date].minuti}m</div>`;
+                if (state.permessoSP[date]) htmlInfo += `<div style="margin-bottom: 5px;">💸 <b>Perm. Senza Paga:</b> ${state.permessoSP[date].ore}h ${state.permessoSP[date].minuti}m</div>`;
+                if (state.note[date]) htmlInfo += `<div style="margin-top: 5px; white-space: pre-wrap;">📝 <b>Note:</b><br>${state.note[date]}</div>`;
+            }
+            
+            infoArea.innerHTML = htmlInfo; 
+            infoArea.style.display = "block"; 
+            popolaCambio();
+            
             const btnImmagine = document.getElementById('btnVisualizzaTurno'); 
-            let isRiposo = ['RI','RIPOSO','AL'].includes(nomeTurnoPulito.toUpperCase());
-            if (!isRiposo && !['DISP','NESSUN TURNO'].includes(nomeTurnoPulito.toUpperCase())) {
-                currentImagePath = `turni_${dataAttiva}/${(chiaveTrovata !== nomeTurnoPulito.toUpperCase() && dbCorrente[chiaveTrovata]) ? chiaveTrovata : nomeTurnoPulito.toUpperCase()}.jpg`;
-                imgBaseFallback = `turni_${dataAttiva}/${nomeTurnoPulito.toUpperCase()}.jpg`;
+            let isRiposo = (codiceBase === 'RI' || codiceBase === 'RIPOSO' || codiceBase === 'AL');
+            
+            if (!isRiposo && codiceBase !== 'DISP' && codiceBase !== 'NESSUN TURNO') {
+                if (chiaveTrovata !== codiceBase && dbCorrente[chiaveTrovata]) { 
+                    currentImagePath = `turni_${dataAttiva}/${chiaveTrovata}.jpg`; 
+                    imgBaseFallback = `turni_${dataAttiva}/${codiceBase}.jpg`; 
+                } else { 
+                    currentImagePath = `turni_${dataAttiva}/${codiceBase}.jpg`; 
+                    imgBaseFallback = ""; 
+                }
                 btnImmagine.style.display = 'block';
-            } else { btnImmagine.style.display = 'none'; }
+            } else { 
+                currentImagePath = ""; 
+                imgBaseFallback = ""; 
+                btnImmagine.style.display = 'none'; 
+            }
             document.getElementById('editModal').style.display = 'block';
         }
     }
 
     function apriAltroModal() {
         document.getElementById('editModal').style.display = 'none';
+        
         document.getElementById('checkSospesoRiposoAltro').checked = !!state.sospesoRiposo[selectedDate];
         document.getElementById('checkNebbiaAltro').checked = !!state.nebbia[selectedDate];
         document.getElementById('checkBuonoPastoAltro').checked = !!state.buonoPasto[selectedDate];
+        
         let hasStraord = !!state.straordinario[selectedDate]; 
         document.getElementById('checkStraordinarioAltro').checked = hasStraord;
         document.getElementById('straordinarioInputsAltro').style.display = hasStraord ? 'flex' : 'none';
         document.getElementById('oreStraordAltro').value = hasStraord ? state.straordinario[selectedDate].ore : '';
         document.getElementById('minutiStraordAltro').value = hasStraord ? state.straordinario[selectedDate].minuti : '';
+        
         let hasPermessoSP = !!state.permessoSP[selectedDate]; 
         document.getElementById('checkPermessoSPAltro').checked = hasPermessoSP;
         document.getElementById('permessoSPInputsAltro').style.display = hasPermessoSP ? 'flex' : 'none';
         document.getElementById('orePermessoSPAltro').value = hasPermessoSP ? state.permessoSP[selectedDate].ore : '';
         document.getElementById('minutiPermessoSPAltro').value = hasPermessoSP ? state.permessoSP[selectedDate].minuti : '';
+        
         document.getElementById('notaAltro').value = state.note[selectedDate] || "";
-        tempColoreAltro = state.colori[selectedDate] || ""; aggiornaSelezioneColoreUI();
+        
+        tempColoreAltro = state.colori[selectedDate] || ""; 
+        aggiornaSelezioneColoreUI();
+        
         document.getElementById('altroModal').style.display = 'block';
     }
 
-    function chiudiAltroModal() { document.getElementById('altroModal').style.display = 'none'; document.getElementById('editModal').style.display = 'block'; }
-    function chiudiAltroSeSfondo(event) { if (event.target.id === 'altroModal') chiudiAltroModal(); }
-    function toggleStraordinarioAltro() { document.getElementById('straordinarioInputsAltro').style.display = document.getElementById('checkStraordinarioAltro').checked ? 'flex' : 'none'; }
-    function togglePermessoSPAltro() { document.getElementById('permessoSPInputsAltro').style.display = document.getElementById('checkPermessoSPAltro').checked ? 'flex' : 'none'; }
-    function selezionaColoreAltro(hex, el) { tempColoreAltro = hex; aggiornaSelezioneColoreUI(); }
-    function aggiornaSelezioneColoreUI() { document.querySelectorAll('.color-circle').forEach(c => { c.classList.remove('selected'); if (tempColoreAltro && c.getAttribute('data-color') === tempColoreAltro) c.classList.add('selected'); }); }
+    function chiudiAltroModal() { 
+        document.getElementById('altroModal').style.display = 'none'; 
+        document.getElementById('editModal').style.display = 'block'; 
+    }
+
+    function chiudiAltroSeSfondo(event) { 
+        if (event.target.id === 'altroModal') chiudiAltroModal(); 
+    }
+
+    function toggleStraordinarioAltro() { 
+        const isChecked = document.getElementById('checkStraordinarioAltro').checked; 
+        document.getElementById('straordinarioInputsAltro').style.display = isChecked ? 'flex' : 'none'; 
+    }
+
+    function togglePermessoSPAltro() { 
+        const isChecked = document.getElementById('checkPermessoSPAltro').checked; 
+        document.getElementById('permessoSPInputsAltro').style.display = isChecked ? 'flex' : 'none'; 
+    }
+
+    function selezionaColoreAltro(hex, el) { 
+        tempColoreAltro = hex; 
+        aggiornaSelezioneColoreUI(); 
+    }
+
+    function aggiornaSelezioneColoreUI() { 
+        document.querySelectorAll('.color-circle').forEach(c => { 
+            c.classList.remove('selected'); 
+            if (tempColoreAltro && c.getAttribute('data-color') === tempColoreAltro) { 
+                c.classList.add('selected'); 
+            } 
+        }); 
+    }
 
     function salvaAltro() {
-        if (document.getElementById('checkSospesoRiposoAltro').checked) state.sospesoRiposo[selectedDate] = true; else delete state.sospesoRiposo[selectedDate];
-        if (document.getElementById('checkNebbiaAltro').checked) state.nebbia[selectedDate] = true; else delete state.nebbia[selectedDate];
-        if (document.getElementById('checkBuonoPastoAltro').checked) state.buonoPasto[selectedDate] = true; else delete state.buonoPasto[selectedDate];
-        if (document.getElementById('checkStraordinarioAltro').checked) state.straordinario[selectedDate] = { ore: document.getElementById('oreStraordAltro').value || "0", minuti: document.getElementById('minutiStraordAltro').value || "0" }; else delete state.straordinario[selectedDate];
-        if (document.getElementById('checkPermessoSPAltro').checked) state.permessoSP[selectedDate] = { ore: document.getElementById('orePermessoSPAltro').value || "0", minuti: document.getElementById('minutiPermessoSPAltro').value || "0" }; else delete state.permessoSP[selectedDate];
-        const nV = document.getElementById('notaAltro').value.trim(); if (nV) state.note[selectedDate] = nV; else delete state.note[selectedDate];
-        if (tempColoreAltro) state.colori[selectedDate] = tempColoreAltro; else delete state.colori[selectedDate];
+        if (document.getElementById('checkSospesoRiposoAltro').checked) { 
+            state.sospesoRiposo[selectedDate] = true; 
+        } else { 
+            delete state.sospesoRiposo[selectedDate]; 
+        }
+        
+        if (document.getElementById('checkNebbiaAltro').checked) { 
+            state.nebbia[selectedDate] = true; 
+        } else { 
+            delete state.nebbia[selectedDate]; 
+        }
+        
+        if (document.getElementById('checkBuonoPastoAltro').checked) { 
+            state.buonoPasto[selectedDate] = true; 
+        } else { 
+            delete state.buonoPasto[selectedDate]; 
+        }
+        
+        if (document.getElementById('checkStraordinarioAltro').checked) { 
+            state.straordinario[selectedDate] = { 
+                ore: document.getElementById('oreStraordAltro').value || "0", 
+                minuti: document.getElementById('minutiStraordAltro').value || "0" 
+            }; 
+        } else { 
+            delete state.straordinario[selectedDate]; 
+        }
+        
+        if (document.getElementById('checkPermessoSPAltro').checked) { 
+            state.permessoSP[selectedDate] = { 
+                ore: document.getElementById('orePermessoSPAltro').value || "0", 
+                minuti: document.getElementById('minutiPermessoSPAltro').value || "0" 
+            }; 
+        } else { 
+            delete state.permessoSP[selectedDate]; 
+        }
+        
+        const notaVal = document.getElementById('notaAltro').value.trim(); 
+        if (notaVal) { 
+            state.note[selectedDate] = notaVal; 
+        } else { 
+            delete state.note[selectedDate]; 
+        }
+        
+        if (tempColoreAltro) { 
+            state.colori[selectedDate] = tempColoreAltro; 
+        } else { 
+            delete state.colori[selectedDate]; 
+        }
+        
         salvaERicarica(); 
     }
 
-    function apriImmagineTurno() { if (!currentImagePath) return; let img = document.getElementById('turnoImage'); img.onerror = erroreImmagine; img.src = currentImagePath; if (pzInstance) pzInstance.reset(); document.getElementById('imageModal').style.display = 'block'; }
-    function chiudiImageModal() { document.getElementById('imageModal').style.display = 'none'; document.getElementById('turnoImage').removeAttribute('src'); if (pzInstance) pzInstance.reset(); }
-    function chiudiSeSfondo(event) { if (['imageModal','imageFlexContainer'].includes(event.target.id)) chiudiImageModal(); }
-    function chiudiEditSeSfondo(event) { if (event.target.id === 'editModal') chiudiEdit(); }
-    function erroreImmagine() { let img = document.getElementById('turnoImage'); if (imgBaseFallback) { currentImagePath = imgBaseFallback; img.src = imgBaseFallback; imgBaseFallback = ""; } else { img.onerror = null; alert("Immagine non trovata."); chiudiImageModal(); } }
-    function scaricaImmagineTurno() { if (!currentImagePath) return; const a = document.createElement('a'); a.href = currentImagePath; a.download = currentImagePath.split('/').pop(); a.click(); }
-    function apriJumpModal() { const yS = document.getElementById('jumpYear'); if(yS.options.length === 0) { let cY = new Date().getFullYear(); for(let i = cY - 2; i <= cY + 5; i++) { let o = document.createElement('option'); o.value = i; o.text = i; if(i === cY) o.selected = true; yS.appendChild(o); } } document.getElementById('jumpMonth').value = (new Date().getMonth() + 1).toString().padStart(2, '0'); document.getElementById('jumpModal').style.display = 'block'; }
-    function chiudiJumpModal() { document.getElementById('jumpModal').style.display = 'none'; }
-    function eseguiSalto() { calendar.gotoDate(document.getElementById('jumpYear').value + '-' + document.getElementById('jumpMonth').value + '-01'); chiudiJumpModal(); }
-
-    function procediConfigurazione() {
-        state.riposoStart = selectedDate; document.getElementById('btnBackStep').style.display = "none";
-        if (state.depositoAttivo.startsWith('disp_')) { state.setupStep = 3; salvaERicarica(); } 
-        else if (state.depositoAttivo.startsWith('tc_')) {
-            document.getElementById('stepTitle').innerText = "Settimana Successiva"; document.getElementById('stepDesc').innerHTML = `6 giorni successivi: turni doppi o alternati con DISP?`;
-            document.getElementById('stepActionArea').innerHTML = `<button class="btn" style="background: var(--turno);" onclick="impostaTcPattern('doppio')">Doppi</button><button class="btn" style="background: var(--disp); color:#32325d; margin-top:10px;" onclick="impostaTcPattern('disp')">Alternati</button>`;
-            document.getElementById('btnConfirmDate').style.display = "none"; 
-        } else { avviaSelezioneTurnoIniziale(); }
+    function apriImmagineTurno() { 
+        if (!currentImagePath) return; 
+        let imgElement = document.getElementById('turnoImage'); 
+        imgElement.onerror = erroreImmagine; 
+        imgElement.src = currentImagePath; 
+        if (pzInstance) { pzInstance.reset(); } 
+        document.getElementById('imageModal').style.display = 'block'; 
     }
 
-    function impostaTcPattern(pattern) { state.tcPattern = pattern; state.turnoIndex = 0; let d = creaDataSicura(selectedDate); d.setDate(d.getDate() + 1); state.rotazioneStart = dateToLocalISO(d); let dF = trovaDataCambioProssimo(state.rotazioneStart); if (dF) state.futureConfig = { dataInizio: dF, turnoIndex: 0, tcPattern: pattern }; state.setupStep = 3; salvaERicarica(); }
-    function avviaSelezioneTurnoIniziale() { state.setupStep = 2; let d = creaDataSicura(selectedDate); d.setDate(d.getDate() + 1); tempRotDate = dateToLocalISO(d); document.getElementById('btnConfirmDate').style.display = "none"; document.getElementById('btnCloseStep').style.display = "none"; document.getElementById('stepDesc').innerHTML = `Turno il <strong style="color:var(--turno);">${formattaData(tempRotDate)}</strong>?`; document.getElementById('stepActionArea').innerHTML = `<select id="tSel"><option value="" disabled selected>Scegli...</option>${getOptionsTurni()}</select>`; document.getElementById('btnConfirmFinal').style.display = "block"; document.getElementById('stepModal').style.display = 'block'; }
-    function avviaRiconfigurazioneAggiornamento() { if (state.depositoAttivo.startsWith('tc_')) { state.futureConfig = { dataInizio: DATA_INIZIO_NUOVI_TURNI, turnoIndex: 0, tcPattern: state.history.tcPattern }; state.setupStep = 4; salvaERicarica(); return; } let d = creaDataSicura(DATA_INIZIO_NUOVI_TURNI); let dS = dateToLocalISO(d); while(isGiornoRiposo(dS)) { d.setDate(d.getDate() + 1); dS = dateToLocalISO(d); } tempRotDate = dS; document.getElementById('stepDesc').innerHTML = `Dal ${formattaData(DATA_INIZIO_NUOVI_TURNI)} nuova rotazione. Turno il <strong style="color:var(--turno);">${formattaData(tempRotDate)}</strong>?`; document.getElementById('stepActionArea').innerHTML = `<select id="tSel"><option value="" disabled selected>Scegli...</option>${getOptionsTurni()}</select>`; document.getElementById('btnConfirmFinal').style.display = "block"; document.getElementById('stepModal').style.display = 'block'; }
+    function chiudiImageModal() { 
+        document.getElementById('imageModal').style.display = 'none'; 
+        document.getElementById('turnoImage').removeAttribute('src'); 
+        if (pzInstance) { pzInstance.reset(); } 
+    }
 
-    function isGiornoRiposoBase(curr, cfg) { if (!cfg.riposoStart) return false; let ref = stringToNum(cfg.riposoStart); if (cfg.depositoAttivo === 'disp_det') return (((curr - ref) % 6 + 6) % 6 === 0); let pos = ((curr - ref + 6) % 15 + 15) % 15; return (pos === 6 || pos === 13 || pos === 14); }
-    function isGiornoRiposo(dStr) { if (['RI','RIPOSO','AL'].includes(state.variazioni[dStr])) return true; let cfg = (state.history && stringToNum(dStr) < stringToNum(DATA_INIZIO_NUOVI_TURNI)) ? state.history : state; return isGiornoRiposoBase(stringToNum(dStr), cfg); }
+    function chiudiSeSfondo(event) { 
+        if (event.target.id === 'imageModal' || event.target.id === 'imageFlexContainer') chiudiImageModal(); 
+    }
+
+    function chiudiEditSeSfondo(event) { 
+        if (event.target.id === 'editModal') chiudiEdit(); 
+    }
+
+    function erroreImmagine() { 
+        let imgElement = document.getElementById('turnoImage'); 
+        if (imgBaseFallback) { 
+            currentImagePath = imgBaseFallback; 
+            imgElement.src = imgBaseFallback; 
+            imgBaseFallback = ""; 
+        } else { 
+            imgElement.onerror = null; 
+            alert("L'immagine del turno non è stata trovata nel database."); 
+            chiudiImageModal(); 
+        } 
+    }
+
+    function scaricaImmagineTurno() { 
+        if (!currentImagePath) return; 
+        const a = document.createElement('a'); 
+        a.href = currentImagePath; 
+        a.download = currentImagePath.split('/').pop(); 
+        document.body.appendChild(a); 
+        a.click(); 
+        document.body.removeChild(a); 
+    }
+    
+    function apriJumpModal() {
+        const yearSelect = document.getElementById('jumpYear');
+        if(yearSelect.options.length === 0) { 
+            let currYear = new Date().getFullYear(); 
+            for(let i = currYear - 2; i <= currYear + 5; i++) { 
+                let opt = document.createElement('option'); 
+                opt.value = i; 
+                opt.text = i; 
+                if(i === currYear) opt.selected = true; 
+                yearSelect.appendChild(opt); 
+            } 
+        }
+        let currMonth = (new Date().getMonth() + 1).toString().padStart(2, '0'); 
+        document.getElementById('jumpMonth').value = currMonth; 
+        document.getElementById('jumpModal').style.display = 'block';
+    }
+
+    function chiudiJumpModal() { 
+        document.getElementById('jumpModal').style.display = 'none'; 
+    }
+
+    function eseguiSalto() { 
+        let m = document.getElementById('jumpMonth').value; 
+        let y = document.getElementById('jumpYear').value; 
+        calendar.gotoDate(y + '-' + m + '-01'); 
+        chiudiJumpModal(); 
+    }
+
+    function procediConfigurazione() {
+        state.riposoStart = selectedDate; 
+        document.getElementById('btnBackStep').style.display = "none";
+        
+        if (state.depositoAttivo.startsWith('disp_')) { 
+            state.setupStep = 3; 
+            salvaERicarica(); 
+        } else if (state.depositoAttivo.startsWith('tc_')) {
+            let altText = state.depositoAttivo === 'tc_spez_lido' ? 'Alternati (es. DISP, Turno)' : 'Alternati (es. Turno, DISP)';
+            document.getElementById('stepTitle').innerText = "Settimana Successiva"; 
+            document.getElementById('stepDateDisplay').innerText = ""; 
+            document.getElementById('stepDesc').innerHTML = `Nei 6 giorni successivi a questo riposo singolo, fai i turni doppi o quelli alternati con i DISP?`;
+            
+            document.getElementById('stepActionArea').innerHTML = `
+                <button class="btn" style="background: var(--turno);" onclick="impostaTcPattern('doppio')">Turni Doppi (es. Turno, Turno)</button>
+                <button class="btn" style="background: var(--disp); color: #32325d; margin-top: 10px;" onclick="impostaTcPattern('disp')">${altText}</button>
+            `;
+            document.getElementById('btnConfirmDate').style.display = "none"; 
+            document.getElementById('btnCloseStep').style.display = "block";
+        } else { 
+            avviaSelezioneTurnoIniziale(); 
+        }
+    }
+
+    function impostaTcPattern(pattern) {
+        state.tcPattern = pattern; 
+        state.turnoIndex = 0; 
+        
+        let d = creaDataSicura(selectedDate); 
+        d.setDate(d.getDate() + 1); 
+        state.rotazioneStart = dateToLocalISO(d);
+        
+        let dataFutura = trovaDataCambioProssimo(state.rotazioneStart); 
+        if (dataFutura) { 
+            state.futureConfig = { 
+                dataInizio: dataFutura, 
+                turnoIndex: 0, 
+                tcPattern: pattern 
+            }; 
+        }
+        
+        state.setupStep = 3; 
+        salvaERicarica(); 
+    }
+
+    function avviaSelezioneTurnoIniziale() {
+        state.setupStep = 2; 
+        let d = creaDataSicura(selectedDate); 
+        d.setDate(d.getDate() + 1); 
+        tempRotDate = dateToLocalISO(d);
+        
+        document.getElementById('btnConfirmDate').style.display = "none"; 
+        document.getElementById('btnCloseStep').style.display = "none"; 
+        document.getElementById('stepTitle').innerText = "Passo 3"; 
+        document.getElementById('stepDateDisplay').innerText = ""; 
+        document.getElementById('stepDesc').innerHTML = `Che turno hai il giorno <strong style="color: var(--turno);">${formattaData(tempRotDate)}</strong>?`;
+        document.getElementById('stepActionArea').innerHTML = `<select id="tSel"><option value="" disabled selected>Seleziona turno...</option>${getOptionsTurni()}</select>`;
+        document.getElementById('btnConfirmFinal').style.display = "block"; 
+        document.getElementById('stepModal').style.display = 'block';
+    }
+
+    function avviaRiconfigurazioneAggiornamento() {
+        if (state.depositoAttivo.startsWith('tc_')) { 
+            state.futureConfig = { 
+                dataInizio: DATA_INIZIO_NUOVI_TURNI, 
+                turnoIndex: 0, 
+                tcPattern: state.history.tcPattern 
+            }; 
+            state.setupStep = 4; 
+            salvaERicarica(); 
+            return; 
+        }
+        
+        let d = creaDataSicura(DATA_INIZIO_NUOVI_TURNI); 
+        let dStr = dateToLocalISO(d); 
+        
+        while(isGiornoRiposo(dStr)) { 
+            d.setDate(d.getDate() + 1); 
+            dStr = dateToLocalISO(d); 
+        }
+        
+        tempRotDate = dStr; 
+        document.getElementById('stepTitle').innerText = "Nuova Rotazione"; 
+        document.getElementById('stepDateDisplay').innerText = ""; 
+        document.getElementById('btnCloseStep').style.display = "none"; 
+        document.getElementById('stepDesc').innerHTML = `Dal <strong>${formattaData(DATA_INIZIO_NUOVI_TURNI)}</strong> entra in vigore una nuova rotazione.<br>Che turno avrai il <strong style="color: var(--turno);">${formattaData(tempRotDate)}</strong>?`;
+        document.getElementById('stepActionArea').innerHTML = `<select id="tSel"><option value="" disabled selected>Seleziona turno...</option>${getOptionsTurni()}</select>`;
+        document.getElementById('btnConfirmFinal').style.display = "block"; 
+        document.getElementById('stepModal').style.display = 'block';
+    }
+
+    function isGiornoRiposoBase(curr, cfg) { 
+        if (!cfg.riposoStart) return false; 
+        let ref = stringToNum(cfg.riposoStart); 
+        if (cfg.depositoAttivo === 'disp_det') return (((curr - ref) % 6 + 6) % 6 === 0); 
+        let pos = ((curr - ref + 6) % 15 + 15) % 15; 
+        return (pos === 6 || pos === 13 || pos === 14); 
+    }
+
+    function isGiornoRiposo(dStr) { 
+        if (state.variazioni[dStr] === "RI" || state.variazioni[dStr] === "RIPOSO" || state.variazioni[dStr] === "AL") return true; 
+        let cfg = (state.history && stringToNum(dStr) < stringToNum(DATA_INIZIO_NUOVI_TURNI)) ? state.history : state; 
+        return isGiornoRiposoBase(stringToNum(dStr), cfg); 
+    }
 
     function attivaRotazioneFinale() {
-        const valStr = document.getElementById('tSel').value; if (!valStr) return;
-        if (valStr === "RIPOSO") { let d = creaDataSicura(tempRotDate); d.setDate(d.getDate() + 1); let dS = dateToLocalISO(d); while(isGiornoRiposo(dS)) { d.setDate(d.getDate() + 1); dS = dateToLocalISO(d); } tempRotDate = dS; document.getElementById('stepDesc').innerHTML = `Turno il <strong style="color:var(--turno);">${formattaData(tempRotDate)}</strong>?`; document.getElementById('stepActionArea').innerHTML = `<select id="tSel"><option value="" disabled selected>Scegli...</option>${getOptionsTurni()}</select>`; return; }
-        const val = parseInt(valStr); if (state.setupStep === 2) { state.turnoIndex = val; state.rotazioneStart = tempRotDate; let dF = trovaDataCambioProssimo(tempRotDate); if (dF) { state.setupStep = 4; state.baseDataFutura = dF; let dFut = creaDataSicura(dF); let dFS = dateToLocalISO(dFut); while(isGiornoRiposo(dFS)) { dFut.setDate(dFut.getDate() + 1); dFS = dateToLocalISO(dFut); } tempRotDate = dFS; document.getElementById('stepDesc').innerHTML = `Dal ${formattaData(state.baseDataFutura)} nuova rotazione. Turno il <strong style="color:var(--turno);">${formattaData(tempRotDate)}</strong>?`; document.getElementById('stepActionArea').innerHTML = `<select id="tSel"><option value="" disabled selected>Scegli...</option>${getOptionsTurni()}</select>`; return; } } 
-        else if (state.setupStep === 4) state.futureConfig = { dataInizio: tempRotDate, turnoIndex: val };
-        else if (state.setupStep === 3) { state.turnoIndex = val; state.rotazioneStart = tempRotDate; }
-        state.setupStep = 3; salvaERicarica(); 
+        const valStr = document.getElementById('tSel').value; 
+        if (!valStr) return;
+        
+        let isSkipDay = false;
+        
+        if (valStr === "RIPOSO") { 
+            isSkipDay = true; 
+        } else {
+            const val = parseInt(valStr); 
+            if(isNaN(val)) return;
+            
+            const currentRotRules = getRotazionePerData(tempRotDate);
+            if (currentRotRules && currentRotRules[state.depositoAttivo]) { 
+                if (currentRotRules[state.depositoAttivo][val] && currentRotRules[state.depositoAttivo][val].toUpperCase() === "DISP") { 
+                    isSkipDay = true; 
+                } 
+            }
+        }
+        
+        if (isSkipDay) {
+            let d = creaDataSicura(tempRotDate); 
+            d.setDate(d.getDate() + 1); 
+            let dStr = dateToLocalISO(d); 
+            
+            while(isGiornoRiposo(dStr)) { 
+                d.setDate(d.getDate() + 1); 
+                dStr = dateToLocalISO(d); 
+            }
+            
+            tempRotDate = dStr; 
+            document.getElementById('stepDateDisplay').innerText = ""; 
+            document.getElementById('stepDesc').innerHTML = `Che turno avrai il <strong style="color: var(--turno);">${formattaData(tempRotDate)}</strong>?`;
+            document.getElementById('stepActionArea').innerHTML = `<select id="tSel"><option value="" disabled selected>Seleziona turno...</option>${getOptionsTurni()}</select>`; 
+            return; 
+        }
+        
+        const val = parseInt(valStr); 
+        if(isNaN(val)) return;
+        
+        if (state.setupStep === 2) {
+            state.turnoIndex = val; 
+            state.rotazioneStart = tempRotDate; 
+            let dataFutura = trovaDataCambioProssimo(tempRotDate);
+            
+            if (dataFutura) {
+                state.setupStep = 4; 
+                state.baseDataFutura = dataFutura;
+                let dFut = creaDataSicura(dataFutura); 
+                let dFutStr = dateToLocalISO(dFut); 
+                
+                while(isGiornoRiposo(dFutStr)) { 
+                    dFut.setDate(dFut.getDate() + 1); 
+                    dFutStr = dateToLocalISO(dFut); 
+                }
+                
+                tempRotDate = dFutStr; 
+                document.getElementById('stepTitle').innerText = "Passo 4 (Cambio Turni)"; 
+                document.getElementById('stepDateDisplay').innerText = ""; 
+                document.getElementById('stepDesc').innerHTML = `Dal <strong>${formattaData(state.baseDataFutura)}</strong> entra in vigore una nuova rotazione. Che turno avrai il <strong style="color: var(--turno);">${formattaData(tempRotDate)}</strong>?`;
+                document.getElementById('stepActionArea').innerHTML = `<select id="tSel"><option value="" disabled selected>Seleziona turno...</option>${getOptionsTurni()}</select>`; 
+                return;
+            }
+        } else if (state.setupStep === 4) { 
+            state.futureConfig = { dataInizio: tempRotDate, turnoIndex: val }; 
+        } else if (state.setupStep === 3) { 
+            state.turnoIndex = val; 
+            state.rotazioneStart = tempRotDate; 
+        }
+        
+        state.setupStep = 3; 
+        salvaERicarica(); 
     }
 
     function calcolaTurni() {
         if (!state.riposoStart) return [];
-        let evs = [], today = new Date(); today.setHours(12, 0, 0, 0); 
-        let limitTurni = 365, limitRiposi = 1825, todayNum = stringToNum(dateToLocalISO(today)); 
-        if (state.rotazioneStart) { let dist = Math.abs(todayNum - stringToNum(state.rotazioneStart)); limitTurni = dist + 365; limitRiposi = dist + 1825; }
-        if (state.futureConfig && state.futureConfig.dataInizio) { let dist = Math.abs(todayNum - stringToNum(state.futureConfig.dataInizio)); if (dist+365 > limitTurni) limitTurni = dist+365; if (dist+1825 > limitRiposi) limitRiposi = dist+1825; }
+        let evs = []; 
+        let today = new Date(); 
+        today.setHours(12, 0, 0, 0); 
+        
+        let limitTurni = 365; 
+        let limitRiposi = 1825; 
+        let todayNum = stringToNum(dateToLocalISO(today)); 
+        
+        if (state.rotazioneStart) { 
+            let distDaOggi = Math.abs(todayNum - stringToNum(state.rotazioneStart)); 
+            limitTurni = distDaOggi + 365; 
+            limitRiposi = distDaOggi + 1825; 
+        }
+        
+        if (state.futureConfig && state.futureConfig.dataInizio) { 
+            let distFutura = Math.abs(todayNum - stringToNum(state.futureConfig.dataInizio)); 
+            if (distFutura + 365 > limitTurni) limitTurni = distFutura + 365; 
+            if (distFutura + 1825 > limitRiposi) limitRiposi = distFutura + 1825; 
+        }
+        
         let processati = new Set(); 
+        
         for (let i = -60; i < limitRiposi; i++) {
             let dObj = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i, 12, 0, 0); 
-            let dStr = dateToLocalISO(dObj); let curr = stringToNum(dStr); processati.add(dStr);
-            let fA = getFerieGiorno(dStr); if (fA) evs.push({ title: fA, start: dStr, allDay: true, className: 'bg-ferie', myOrder: 1 }); 
-            let customColor = (state.colori && state.colori[dStr]) ? state.colori[dStr] : null;
-            let cfgB = (state.history && curr < stringToNum(DATA_INIZIO_NUOVI_TURNI)) ? state.history : state;
-            if (!customColor && state.coloriRotazione) {
-                if (isGiornoRiposo(dStr)) { if (state.coloriRotazione['riposo']) customColor = state.coloriRotazione['riposo']; } 
-                else { let idxG = 1; for (let k = curr - 1; k >= curr - 10; k--) { if (isGiornoRiposoBase(k, cfgB)) break; idxG++; } if (idxG <= 6 && state.coloriRotazione[idxG]) customColor = state.coloriRotazione[idxG]; }
+            let dStr = dateToLocalISO(dObj); 
+            let curr = stringToNum(dStr); 
+            processati.add(dStr);
+            
+            // Ferie Programmate
+            let ferieAssegnate = getFerieGiorno(dStr); 
+            if (ferieAssegnate) { 
+                evs.push({ title: ferieAssegnate, start: dStr, allDay: true, className: 'bg-ferie', myOrder: 1 }); 
             }
-            let tC = (customColor === '#f1c40f') ? '#32325d' : '#ffffff';
-            let addon = (state.nebbia[dStr]?" 🌫️":"")+(state.straordinario[dStr]?" ⏱️":"")+(state.buonoPasto[dStr]?" 🍝":"")+(state.sospesoRiposo[dStr]?" (Sospeso)":"")+(state.permessoSP[dStr]?" 💸":"")+(state.note[dStr]?" 📝":"");
-            if (state.variazioni[dStr]) { let ev = { title: state.variazioni[dStr] + addon, start: dStr, allDay: true, myOrder: 2 }; if (customColor) { ev.backgroundColor = customColor; ev.textColor = tC; } else ev.className = ['RI','RIPOSO','AL'].includes(state.variazioni[dStr]) ? 'bg-riposo' : 'bg-modificato'; evs.push(ev); continue; }
-            if (isGiornoRiposo(dStr)) { let tr = 'RI'; if (cfgB.riposoStart && cfgB.depositoAttivo !== 'disp_det') { if (((curr - stringToNum(cfgB.riposoStart) + 6) % 15 + 15) % 15 === 13) tr = 'AL'; } let ev = { title: tr + addon, start: dStr, allDay: true, myOrder: 2 }; if (customColor) { ev.backgroundColor = customColor; ev.textColor = tC; } else ev.className = 'bg-riposo'; evs.push(ev); } 
-            else if (i < limitTurni) {
-                const rules = getRotazionePerData(dStr); let t = "";
-                if (cfgB.depositoAttivo.startsWith('disp_')) t = "DISP"; 
-                else if (cfgB.rotazioneStart) {
-                    let active = (state.futureConfig && curr >= stringToNum(state.futureConfig.dataInizio)) ? { s: state.futureConfig.dataInizio, i: state.futureConfig.turnoIndex, p: state.futureConfig.tcPattern } : { s: cfgB.rotazioneStart, i: cfgB.turnoIndex, p: cfgB.tcPattern };
-                    let refRot = stringToNum(active.s), w = 0; if (curr >= refRot) { for (let j = refRot; j < curr; j++) if (!isGiornoRiposoBase(j, cfgB)) w++; } else { for (let j = refRot; j > curr; j--) if (!isGiornoRiposoBase(j, cfgB)) w--; }
-                    let refRip = stringToNum(cfgB.riposoStart), sP = ((refRot - refRip + 6) % 15 + 15) % 15, off = [1, 3, 5, 8, 10, 12].includes(sP) ? 1 : 0;
-                    const list = (rules && rules[cfgB.depositoAttivo]) ? rules[cfgB.depositoAttivo] : [];
-                    if (list.length > 0) {
-                        if (cfgB.depositoAttivo.startsWith('tc_')) { let cP = ((curr - refRip + 6) % 15 + 15) % 15, isB2 = (cP >= 7 && cP <= 12), k = isB2 ? (cP - 7) : cP, p = active.p || cfgB.p || 'doppio', isAlt = (p === 'disp') ? isB2 : !isB2, idx = Math.floor(k / 2); t = list[idx>=list.length?list.length-1:idx].toUpperCase(); if (isAlt) { let dOE = (cfgB.depositoAttivo === 'tc_spez_lido'); if ((dOE && k % 2 === 0) || (!dOE && k % 2 !== 0)) t = "DISP"; } } 
-                        else { let exp = [], oToE = []; for (let j = 0; j < list.length; j++) { oToE[j] = exp.length; let cT = list[j].toUpperCase(); if (cT.includes('+')) { let p = cT.split('+'); exp.push(p[0].trim()); if (p.length > 1) exp.push(p[1].trim()); } else { exp.push(cT); exp.push(cT); } } let L = exp.length, bIdx = oToE[active.i], bS = bIdx - (bIdx % 2), idxE = (bS + w + off) % L; t = exp[idxE < 0 ? idxE + L : idxE]; }
-                        let dR = getDispPerData(dStr); if (dR) { let nG = ["DOMENICA", "LUNEDI", "MARTEDI", "MERCOLEDI", "GIOVEDI", "VENERDI", "SABATO"][dObj.getDay()]; let rG = dR[nG] || dR[nG.toLowerCase()] || dR[dObj.getDay().toString()]; if (rG && Array.isArray(rG) && rG.map(x => x.toUpperCase()).includes(t)) t = "DISP"; }
+            
+            let customColor = (state.colori && state.colori[dStr]) ? state.colori[dStr] : null;
+            let isPastUpdate = (state.history && curr < stringToNum(DATA_INIZIO_NUOVI_TURNI)); 
+            let cfgBase = isPastUpdate ? state.history : state;
+            
+            if (!customColor && state.coloriRotazione) {
+                let isManualManual = (state.variazioni[dStr] === "RI" || state.variazioni[dStr] === "RIPOSO" || state.variazioni[dStr] === "AL");
+                let isStrutturaleRest = isGiornoRiposoBase(curr, cfgBase);
+                
+                if (isManualManual || isStrutturaleRest) { 
+                    if (state.coloriRotazione['riposo']) customColor = state.coloriRotazione['riposo']; 
+                } else { 
+                    let indiceGiornata = 1; 
+                    for (let k = curr - 1; k >= curr - 10; k--) { 
+                        if (isGiornoRiposoBase(k, cfgBase)) break; 
+                        indiceGiornata++; 
+                    } 
+                    if (indiceGiornata <= 6 && state.coloriRotazione[indiceGiornata]) { 
+                        customColor = state.coloriRotazione[indiceGiornata]; 
+                    } 
+                }
+            }
+            
+            let tColor = (customColor === '#f1c40f') ? '#32325d' : '#ffffff';
+            let titleAddon = ""; 
+            
+            if (state.nebbia[dStr]) titleAddon += " 🌫️"; 
+            if (state.straordinario[dStr]) titleAddon += " ⏱️"; 
+            if (state.buonoPasto[dStr]) titleAddon += " 🍝"; 
+            if (state.sospesoRiposo[dStr]) titleAddon += " (Sospeso)"; 
+            if (state.permessoSP[dStr]) titleAddon += " 💸"; 
+            if (state.note[dStr]) titleAddon += " 📝";
+            
+            if (state.variazioni[dStr]) {
+                let ev = { title: state.variazioni[dStr] + titleAddon, start: dStr, allDay: true, myOrder: 2 };
+                if (customColor) { 
+                    ev.backgroundColor = customColor; 
+                    ev.textColor = tColor; 
+                } else { 
+                    ev.className = (state.variazioni[dStr]==='RI' || state.variazioni[dStr]==='RIPOSO' || state.variazioni[dStr]==='AL') ? 'bg-riposo' : 'bg-modificato'; 
+                }
+                evs.push(ev); 
+                continue;
+            }
+            
+            if (isGiornoRiposo(dStr)) { 
+                let tituloRiposo = 'RI'; 
+                if (cfgBase.riposoStart && cfgBase.depositoAttivo !== 'disp_det') { 
+                    let ref = stringToNum(cfgBase.riposoStart); 
+                    let pos = ((curr - ref + 6) % 15 + 15) % 15; 
+                    if (pos === 13) tituloRiposo = 'AL'; 
+                }
+                
+                let ev = { title: tituloRiposo + titleAddon, start: dStr, allDay: true, myOrder: 2 }; 
+                if (customColor) { 
+                    ev.backgroundColor = customColor; 
+                    ev.textColor = tColor; 
+                } else { 
+                    ev.className = 'bg-riposo'; 
+                }
+                evs.push(ev);
+                
+            } else if (i < limitTurni) {
+                const currentRotRules = getRotazionePerData(dStr); 
+                let t = "";
+                
+                if (cfgBase.depositoAttivo.startsWith('disp_')) { 
+                    t = "DISP"; 
+                } else if (cfgBase.rotazioneStart) {
+                    let activeCfg = (state.futureConfig && curr >= stringToNum(state.futureConfig.dataInizio)) ? { start: state.futureConfig.dataInizio, idx: state.futureConfig.turnoIndex, tcPattern: state.futureConfig.tcPattern } : { start: cfgBase.rotazioneStart, idx: cfgBase.turnoIndex, tcPattern: cfgBase.tcPattern };
+                    let refRot = stringToNum(activeCfg.start), w = 0; 
+                    
+                    if (curr >= refRot) { 
+                        for (let j = refRot; j < curr; j++) { 
+                            if (!isGiornoRiposoBase(j, cfgBase)) w++; 
+                        } 
+                    } else { 
+                        for (let j = refRot; j > curr; j--) { 
+                            if (!isGiornoRiposoBase(j, cfgBase)) w--; 
+                        } 
+                    }
+                    
+                    let refRip = stringToNum(cfgBase.riposoStart); 
+                    let startPos = ((refRot - refRip + 6) % 15 + 15) % 15; 
+                    let offset = [1, 3, 5, 8, 10, 12].includes(startPos) ? 1 : 0;
+                    
+                    const rotList = (currentRotRules && currentRotRules[cfgBase.depositoAttivo]) ? currentRotRules[cfgBase.depositoAttivo] : [];
+                    
+                    if (rotList.length > 0) {
+                        if (cfgBase.depositoAttivo.startsWith('tc_')) {
+                            let currPos = ((curr - refRip + 6) % 15 + 15) % 15; 
+                            let isBlock2 = (currPos >= 7 && currPos <= 12); 
+                            let k = isBlock2 ? (currPos - 7) : currPos; 
+                            let patternDopoSingolo = activeCfg.tcPattern || cfgBase.tcPattern || 'doppio'; 
+                            let isAlternato = (patternDopoSingolo === 'disp') ? isBlock2 : !isBlock2;
+                            let idx = Math.floor(k / 2); 
+                            
+                            if (idx >= rotList.length) idx = rotList.length - 1; 
+                            t = rotList[idx].toUpperCase();
+                            
+                            if (isAlternato) { 
+                                let dispOnEven = (cfgBase.depositoAttivo === 'tc_spez_lido'); 
+                                if (dispOnEven && k % 2 === 0) t = "DISP"; 
+                                if (!dispOnEven && k % 2 !== 0) t = "DISP"; 
+                            }
+                        } else {
+                            let expandedRotList = []; 
+                            let originalToExpanded = [];
+                            
+                            for (let j = 0; j < rotList.length; j++) { 
+                                originalToExpanded[j] = expandedRotList.length; 
+                                let currentTurn = rotList[j].toUpperCase(); 
+                                
+                                if (currentTurn.includes('+')) { 
+                                    let parts = currentTurn.split('+'); 
+                                    expandedRotList.push(parts[0].trim()); 
+                                    if (parts.length > 1) { 
+                                        expandedRotList.push(parts[1].trim()); 
+                                    } 
+                                } else { 
+                                    expandedRotList.push(currentTurn); 
+                                    expandedRotList.push(currentTurn); 
+                                } 
+                            }
+                            
+                            let L_exp = expandedRotList.length; 
+                            let baseExpIdx = originalToExpanded[activeCfg.idx]; 
+                            let blockStartIdx = baseExpIdx - (baseExpIdx % 2); 
+                            let idxExp = (blockStartIdx + w + offset) % L_exp; 
+                            
+                            if (idxExp < 0) idxExp += L_exp; 
+                            t = expandedRotList[idxExp];
+                        }
+                        
+                        let currentDispRules = getDispPerData(dStr); 
+                        if (currentDispRules) { 
+                            const mapG = ["DOMENICA", "LUNEDI", "MARTEDI", "MERCOLEDI", "GIOVEDI", "VENERDI", "SABATO"]; 
+                            let nomeG = mapG[dObj.getDay()]; 
+                            let rGiorno = currentDispRules[nomeG] || currentDispRules[nomeG.toLowerCase()] || currentDispRules[nomeG.charAt(0) + nomeG.slice(1).toLowerCase()] || currentDispRules[dObj.getDay().toString()]; 
+                            
+                            if (rGiorno && Array.isArray(rGiorno)) { 
+                                if (rGiorno.map(x => x.toUpperCase()).includes(t)) { 
+                                    t = "DISP"; 
+                                } 
+                            } 
+                        }
                     }
                 }
-                if (t !== "") { let ev = { title: t + addon, start: dStr, allDay: true, myOrder: 2 }; if (customColor) { ev.backgroundColor = customColor; ev.textColor = tC; } else ev.className = (t==='DISP' ? 'bg-disp' : 'bg-turno'); evs.push(ev); }
+                
+                if (t !== "") { 
+                    let ev = { title: t + titleAddon, start: dStr, allDay: true, myOrder: 2 }; 
+                    if (customColor) { 
+                        ev.backgroundColor = customColor; 
+                        ev.textColor = tColor; 
+                    } else { 
+                        ev.className = (t==='DISP' ? 'bg-disp' : 'bg-turno'); 
+                    } 
+                    evs.push(ev); 
+                }
             }
         }
+        
+        let chiaviModificate = new Set([
+            ...Object.keys(state.variazioni || {}), 
+            ...Object.keys(state.nebbia || {}), 
+            ...Object.keys(state.straordinario || {}), 
+            ...Object.keys(state.sospesoRiposo || {}), 
+            ...Object.keys(state.colori || {}), 
+            ...Object.keys(state.note || {}), 
+            ...Object.keys(state.buonoPasto || {}), 
+            ...Object.keys(state.permessoSP || {})
+        ]);
+        
+        chiaviModificate.forEach(dStr => {
+            if (!processati.has(dStr)) {
+                let ferieAssegnate = getFerieGiorno(dStr); 
+                if (ferieAssegnate) { 
+                    evs.push({ title: ferieAssegnate, start: dStr, allDay: true, className: 'bg-ferie', myOrder: 1 }); 
+                }
+                
+                let customColor = (state.colori && state.colori[dStr]) ? state.colori[dStr] : null;
+                let currMod = stringToNum(dStr); 
+                let isPastUpdateMod = (state.history && currMod < stringToNum(DATA_INIZIO_NUOVI_TURNI)); 
+                let cfgBaseMod = isPastUpdateMod ? state.history : state;
+                
+                if (!customColor && state.coloriRotazione) {
+                    let isManualManual = (state.variazioni[dStr] === "RI" || state.variazioni[dStr] === "RIPOSO" || state.variazioni[dStr] === "AL");
+                    let isStrutturaleRest = isGiornoRiposoBase(currMod, cfgBaseMod);
+                    
+                    if (isManualManual || isStrutturaleRest) { 
+                        if (state.coloriRotazione['riposo']) customColor = state.coloriRotazione['riposo']; 
+                    } else { 
+                        let indiceGiornata = 1; 
+                        for (let k = currMod - 1; k >= currMod - 10; k--) { 
+                            if (isGiornoRiposoBase(k, cfgBaseMod)) break; 
+                            indiceGiornata++; 
+                        } 
+                        if (indiceGiornata <= 6 && state.coloriRotazione[indiceGiornata]) { 
+                            customColor = state.coloriRotazione[indiceGiornata]; 
+                        } 
+                    }
+                }
+                
+                let tColor = (customColor === '#f1c40f') ? '#32325d' : '#ffffff';
+                let titleAddon = ""; 
+                if (state.nebbia[dStr]) titleAddon += " 🌫️"; 
+                if (state.straordinario[dStr]) titleAddon += " ⏱️"; 
+                if (state.buonoPasto[dStr]) titleAddon += " 🍝"; 
+                if (state.sospesoRiposo[dStr]) titleAddon += " (Sospeso)"; 
+                if (state.permessoSP[dStr]) titleAddon += " 💸"; 
+                if (state.note[dStr]) titleAddon += " 📝";
+                
+                let titleTxt = state.variazioni[dStr] ? state.variazioni[dStr] : "NOTA"; 
+                let ev = { title: titleTxt + titleAddon, start: dStr, allDay: true, myOrder: 2 };
+                
+                if (customColor) { 
+                    ev.backgroundColor = customColor; 
+                    ev.textColor = tColor; 
+                } else { 
+                    ev.className = (titleTxt==='RI' || titleTxt==='RIPOSO' || titleTxt==='AL') ? 'bg-riposo' : 'bg-modificato'; 
+                }
+                evs.push(ev);
+            }
+        });
         return evs;
     }
 
-    function getOptionsTurni() { let d = new Date(); d.setHours(12,0,0,0); const rot = getRotazionePerData(tempRotDate || dateToLocalISO(d)); if (!rot || !rot[state.depositoAttivo]) return ""; let hD = "", hT = "", dA = false, hR = `<option value="RIPOSO" style="font-weight:bold; color:var(--riposo);">RIPOSO</option>`; rot[state.depositoAttivo].map((n, i) => ({ n: n.toUpperCase(), i: i })).sort((a, b) => a.n.localeCompare(b.n, undefined, {numeric: true})).forEach(item => { if (item.n === "DISP") { if (!dA) { hD = `<option value="${item.i}">DISP</option>`; dA = true; } } else { hT += `<option value="${item.i}">${item.n}</option>`; } }); return hR + hD + hT; }
-    function salvaCambioSingolo() { const val = document.getElementById('singleTurnoSelect').value.trim().toUpperCase(); if(val) { state.variazioni[selectedDate] = val; } salvaERicarica(); }
-    function resetGiornoSingolo() { delete state.variazioni[selectedDate]; delete state.colori[selectedDate]; delete state.nebbia[selectedDate]; delete state.straordinario[selectedDate]; delete state.sospesoRiposo[selectedDate]; delete state.note[selectedDate]; delete state.buonoPasto[selectedDate]; delete state.permessoSP[selectedDate]; salvaERicarica(); }
-    function aggiornaUI() { document.getElementById('activeDepotLabel').innerText = state.depositoAttivo || "Configurazione"; }
-    function apriReset() { chiudiMenuDestro(); document.getElementById('resetModal').style.display = 'block'; }
-    function chiudiReset() { document.getElementById('resetModal').style.display = 'none'; }
-    async function confermaReset() { document.body.style.opacity = "0.5"; if(typeof window.deleteCloudData === 'function') await window.deleteCloudData(); localStorage.removeItem('myTurniApp'); location.href = "index.html"; }
-    function apriBackup() { chiudiMenuDestro(); document.getElementById('backupModal').style.display = 'block'; }
-    function chiudiBackup() { document.getElementById('backupModal').style.display = 'none'; }
-    function chiudiStep() { document.getElementById('stepModal').style.display = 'none'; }
-    function chiudiEdit() { document.getElementById('editModal').style.display = 'none'; }
-    function esportaDatiSuFile() { const data = localStorage.getItem('myTurniApp'); if(!data) return; const blob = new Blob([data], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `backup_turni_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url); }
-    function importaDatiDaFile(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { let parsed = JSON.parse(e.target.result); parsed.lastUpdate = new Date().getTime(); localStorage.setItem('myTurniApp', JSON.stringify(parsed)); alert("Backup ripristinato!"); location.reload(); } catch (err) { alert("Errore file."); } }; reader.readAsText(file); }
-    function popolaCambio() { document.getElementById('singleTurnoSelect').value = ''; document.getElementById('btnSalvaCambio').disabled = true; }
-    function apriIcsModal() { chiudiMenuDestro(); document.getElementById('icsModal').style.display = 'block'; }
-    function chiudiIcsModal() { document.getElementById('icsModal').style.display = 'none'; }
-    function esportaICS() { const sD = document.getElementById('icsStartDate').value, eD = document.getElementById('icsEndDate').value; if (!sD || !eD || sD > eD) { alert("Date non valide."); return; } const tF = calcolaTurni().filter(t => t.start >= sD && t.start <= eD); if (tF.length === 0) { alert("Nessun turno."); return; } let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//MyTurniApp//IT\r\nCALSCALE:GREGORIAN\r\n"; const dC = Object.keys(state.dbCache || {}).sort(); tF.forEach(t => { const dP = t.start.split('-'); let d = creaDataSicura(t.start); d.setDate(d.getDate() + 1); const nP = dateToLocalISO(d).split('-'); let pT = t.title.replace(/ 🌫️| ⏱️| 📝|\(Sospeso\)| 🍝| 💸/g, '').trim(); const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + "Z"; let dbC = {}; const dSN = stringToNum(t.start); for (let i = dC.length - 1; i >= 0; i--) if (dSN >= stringToNum(dC[i])) { dbC = state.dbCache[dC[i]]; break; } let cT = trovaChiaveEsatta(dbC, pT.toUpperCase(), t.start), det = dbC[cT], oT = "", desc = "", loc = ""; if (det && det.inizio) { oT = ` (${det.inizio} - ${det.fine})`; desc = `Inizio: ${det.inizio} (${det.luogoInizio})\\nFine: ${det.fine} (${det.luogoFine})`; loc = det.luogoInizio; } ics += "BEGIN:VEVENT\r\nUID:" + t.start + "-" + pT + "@myturniapp\r\nDTSTAMP:" + now + "\r\nDTSTART;VALUE=DATE:" + dP[0]+dP[1]+dP[2] + "\r\nDTEND;VALUE=DATE:" + nP[0]+nP[1]+nP[2] + "\r\nSUMMARY:" + pT + oT + "\r\n" + (desc?"DESCRIPTION:"+desc+"\r\n":"") + (loc?"LOCATION:"+loc+"\r\n":"") + "END:VEVENT\r\n"; }); ics += "END:VCALENDAR"; const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' })); const a = document.createElement('a'); a.href = url; a.download = `turni.ics`; a.click(); chiudiIcsModal(); }
-    function inizializzaCalendario() { calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView: 'dayGridMonth', locale: 'it', firstDay: 1, height: 'auto', eventOrder: 'myOrder', buttonText: { today: 'Oggi' }, customButtons: { btnSalto: { text: '🔍', click: apriJumpModal } }, headerToolbar: { left: 'prev,next', center: 'title', right: 'btnSalto today' }, dateClick: (i) => gestisciInterazione(i.dateStr), eventClick: (info) => gestisciInterazione(info.event.startStr), events: (i, success) => success(calcolaTurni()) }); calendar.render(); }
+    function getOptionsTurni(includeDisp = false) {
+        let d = new Date(); 
+        d.setHours(12,0,0,0); 
+        let referenceDate = tempRotDate || dateToLocalISO(d); 
+        const rot = getRotazionePerData(referenceDate);
+        
+        if (!rot || !rot[state.depositoAttivo]) return ""; 
+        
+        let htmlDisp = "", htmlTurni = "", dispAggiunto = false;
+        let htmlRiposo = `<option value="RIPOSO" style="font-weight:bold; color:var(--riposo);">RIPOSO</option>`;
+        
+        rot[state.depositoAttivo].map((n, i) => ({ n: n.toUpperCase(), i: i }))
+            .sort((a, b) => a.n.localeCompare(b.n, undefined, {numeric: true}))
+            .forEach(item => { 
+                if (item.n === "DISP") { 
+                    if (!dispAggiunto) { 
+                        htmlDisp = `<option value="${item.i}">DISP</option>`; 
+                        dispAggiunto = true; 
+                    } 
+                } else { 
+                    htmlTurni += `<option value="${item.i}">${item.n}</option>`; 
+                } 
+            });
+            
+        if (includeDisp && state.depositoAttivo.startsWith('tc_') && !dispAggiunto) { 
+            htmlDisp = `<option value="DISP">DISP</option>`; 
+        }
+        
+        return htmlRiposo + htmlDisp + htmlTurni;
+    }
+
+    function salvaCambioSingolo() { 
+        const val = document.getElementById('singleTurnoSelect').value.trim().toUpperCase(); 
+        if(val) { state.variazioni[selectedDate] = val; } 
+        salvaERicarica(); 
+    }
+
+    function resetGiornoSingolo() { 
+        delete state.variazioni[selectedDate]; 
+        delete state.colori[selectedDate]; 
+        delete state.nebbia[selectedDate]; 
+        delete state.straordinario[selectedDate]; 
+        delete state.sospesoRiposo[selectedDate]; 
+        delete state.note[selectedDate]; 
+        delete state.buonoPasto[selectedDate]; 
+        delete state.permessoSP[selectedDate]; 
+        salvaERicarica(); 
+    }
+
+    function aggiornaUI() { 
+        document.getElementById('activeDepotLabel').innerText = state.depositoAttivo || "Configurazione"; 
+    }
+
+    function apriReset() { 
+        chiudiMenuDestro(); 
+        document.getElementById('resetModal').style.display = 'block'; 
+    }
+
+    function chiudiReset() { 
+        document.getElementById('resetModal').style.display = 'none'; 
+    }
+
+    async function confermaReset() { 
+        document.body.style.opacity = "0.5";
+        if(typeof window.deleteCloudData === 'function') {
+            await window.deleteCloudData();
+        }
+        localStorage.removeItem('myTurniApp'); 
+        location.href = "index.html"; 
+    }
+
+    function apriBackup() { 
+        chiudiMenuDestro(); 
+        document.getElementById('backupModal').style.display = 'block'; 
+    }
+
+    function chiudiBackup() { 
+        document.getElementById('backupModal').style.display = 'none'; 
+    }
+
+    function chiudiStep() { 
+        document.getElementById('stepModal').style.display = 'none'; 
+    }
+
+    function chiudiEdit() { 
+        document.getElementById('editModal').style.display = 'none'; 
+    }
+
+    function esportaDatiSuFile() { 
+        const data = localStorage.getItem('myTurniApp'); 
+        if(!data) return; 
+        const blob = new Blob([data], { type: 'application/json' }); 
+        const url = URL.createObjectURL(blob); 
+        const a = document.createElement('a'); 
+        a.href = url; 
+        a.download = `backup_turni_${new Date().toISOString().split('T')[0]}.json`; 
+        a.click(); 
+        URL.revokeObjectURL(url); 
+    }
+
+    function importaDatiDaFile(event) { 
+        const file = event.target.files[0]; 
+        if (!file) return; 
+        const reader = new FileReader(); 
+        reader.onload = function(e) { 
+            try { 
+                let parsed = JSON.parse(e.target.result);
+                parsed.lastUpdate = new Date().getTime(); // Rende i dati importati più "nuovi" per forzare la sincronizzazione
+                localStorage.setItem('myTurniApp', JSON.stringify(parsed)); 
+                alert("Backup ripristinato!"); 
+                location.reload(); 
+            } catch (err) { 
+                alert("Errore file non valido."); 
+            } 
+        }; 
+        reader.readAsText(file); 
+    }
+
+    function popolaCambio() { 
+        const input = document.getElementById('singleTurnoSelect'); 
+        input.value = ''; 
+        document.getElementById('btnSalvaCambio').disabled = true; 
+    }
+
+    function apriIcsModal() { 
+        chiudiMenuDestro(); 
+        document.getElementById('icsModal').style.display = 'block'; 
+    }
+
+    function chiudiIcsModal() { 
+        document.getElementById('icsModal').style.display = 'none'; 
+    }
+    
+    function esportaICS() {
+        const startDate = document.getElementById('icsStartDate').value; 
+        const endDate = document.getElementById('icsEndDate').value;
+        
+        if (!startDate || !endDate) { alert("Seleziona entrambe le date."); return; } 
+        if (startDate > endDate) { alert("La data di inizio deve essere precedente alla data di fine."); return; }
+        
+        const turni = calcolaTurni(); 
+        const turniFiltrati = turni.filter(t => t.start >= startDate && t.start <= endDate); 
+        
+        if (turniFiltrati.length === 0) { alert("Nessun turno nel periodo selezionato."); return; }
+        
+        let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//MyTurniApp//IT\r\nCALSCALE:GREGORIAN\r\n"; 
+        const dateChiavi = Object.keys(state.dbCache || {}).sort();
+        
+        turniFiltrati.forEach(t => {
+            const dateParts = t.start.split('-'); 
+            const icsDate = dateParts[0] + dateParts[1] + dateParts[2];
+            let d = creaDataSicura(t.start); 
+            d.setDate(d.getDate() + 1); 
+            
+            const nextDateStr = dateToLocalISO(d); 
+            const nextParts = nextDateStr.split('-'); 
+            const icsNextDate = nextParts[0] + nextParts[1] + nextParts[2];
+            
+            let pulitoTitle = t.title.replace(/ 🌫️| ⏱️| 📝|\(Sospeso\)| 🍝| 💸/g, '').trim(); 
+            const uid = t.start + "-" + pulitoTitle.replace(/\s+/g, '') + "@myturniapp"; 
+            const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + "Z";
+            
+            let dbCorrente = {}; 
+            const dSelezionata = stringToNum(t.start);
+            for (let i = dateChiavi.length - 1; i >= 0; i--) { 
+                if (dSelezionata >= stringToNum(dateChiavi[i])) { 
+                    dbCorrente = state.dbCache[dateChiavi[i]]; 
+                    break; 
+                } 
+            }
+            
+            let codiceBase = pulitoTitle.toUpperCase(); 
+            let chiaveTrovata = trovaChiaveEsatta(dbCorrente, codiceBase, t.start); 
+            let dettagli = dbCorrente[chiaveTrovata];
+            
+            let orariTitolo = ""; 
+            let descrizione = ""; 
+            let location = "";
+            
+            if (dettagli && dettagli.inizio && dettagli.fine) { 
+                orariTitolo = ` (${dettagli.inizio} - ${dettagli.fine})`; 
+                descrizione = `Inizio: ${dettagli.inizio} (${dettagli.luogoInizio})\\nFine: ${dettagli.fine} (${dettagli.luogoFine})`; 
+                location = dettagli.luogoInizio; 
+            }
+            
+            ics += "BEGIN:VEVENT\r\n"; 
+            ics += "UID:" + uid + "\r\n"; 
+            ics += "DTSTAMP:" + now + "\r\n"; 
+            ics += "DTSTART;VALUE=DATE:" + icsDate + "\r\n"; 
+            ics += "DTEND;VALUE=DATE:" + icsNextDate + "\r\n"; 
+            ics += "SUMMARY:" + pulitoTitle + orariTitolo + "\r\n"; 
+            if (descrizione) ics += "DESCRIPTION:" + descrizione + "\r\n"; 
+            if (location) ics += "LOCATION:" + location + "\r\n"; 
+            ics += "END:VEVENT\r\n";
+        });
+        
+        ics += "END:VCALENDAR"; 
+        const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' }); 
+        const url = URL.createObjectURL(blob); 
+        const a = document.createElement('a'); 
+        a.href = url; 
+        a.download = `turni_${startDate}_al_${endDate}.ics`; 
+        document.body.appendChild(a); 
+        a.click(); 
+        URL.revokeObjectURL(url); 
+        document.body.removeChild(a); 
+        chiudiIcsModal();
+    }
+
+        function inizializzaCalendario() { 
+        calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { 
+            initialView: 'dayGridMonth', 
+            locale: 'it', 
+            firstDay: 1, 
+            height: 'auto', 
+            eventOrder: 'myOrder', 
+            buttonText: { today: 'Oggi' }, 
+            customButtons: { btnSalto: { text: '🔍', click: apriJumpModal } }, 
+            headerToolbar: { left: 'prev,next', center: 'title', right: 'btnSalto today' }, 
+            dateClick: (i) => gestisciInterazione(i.dateStr),
+            eventClick: (info) => gestisciInterazione(info.event.startStr),
+            events: (i, success) => success(calcolaTurni())
+        });
+        calendar.render();
+    }
 </script>
 
 <script type="module">
@@ -1664,24 +2756,68 @@
 
     window.utenteLoggato = null;
 
-    window.deleteCloudData = async () => { if (window.utenteLoggato) try { await deleteDoc(doc(db, "utenti", window.utenteLoggato)); } catch(e) {} };
+    window.deleteCloudData = async () => {
+        if (window.utenteLoggato) {
+            try {
+                await deleteDoc(doc(db, "utenti", window.utenteLoggato));
+            } catch(e) { console.error("Errore eliminazione Cloud:", e); }
+        }
+    };
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             window.utenteLoggato = user.uid;
+            console.log("Sincronizzazione Cloud attiva per:", user.email);
+
             try {
-                const docSnap = await getDoc(doc(db, "utenti", window.utenteLoggato));
+                const docRef = doc(db, "utenti", window.utenteLoggato);
+                const docSnap = await getDoc(docRef);
+
                 if (docSnap.exists()) {
-                    let dC = docSnap.data(), dL = JSON.parse(localStorage.getItem('myTurniApp')) || state;
-                    if ((dC.lastUpdate || 0) >= (dL.lastUpdate || 0)) { Object.assign(state, dC); localStorage.setItem('myTurniApp', JSON.stringify(state)); } 
-                    else if (typeof window.syncToCloud === 'function') window.syncToCloud(dL);
-                    if (typeof calendar !== 'undefined') calendar.refetchEvents(); 
-                } else { let sS = { ...state }; delete sS.dbCache; delete sS.rotCache; delete sS.dispCache; await setDoc(doc(db, "utenti", window.utenteLoggato), sS); }
-            } catch(e) {}
-        } else { window.utenteLoggato = null; }
+                    let datiCloud = docSnap.data();
+                    let datiLocali = JSON.parse(localStorage.getItem('myTurniApp')) || state;
+
+                    // CONTROLLO TIMESTAMP
+                    let cloudTime = datiCloud.lastUpdate || 0;
+                    let localTime = datiLocali.lastUpdate || 0;
+
+                    if (cloudTime >= localTime) {
+                        // Il Cloud ha i dati più aggiornati: li sovrascriviamo al telefono
+                        Object.assign(state, datiCloud);
+                        localStorage.setItem('myTurniApp', JSON.stringify(state));
+                    } else {
+                        // Il telefono ha dati più nuovi (es. si era disconnesso). Forziamo l'aggiornamento verso il Cloud
+                        console.log("Dati locali più recenti, sincronizzo verso il cloud...");
+                        Object.assign(state, datiLocali);
+                        if (typeof window.syncToCloud === 'function') {
+                            window.syncToCloud(state);
+                        }
+                    }
+                    
+                    // Ricarichiamo gli eventi del calendario
+                    if (typeof calendar !== 'undefined') {
+                        calendar.refetchEvents(); 
+                    }
+                } else {
+                    let stateDaSalvare = { ...state };
+                    delete stateDaSalvare.dbCache; 
+                    delete stateDaSalvare.rotCache; 
+                    delete stateDaSalvare.dispCache;
+                    await setDoc(docRef, stateDaSalvare);
+                }
+            } catch(e) { console.error("Errore sincronizzazione Cloud:", e); }
+        } else {
+            window.utenteLoggato = null;
+        }
     });
 
-    window.syncToCloud = async (s) => { if (window.utenteLoggato) try { await setDoc(doc(db, "utenti", window.utenteLoggato), s); } catch(e) {} };
+    window.syncToCloud = async (stateDaSalvare) => {
+        if (window.utenteLoggato) {
+            try {
+                await setDoc(doc(db, "utenti", window.utenteLoggato), stateDaSalvare);
+            } catch(e) { console.log("Salvataggio Cloud fallito (probabilmente sei offline).", e); }
+        }
+    };
 </script>
 </body>
 </html>
