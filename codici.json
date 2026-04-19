@@ -1,0 +1,224 @@
+[
+  {
+    "codice": "IQV4JN",
+    "nome": "De Boni Eleonora",
+    "data_creazione": "2026-03-25",
+    "attivo": true
+  },
+  {
+    "codice": "O0UUMF",
+    "nome": "Bacci 02 Mattia",
+    "data_creazione": "2026-03-27",
+    "attivo": true
+  },
+  {
+    "codice": "N08MUP",
+    "nome": "Naccari Luca",
+    "data_creazione": "2026-03-27",
+    "attivo": true
+  },
+  {
+    "codice": "R9OOEP",
+    "nome": "Fuin Raffaele",
+    "data_creazione": "2026-03-27",
+    "attivo": true
+  },
+  {
+    "codice": "XD2FDC",
+    "nome": "Scarpa Giada",
+    "data_creazione": "2026-03-31",
+    "attivo": true
+  },
+  {
+    "codice": "BY4DDP",
+    "nome": "Scarpa Enrico",
+    "data_creazione": "2026-03-31",
+    "attivo": true
+  },
+  {
+    "codice": "X0TQBB",
+    "nome": "Falconi Federico",
+    "data_creazione": "2026-03-31",
+    "attivo": true
+  },
+  {
+    "codice": "13AKDU",
+    "nome": "Vianello Gianluigi",
+    "data_creazione": "2026-04-01",
+    "attivo": true
+  },
+  {
+    "codice": "G9G42L",
+    "nome": "Padoan Davide",
+    "data_creazione": "2026-04-01",
+    "attivo": true
+  },
+  {
+    "codice": "QTGQ3J",
+    "nome": "Zane Maura",
+    "data_creazione": "2026-04-02",
+    "attivo": true
+  },
+  {
+    "codice": "YX7XLJ",
+    "nome": "Vitturi Mattia",
+    "data_creazione": "2026-04-02",
+    "attivo": true
+  },
+  {
+    "codice": "3LGN28",
+    "nome": "Poggi Ettore",
+    "data_creazione": "2026-04-02",
+    "attivo": true
+  },
+  {
+    "codice": "YNYPW1",
+    "nome": "De Grandis Matteo",
+    "data_creazione": "2026-04-02",
+    "attivo": true
+  },
+  {
+    "codice": "P0B6UP",
+    "nome": "Boscolo Tommaso",
+    "data_creazione": "2026-04-02",
+    "attivo": true
+  },
+  {
+    "codice": "IU6858",
+    "nome": "Zennaro Marco",
+    "data_creazione": "2026-04-02",
+    "attivo": true
+  },
+  {
+    "codice": "J4NVZ1",
+    "nome": "Ballarin Cristian",
+    "data_creazione": "2026-04-04",
+    "attivo": true
+  },
+  {
+    "codice": "5U239W",
+    "nome": "Missaglia Barbara",
+    "data_creazione": "2026-04-06",
+    "attivo": true
+  },
+  {
+    "codice": "MLPIZR",
+    "nome": "Martin Thomas",
+    "data_creazione": "2026-04-07",
+    "attivo": true
+  },
+  {
+    "codice": "YR9Z98",
+    "nome": "Scarpa Prisca",
+    "data_creazione": "2026-04-07",
+    "attivo": true
+  },
+  {
+    "codice": "J34LLK",
+    "nome": "Comin Paolo",
+    "data_creazione": "2026-04-07",
+    "attivo": true
+  },
+  {
+    "codice": "QEAPYG",
+    "nome": "Signoretto Nicola",
+    "data_creazione": "2026-04-07",
+    "attivo": true
+  },
+  {
+    "codice": "YM7T0W",
+    "nome": "Lana Mattia",
+    "data_creazione": "2026-04-08",
+    "attivo": true
+  },
+  {
+    "codice": "6GYV4R",
+    "nome": "Scarpa Angela",
+    "data_creazione": "2026-04-08",
+    "attivo": true
+  },
+  {
+    "codice": "7ABAS2",
+    "nome": "David Giacomo",
+    "data_creazione": "2026-04-08",
+    "attivo": true
+  },
+  {
+    "codice": "ZFDQY0",
+    "nome": "Zennaro Matteo",
+    "data_creazione": "2026-04-10",
+    "attivo": true
+  },
+  {
+    "codice": "6U321Y",
+    "nome": "Grasso Filippo",
+    "data_creazione": "2026-04-10",
+    "attivo": true
+  },
+  {
+    "codice": "F17WI6",
+    "nome": "Ukeni Jermain",
+    "data_creazione": "2026-04-10",
+    "attivo": true
+  },
+  {
+    "codice": "XTRRBE",
+    "nome": "Vio Michele",
+    "data_creazione": "2026-04-10",
+    "attivo": true
+  },
+  {
+    "codice": "2MPJ0I",
+    "nome": "Caforio Cosimo",
+    "data_creazione": "2026-04-10",
+    "attivo": true
+  },
+  {
+    "codice": "ILO8FS",
+    "nome": "Ricca Nicola",
+    "data_creazione": "2026-04-10",
+    "attivo": true
+  },
+  {
+    "codice": "CJS9AM",
+    "nome": "Passarella Mattia",
+    "data_creazione": "2026-04-14",
+    "attivo": true
+  },
+  {
+    "codice": "25MIZP",
+    "nome": "Secco Matteo",
+    "data_creazione": "2026-04-14",
+    "attivo": true
+  },
+  {
+    "codice": "8JC19I",
+    "nome": "Ferro Alvise",
+    "data_creazione": "2026-04-15",
+    "attivo": true
+  },
+  {
+    "codice": "F1UQED",
+    "nome": "Quaresima Eleonora",
+    "data_creazione": "2026-04-16",
+    "attivo": true
+  },
+  {
+    "codice": "LROYGU",
+    "nome": "Ferro Jacopo",
+    "data_creazione": "2026-04-16",
+    "attivo": true
+  },
+  {
+    "codice": "QLR61J",
+    "nome": "Vio Roberto",
+    "data_creazione": "2026-04-17",
+    "attivo": true
+  },
+  {
+    "codice": "9FPDZ2",
+    "nome": "Dragone Rosanna",
+    "data_creazione": "2026-04-18",
+    "attivo": true
+  }
+]

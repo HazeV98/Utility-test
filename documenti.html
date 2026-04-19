@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utility - Documenti</title>
+    <style>
+        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; }
+        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
+        
+        /* MENU LATERALE UNIFICATO */
+        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 5999; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 6000; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
+        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; text-transform: none; }
+        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+
+        #content-area { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
+        .file-btn { background-color: var(--primary); color: white; border: none; padding: 15px; font-size: 16px; border-radius: 10px; cursor: pointer; text-decoration: none; text-align: center; flex: 1; font-weight: 500; }
+        .file-row { display: flex; gap: 10px; width: 100%; }
+        .download-btn { background-color: white; border: 2px solid var(--primary); color: var(--primary); padding: 10px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 45px; font-size: 20px; }
+        .status-message { color: #666; text-align: center; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3 style="margin:0; color:white;">Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+        </div>
+        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
+        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
+        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
+        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link">🕒 Orari Navigazione</a>
+        <a href="documenti.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">📄 Documenti</a>
+        <a href="link.html" class="sidebar-link">🔗 Link</a>
+        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
+        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
+        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+    </div>
+
+    <div class="header">
+        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
+        <h2>📄 Documenti</h2>
+        <div style="width: 50px;"></div>
+    </div>
+
+    <div id="content-area">
+        <div class="status-message">Caricamento documenti...</div>
+    </div>
+
+    <script>
+        // Funzioni per l'apertura e la chiusura del menù laterale
+        function apriMenuLaterale() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; }
+        function chiudiMenuLaterale() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; }
+
+        const CARTELLA_DOCS = "documenti";
+
+        async function downloadForzato(url, filename) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const urlBlob = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = urlBlob; a.download = filename;
+                document.body.appendChild(a); a.click();
+                window.URL.revokeObjectURL(urlBlob);
+            } catch (e) { window.open(url, '_blank'); }
+        }
+
+        async function init() {
+            const area = document.getElementById('content-area');
+            try {
+                const resMappa = await fetch('mappa_file.json?t=' + new Date().getTime());
+                if (!resMappa.ok) throw new Error();
+                const datiMappa = await resMappa.json();
+                
+                // Filtra i file che si trovano nella cartella "documenti"
+                const files = datiMappa.albero
+                    .filter(p => p.startsWith(CARTELLA_DOCS + "/") && p.split('/').length === 2)
+                    .map(p => p.split('/')[1]);
+
+                area.innerHTML = "";
+                if (files.length === 0) {
+                    area.innerHTML = `<div class="status-message">Nessun documento presente in archivio.</div>`;
+                    return;
+                }
+
+                files.sort((a, b) => a.localeCompare(b));
+
+                files.forEach(nomeOriginale => {
+                    let nomeVis = nomeOriginale.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
+                    nomeVis = nomeVis.charAt(0).toUpperCase() + nomeVis.slice(1);
+
+                    const row = document.createElement('div'); row.className = "file-row";
+                    const aOpen = document.createElement('a');
+                    aOpen.className = "file-btn"; aOpen.innerText = nomeVis;
+                    aOpen.href = `${CARTELLA_DOCS}/${nomeOriginale}`;
+                    aOpen.target = "_blank";
+
+                    const aDown = document.createElement('div');
+                    aDown.className = "download-btn"; aDown.innerHTML = "⬇️";
+                    aDown.onclick = () => downloadForzato(`${CARTELLA_DOCS}/${nomeOriginale}`, nomeOriginale);
+
+                    row.appendChild(aOpen); row.appendChild(aDown); area.appendChild(row);
+                });
+            } catch (e) { 
+                area.innerHTML = `<div class="status-message">Errore: mappa_file.json non trovata.<br>Vai in Admin e clicca 'Forza Creazione Mappa'.</div>`; 
+            }
+        }
+        window.onload = init;
+    </script>
+</body>
+</html>
+ 

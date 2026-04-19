@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utility - Link</title>
+    <style>
+        /* --- STILI GLOBALI UNIFICATI --- */
+        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; }
+        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* HEADER */
+        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; }
+        
+        /* MENU LATERALE */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
+        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; }
+        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+
+        /* AREA CONTENUTI E CATEGORIE */
+        .content-area { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
+        .status-message { text-align: center; color: #666; font-size: 16px; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        
+        .category-block { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+        .category-title { font-size: 14px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; margin-top: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        
+        /* RIGA LINK CON COPIA */
+        .link-row { display: flex; gap: 8px; width: 100%; align-items: stretch; }
+
+        .link-btn { flex-grow: 1; background-color: white; color: var(--primary); border: 2px solid var(--primary); padding: 16px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: space-between; transition: background-color 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .link-btn:active { transform: translateY(2px); background-color: #f8f9fa; }
+        
+        .copy-btn { width: 55px; background-color: white; color: var(--primary); border: 2px solid var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .copy-btn:active { transform: translateY(2px); background-color: #e9ecef; }
+        
+        .link-icon { font-size: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
+        <h2>Link Utili</h2>
+        <div style="width: 50px;"></div>
+    </div>
+
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3 style="margin:0; color:white;">Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+        </div>
+        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
+        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
+        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
+        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link">🕒 Orari</a>
+        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
+        <a href="link.html" class="sidebar-link">🔗 Link</a>
+        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
+        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
+        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+    </div>
+
+    <div id="content-area" class="content-area">
+        <div class="status-message">Caricamento link...</div>
+    </div>
+
+    <script>
+        function apriMenuLaterale() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; }
+        function chiudiMenuLaterale() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; }
+
+        // --- FUNZIONE COPIA URL ---
+        function copiaLink(url, btn) {
+            navigator.clipboard.writeText(url).then(() => {
+                const iconaOriginale = btn.innerHTML;
+                btn.innerHTML = "✅"; 
+                btn.style.borderColor = "#28a745";
+                btn.style.color = "#28a745";
+                
+                setTimeout(() => {
+                    btn.innerHTML = iconaOriginale;
+                    btn.style.borderColor = "";
+                    btn.style.color = "";
+                }, 1500);
+            }).catch(err => {
+                console.error('Errore nella copia: ', err);
+            });
+        }
+
+        async function caricaLink() {
+            const area = document.getElementById('content-area');
+            try {
+                const noCache = new Date().getTime();
+                const response = await fetch(`link.json?v=${noCache}`);
+                
+                if (!response.ok) {
+                    area.innerHTML = `<div class="status-message">File link.json non trovato.</div>`;
+                    return;
+                }
+
+                const dati = await response.json();
+                area.innerHTML = "";
+
+                if (!dati.link || dati.link.length === 0) {
+                    area.innerHTML = `<div class="status-message">Nessun link presente.</div>`;
+                    return;
+                }
+
+                // Genera i blocchi per le Categorie
+                dati.link.forEach(categoriaObj => {
+                    const block = document.createElement('div');
+                    block.className = "category-block";
+
+                    const titolo = document.createElement('div');
+                    titolo.className = "category-title";
+                    titolo.innerText = categoriaObj.categoria;
+                    block.appendChild(titolo);
+
+                    // Genera i singoli link dentro la categoria
+                    categoriaObj.elementi.forEach(linkObj => {
+                        const row = document.createElement('div');
+                        row.className = "link-row";
+
+                        const btn = document.createElement('a');
+                        btn.className = "link-btn";
+                        btn.href = linkObj.url;
+                        btn.target = "_blank";
+                        btn.innerHTML = `<span>${linkObj.nome}</span> <span class="link-icon">🔗</span>`;
+                        
+                        const copyBtn = document.createElement('div');
+                        copyBtn.className = "copy-btn";
+                        copyBtn.innerHTML = "📋";
+                        copyBtn.title = "Copia URL";
+                        copyBtn.onclick = (e) => {
+                            e.preventDefault();
+                            copiaLink(linkObj.url, copyBtn);
+                        };
+
+                        row.appendChild(btn);
+                        row.appendChild(copyBtn);
+                        block.appendChild(row);
+                    });
+
+                    area.appendChild(block);
+                });
+
+            } catch (error) {
+                area.innerHTML = `<div class="status-message">Errore nel caricamento dei dati.</div>`;
+            }
+        }
+
+        window.onload = caricaLink;
+    </script>
+</body>
+</html>

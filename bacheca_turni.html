@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Utility - Bacheca Cambi</title>
+    <meta name="theme-color" content="#0056b3">
+
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
+
+    <style>
+        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #dc3545; --warning: #ffc107; --info: #17a2b8;}
+        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
+        
+        /* MENU LATERALE UNIFICATO */
+        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 5999; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 6000; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
+        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; text-transform: none; }
+        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+
+        .view-container { width: 100%; max-width: 400px; display: none; flex-direction: column; gap: 15px; text-align: center; }
+        
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; margin-bottom: 15px; position: relative; }
+        .card-suggested { background: #fffff8; border: 2px solid var(--warning); padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; margin-bottom: 15px; position: relative;}
+        .card-suggested::before { content: "✨ MATCH"; position: absolute; top: -10px; right: 15px; background: var(--warning); color: #fff; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 10px; }
+
+        .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; transition: opacity 0.2s; margin-top: 10px; }
+        .btn-action:active { opacity: 0.8; }
+        
+        .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white; text-transform: uppercase;}
+        .input-field::placeholder { text-transform: none; }
+        .suggested-header { font-size: 14px; font-weight: bold; color: #856404; text-align: left; margin-bottom: 10px; margin-top: 5px; text-transform: none;}
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; max-height: 90vh; overflow-y: auto;}
+        
+        .tabs { display: flex; background: #e9ecef; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 12px; text-align: center; font-weight: bold; color: #666; cursor: pointer; background: transparent; border: none; transition: 0.2s; }
+        .tab-btn.active { background: var(--primary); color: white; }
+
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 4px; }
+        .badge-primo { background: #cce5ff; color: #004085; }
+        .badge-mezzo { background: #d4edda; color: #155724; }
+        .badge-terzo { background: #f8d7da; color: #721c24; }
+        .badge-riposo { background: #e2e3e5; color: #383d41; }
+
+        .contact-actions { display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 10px;}
+        .action-icon { background: #e9ecef; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px; color: var(--text-color); cursor: pointer;}
+    </style>
+</head>
+<body>
+
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3 style="margin:0; color:white;">Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+        </div>
+        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
+        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
+        <a href="rotazioni.html" class="sidebar-link">👥 Rotazioni (test)</a>
+        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">🔄 Bacheca Turni</a>
+        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link">🕒 Orari Navigazione</a>
+        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
+        <a href="link.html" class="sidebar-link">🔗 Link</a>
+        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
+        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
+        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+    </div>
+
+    <div class="header">
+        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
+        <h2>🔄 Cambi Turno</h2>
+        <div style="width: 50px;"></div>
+    </div>
+
+    <div id="view-no-auth" class="view-container">
+        <div class="card" style="text-align: center;">
+            <h3 style="color: var(--danger);">Accesso Richiesto</h3>
+            <p style="color: #666; font-size: 15px; line-height: 1.5; text-transform: none;">Per accedere alla bacheca scambi devi effettuare il login tramite la Home page.</p>
+            <button class="btn-action" style="background-color: var(--primary);" onclick="window.location.href='index.html'">Torna alla Home</button>
+        </div>
+    </div>
+
+    <div id="view-main" class="view-container">
+        <button class="btn-action" style="margin-top: 0; margin-bottom: 10px;" onclick="apriModaleAnnuncio()">+ Nuovo Scambio</button>
+        
+        <div class="card" style="padding: 15px; margin-bottom: 15px;">
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Filtra Mansione:</label>
+                    <select id="filtroMansione" class="input-field" style="margin-bottom: 0; text-transform: none;" onchange="caricaBacheca()">
+                        <option value="Tutte">Tutte le mansioni</option>
+                        <option value="Marinaio">Marinaio</option>
+                        <option value="Preposto al comando">Preposto al comando</option>
+                        <option value="Comandante">Comandante</option>
+                        <option value="Timoniere">Timoniere</option>
+                        <option value="Marinaio polivalente">Marinaio polivalente</option>
+                        <option value="Direttore di macchina">Direttore di macchina</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Filtra Data:</label>
+                    <input type="date" id="filtroData" class="input-field" style="margin-bottom: 0; text-transform: none;" onchange="caricaBacheca()">
+                </div>
+            </div>
+        </div>
+        
+        <div id="suggeriti-bacheca-container" style="display: none; border-bottom: 2px dashed #ddd; padding-bottom: 15px; margin-bottom: 15px;">
+            <div class="suggested-header">✨ Suggeriti per te (Offrono ciò che cerchi)</div>
+            <div id="suggeriti-bacheca"></div>
+        </div>
+
+        <div id="lista-annunci"></div>
+    </div>
+
+    <div id="profileModal" class="modal-overlay" onclick="chiudiSeSfondo(event, 'profileModal')" style="z-index: 5010;">
+        <div class="modal-content">
+            <span id="btnCloseProfileModal" style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f; display:none;" onclick="chiudiModaleProfilo()">&times;</span>
+            <h3 style="margin-top: 5px; color: #32325d; text-align: center; text-transform: none;">I Tuoi Dati</h3>
+            <p style="font-size: 13px; color: #666; text-align: center; text-transform: none;">Questi dati verranno mostrati nei tuoi annunci.</p>
+            <input type="text" id="regNome" class="input-field" placeholder="Nome" style="text-transform: capitalize;">
+            <input type="text" id="regCognome" class="input-field" placeholder="Cognome" style="text-transform: capitalize;">
+            <input type="number" id="regProgressivo" class="input-field" placeholder="Numero Progressivo (Facoltativo)" style="text-transform: none;">
+            <input type="text" id="regMatricola" class="input-field" placeholder="Matricola" style="text-transform: uppercase;">
+            <input type="tel" id="regTelefono" class="input-field" placeholder="Telefono (per WhatsApp)" style="text-transform: none;">
+            <select id="regMansione" class="input-field" style="text-transform: none;">
+                <option value="">-- Seleziona Mansione --</option>
+                <option value="Marinaio">Marinaio</option>
+                <option value="Preposto al comando">Preposto al comando</option>
+                <option value="Comandante">Comandante</option>
+                <option value="Timoniere">Timoniere</option>
+                <option value="Marinaio polivalente">Marinaio polivalente</option>
+                <option value="Direttore di macchina">Direttore di macchina</option>
+            </select>
+            <button id="btnSalvaProfilo" class="btn-action" onclick="salvaProfilo()">Salva Dati</button>
+        </div>
+    </div>
+
+    <div id="adModal" class="modal-overlay" onclick="chiudiSeSfondo(event, 'adModal')">
+        <div class="modal-content">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('adModal').style.display='none'">&times;</span>
+            <h3 style="margin-top: 5px; color: #32325d; text-transform: none;">Crea Annuncio</h3>
+            
+            <div class="tabs">
+                <button id="tab-ad-turno" class="tab-btn active" onclick="switchAdTab('turno')">Cambio Turno</button>
+                <button id="tab-ad-riposo" class="tab-btn" onclick="switchAdTab('riposo')">Cambio Riposo</button>
+            </div>
+
+            <div id="form-ad-turno">
+                <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Data del cambio:</label>
+                <input type="date" id="adDataTurno" class="input-field" style="text-transform: none;" onchange="verificaTurno()">
+                
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Cedo:</label>
+                        <select id="adCedoTurno" class="input-field" style="text-transform: none;">
+                            <option value="primo">Primo</option>
+                            <option value="mezzo">Mezzo</option>
+                            <option value="terzo">Terzo</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Cerco:</label>
+                        <select id="adCercoTurno" class="input-field" style="text-transform: none;">
+                            <option value="primo">Primo</option>
+                            <option value="mezzo">Mezzo</option>
+                            <option value="terzo">Terzo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px dashed #ccc; margin: 15px 0;">
+                
+                <label style="font-size: 11px; font-weight: bold; color: var(--primary); text-transform: none;">Codice Turno Ceduto:</label>
+                <input type="text" id="adCodiceTurno" class="input-field" placeholder="es. 1C01, 1B01 ecc..." oninput="this.value = this.value.toUpperCase(); verificaTurno()">
+                
+                <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none; display: block; margin-top: 5px;">Info Turno (Facoltativo):</label>
+                
+                <div style="display: flex; gap: 10px;">
+                    <input type="time" id="adOraInizio" class="input-field" placeholder="Ora Inizio" style="flex:1; text-transform: none;">
+                    <input type="text" id="adLuogoInizio" class="input-field" placeholder="Luogo Inizio" style="flex:2; text-transform: none;">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <input type="time" id="adOraFine" class="input-field" placeholder="Ora Fine" style="flex:1; text-transform: none;">
+                    <input type="text" id="adLuogoFine" class="input-field" placeholder="Luogo Fine" style="flex:2; text-transform: none;">
+                </div>
+                
+                <input type="hidden" id="adChiaveEsatta">
+                <input type="hidden" id="adDataAttivaDb">
+            </div>
+
+            <div id="form-ad-riposo" style="display: none;">
+                <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Cerco Riposo il giorno:</label>
+                <input type="date" id="adDataRiposo" class="input-field" style="text-transform: none;">
+                
+                <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Giorni in cui posso restituirlo (Facoltativo):</label>
+                <input type="date" id="adDataRestituzione1" class="input-field" style="margin-bottom: 5px; text-transform: none;">
+                <input type="date" id="adDataRestituzione2" class="input-field" style="text-transform: none;">
+                <p style="font-size: 10px; color: #999; margin-top: 0; text-transform: none;">Puoi lasciare vuoto se vuoi concordarlo in chat.</p>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+            <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none; display: block;">Note (Facoltative):</label>
+            <textarea id="adNote" class="input-field" placeholder="Es. Cerco solo mattina, flessibile sull'orario..." style="text-transform: none; resize: vertical; min-height: 60px;"></textarea>
+
+            <button id="btnPubblica" class="btn-action" onclick="pubblicaAnnuncio()">Pubblica Annuncio</button>
+            <button class="btn-action" style="background: #e9ecef; color: #32325d; margin-top: 10px;" onclick="apriModaleProfilo()">👤 I Miei Dati</button>
+        </div>
+    </div>
+
+    <div id="imageModal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); overflow: hidden; backdrop-filter: blur(5px);" onclick="chiudiImageModalSeSfondo(event)">
+        <div style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; font-size: 35px; color: white; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10001;" onclick="chiudiImageModal()">&times;</div>
+        
+        <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px; padding-bottom: 80px; position: relative;">
+            <img id="turnoImage" src="" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain;">
+            
+            <div id="imageBanner" style="position: relative; z-index: 10001; margin-top: 15px; background: rgba(0,0,0,0.7); color: #fff; padding: 10px 20px; border-radius: 12px; font-size: 13px; text-align: center; max-width: 90%; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                ⚠️ Controllare sempre i turni ufficiali e la presenza di eventuali varianti ai turni.
+            </div>
+        </div>
+        
+        <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #11cdef; color: white; border: none; padding: 12px 24px; border-radius: 20px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 10001;">📥 Scarica</button>
+    </div>
+
+    <div id="error-box" style="display: none; padding: 20px; color: red; text-align: center; width: 100%;"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, where, addDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", storageBucket: "utility-haze.firebasestorage.app", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let userDataPrivate = {};
+        let myAnnunciAttivi = []; 
+        const isAdmin = localStorage.getItem('dev_mode_active') === 'true';
+
+        let currentImagePath = "";
+        let imgBaseFallback = "";
+        let pzInstance = null;
+
+        const svgWa = `<svg viewBox="0 0 24 24" width="22" height="22" fill="#25D366"><path d="M12.031 0C5.385 0 .018 5.366.018 12.012c0 2.125.553 4.197 1.603 6.012L.05 24l6.115-1.604c1.745.965 3.738 1.474 5.866 1.474 6.646 0 12.013-5.366 12.013-12.012S18.677 0 12.031 0zm-.018 21.84c-1.796 0-3.553-.483-5.093-1.396l-.365-.216-3.791.994.996-3.697-.238-.377a9.98 9.98 0 0 1-1.528-5.337C1.994 6.452 6.444 2.016 12.013 2.016c2.705 0 5.247 1.053 7.158 2.966 1.91 1.912 2.964 4.456 2.964 7.165 0 5.564-4.45 10.003-10.012 10.003l-.11-.31zm5.503-7.534c-.302-.151-1.785-.881-2.062-.981-.277-.101-.479-.151-.68.151-.202.302-.781.981-.957 1.182-.176.202-.353.226-.655.075-.302-.151-1.275-.47-2.428-1.503-.896-.803-1.501-1.794-1.677-2.096-.176-.302-.019-.465.132-.616.136-.136.302-.353.453-.53.151-.176.202-.302.302-.504.101-.202.05-.378-.025-.53-.075-.151-.68-1.64-.932-2.245-.245-.59-.495-.51-.68-.52-.176-.01-.378-.01-.58-.01-.202 0-.53.076-.807.378-.277.302-1.058 1.034-1.058 2.52 0 1.487 1.083 2.924 1.234 3.125.151.202 2.132 3.255 5.163 4.561 2.222.956 2.87.805 3.373.68.591-.148 1.785-.73 2.037-1.435.252-.705.252-1.31.176-1.435-.075-.126-.277-.202-.58-.353z"/></svg>`;
+        const svgCamera = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm8 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg>`;
+        const svgShare = `<svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg>`;
+
+        // Funzioni per l'apertura e la chiusura del menù laterale
+        window.apriMenuLaterale = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; };
+        window.chiudiMenuLaterale = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; };
+        
+        function nascondiTutto() { document.querySelectorAll('.view-container').forEach(e => e.style.display='none'); }
+
+        // --- FUNZIONE PER CHIUDERE MODALI CLICCANDO FUORI ---
+        window.chiudiSeSfondo = function(event, modalId) {
+            if (event.target.id === modalId) {
+                document.getElementById(modalId).style.display = 'none';
+            }
+        };
+
+        // Ritorna la data di oggi formattata locale senza i problemi del fuso orario UTC
+        function getOggiLocale() {
+            const d = new Date();
+            return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+        }
+
+        // --- MOTORE LOGICA DB COME IN CALENDARIO.HTML ---
+        const LISTA_FILE_INFO = ["info_turni_2026-03-02.json", "info_turni_2026-03-28.json"];
+        let localDbCache = {};
+        
+        async function precaricaTuttiDB() {
+            for (let file of LISTA_FILE_INFO) {
+                const match = file.match(/\d{4}-\d{2}-\d{2}/);
+                const dataInizio = match ? match[0] : null;
+                if (dataInizio) {
+                    try {
+                        const res = await fetch(file + "?v=" + new Date().getTime());
+                        if (res.ok) {
+                            localDbCache[dataInizio] = await res.json();
+                        }
+                    } catch(e) { console.warn("Impossibile caricare " + file); }
+                }
+            }
+        }
+
+        let dbInUso = null;
+        let dataAttivaDb = "";
+
+        function caricaDbCorrenteSincrono(dateStr) {
+            const dateChiavi = Object.keys(localDbCache).sort();
+            if (dateChiavi.length === 0) return null;
+            
+            const dSelezionata = stringToNum(dateStr);
+            let dataTrovata = dateChiavi[0];
+            let dbTrovato = localDbCache[dataTrovata];
+
+            for (let i = dateChiavi.length - 1; i >= 0; i--) { 
+                if (dSelezionata >= stringToNum(dateChiavi[i])) { 
+                    dataTrovata = dateChiavi[i];
+                    dbTrovato = localDbCache[dateChiavi[i]];
+                    break;
+                } 
+            }
+            
+            dbInUso = dbTrovato;
+            dataAttivaDb = dataTrovata;
+            return { db: dbTrovato, dataDb: dataTrovata };
+        }
+
+        function stringToNum(s) { 
+            if(!s) return 0; 
+            let p = s.split('-'); 
+            return Math.floor(Date.UTC(p[0], p[1]-1, p[2]) / 86400000); 
+        }
+
+        function creaDataSicura(dataStr) { 
+            if(!dataStr) return new Date(); 
+            let p = dataStr.split('-'); 
+            return new Date(p[0], p[1] - 1, p[2], 12, 0, 0); 
+        }
+
+        function trovaChiaveEsatta(db, codiceBase, dateStr) {
+            if (!db || !codiceBase) return codiceBase;
+            let codiciDaCercare = [codiceBase];
+            
+            let matchB = codiceBase.match(/^([1-9])B(\d{2})$/);
+            if (matchB) {
+                let linea = matchB[1]; let finale = matchB[2];
+                let letteraPilota = (linea === '1' || linea === '2') ? 'C' : 'P';
+                let regex = new RegExp(`^${linea}[A-Z]${finale}$`);
+                let trovati = Object.keys(db).filter(k => regex.test(k));
+                if (trovati.length > 0) codiciDaCercare.push(...trovati);
+                else codiciDaCercare.push(`${linea}${letteraPilota}${finale}`);
+            } else {
+                let match50 = codiceBase.match(/^([A-Z0-9]+?)(\d{2})$/);
+                if (match50) {
+                    let pref = match50[1]; let num = parseInt(match50[2], 10);
+                    if (num >= 50) codiciDaCercare.push(pref + String(num - 50).padStart(2, '0'));
+                }
+            }
+
+            let targetDay = creaDataSicura(dateStr).getDay(); 
+            targetDay = targetDay === 0 ? 7 : targetDay; 
+            const dayMap = { "LUN": 1, "MAR": 2, "MER": 3, "GIO": 4, "VEN": 5, "SAB": 6, "DOM": 7 };
+
+            for (let codCercato of codiciDaCercare) {
+                let keys = Object.keys(db).filter(k => k === codCercato || k.startsWith(codCercato + "_"));
+                let exactMatch = null; let genericMatch = null;
+                for (let k of keys) {
+                    if (k === codCercato) { genericMatch = k; continue; }
+                    let suffix = k.substring(codCercato.length + 1); 
+                    if (suffix.includes("-")) {
+                        let parts = suffix.split("-");
+                        if (parts.length === 2 && dayMap[parts[0]] && dayMap[parts[1]]) {
+                            let start = dayMap[parts[0]]; let end = dayMap[parts[1]];
+                            if (start <= end) { if (targetDay >= start && targetDay <= end) exactMatch = k; } 
+                            else { if (targetDay >= start || targetDay <= end) exactMatch = k; }
+                        }
+                    } else {
+                        if (dayMap[suffix] && dayMap[suffix] === targetDay) exactMatch = k;
+                    }
+                }
+                if (exactMatch) return exactMatch;
+                if (genericMatch) return genericMatch;
+            }
+            return codiceBase; 
+        }
+
+        function formatTimeForInput(timeStr) {
+            if (!timeStr) return "";
+            let parts = timeStr.replace('.', ':').split(':');
+            if (parts.length >= 2) {
+                let h = parts[0].trim().padStart(2, '0');
+                let m = parts[1].trim().padStart(2, '0');
+                return `${h}:${m}`;
+            }
+            return timeStr;
+        }
+
+        // --- Inizializzazione Panzoom ---
+        document.addEventListener('DOMContentLoaded', async function() {
+            
+            await precaricaTuttiDB(); // Scarica i DB di base immediatamente come Calendario!
+
+            const imgElem = document.getElementById('turnoImage');
+            if (typeof Panzoom !== 'undefined') {
+                pzInstance = Panzoom(imgElem, { maxScale: 5, minScale: 1 });
+                document.getElementById('imageFlexContainer').addEventListener('wheel', pzInstance.zoomWithWheel);
+                
+                function eseguiZoomToggle(e) {
+                    if (!pzInstance) return;
+                    let currentScale = pzInstance.getScale();
+                    if (currentScale < 1.1) { 
+                        pzInstance.zoom(1.75, { animate: true }); 
+                    } else { 
+                        pzInstance.reset({ animate: true }); 
+                    }
+                }
+                
+                let lastTap = 0; 
+                let isPinching = false;
+                imgElem.addEventListener('touchstart', function(e) { 
+                    if (e.touches.length > 1) { isPinching = true; } 
+                });
+                imgElem.addEventListener('touchend', function(e) {
+                    if (isPinching) { 
+                        if (e.touches.length === 0) { setTimeout(() => isPinching = false, 300); } 
+                        return; 
+                    }
+                    let currentTime = new Date().getTime(); 
+                    let tapLength = currentTime - lastTap;
+                    if (tapLength < 300 && tapLength > 0) { 
+                        eseguiZoomToggle(e); 
+                        if (e.cancelable) e.preventDefault(); 
+                    }
+                    lastTap = currentTime;
+                });
+                imgElem.addEventListener('dblclick', function(e) { eseguiZoomToggle(e); });
+            }
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            try {
+                nascondiTutto();
+                if (user) {
+                    currentUser = user;
+                    await checkStato();
+                } else {
+                    document.getElementById('view-no-auth').style.display = 'flex';
+                }
+            } catch(err) {
+                document.getElementById('error-box').innerHTML = "Errore di connessione o lettura dati: " + err.message;
+                document.getElementById('error-box').style.display = 'block';
+            }
+        });
+
+        async function checkStato() {
+            try {
+                const utenteRef = doc(db, "utenti", currentUser.uid);
+                const utenteSnap = await getDoc(utenteRef);
+                if (utenteSnap.exists()) userDataPrivate = utenteSnap.data();
+
+                const ok = userDataPrivate.nome && userDataPrivate.cognome && userDataPrivate.matricola && userDataPrivate.mansione && userDataPrivate.telefono;
+                
+                nascondiTutto();
+                document.getElementById('view-main').style.display = 'flex';
+
+                if (!ok) {
+                    apriModaleProfilo(); // Forza apertura
+                    document.getElementById('btnCloseProfileModal').style.display = 'none'; // Nascondi X se non è completo
+                    return;
+                }
+
+                document.getElementById('filtroMansione').value = userDataPrivate.mansione || "Tutte";
+                
+                const today = getOggiLocale(); // Evita i bug di fuso orario!
+                
+                let qCleanup = isAdmin ? collection(db, "bacheca_turni") : query(collection(db, "bacheca_turni"), where("uid", "==", currentUser.uid));
+                const adsSnap = await getDocs(qCleanup);
+                myAnnunciAttivi = [];
+                
+                adsSnap.forEach(d => {
+                    const a = d.data();
+                    if(a.data_scambio > today) {
+                        if (a.uid === currentUser.uid) myAnnunciAttivi.push(a);
+                    } else {
+                        deleteDoc(doc(db, "bacheca_turni", d.id)).catch(e => {});
+                    }
+                });
+
+                window.caricaBacheca();
+            } catch (error) { console.error(error); }
+        }
+
+        window.apriModaleProfilo = function() {
+            // Rimossa la chiusura del modale adModal: ora si apre in sovraimpressione!
+            
+            document.getElementById('regNome').value = userDataPrivate.nome || "";
+            document.getElementById('regCognome').value = userDataPrivate.cognome || "";
+            document.getElementById('regProgressivo').value = userDataPrivate.progressivo || "";
+            document.getElementById('regMatricola').value = userDataPrivate.matricola || "";
+            document.getElementById('regTelefono').value = userDataPrivate.telefono || "";
+            document.getElementById('regMansione').value = userDataPrivate.mansione || "";
+            
+            // Mostra la X solo se ha già i dati minimi salvati
+            const ok = userDataPrivate.nome && userDataPrivate.cognome && userDataPrivate.matricola && userDataPrivate.mansione && userDataPrivate.telefono;
+            document.getElementById('btnCloseProfileModal').style.display = ok ? 'block' : 'none';
+
+            document.getElementById('profileModal').style.display = 'flex';
+        }
+
+        window.chiudiModaleProfilo = function() {
+            document.getElementById('profileModal').style.display = 'none';
+        }
+
+        window.salvaProfilo = async function() {
+            const n = document.getElementById('regNome').value.trim();
+            const c = document.getElementById('regCognome').value.trim();
+            const p = document.getElementById('regProgressivo').value.trim();
+            const mat = document.getElementById('regMatricola').value.trim();
+            const tel = document.getElementById('regTelefono').value.trim();
+            const man = document.getElementById('regMansione').value;
+
+            if(!n || !c || !mat || !tel || !man) return alert("Compila tutti i campi per usare la bacheca.");
+            
+            document.getElementById('btnSalvaProfilo').innerText = "⏳ Salvataggio...";
+            try {
+                await setDoc(doc(db, "utenti", currentUser.uid), { nome: n, cognome: c, progressivo: p, matricola: mat, telefono: tel, mansione: man }, { merge: true });
+                document.getElementById('btnSalvaProfilo').innerText = "Salva Dati";
+                chiudiModaleProfilo();
+                checkStato();
+            } catch(e) { alert("Errore"); document.getElementById('btnSalvaProfilo').innerText = "Salva Dati"; }
+        };
+
+        let adTypeSelezionato = 'turno';
+        
+        window.apriModaleAnnuncio = async function() {
+            document.getElementById('adModal').style.display = 'flex';
+            switchAdTab('turno');
+            
+            let todayStr = getOggiLocale();
+            document.getElementById('adDataTurno').value = todayStr;
+            
+            svuotaCampiTurno();
+            document.getElementById('adCodiceTurno').value = "";
+            document.getElementById('adDataRiposo').value = "";
+            document.getElementById('adDataRestituzione1').value = ""; 
+            document.getElementById('adDataRestituzione2').value = "";
+            document.getElementById('adNote').value = "";
+
+            verificaTurno(); 
+        };
+
+        window.switchAdTab = function(type) {
+            adTypeSelezionato = type;
+            document.getElementById('tab-ad-turno').classList.remove('active');
+            document.getElementById('tab-ad-riposo').classList.remove('active');
+            document.getElementById('tab-ad-'+type).classList.add('active');
+            document.getElementById('form-ad-turno').style.display = type === 'turno' ? 'block' : 'none';
+            document.getElementById('form-ad-riposo').style.display = type === 'riposo' ? 'block' : 'none';
+        };
+
+        function svuotaCampiTurno() {
+            document.getElementById('adOraInizio').value = ""; document.getElementById('adOraFine').value = "";
+            document.getElementById('adLuogoInizio').value = ""; document.getElementById('adLuogoFine').value = "";
+            document.getElementById('adChiaveEsatta').value = ""; document.getElementById('adDataAttivaDb').value = "";
+        }
+
+        window.verificaTurno = function() {
+            let dateStr = document.getElementById('adDataTurno').value;
+            if(!dateStr) dateStr = getOggiLocale();
+            
+            caricaDbCorrenteSincrono(dateStr); // Cerca sincrono nella cache
+
+            const codiceBase = document.getElementById('adCodiceTurno').value.trim().toUpperCase();
+            
+            if (!codiceBase || !dbInUso) {
+                svuotaCampiTurno();
+                return;
+            }
+
+            let chiaveTrovata = trovaChiaveEsatta(dbInUso, codiceBase, dateStr); 
+            let dettagli = dbInUso[chiaveTrovata];
+
+            if (dettagli) {
+                if(dettagli.inizio) document.getElementById('adOraInizio').value = formatTimeForInput(dettagli.inizio);
+                if(dettagli.fine) document.getElementById('adOraFine').value = formatTimeForInput(dettagli.fine);
+                
+                if(dettagli.luogoInizio) document.getElementById('adLuogoInizio').value = dettagli.luogoInizio;
+                if(dettagli.luogoFine) document.getElementById('adLuogoFine').value = dettagli.luogoFine;
+                
+                document.getElementById('adChiaveEsatta').value = chiaveTrovata;
+                document.getElementById('adDataAttivaDb').value = dataAttivaDb;
+            } else {
+                svuotaCampiTurno();
+            }
+        };
+
+        window.pubblicaAnnuncio = async function() {
+            const btn = document.getElementById('btnPubblica');
+            let payload = {
+                uid: currentUser.uid,
+                nome: userDataPrivate.nome, cognome: userDataPrivate.cognome, 
+                progressivo: userDataPrivate.progressivo || "",
+                mansione: userDataPrivate.mansione, matricola: userDataPrivate.matricola, telefono: userDataPrivate.telefono,
+                timestamp: new Date().getTime(), tipo_annuncio: adTypeSelezionato,
+                note: document.getElementById('adNote').value.trim()
+            };
+
+            if (adTypeSelezionato === 'turno') {
+                const dataT = document.getElementById('adDataTurno').value;
+                if(!dataT) return alert("Inserisci la data del turno.");
+                
+                const codiceT = document.getElementById('adCodiceTurno').value.trim().toUpperCase();
+                if(!codiceT) return alert("Devi inserire il codice del turno che stai cedendo.");
+
+                payload.data_scambio = dataT;
+                payload.cerco = document.getElementById('adCercoTurno').value;
+                payload.cedo = document.getElementById('adCedoTurno').value;
+                payload.codice_turno = codiceT;
+                payload.ora_inizio = document.getElementById('adOraInizio').value;
+                payload.ora_fine = document.getElementById('adOraFine').value;
+                payload.luogo_inizio = document.getElementById('adLuogoInizio').value;
+                payload.luogo_fine = document.getElementById('adLuogoFine').value;
+                
+                payload.chiave_esatta = document.getElementById('adChiaveEsatta').value;
+                payload.data_attiva_db = document.getElementById('adDataAttivaDb').value;
+            } else {
+                const dataR = document.getElementById('adDataRiposo').value;
+                if(!dataR) return alert("Inserisci la data.");
+                payload.data_scambio = dataR; payload.cerco = 'riposo'; payload.cedo = 'riposo';
+                let res = [];
+                const d1 = document.getElementById('adDataRestituzione1').value;
+                const d2 = document.getElementById('adDataRestituzione2').value;
+                if(d1) res.push(d1); if(d2) res.push(d2);
+                payload.restituzione = res;
+            }
+
+            btn.innerText = "⏳ Pubblicazione...";
+            try {
+                await addDoc(collection(db, "bacheca_turni"), payload);
+                document.getElementById('adModal').style.display = 'none';
+                btn.innerText = "Pubblica Annuncio";
+                checkStato();
+            } catch(e) { alert("Errore"); btn.innerText = "Pubblica Annuncio"; }
+        };
+
+        function formattaData(isoStr) {
+            if(!isoStr) return "";
+            const d = new Date(isoStr);
+            return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        // --- Logica Immagine Perfettamente Identica a Calendario ---
+        window.apriImmagineTurno = function(codiceTurno, dataScambio) {
+            if (!codiceTurno || !dataScambio) {
+                alert("Dati mancanti per aprire l'immagine.");
+                return;
+            }
+            
+            let codicePulito = codiceTurno.toUpperCase().trim();
+            caricaDbCorrenteSincrono(dataScambio); // Inizializza dbInUso e dataAttivaDb localmente
+
+            let dataAttiva = dataAttivaDb || "2026-03-02"; // Fallback di sicurezza 
+            let chiaveTrovata = trovaChiaveEsatta(dbInUso, codicePulito, dataScambio);
+
+            if (chiaveTrovata && chiaveTrovata !== codicePulito && dbInUso && dbInUso[chiaveTrovata]) { 
+                currentImagePath = `turni_${dataAttiva}/${chiaveTrovata}.jpg`; 
+                imgBaseFallback = `turni_${dataAttiva}/${codicePulito}.jpg`; 
+            } else { 
+                currentImagePath = `turni_${dataAttiva}/${codicePulito}.jpg`; 
+                imgBaseFallback = ""; 
+            }
+            
+            let imgElement = document.getElementById('turnoImage');
+            imgElement.onerror = window.erroreImmagine; 
+            imgElement.src = currentImagePath; 
+            if (pzInstance) { pzInstance.reset(); } 
+            document.getElementById('imageModal').style.display = 'block'; 
+        };
+
+        window.erroreImmagine = function() { 
+            let imgElement = document.getElementById('turnoImage'); 
+            if (imgBaseFallback) { 
+                currentImagePath = imgBaseFallback; 
+                imgElement.src = imgBaseFallback; 
+                imgBaseFallback = ""; 
+            } else { 
+                imgElement.onerror = null; 
+                alert("L'immagine del turno non è stata trovata nel database."); 
+                chiudiImageModal(); 
+            } 
+        };
+
+        window.chiudiImageModal = function() {
+            document.getElementById('imageModal').style.display = 'none';
+            document.getElementById('turnoImage').removeAttribute('src');
+            if (pzInstance) { pzInstance.reset(); }
+        };
+
+        window.chiudiImageModalSeSfondo = function(event) {
+            if (event.target.id === 'imageModal' || event.target.id === 'imageFlexContainer') chiudiImageModal();
+        };
+        
+        window.scaricaImmagineTurno = function() { 
+            if (!currentImagePath) return; 
+            const a = document.createElement('a'); 
+            a.href = currentImagePath; 
+            a.download = currentImagePath.split('/').pop(); 
+            document.body.appendChild(a); 
+            a.click(); 
+            document.body.removeChild(a); 
+        };
+
+        window.caricaBacheca = async function() {
+            const containerRes = document.getElementById('lista-annunci');
+            const containerSug = document.getElementById('suggeriti-bacheca');
+            const divSugContainer = document.getElementById('suggeriti-bacheca-container');
+            
+            const fMan = document.getElementById('filtroMansione').value;
+            const fData = document.getElementById('filtroData').value;
+            const today = getOggiLocale(); // Risolve il bug fuso orario visivo
+
+            containerRes.innerHTML = "<p style='color:#666;'>Caricamento annunci in corso...</p>";
+            containerSug.innerHTML = "";
+
+            try {
+                let q = fMan === "Tutte" ? query(collection(db, "bacheca_turni")) : query(collection(db, "bacheca_turni"), where("mansione", "==", fMan));
+                const snap = await getDocs(q);
+                let annunci = [];
+                snap.forEach(doc => {
+                    const a = doc.data(); a.id = doc.id;
+                    if(a.data_scambio > today) annunci.push(a);
+                });
+
+                if(fData) annunci = annunci.filter(a => a.data_scambio === fData);
+                annunci.sort((a,b) => a.data_scambio.localeCompare(b.data_scambio));
+
+                containerRes.innerHTML = "";
+                let suggeriti = 0;
+
+                annunci.forEach(a => {
+                    const isMe = a.uid === currentUser.uid;
+                    const canDelete = isMe || isAdmin; // Logica ADMIN integrata
+                    const progLabel = a.progressivo ? ` (${a.progressivo})` : "";
+                    
+                    let isSuggested = false;
+                    if (!isMe) {
+                        isSuggested = myAnnunciAttivi.some(mio => {
+                            if(mio.data_scambio === a.data_scambio && mio.cerco === a.cedo) return true;
+                            return false;
+                        });
+                    }
+                    if (isSuggested) suggeriti++;
+
+                    const showWa = !isMe && a.telefono; 
+                    const itemClass = isSuggested ? "card-suggested" : "card";
+                    const numClean = (a.telefono||"").replace(/\s+/g, '');
+                    const dateFormatted = formattaData(a.data_scambio);
+
+                    let corpoHTML = "";
+                    if (a.tipo_annuncio === 'turno') {
+                        
+                        let infoTurnoHTML = "";
+                        if (a.ora_inizio || a.luogo_inizio) {
+                            infoTurnoHTML = `
+                                <div style="font-size: 11px; color: #555; margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid var(--primary);">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                        <span><b>Inizio:</b> ${a.ora_inizio || '--:--'}</span>
+                                        <span><b>Fine:</b> ${a.ora_fine || '--:--'}</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span><b>Da:</b> ${a.luogo_inizio || '--'}</span>
+                                        <span><b>A:</b> ${a.luogo_fine || '--'}</span>
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        let btnImmagine = "";
+                        if (a.codice_turno) {
+                            let codBase = a.codice_turno.toUpperCase();
+                            let isRiposo = (codBase === 'RI' || codBase === 'RIPOSO' || codBase === 'AL' || codBase === 'DISP' || codBase === 'NESSUN TURNO');
+                            
+                            if (!isRiposo) {
+                                btnImmagine = `<div style="margin-top: 10px;"><button onclick="apriImmagineTurno('${a.codice_turno}', '${a.data_scambio}')" style="background:transparent; border:1px solid var(--primary); color:var(--primary); padding:6px 12px; border-radius:12px; font-size:12px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:5px; width: 100%; justify-content: center;">${svgCamera} Mostra Immagine Turno</button></div>`;
+                            }
+                        }
+
+                        corpoHTML = `
+                            <div style="font-size: 13px; font-weight: bold; margin-bottom: 5px;">📅 ${dateFormatted}</div>
+                            <div><span class="badge badge-${a.cerco}">CERCA: ${a.cerco.toUpperCase()}</span></div>
+                            <div style="margin-top: 4px;"><span class="badge badge-${a.cedo}">CEDE: ${a.cedo.toUpperCase()} ${a.codice_turno ? '('+a.codice_turno+')' : ''}</span></div>
+                            ${infoTurnoHTML}
+                            ${btnImmagine}
+                        `;
+                    } else {
+                        let restStr = a.restituzione && a.restituzione.length > 0 ? a.restituzione.map(formattaData).join(' o ') : "Da concordare";
+                        corpoHTML = `
+                            <div style="font-size: 13px; font-weight: bold; margin-bottom: 5px;">📅 CERCA RIPOSO IL: ${dateFormatted}</div>
+                            <div style="margin-top: 4px;"><span class="badge badge-riposo">RESTITUISCE: ${restStr}</span></div>
+                        `;
+                    }
+                    
+                    let noteHTML = "";
+                    if (a.note) {
+                        noteHTML = `<div style="font-size: 12px; color: #555; background: #fff3cd; padding: 8px; border-radius: 6px; margin-top: 8px; border-left: 3px solid var(--warning);"><b>Note:</b> ${a.note}</div>`;
+                    }
+
+                    // Creazione sequenziale dei bottoni laterali
+                    let actionsHTML = "";
+                    
+                    if (showWa) {
+                        actionsHTML += `<a href="https://wa.me/39${numClean}" target="_blank" class="action-icon" style="background:transparent;" title="Contatta su WhatsApp">${svgWa}</a>`;
+                    }
+                    
+                    if (isMe) {
+                        // Creazione stringa messaggio per condivisione
+                        let shareText = "";
+                        if (a.tipo_annuncio === 'turno') {
+                            shareText = `Cedo per il giorno ${dateFormatted} il turno ${a.codice_turno || ''}`;
+                            if (a.ora_inizio && a.luogo_inizio && a.ora_fine && a.luogo_fine) {
+                                shareText += ` che monta alle ore ${a.ora_inizio} presso ${a.luogo_inizio} e termina alle ore ${a.ora_fine} presso ${a.luogo_fine}.`;
+                            } else {
+                                shareText += `.`;
+                            }
+                            shareText += ` Cerco ${a.cerco}.`;
+                            if (a.note) shareText += ` Note: ${a.note}.`;
+                            shareText += ` condiviso da Utility https://hazev98.github.io/Utility/bacheca_turni.html`;
+                        } else {
+                            shareText = `Cerco riposo per il giorno ${dateFormatted}`;
+                            if (a.note) shareText += ` Note: ${a.note}.`;
+                            shareText += ` condiviso da Utility https://hazev98.github.io/Utility/bacheca_turni.html`;
+                        }
+                        
+                        const encodedShare = encodeURIComponent(shareText);
+                        
+                        actionsHTML += `<a href="https://wa.me/?text=${encodedShare}" target="_blank" class="action-icon" style="background:#25D366; color:white; border:none;" title="Condividi su WhatsApp">${svgShare}</a>`;
+                    }
+                    
+                    if (canDelete) {
+                        actionsHTML += `<button onclick="cancellaAnnuncio('${a.id}')" class="action-icon" style="background:var(--danger); color:white; border:none; padding:8px; width:auto; height:auto; font-size: 16px;">🗑️</button>`;
+                    }
+
+                    const html = `
+                        <div class="${itemClass}">
+                            <div style="display:flex; justify-content: space-between;">
+                                <div style="flex: 1;">
+                                    <div style="font-weight:bold; color:var(--text-color); margin-bottom: 2px;">${a.cognome} ${a.nome}${progLabel}</div>
+                                    <div style="font-size:11px; color:#666; margin-bottom: 8px;">${a.mansione} | Mat: ${a.matricola} | Tel: ${a.telefono}</div>
+                                    ${corpoHTML}
+                                    ${noteHTML}
+                                </div>
+                                <div class="contact-actions" style="flex-direction:column; justify-content:center; padding-left: 10px;">
+                                    ${actionsHTML}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    if (isSuggested) containerSug.innerHTML += html;
+                    else containerRes.innerHTML += html;
+                });
+
+                divSugContainer.style.display = suggeriti > 0 ? 'block' : 'none';
+                if (annunci.length === 0) containerRes.innerHTML = "<p style='color:#666;'>Nessun annuncio in bacheca.</p>";
+
+            } catch(e) { containerRes.innerHTML = "<p>Errore caricamento bacheca: " + e.message + "</p>"; }
+        }
+
+        window.cancellaAnnuncio = async function(id) {
+            if(!confirm("Vuoi cancellare questo annuncio?")) return;
+            await deleteDoc(doc(db, "bacheca_turni", id));
+            checkStato();
+        };
+
+    </script>
+</body>
+</html>

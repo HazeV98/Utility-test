@@ -1,0 +1,1838 @@
+{
+  "1401": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "5:27",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "5:57"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "5:57",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "6:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "6:15",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "6:50"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "7:00",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "7:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "7:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "8:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "8:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "9:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "9:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "10:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "10:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "11:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "11:05",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "11:23"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "11:23",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "11:43"
+    }
+  ],
+  "1402_LUN-SAB": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "4:18",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "4:33"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "4:33",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "4:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "4:35",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "5:10"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "5:15",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "5:50"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "6:00",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "6:30"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "6:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "7:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "7:29",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "7:59"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "7:59",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "8:29"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "8:29",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "8:31"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "8:31",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "8:41"
+    }
+  ],
+  "1403_LUN-SAB": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "5:10",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "5:15"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "5:15",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "5:50"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "5:55",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "6:30"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "6:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "7:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "7:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "8:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "8:30",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "9:00"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "9:00",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "9:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "9:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "9:37"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "9:37",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "9:47"
+    }
+  ],
+  "1403_DOM": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "4:06",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "4:11"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "5:15",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "5:50"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "5:55",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "6:30"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "6:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "7:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "7:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "8:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "8:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "8:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "8:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "9:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "9:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "10:05"
+    }
+  ],
+  "1404_LUN-SAB": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "5:28",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "5:43"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "5:43",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "5:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "5:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "6:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "6:29",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "6:59"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "6:59",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "7:29"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "7:29",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "7:59"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "7:59",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "8:30"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "8:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "8:31"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "8:58",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "9:13"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "9:13",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "9:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "9:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "10:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "10:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "10:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "10:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "11:35"
+    }
+  ],
+  "1404_DOM": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "5:28",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "5:43"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "5:43",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "5:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "5:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "6:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "6:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "7:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "7:15",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "7:50"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "8:00",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "8:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "8:56",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "8:57"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "8:57",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "9:12"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "9:12",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "9:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "9:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "10:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "10:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "10:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "10:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "11:35"
+    }
+  ],
+  "1405_LUN-SAB": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "6:14",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "6:29"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "6:29",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "6:59"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "6:59",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "7:29"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "8:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "8:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "8:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "9:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "9:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "9:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "9:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "10:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "11:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "11:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "11:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "12:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "12:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "13:05"
+    }
+  ],
+  "1405_DOM": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "8:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "8:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "8:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "9:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "9:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "9:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "9:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "10:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "10:56",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "10:57"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "10:57",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "11:12"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "11:12",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "11:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "11:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "12:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "12:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "12:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "12:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "13:35"
+    }
+  ],
+  "1406_LUN-SAB": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "7:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "7:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "7:15",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "7:50"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "8:00",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "8:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "8:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "9:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "9:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "10:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "10:57",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "10:58"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "10:58",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "11:13"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "11:13",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "11:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "11:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "12:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "12:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "12:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "12:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "13:35"
+    }
+  ],
+  "1406_DOM": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "8:15",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "8:30"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "8:30",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "9:00"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "9:00",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "9:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "9:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "9:38"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "9:38",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "9:48"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "9:48",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "9:49"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "10:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "10:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "10:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "11:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "11:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "12:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "12:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "12:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "12:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "13:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "13:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "14:05"
+    }
+  ],
+  "1407_LUN-SAB": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "12:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "12:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "12:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "13:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "13:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "13:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "13:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "14:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "15:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "15:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "15:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "16:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "16:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "16:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "16:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "17:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "18:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "18:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "18:15",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "18:50"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "18:50",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "19:20"
+    }
+  ],
+  "1407_DOM": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "12:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "12:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "12:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "13:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "13:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "13:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "13:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "14:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "15:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "15:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "15:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "16:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "16:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "16:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "16:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "17:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "18:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "18:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "18:15",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "18:50"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "18:50",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "19:20"
+    }
+  ],
+  "1408_LUN-SAB": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "16:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "16:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "16:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "17:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "17:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "17:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "17:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "18:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "19:20",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "19:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "19:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "20:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "20:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "21:05"
+    }
+  ],
+  "1408_DOM": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "14:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "14:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "14:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "15:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "15:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "16:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "16:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "16:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "16:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "17:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "17:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "18:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "19:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "19:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "19:15",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "19:50"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "20:00",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "20:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "20:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "20:37"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "20:37",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "20:47"
+    }
+  ],
+  "1409_LUN-SAB": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "14:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "14:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "14:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "15:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "15:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "15:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "15:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "16:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "17:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "17:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "17:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "18:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "18:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "18:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "18:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "19:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "19:35",
+      "arrivo_luogo": "DEP. F.TE NOVE",
+      "arrivo_ora": "20:03"
+    },
+    {
+      "partenza_luogo": "DEP. F.TE NOVE",
+      "partenza_ora": "20:03",
+      "arrivo_luogo": "DEP. F.TE NOVE",
+      "arrivo_ora": "20:13"
+    },
+    {
+      "partenza_luogo": "DEP. F.TE NOVE",
+      "partenza_ora": "20:13",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "20:38"
+    }
+  ],
+  "1409_DOM": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "14:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "14:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "14:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "15:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "15:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "15:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "15:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "16:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "17:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "17:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "17:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "18:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "18:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "18:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "18:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "19:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "19:35",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "19:53"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "19:53",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "20:03"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "20:03",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "20:26"
+    }
+  ],
+  "1410": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "22:30",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "22:52"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "23:57",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "0:12"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "0:12",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "0:30"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "0:30",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "1:05"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "1:10",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "1:31"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "1:31",
+      "arrivo_luogo": "LIDO AI PALI",
+      "arrivo_ora": "1:33"
+    },
+    {
+      "partenza_luogo": "LIDO AI PALI",
+      "partenza_ora": "1:33",
+      "arrivo_luogo": "LIDO AI PALI",
+      "arrivo_ora": "1:43"
+    },
+    {
+      "partenza_luogo": "LIDO AI PALI",
+      "partenza_ora": "1:59",
+      "arrivo_luogo": "LIDO AI PALI",
+      "arrivo_ora": "2:14"
+    },
+    {
+      "partenza_luogo": "LIDO AI PALI",
+      "partenza_ora": "2:14",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "2:16"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "2:16",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "2:37"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "2:40",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "3:01"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "3:16",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "3:37"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "3:40",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "4:01"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "4:16",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "4:37"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "4:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "5:15"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "5:29",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "5:34"
+    }
+  ],
+  "1411_LUN-SAB": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "16:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "16:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "16:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "17:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "17:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "18:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "19:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "19:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "19:15",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "19:50"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "20:00",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "20:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "20:35",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "20:53"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "20:53",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "21:03"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "21:19",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "21:49"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "22:00",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "22:35"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "22:41",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "23:16"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "23:16",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "23:18"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "23:18",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "23:28"
+    }
+  ],
+  "1411_DOM": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "16:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "16:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "16:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "17:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "17:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "17:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "17:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "18:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "19:20",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "19:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "19:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "20:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "20:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "21:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "21:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "22:00"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "22:00",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "22:35"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "22:41",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "23:16"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "23:16",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "23:18"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "23:18",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "23:28"
+    }
+  ],
+  "1412_LUN-SAB": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "17:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "17:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "17:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "18:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "18:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "19:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "20:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "20:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "20:15",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "20:50"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "21:00",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "21:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "21:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "22:00"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "22:42",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "22:43"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "22:43",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "22:58"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "22:58",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "23:00"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "23:00",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "23:35"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "23:41",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "0:16"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "0:16",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "0:18"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "0:18",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "0:28"
+    }
+  ],
+  "1412_DOM": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "17:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "17:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "17:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "18:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "18:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "19:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "20:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "20:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "20:15",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "20:50"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "21:00",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "21:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "22:42",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "22:43"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "22:43",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "22:58"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "22:58",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "23:00"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "23:00",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "23:35"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "23:41",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "0:16"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "0:16",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "0:18"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "0:18",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "0:28"
+    }
+  ],
+  "1413_LUN-SAB": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "13:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "13:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "13:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "14:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "14:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "15:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "15:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "15:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "15:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "16:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "16:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "17:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "17:26",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "17:27"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "17:27",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "17:42"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "17:42",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "17:44"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "17:44",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "18:14"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "18:14",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "18:44"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "18:44",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "19:14"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "19:14",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "19:44"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "19:44",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "19:54"
+    }
+  ],
+  "1413_DOM": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "11:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "11:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "11:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "12:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "12:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "13:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "13:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "13:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "13:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "14:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "14:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "15:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "15:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "15:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "15:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "16:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "16:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "17:05"
+    }
+  ],
+  "1414": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "18:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "18:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "18:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "19:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "19:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "20:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "21:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "21:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "21:15",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "21:50"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "21:54",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "22:29"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "22:29",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "22:31"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "22:31",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "22:41"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "23:28",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "23:43"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "23:43",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "23:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "23:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "0:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "0:20",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "0:55"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "0:55",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "0:57"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "0:57",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "1:07"
+    }
+  ],
+  "1415_LUN-SAB": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "10:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "10:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "10:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "11:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "11:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "11:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "11:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "12:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "13:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "13:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "13:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "14:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "14:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "14:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "14:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "15:35"
+    }
+  ],
+  "1415_DOM": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "10:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "10:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "10:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "11:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "11:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "11:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "11:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "12:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "13:05",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "13:15"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "13:15",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "14:20"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "14:20",
+      "arrivo_luogo": "BURANO",
+      "arrivo_ora": "14:24"
+    },
+    {
+      "partenza_luogo": "BURANO",
+      "partenza_ora": "14:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "15:35"
+    }
+  ],
+  "1416_LUN-SAB": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "10:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "10:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "10:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "11:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "11:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "12:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "12:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "12:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "12:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "13:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "13:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "14:05"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "14:35",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "14:45"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "14:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "15:20"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "15:30",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "16:05"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "link": [
+    {
+      "categoria": "Aziendali",
+      "elementi": [
+        { "nome": "Spriss", "url": "https://spriss.avmspa.it/" },
+        { "nome": "Welfare", "url": "https://beneficiari.edenred.it/login" },
+        { "nome": "TPL Salute", "url": "https://www.tplsalute.it/" },
+        { "nome": "Priamo", "url": "https://www.fondopriamo.it/" },
+        { "nome": "Buoni pasto Pellegrini", "url": "https://login.welfarepellegrini.it/Login.aspx" }
+      ]
+    },
+    {
+      "categoria": "Utili",
+      "elementi": [
+        { "nome": "VePorto", "url": "https://veporto.it/VePorto/splash" },
+        { "nome": "Maree", "url": "https://www.comune.venezia.it/it/content/centro-previsioni-e-segnalazioni-maree" },
+        { "nome": "Link Utility", "url": "https://hazev98.github.io/Utility/" },
+        { "nome": "Congedi parentali INPS", "url": "https://www.inps.it/it/it/dettaglio-scheda.it.schede-servizio-strumento.schede-servizi.50583.indennit-di-congedo-parentale-per-lavoratrici-e-lavoratori-dipendenti.html" },
+        { "nome": "Congedi 104 INPS", "url": "https://www.inps.it/it/it/dettaglio-scheda.it.schede-servizio-strumento.schede-servizi.50097.indennit-per-congedi-straordinari-assistenza-familiari-disabili-.html" },
+        { "nome": "Congedo AVIS", "url": "https://sit-donor.azero.veneto.it/home" }
+      ]
+    },
+    {
+      "categoria": "Orari",
+      "elementi": [
+        { "nome": "CheBateo", "url": "https://m.chebateo.it/" },
+        { "nome": "Orari Arriva Veneto", "url": "https://www.arrivaveneto.it/orari-e-percorsi/" },
+        { "nome": "Bus Actv Urbani", "url": "https://avm.avmspa.it/it/content/linee-urbane-0" },
+        { "nome": "Bus Actv Extraurbani", "url": "https://avm.avmspa.it/it/content/linee-extraurbane-0" }
+      ]
+    },
+    {
+      "categoria": "Telegram",
+      "elementi": [
+        { "nome": "Scambio Ferie Navigazione", "url": "https://t.me/joinchat/UVyLRHc5UJfwK1wT" },
+        { "nome": "Scambio Ferie Piloti", "url": "https://t.me/joinchat/08Yb9Y7uB9s3MmQ0" },
+        { "nome": "Assistenza Welfare", "url": "https://t.me/+Snsgx1sSIsf4UjRR" },
+        { "nome": "Lavoratori: dite la vostra", "url": "https://t.me/joinchat/PrZ6L83xQduIH-CP" },
+        { "nome": "Canale Actv Info", "url": "https://t.me/muoversivenezia" },
+        { "nome": "Canale Centro Maree", "url": "https://t.me/CentroMareeAvvisa" },
+        { "nome": "Utility Telegram", "url": "https://t.me/A9z24sv67wbot" }
+      ]
+    },
+    {
+      "categoria": "Facebook",
+      "elementi": [
+        { "nome": "Scambio Divise 2.0", "url": "https://www.facebook.com/groups/721819148278490/?ref=share_group_link" },
+        { "nome": "Cambio ferie preposti", "url": "https://www.facebook.com/share/g/1Aa4hZ5cjC/" }
+      ]
+    }
+  ]
+}

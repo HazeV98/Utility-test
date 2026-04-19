@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utility - Guida all'uso</title>
+
+    <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+    
+    <style>
+        /* --- STILI GLOBALI UNIFICATI --- */
+        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #f5365c; }
+        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; line-height: 1.6; }
+        
+        /* HEADER */
+        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
+        
+        /* MENU LATERALE */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
+        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; }
+        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+
+        /* AREA CONTENUTI SPECIFICA PER LA GUIDA */
+        .content-area { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
+        
+        .guide-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .guide-card h3 { margin-top: 0; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px; font-size: 20px; display: flex; align-items: center; gap: 8px; }
+        
+        .guide-card.apple-card { border-left: 5px solid #000; }
+        .guide-card.android-card { border-left: 5px solid var(--success); }
+        .guide-card.calendar-card { border-left: 5px solid #5e72e4; }
+
+        .guide-text { font-size: 15px; color: #555; margin-bottom: 15px; }
+        .guide-text strong { color: #333; }
+        
+        .step-list { padding-left: 20px; margin: 0; color: #555; }
+        .step-list li { margin-bottom: 10px; }
+
+        .highlight-box { background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; border: 1px solid #ffeeba; font-size: 14px; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
+        <h2>Manuale d'uso</h2>
+        <div style="width: 50px;"></div>
+    </div>
+
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3 style="margin:0; color:white;">Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+        </div>
+        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
+        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
+        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
+        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link">🕒 Orari</a>
+        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
+        <a href="link.html" class="sidebar-link">🔗 Link</a>
+        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
+        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
+        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+    </div>
+
+    <div class="content-area">
+
+        <div class="guide-card apple-card">
+            <h3>🍏 Come installare su iPhone</h3>
+            <div class="guide-text">Per avere l'icona dell'app direttamente sulla schermata principale del tuo telefono, segui questi semplici passaggi. <br><strong>ATTENZIONE: DEVI USARE SAFARI</strong> (non usare Chrome o Google).</div>
+            <ol class="step-list">
+                <li>Apri questo sito web usando l'applicazione <strong>Safari</strong> (quella con l'icona della bussola).</li>
+                <li>Guarda in basso nello schermo: troverai un'icona quadrata con una freccia che punta verso l'alto (il tasto <strong>Condividi</strong>). Premila.</li>
+                <li>Si aprirà un menù. Scorri un po' verso il basso finché non trovi la voce <strong>"Aggiungi alla schermata Home"</strong> (ha l'icona di un +). Premila.</li>
+                <li>In alto a destra premi su <strong>"Aggiungi"</strong>.</li>
+            </ol>
+            <div class="highlight-box">Fatto! Ora troverai l'icona "Utility" insieme alle altre app del telefono. Aprili sempre da lì e funzionerà anche senza internet!</div>
+        </div>
+
+        <div class="guide-card android-card">
+            <h3>🤖 Come installare su Android</h3>
+            <div class="guide-text">Su telefoni Android (Samsung, Xiaomi, Oppo, ecc.) è facilissimo. Usa l'app <strong>Google Chrome</strong>.</div>
+            <ol class="step-list">
+                <li>Nella pagina principale (Home Page) dovresti vedere un tasto verde con scritto <strong>"Installa"</strong> in alto a destra. Se lo vedi, premilo e conferma.</li>
+                <li>Se non vedi il tasto verde, premi i <strong>tre puntini</strong> in alto a destra su Chrome.</li>
+                <li>Nel menù che si apre, tocca <strong>"Aggiungi a schermata Home"</strong> o <strong>"Installa app"</strong>.</li>
+            </ol>
+        </div>
+
+        <div class="guide-card calendar-card">
+            <h3>📅 Calendario Turni</h3>
+            
+            <p><strong>Configurazione iniziale:</strong><br>
+            La prima volta che entri, l'app ti chiederà di scegliere la tua rotazione (es. F.Nove, Lido, Disp. 5-1). Poi dovrai toccare sul calendario il giorno di un tuo riposo singolo, e infine dire all'app che turno hai il giorno dopo. Fatto questo, il calendario si compilerà da solo</p>
+
+            <p><strong>Come modificare un giorno:</strong><br>
+            Tocca una casella qualsiasi del calendario. Si aprirà una finestra dove vedrai il turno previsto, l'orario e il luogo. Se vuoi cambiarlo (es. prendere Ferie), scrivi "FER" o "FERIE" nello spazio bianco e premi <strong>Salva Cambio</strong>. Da questa stessa finestra appariranno in automatico gli avvisi se c'è una Variante o una DDS in vigore quel giorno.</p>
+
+            <p><strong>Tasto "Altro" (Note, Nebbia, Straordinari):</strong><br>
+            Sempre toccando un giorno, se premi il tasto azzurro <strong>Altro</strong>, potrai:
+            <ul class="step-list" style="margin-top: 5px;">
+                <li>Segnare se quel giorno stai facendo un <strong>sospeso riposo</strong>.</li>
+                <li>Aggiungere le ore di <strong>Straordinario</strong>.</li>
+                <li>Spuntare la casella per l'<strong>Indennità Nebbia</strong>.</li>
+                <li>Aggiungere delle <strong>Note di testo libere</strong> a quella giornata.</li>
+                <li>Segnare l'utilizzo del <strong>Buono Pasto</strong> in quella giornata.</li>
+                <li>Colorare la casella del giorno per evidenziarla.</li>
+            </ul>
+            </p>
+
+            <p><strong>Il menù Azioni (i 3 puntini ⋮):</strong><br>
+            In alto a destra, nel calendario, c'è un tasto con tre pallini. Aprendolo trovi funzioni potentissime:
+            <ul class="step-list" style="margin-top: 5px;">
+                <li><strong>Modifica Multipla:</strong> Metti la data di inizio, la data di fine, scrivi il turno che vuoi inserire e lui modificherà tutti i giorni selezionati in un colpo solo.</li>
+                <li><strong>Colori Rotazione:</strong> Ti permette di assegnare un colore specifico (es. sempre rosso, verde, ecc.) al 1°, 2°, 3° giorno lavorato e via dicendo della tua rotazione</li>
+                <li><strong>Esporta PDF (Tipo 1 e Tipo 2):</strong> Il primo stampa l'immagine del calendario, il secondo genera un PDF a lista per un intero mese con tutti i tuoi orari.</li>
+                <li><strong>Esporta ICS:</strong> Salva un file che permette di aggiungere i turni con i relativi dati a qualsiasi calendario (Google Calendar, Outlook, Apple).</li>
+                <li><strong>Ferie programmate:</strong> Imposta la tua rotazione ferie che verrà calcolata automaticamente per gli anni successivi e aggiungi anno per anno eventuali cambi ferie.</li>
+                <li><strong>Importa Bibbia:</strong> Carica la tua bibbia per salvare automaticamente i turni diversi da quelli segnati come ad esempio coperture ferie.</li>
+                <li><strong>Backup e Reset:</strong> Salva i tuoi dati per non perderli se cambi telefono, oppure cancella tutto se vuoi ripartire da zero.</li>
+                <li><strong>Cambio bibbia:</strong> Da usare se cambi bibbia, elimina i riposi e i turni inseriti automaticamente mantenendo le modifiche e le ferie.</li>
+            </ul>
+            </p>
+        </div>
+        
+        <div class="guide-card">
+            <h3>📊 Statistiche Calendario</h3>
+            <div class="guide-text">Questa pagina legge automaticamente il tuo calendario. Inserisci una data d'inizio e una di fine: l'app conterà da sola quanti riposi, quante ferie, quanti giorni di malattia e quante ore totali di straordinario hai fatto in quel periodo</div>
+        </div>
+
+        <div class="guide-card">
+            <h3>🔄 Turni, Orari e Documenti</h3>
+            <div class="guide-text">In queste pagine trovi i file PDF aziendali divisi per cartelle.
+            <ul class="step-list" style="margin-top: 10px;">
+                <li>Usando la barra di ricerca in cima alla lista puoi cercare direttamente il turno che ti interessa.</li>
+                <li>Con il tasto ricerca a fianco ai turni puoi trovare il turno che effettua una partenza o un arrivo dalle fermate segnate nei turni.</li>
+                <li>Se tocchi <strong>il nome del file (il tasto blu lungo)</strong>, il documento si aprirà direttamente nel telefono per leggerlo.</li>
+                <li>Se tocchi <strong>il tasto bianco con la freccia ⬇️</strong> a destra, il file verrà scaricato e salvato nella memoria del tuo telefono.</li>
+            </ul>
+            </div>
+        </div>
+
+        <div class="guide-card">
+            <h3>🔄 Bacheca Turni</h3>
+            <div class="guide-text">Gestisci i tuoi cambi turno con i colleghi in modo intelligente.
+            <ul class="step-list">
+                <li><strong>Nuovo Scambio:</strong> Inserisci la data, il turno che cedi e quello che cerchi. Se inserisci un codice turno valido (es. 1C01), potrai visualizzare l'immagine del turno cliccando su "Mostra Immagine".</li>
+                <li><strong>Match:</strong> Se un collega offre un turno compatibile con quello che cerchi, l'annuncio apparirà in cima con l'etichetta gialla ✨ MATCH.</li>
+                <li><strong>Contatto Rapido:</strong> Clicca l'icona di WhatsApp per avviare subito una chat con il collega.</li>
+            </ul>
+            </div>
+        </div>
+
+        <div class="guide-card">
+            <h3>🌴 Rotazione Ferie</h3>
+            <div class="guide-text">Vedi le ferie dei colleghi e proponi scambi per i periodi di ferie.
+            <ul class="step-list">
+                <li><strong>Condivisione Obbligatoria:</strong> Per vedere le ferie dei colleghi, devi prima inserire le tue tramite il tasto "Inserisci le tue ferie".</li>
+                <li><strong>Ricerca Avanzata:</strong> Filtra per anno (per vedere la rotazione futura) e per mansione.</li>
+                <li><strong>Bacheca Scambi:</strong> Nella sezione "Bacheca" puoi pubblicare un annuncio se cerchi di scambiare un periodo con un altro.</li>
+            </ul>
+            </div>
+        </div>
+
+        <div class="guide-card">
+            <h3>📞 Rubrica Colleghi</h3>
+            <div class="guide-text">Tutti i contatti telefonici dei colleghi in un unico posto.
+            <ul class="step-list">
+                <li><strong>Privacy e Reciprocità:</strong> Potrai consultare la rubrica solo se deciderai di condividere il tuo numero con gli altri.</li>
+                <li><strong>Ricerca:</strong> Usa la barra in alto per cercare velocemente un collega per nome, cognome o matricola.</li>
+                <li><strong>Azioni:</strong> Usa l'icona del telefono 📞 per chiamare direttamente o quella di WhatsApp per inviare un messaggio.</li>
+            </ul>
+            </div>
+        </div>
+
+        <div class="guide-card">
+            <h3>🔗 Link e 📇 Contatti</h3>
+            <div class="guide-text">Qui troverai una rubrica con tutti i numeri utili, le mail e i siti web.
+            <ul class="step-list" style="margin-top: 10px;">
+                <li>Se tocchi un numero di telefono, si aprirà automaticamente l'app telefono. Se tocchi una mail, si aprirà la posta.</li>
+                <li>Se premi il piccolo <strong>tasto a destra con l'icona della cartellina (📋)</strong>, l'app copierà il numero o l'indirizzo per permetterti di incollarlo facilmente su WhatsApp o Telegram.</li>
+            </ul>
+            </div>
+        </div>
+
+
+        <div class="guide-card">
+            <h3>📂 Archivio DDS</h3>
+            <div class="guide-text">Una nuova sezione creata per gestire le Disposizioni di Servizio, puoi caricare il pdf o un immagine e segnando la data di validità puoi impostare degli avvisi.
+            <ul class="step-list" style="margin-top: 10px;">
+                <li>Puoi aggiungere il titolo, le date di validità specifiche cliccando sul calendario e allegare foto e file PDF per averli sempre a portata di mano.</li>
+                <li>I file allegati verranno salvati dentro al tuo telefono (senza consumare la tua connessione internet dopo la prima volta).</li>
+                <li>Quando salvi una DDS con delle date di validità, il calendario principale ti mostrerà un avviso automatico ("📄 DDS in vigore") quando toccherai quei giorni</li>
+            </ul>
+            </div>
+        </div>
+
+        <div class="guide-card">
+            <h3>🍝 Contatore Buoni Pasto</h3>
+            <div class="guide-text">Gestisci i tuoi buoni in maniera manuale o automatica.
+            <ul class="step-list" style="margin-top: 10px;">
+                <li><strong>Tasti rapidi:</strong> Usa i pulsanti per scalare velocemente i buoni spesi (puoi personalizzare i numeri premendo l'icona ⚙️).</li>
+                <li><strong>Integrazione Calendario:</strong> Se attivi l'interruttore apposito, l'app calcolerà i buoni pasto maturati in base ai giorni lavorati nel calendario, escludendo automaticamente Riposi, Ferie, Malattia, ecc.</li>
+                <li><strong>Precompilazione:</strong> Dentro al <em>Calcolatore Buoni</em> trovi la bacchetta magica "Precompila con dati Calendario" per contare subito le tue presenze.</li>
+            </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- FUNZIONI MENU LATERALE ---
+        function apriMenuLaterale() { 
+            document.getElementById('sidebar').classList.add('open'); 
+            document.getElementById('sidebar-overlay').style.display = 'block'; 
+        }
+        function chiudiMenuLaterale() { 
+            document.getElementById('sidebar').classList.remove('open'); 
+            document.getElementById('sidebar-overlay').style.display = 'none'; 
+        }
+    </script>
+</body>
+</html>
+ 

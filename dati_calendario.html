@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utility - Statistiche Calendario</title>
+
+    <script data-goatcounter="https://hazev.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+
+    <style>
+        /* --- STILI GLOBALI UNIFICATI --- */
+        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; }
+        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* HEADER */
+        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
+        
+        /* MENU LATERALE */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
+        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; }
+        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+
+        /* AREA CONTENUTI SPECIFICA */
+        .content-area { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+        
+        .input-group { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 10px; }
+        .input-group label { font-size: 14px; font-weight: bold; color: #555; }
+        .input-group input[type="date"] { padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 16px; font-family: inherit; }
+        .input-help { font-size: 12px; color: #888; margin-top: -5px; }
+        
+        .btn-calc { background-color: var(--primary); color: white; border: none; padding: 16px; font-size: 18px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s; }
+        .btn-calc:active { transform: translateY(2px); }
+
+        /* RISULTATI */
+        .results-container { display: none; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 10px; }
+        .results-title { color: var(--primary); font-size: 18px; margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f4f7f6; }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-label { font-size: 16px; color: #555; display: flex; align-items: center; gap: 8px; }
+        .stat-value { font-size: 18px; font-weight: bold; color: var(--primary); }
+        .stat-value.highlight { color: #f5365c; }
+        .stat-value.parental { color: #8965e0; }
+        .stat-value.nebbia { color: #5e72e4; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
+        <h2>Statistiche</h2>
+        <div style="width: 50px;"></div>
+    </div>
+
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3 style="margin:0; color:white;">Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+        </div>
+        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
+        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">📊 Statistiche Calendario</a>
+        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
+        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link">🕒 Orari</a>
+        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
+        <a href="link.html" class="sidebar-link">🔗 Link</a>
+        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
+        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
+        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+    </div>
+
+    <div class="content-area">
+        <div class="input-group">
+            <label>Da (Inizio):</label>
+            <input type="date" id="dateStart">
+            
+            <label>A (Fine):</label>
+            <input type="date" id="dateEnd">
+            
+            <div class="input-help">Lascia vuoti i campi per calcolare i dati totali registrati.</div>
+        </div>
+
+        <button class="btn-calc" onclick="calcolaStatistiche(false)">Calcola Statistiche</button>
+
+        <div id="results" class="results-container">
+            <h3 class="results-title" id="titoloRisultati">Risultati Totali Registrati</h3>
+            
+            <div class="stat-row">
+                <div class="stat-label">🏖️ Ferie (FER)</div>
+                <div class="stat-value" id="resFerie">0</div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-label">🍼 Congedi Parentali (KNOP)</div>
+                <div class="stat-value parental" id="resParentali">0</div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-label">🔴 Sospesi Riposo</div>
+                <div class="stat-value highlight" id="resSospesi">0</div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-label">🌫️ Indennità Nebbia</div>
+                <div class="stat-value nebbia" id="resNebbia">0</div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-label">⚕️ Malattia (KMAL)</div>
+                <div class="stat-value" id="resMalattia">0</div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-label">🩸 Donazione Sangue</div>
+                <div class="stat-value" id="resSangue">0</div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-label">⏱️ Ore Straordinario</div>
+                <div class="stat-value" id="resStraord">0h 0m</div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-label">💸 Permesso Senza Paga</div>
+                <div class="stat-value highlight" id="resPermessoSP">0h 0m</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- FUNZIONI MENU LATERALE ---
+        function apriMenuLaterale() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; }
+        function chiudiMenuLaterale() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; }
+
+        function calcolaStatistiche(isAutoLoad = false) {
+            const startStr = document.getElementById('dateStart').value;
+            const endStr = document.getElementById('dateEnd').value;
+
+            // Avviso se si compila solo un campo
+            if ((startStr && !endStr) || (!startStr && endStr)) {
+                if (!isAutoLoad) alert("Seleziona entrambe le date, oppure lasciale entrambe vuote per i dati totali.");
+                return;
+            }
+
+            if (startStr && endStr && startStr > endStr) {
+                if (!isAutoLoad) alert("La data d'inizio deve essere precedente alla fine!");
+                return;
+            }
+
+            let state = JSON.parse(localStorage.getItem('myTurniApp')) || { variazioni: {}, straordinario: {}, sospesoRiposo: {}, nebbia: {}, permessoSP: {} };
+            
+            let stats = {
+                ferie: 0,
+                parentali: 0,
+                sospesi: 0,
+                nebbia: 0,
+                malattia: 0,
+                sangue: 0,
+                straordMinutiTotali: 0,
+                permessoSPMinutiTotali: 0
+            };
+
+            let dateArray = [];
+
+            // Se non ci sono date, calcola tutti i giorni che hanno variazioni o dati aggiuntivi
+            if (!startStr && !endStr) {
+                let allDates = new Set([
+                    ...Object.keys(state.variazioni || {}),
+                    ...Object.keys(state.sospesoRiposo || {}),
+                    ...Object.keys(state.straordinario || {}),
+                    ...Object.keys(state.nebbia || {}),
+                    ...Object.keys(state.permessoSP || {})
+                ]);
+                dateArray = Array.from(allDates);
+                
+                if (dateArray.length === 0 && !isAutoLoad) {
+                    alert("Nessun dato registrato nel calendario.");
+                    // Non fermiamo lo script, così mostra semplicemente gli zeri
+                }
+                
+                document.getElementById('titoloRisultati').innerText = "Risultati Totali Registrati";
+            } else {
+                // Altrimenti, calcola le statistiche giorno per giorno nel periodo selezionato
+                let currentDate = new Date(startStr);
+                let endDate = new Date(endStr);
+
+                while (currentDate <= endDate) {
+                    let dStr = currentDate.getFullYear() + "-" + 
+                               String(currentDate.getMonth() + 1).padStart(2, '0') + "-" + 
+                               String(currentDate.getDate()).padStart(2, '0');
+                    dateArray.push(dStr);
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                
+                document.getElementById('titoloRisultati').innerText = "Risultati del periodo";
+            }
+
+            // Calcolo effettivo sulle date selezionate o totali
+            dateArray.forEach(dStr => {
+                let varTurno = state.variazioni && state.variazioni[dStr] ? state.variazioni[dStr].toUpperCase() : "";
+
+                // CALCOLA SOSPESO RIPOSO
+                let isSospesoSpuntato = state.sospesoRiposo && state.sospesoRiposo[dStr];
+                let isSospesoTesto = (varTurno === "SOSPESO" || varTurno === "SOR");
+                let isSospesoRiposo = isSospesoSpuntato || isSospesoTesto;
+
+                if (isSospesoRiposo) stats.sospesi++;
+
+                // CALCOLA NEBBIA
+                if (state.nebbia && state.nebbia[dStr]) stats.nebbia++;
+
+                // CALCOLA ALTRE CAUSALI
+                if (varTurno === "KNOP" || varTurno.includes("KNOP")) stats.parentali++;
+                if (varTurno.includes("FER") || varTurno === "FERIE") stats.ferie++;
+                if (varTurno.includes("KMAL") || varTurno === "MALATTIA") stats.malattia++;
+                if (varTurno.includes("AVIS") || varTurno === "AVIS") stats.sangue++;
+
+                // CALCOLA STRAORDINARI
+                if (state.straordinario && state.straordinario[dStr]) {
+                    let h = parseInt(state.straordinario[dStr].ore) || 0;
+                    let m = parseInt(state.straordinario[dStr].minuti) || 0;
+                    stats.straordMinutiTotali += (h * 60) + m;
+                }
+
+                // CALCOLA PERMESSO SENZA PAGA
+                if (state.permessoSP && state.permessoSP[dStr]) {
+                    let hSP = parseInt(state.permessoSP[dStr].ore) || 0;
+                    let mSP = parseInt(state.permessoSP[dStr].minuti) || 0;
+                    stats.permessoSPMinutiTotali += (hSP * 60) + mSP;
+                }
+            });
+
+            // Stampa a schermo
+            document.getElementById('resFerie').innerText = stats.ferie;
+            document.getElementById('resParentali').innerText = stats.parentali;
+            document.getElementById('resSospesi').innerText = stats.sospesi;
+            document.getElementById('resNebbia').innerText = stats.nebbia;
+            document.getElementById('resMalattia').innerText = stats.malattia;
+            document.getElementById('resSangue').innerText = stats.sangue;
+
+            let finalHours = Math.floor(stats.straordMinutiTotali / 60);
+            let finalMins = stats.straordMinutiTotali % 60;
+            document.getElementById('resStraord').innerText = `${finalHours}h ${finalMins}m`;
+
+            let finalHoursSP = Math.floor(stats.permessoSPMinutiTotali / 60);
+            let finalMinsSP = stats.permessoSPMinutiTotali % 60;
+            document.getElementById('resPermessoSP').innerText = `${finalHoursSP}h ${finalMinsSP}m`;
+
+            document.getElementById('results').style.display = 'block';
+        }
+
+        // Calcola automaticamente al caricamento della pagina in locale
+        window.addEventListener('DOMContentLoaded', () => {
+            calcolaStatistiche(true);
+        });
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4",
+          authDomain: "utility-haze.firebaseapp.com",
+          projectId: "utility-haze",
+          storageBucket: "utility-haze.firebasestorage.app",
+          messagingSenderId: "686237947418",
+          appId: "1:686237947418:web:f03ba19ab8fff43110a3a3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const docRef = doc(db, "utenti", user.uid);
+                    const docSnap = await getDoc(docRef);
+
+                    if (docSnap.exists()) {
+                        // Scarica i dati e aggiorna il telefono in background
+                        let datiCloud = docSnap.data();
+                        let datiLocali = JSON.parse(localStorage.getItem('myTurniApp')) || {};
+                        
+                        // Fonde i dati
+                        let stateAggiornato = { ...datiLocali, ...datiCloud }; 
+                        localStorage.setItem('myTurniApp', JSON.stringify(stateAggiornato)); 
+                        
+                        // Ricalcola istantaneamente le statistiche con i nuovi dati
+                        calcolaStatistiche(true);
+                    }
+                } catch(e) { console.error("Errore Sync Cloud Statistiche:", e); }
+            }
+        });
+    </script>
+</body>
+</html>
+ 

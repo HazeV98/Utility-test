@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="theme-color" content="#f7f9fe">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Turni">
+    
+    <title>Calendario Turni</title>
+
+    <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+
+    <style>
+        :root { 
+            --riposo: #1e8449; --disp: #feb236; --turno: #5e72e4; 
+            --bg: #f7f9fe; --text: #32325d;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            margin: 0; background: var(--bg); color: var(--text);
+            padding-bottom: env(safe-area-inset-bottom); overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #topBar { 
+            padding: calc(20px + env(safe-area-inset-top)) 20px 15px 20px; 
+            display: flex; justify-content: space-between; 
+            align-items: center; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        #calendar { background: white; padding: 2px; border-radius: 15px; margin: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+
+        .fc .fc-toolbar-title { font-size: 1.2em !important; text-transform: capitalize; }
+        .fc .fc-button { padding: 5px 10px !important; font-size: 0.9em !important; }
+        .fc .fc-btnSalto-button { background-color: white !important; border-color: #e9ecef !important; color: #32325d !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important; }
+        .fc .fc-daygrid-day-frame { min-height: 80px !important; cursor: pointer; }
+        
+        .fc-event { 
+            border: none !important; padding: 6px 4px !important; 
+            margin: 2px 0 !important; border-radius: 6px !important; 
+            font-weight: 700 !important; font-size: 0.85em !important; 
+            text-align: center; cursor: pointer !important;
+        }
+
+        .bg-riposo { background-color: var(--riposo) !important; }
+        .bg-disp { background-color: var(--disp) !important; }
+        .bg-turno { background-color: var(--turno) !important; }
+        .bg-modificato { background-color: #f5365c !important; }
+        .bg-ferie { background-color: #20c997 !important; color: white !important; font-size: 0.75em !important; padding: 2px !important; margin-bottom: 4px !important; }
+
+        .disclaimer-banner {
+            margin: 15px 10px; padding: 15px; background-color: #fff3cd;
+            border: 1px solid #ffeeba; border-radius: 12px; color: #856404;
+            font-size: 13px; text-align: center; line-height: 1.4;
+        }
+
+        #welcomeModal, #stepModal, #editModal, #altroModal, #resetModal, #backupModal, #imageModal, #jumpModal, #icsModal, #multiEditModal, #cambioBibbiaModal, #pdfTipo2Modal, #coloriRotazioneModal, #ferieModal, #pdfSyncModal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); }
+        .modal-content { background: white; margin: 15% auto; padding: 25px; width: 85%; max-width: 400px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; max-height: 80vh; overflow-y: auto; }
+
+        select, input[type="text"], input[type="date"], input[type="number"] { width: 100%; box-sizing: border-box; margin: 15px 0; padding: 15px; border: 2px solid #e9ecef; border-radius: 12px; font-size: 16px; background: white; -webkit-appearance: none; }
+        .btn { padding: 16px; border: none; border-radius: 14px; color: white; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; font-size: 15px; }
+        .btn-reset { padding: 12px 15px; width: auto; font-size: 14px; }
+        .instruction-text { font-size: 15px; line-height: 1.6; color: #525f7f; margin-bottom: 10px; }
+        .deposito-tag { font-size: 10px; background: #eef2ff; color: var(--turno); padding: 4px 8px; border-radius: 5px; font-weight: bold; }
+
+        .color-circle { width: 40px; height: 40px; border-radius: 50%; display: inline-block; margin: 6px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s, border 0.2s; }
+        .color-circle.selected { border: 3px solid #32325d; transform: scale(1.15); box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
+        .color-yellow { background: #f1c40f; }
+        .color-orange { background: #fd7e14; }
+        .color-red { background: #f5365c; }
+        .color-pink { background: #e83e8c; }
+        .color-purple { background: #8965e0; }
+        .color-blue { background: #5e72e4; }
+        .color-teal { background: #11cdef; }
+        .color-green { background: #2dce89; }
+        
+        #coloriRotazioneModal .color-circle { width: 30px; height: 30px; margin: 4px; }
+
+        @media (max-width: 400px) {
+            .fc-event { font-size: 0.75em !important; padding: 4px 2px !important; }
+            .modal-content { padding: 20px; }
+        }
+
+        /* --- STILI MENU LATERALE SINISTRO --- */
+        .hamburger-btn { background: none; border: none; font-size: 28px; color: var(--text); cursor: pointer; padding: 0; margin-right: 15px; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--turno); color: white; }
+        .sidebar-link { padding: 15px 20px; text-decoration: none; color: #333; font-size: 18px; border-bottom: 1px solid #eee; display: block; }
+        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--turno); font-weight: bold; }
+
+        /* --- STILI MENU LATERALE DESTRO (AZIONI) --- */
+        .right-sidebar { position: fixed; top: 0; right: -280px; width: 250px; height: 100%; background-color: white; box-shadow: -2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: right 0.3s ease; display: flex; flex-direction: column; }
+        .right-sidebar.open { right: 0; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale(); chiudiMenuDestro();"></div>
+
+<div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+        <h3 style="margin:0; color:white;">Menu</h3>
+        <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+    </div>
+    <a href="index.html" class="sidebar-link">🏠 Home Page</a>
+    <a href="calendario.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">📅 Calendario</a>
+    <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
+    <a href="turni.html" class="sidebar-link">🔄 Turni</a>
+    <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
+    <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
+    <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
+    <a href="orari.html" class="sidebar-link">🕒 Orari</a>
+    <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
+    <a href="link.html" class="sidebar-link">🔗 Link</a>
+    <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
+    <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
+    <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
+    <a href="guida.html" class="sidebar-link">📖 Guida</a>
+</div>
+
+<div id="right-sidebar" class="right-sidebar">
+    <div class="sidebar-header" style="background-color: #32325d;">
+        <h3 style="margin:0; color:white;">Azioni</h3>
+        <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuDestro()">✕</button>
+    </div>
+    <div style="padding: 20px; display: flex; flex-direction: column; gap: 15px;">
+        <button class="btn btn-reset" style="background: #2dce89; margin:0; width:100%;" onclick="apriMultiEdit()">✏️ Modifica Multipla</button>
+        <button class="btn btn-reset" style="background: #11cdef; margin:0; width:100%;" onclick="apriColoriRotazione()">🎨 Colori Rotazione</button>
+        <hr style="width: 100%; border: 0; border-top: 1px solid #eee;">
+        
+        <button class="btn btn-reset" style="background: #5e72e4; margin:0; width:100%;" onclick="scaricaPDF()">📄 Esporta PDF (Tipo 1)</button>
+        <button class="btn btn-reset" style="background: #5e72e4; margin:0; width:100%;" onclick="apriPdfTipo2Modal()">📄 Esporta PDF (Tipo 2)</button>
+        
+        <button class="btn btn-reset" style="background: #5e72e4; margin:0; width:100%;" onclick="apriIcsModal()">📅 Esporta ICS</button>
+        <hr style="width: 100%; border: 0; border-top: 1px solid #eee;">
+        
+        <button class="btn btn-reset" style="background: #20c997; margin:0; width:100%;" onclick="apriFerieModal()">🌴 Ferie Programmate</button>
+        
+        <input type="file" id="pdfBibbiaInput" style="display:none" accept=".pdf" onchange="elaboraPdfBibbia(event)">
+        <button class="btn btn-reset" style="background: #e83e8c; margin:0; width:100%;" onclick="document.getElementById('pdfBibbiaInput').click()">📄 Importa Bibbia</button>
+
+        <button class="btn btn-reset" style="background: #f1c40f; color: #32325d; margin:0; width:100%;" onclick="apriCambioBibbia()">🔄 Cambio Bibbia</button>
+        <button class="btn btn-reset" style="background: #adb5bd; margin:0; width:100%;" onclick="apriBackup()">💾 Backup Dati</button>
+        <button class="btn btn-reset" style="background: #f5365c; margin:0; width:100%;" onclick="apriReset()">🗑️ Reset Totale</button>
+    </div>
+</div>
+
+<div id="topBar">
+    <div style="display: flex; align-items: center;">
+        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
+        <div>
+            <h2 style="margin:0; font-size: 18px;">Gestione Turni</h2>
+            <span id="activeDepotLabel" class="deposito-tag">In attesa...</span>
+        </div>
+    </div>
+    <button class="hamburger-btn" style="margin-right: 0;" onclick="apriMenuDestro()">⋮</button>
+</div>
+
+<div id="pdfSyncModal">
+    <div class="modal-content" style="max-height: 85vh; display: flex; flex-direction: column;">
+        <h3 style="color: #e83e8c; margin-top: 0;">📄 Sincronizzazione PDF</h3>
+        <p class="instruction-text" style="font-size: 14px;">Seleziona i turni da aggiornare rispetto al calendario attuale:</p>
+        
+        <div id="pdfSyncList" style="text-align: left; overflow-y: auto; flex: 1; border: 1px solid #e9ecef; border-radius: 10px; padding: 10px; margin-bottom: 15px;">
+            </div>
+        
+        <button class="btn" style="background: #2dce89; margin-top: auto;" onclick="applicaModifichePdf()">Applica Modifiche</button>
+        <button class="btn" style="background: #f8f9fa; color: #525f7f; margin-top: 10px;" onclick="chiudiPdfSyncModal()">Annulla</button>
+    </div>
+</div>
+
+<div id="ferieModal">
+    <div class="modal-content" style="padding: 20px;">
+        <h3 style="color: #20c997; margin-top: 0;">🌴 Ferie Programmate</h3>
+        
+        <div style="display: flex; margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 1px solid #20c997;">
+            <button id="btnTabFerieBase" style="flex:1; padding:10px; border:none; background:#20c997; color:white; font-weight:bold; cursor:pointer;" onclick="switchFerieTab('base')">Impostazioni Base</button>
+            <button id="btnTabFerieScambio" style="flex:1; padding:10px; border:none; background:white; color:#20c997; font-weight:bold; cursor:pointer;" onclick="switchFerieTab('scambio')">Scambio Ferie</button>
+        </div>
+
+        <div id="ferieBaseSection" style="display: block;">
+            <p class="instruction-text" style="font-size: 14px; margin-bottom: 15px;">Imposta il tuo gruppo base. Gli anni successivi verranno calcolati in automatico.</p>
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label style="font-weight: bold; font-size: 14px; color: #525f7f;">Anno di partenza (Base):</label>
+                <input type="number" id="ferieAnnoBase" placeholder="Es. 2026">
+                
+                <label style="font-weight: bold; font-size: 14px; color: #525f7f; margin-top: 10px; display: block;">Periodo Estivo Base:</label>
+                <select id="ferieEstiveBase">
+                    <option value="-1">Nessuna / Non lo so</option>
+                </select>
+                
+                <label style="font-weight: bold; font-size: 14px; color: #525f7f; margin-top: 10px; display: block;">Periodo Invernale Base:</label>
+                <select id="ferieInvernaliBase">
+                    <option value="-1">Nessuna / Non lo so</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="ferieScambioSection" style="display: none;">
+            <p style="font-size: 13px; color: #888; text-align: left; margin-bottom: 15px;">Sostituisci il periodo calcolato in automatico per un singolo anno (es. scambio con collega).</p>
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label style="font-weight: bold; font-size: 14px; color: #525f7f;">Anno dello scambio:</label>
+                <input type="number" id="ferieScambioAnno" placeholder="Es. 2026">
+                
+                <label style="font-weight: bold; font-size: 14px; color: #525f7f; margin-top: 10px; display: block;">Nuovo Periodo Estivo:</label>
+                <select id="ferieEstiveScambio">
+                    <option value="-1">Mantieni Automatico</option>
+                </select>
+                
+                <label style="font-weight: bold; font-size: 14px; color: #525f7f; margin-top: 10px; display: block;">Nuovo Periodo Invernale:</label>
+                <select id="ferieInvernaliScambio">
+                    <option value="-1">Mantieni Automatico</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn" style="background: #20c997; margin-top: 10px;" onclick="salvaFerie()">Salva Configurazioni</button>
+        <button class="btn" style="background: #f5365c; margin-top: 10px;" onclick="resetFerie()">Reset Dati Ferie</button>
+        <button class="btn" style="background: #f8f9fa; color: #525f7f; margin-top: 10px;" onclick="chiudiFerieModal()">Chiudi</button>
+    </div>
+</div>
+
+<div id="coloriRotazioneModal">
+    <div class="modal-content" style="padding: 20px;">
+        <h3 style="color: #11cdef; margin-top: 0;">🎨 Colori Rotazione</h3>
+        <p class="instruction-text" style="font-size: 14px; margin-bottom: 20px;">Assegna un colore per ogni giorno lavorativo della tua rotazione (dal 1° al 6° dopo il riposo).</p>
+        
+        <div style="margin-bottom: 12px; text-align: left; padding-bottom: 10px; border-bottom: 2px dashed #eee;">
+            <div style="font-weight: bold; color: var(--riposo); font-size: 14px; margin-bottom: 5px;">Giorno di Riposo (RI / AL):</div>
+            <div class="day-riposo" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
+                <div class="color-circle" style="background: #e9ecef; display:flex; align-items:center; justify-content:center; font-size:12px; color: #32325d;" data-color="" onclick="selezionaColoreRotazione('riposo', '', this)">✕</div>
+                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione('riposo', '#f1c40f', this)"></div>
+                <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione('riposo', '#fd7e14', this)"></div>
+                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione('riposo', '#f5365c', this)"></div>
+                <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreRotazione('riposo', '#e83e8c', this)"></div>
+                <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreRotazione('riposo', '#8965e0', this)"></div>
+                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreRotazione('riposo', '#5e72e4', this)"></div>
+                <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreRotazione('riposo', '#11cdef', this)"></div>
+                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreRotazione('riposo', '#2dce89', this)"></div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 12px; text-align: left;">
+            <div style="font-weight: bold; color: #525f7f; font-size: 14px; margin-bottom: 5px;">1° Giorno:</div>
+            <div class="day-1" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
+                <div class="color-circle" style="background: #e9ecef; display:flex; align-items:center; justify-content:center; font-size:12px; color: #32325d;" data-color="" onclick="selezionaColoreRotazione(1, '', this)">✕</div>
+                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(1, '#f1c40f', this)"></div>
+                <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(1, '#fd7e14', this)"></div>
+                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(1, '#f5365c', this)"></div>
+                <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreRotazione(1, '#e83e8c', this)"></div>
+                <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreRotazione(1, '#8965e0', this)"></div>
+                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreRotazione(1, '#5e72e4', this)"></div>
+                <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreRotazione(1, '#11cdef', this)"></div>
+                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreRotazione(1, '#2dce89', this)"></div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 12px; text-align: left;">
+            <div style="font-weight: bold; color: #525f7f; font-size: 14px; margin-bottom: 5px;">2° Giorno:</div>
+            <div class="day-2" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
+                <div class="color-circle" style="background: #e9ecef; display:flex; align-items:center; justify-content:center; font-size:12px; color: #32325d;" data-color="" onclick="selezionaColoreRotazione(2, '', this)">✕</div>
+                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(2, '#f1c40f', this)"></div>
+                <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(2, '#fd7e14', this)"></div>
+                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(2, '#f5365c', this)"></div>
+                <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreRotazione(2, '#e83e8c', this)"></div>
+                <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreRotazione(2, '#8965e0', this)"></div>
+                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreRotazione(2, '#5e72e4', this)"></div>
+                <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreRotazione(2, '#11cdef', this)"></div>
+                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreRotazione(2, '#2dce89', this)"></div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 12px; text-align: left;">
+            <div style="font-weight: bold; color: #525f7f; font-size: 14px; margin-bottom: 5px;">3° Giorno:</div>
+            <div class="day-3" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
+                <div class="color-circle" style="background: #e9ecef; display:flex; align-items:center; justify-content:center; font-size:12px; color: #32325d;" data-color="" onclick="selezionaColoreRotazione(3, '', this)">✕</div>
+                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(3, '#f1c40f', this)"></div>
+                <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(3, '#fd7e14', this)"></div>
+                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(3, '#f5365c', this)"></div>
+                <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreRotazione(3, '#e83e8c', this)"></div>
+                <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreRotazione(3, '#8965e0', this)"></div>
+                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreRotazione(3, '#5e72e4', this)"></div>
+                <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreRotazione(3, '#11cdef', this)"></div>
+                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreRotazione(3, '#2dce89', this)"></div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 12px; text-align: left;">
+            <div style="font-weight: bold; color: #525f7f; font-size: 14px; margin-bottom: 5px;">4° Giorno:</div>
+            <div class="day-4" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
+                <div class="color-circle" style="background: #e9ecef; display:flex; align-items:center; justify-content:center; font-size:12px; color: #32325d;" data-color="" onclick="selezionaColoreRotazione(4, '', this)">✕</div>
+                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(4, '#f1c40f', this)"></div>
+                <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(4, '#fd7e14', this)"></div>
+                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(4, '#f5365c', this)"></div>
+                <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreRotazione(4, '#e83e8c', this)"></div>
+                <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreRotazione(4, '#8965e0', this)"></div>
+                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreRotazione(4, '#5e72e4', this)"></div>
+                <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreRotazione(4, '#11cdef', this)"></div>
+                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreRotazione(4, '#2dce89', this)"></div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 12px; text-align: left;">
+            <div style="font-weight: bold; color: #525f7f; font-size: 14px; margin-bottom: 5px;">5° Giorno:</div>
+            <div class="day-5" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
+                <div class="color-circle" style="background: #e9ecef; display:flex; align-items:center; justify-content:center; font-size:12px; color: #32325d;" data-color="" onclick="selezionaColoreRotazione(5, '', this)">✕</div>
+                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(5, '#f1c40f', this)"></div>
+                <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(5, '#fd7e14', this)"></div>
+                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(5, '#f5365c', this)"></div>
+                <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreRotazione(5, '#e83e8c', this)"></div>
+                <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreRotazione(5, '#8965e0', this)"></div>
+                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreRotazione(5, '#5e72e4', this)"></div>
+                <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreRotazione(5, '#11cdef', this)"></div>
+                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreRotazione(5, '#2dce89', this)"></div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 12px; text-align: left;">
+            <div style="font-weight: bold; color: #525f7f; font-size: 14px; margin-bottom: 5px;">6° Giorno:</div>
+            <div class="day-6" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
+                <div class="color-circle" style="background: #e9ecef; display:flex; align-items:center; justify-content:center; font-size:12px; color: #32325d;" data-color="" onclick="selezionaColoreRotazione(6, '', this)">✕</div>
+                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(6, '#f1c40f', this)"></div>
+                <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(6, '#fd7e14', this)"></div>
+                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(6, '#f5365c', this)"></div>
+                <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreRotazione(6, '#e83e8c', this)"></div>
+                <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreRotazione(6, '#8965e0', this)"></div>
+                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreRotazione(6, '#5e72e4', this)"></div>
+                <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreRotazione(6, '#11cdef', this)"></div>
+                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreRotazione(6, '#2dce89', this)"></div>
+            </div>
+        </div>
+        
+        <button class="btn" style="background: #11cdef; margin-top: 15px;" onclick="salvaColoriRotazione()">Salva Modifiche</button>
+        <button class="btn" style="background: #f8f9fa; color: #525f7f; margin-top: 10px;" onclick="chiudiColoriRotazione()">Annulla</button>
+    </div>
+</div>
+
+<div id="pdfTipo2Modal">
+    <div class="modal-content">
+        <h3 style="color: #5e72e4; margin-top: 0;">Esporta PDF (Tipo 2)</h3>
+        <p class="instruction-text" style="font-size: 14px;">Seleziona mese e anno per esportare la lista dei turni.</p>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <select id="pdfTipo2Mese" style="flex: 1; margin: 0;">
+                <option value="01">Gennaio</option>
+                <option value="02">Febbraio</option>
+                <option value="03">Marzo</option>
+                <option value="04">Aprile</option>
+                <option value="05">Maggio</option>
+                <option value="06">Giugno</option>
+                <option value="07">Luglio</option>
+                <option value="08">Agosto</option>
+                <option value="09">Settembre</option>
+                <option value="10">Ottobre</option>
+                <option value="11">Novembre</option>
+                <option value="12">Dicembre</option>
+            </select>
+            <input type="number" id="pdfTipo2Anno" style="flex: 1; margin: 0; padding: 15px; border: 2px solid #e9ecef; border-radius: 12px; font-size: 16px;">
+        </div>
+        
+        <button class="btn" style="background: #5e72e4;" onclick="generaPdfTipo2()">📄 Scarica PDF</button>
+        <button class="btn" style="background: #f8f9fa; color: #525f7f; margin-top: 15px;" onclick="chiudiPdfTipo2Modal()">Annulla</button>
+    </div>
+</div>
+
+<div id="multiEditModal">
+    <div class="modal-content">
+        <h3 style="color: #2dce89; margin-top: 0;">Modifica Multipla</h3>
+        <p class="instruction-text" style="font-size: 14px;">Applica lo stesso turno a più giorni consecutivi (es. FERIE).</p>
+        
+        <label style="font-size: 14px; color: #525f7f; text-align: left; display: block; margin-top: 10px; font-weight:bold;">Da (Inizio):</label>
+        <input type="date" id="multiStart">
+        
+        <label style="font-size: 14px; color: #525f7f; text-align: left; display: block; margin-top: 10px; font-weight:bold;">A (Fine):</label>
+        <input type="date" id="multiEnd">
+        
+        <label style="font-size: 14px; color: #525f7f; text-align: left; display: block; margin-top: 10px; font-weight:bold;">Turno da inserire:</label>
+        <input type="text" id="multiTurno" placeholder="Es. FER, KMAL..." oninput="this.value = this.value.toUpperCase();">
+        
+        <label style="display: flex; align-items: center; font-size: 14px; color: #525f7f; margin-top: 15px; font-weight: bold; cursor: pointer; text-align: left;">
+            <input type="checkbox" id="checkEscludiRiposi" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #2dce89;" checked>
+            Escludi i Riposi (RI / AL)
+        </label>
+        
+        <button class="btn" style="background: #2dce89; margin-top: 20px;" onclick="salvaModificaMultipla()">Salva Modifiche</button>
+        <button class="btn" style="background: #f8f9fa; color: #525f7f; margin-top: 15px;" onclick="chiudiMultiEdit()">Annulla</button>
+    </div>
+</div>
+
+<div id="cambioBibbiaModal">
+    <div class="modal-content">
+        <h3 style="color: #f1c40f; margin-top: 0;">Cambio Bibbia</h3>
+        <p class="instruction-text">Vuoi configurare una nuova rotazione? <b>I tuoi turni manuali, straordinari, colori e note verranno mantenuti.</b> Verrà ripristinata solo la rotazione calcolata automaticamente.</p>
+        <button class="btn" style="background: #f1c40f; color: #32325d;" onclick="confermaCambioBibbia()">Sì, configura nuova ruota</button>
+        <button class="btn" style="background: #f8f9fa; color: #525f7f; margin-top: 15px;" onclick="chiudiCambioBibbia()">Annulla</button>
+    </div>
+</div>
+
+<div id="resetModal">
+    <div class="modal-content">
+        <h3 style="color: #f5365c; margin-top: 0;">Attenzione!</h3>
+        <p class="instruction-text">Vuoi cancellare DEFINITIVAMENTE tutti i dati e i turni salvati?</p>
+        <button class="btn" style="background: #f5365c;" onclick="confermaReset()">Sì, cancella tutto</button>
+        <button class="btn" style="background: #f8f9fa; color: #525f7f; margin-top: 15px;" onclick="chiudiReset()">Annulla</button>
+    </div>
+</div>
+
+<div id="backupModal">
+    <div class="modal-content">
+        <h3 style="color: var(--turno); margin-top: 0;">Backup Dati</h3>
+        <p class="instruction-text" style="font-size: 14px;">Gestisci i tuoi dati tramite file per non perdere i tuoi turni.</p>
+        <input type="file" id="fileInput" style="display:none" accept=".json" onchange="importaDatiDaFile(event)">
+        <button class="btn" style="background: var(--turno);" onclick="esportaDatiSuFile()">Scarica Backup (Esporta)</button>
+        <button class="btn" style="background: var(--riposo);" onclick="document.getElementById('fileInput').click()">Carica Backup (Importa)</button>
+        <button class="btn" style="background: #f8f9fa; color: #525f7f; margin-top: 15px;" onclick="chiudiBackup()">Chiudi</button>
+    </div>
+</div>
+
+<div id="icsModal">
+    <div class="modal-content">
+        <h3 style="color: #5e72e4; margin-top: 0;">Esporta in ICS</h3>
+        <p class="instruction-text" style="font-size: 14px;">Seleziona il periodo da esportare.</p>
+        <label style="font-size: 14px; color: #525f7f; text-align: left; display: block; margin-top: 10px;">Da:</label>
+        <input type="date" id="icsStartDate">
+        <label style="font-size: 14px; color: #525f7f; text-align: left; display: block; margin-top: 10px;">A:</label>
+        <input type="date" id="icsEndDate">
+        <button class="btn" style="background: #5e72e4;" onclick="esportaICS()">Scarica .ics</button>
+        <button class="btn" style="background: #f8f9fa; color: #525f7f; margin-top: 15px;" onclick="chiudiIcsModal()">Chiudi</button>
+    </div>
+</div>
+
+<div id="jumpModal">
+    <div class="modal-content">
+        <h3 style="color: var(--turno); margin-top: 0;">Vai alla data</h3>
+        <div style="display: flex; gap: 10px;">
+            <select id="jumpMonth" style="flex: 1;">
+                <option value="01">Gennaio</option>
+                <option value="02">Febbraio</option>
+                <option value="03">Marzo</option>
+                <option value="04">Aprile</option>
+                <option value="05">Maggio</option>
+                <option value="06">Giugno</option>
+                <option value="07">Luglio</option>
+                <option value="08">Agosto</option>
+                <option value="09">Settembre</option>
+                <option value="10">Ottobre</option>
+                <option value="11">Novembre</option>
+                <option value="12">Dicembre</option>
+            </select>
+            <select id="jumpYear" style="flex: 1;"></select>
+        </div>
+        <button class="btn" style="background: var(--turno);" onclick="eseguiSalto()">Vai</button>
+        <button class="btn" style="background: #f8f9fa; color: #525f7f; margin-top: 15px;" onclick="chiudiJumpModal()">Annulla</button>
+    </div>
+</div>
+
+<div id="welcomeModal">
+    <div class="modal-content">
+        <h3 id="welcomeTitle" style="color: var(--turno); margin-top: 0;">Benvenuto</h3>
+        <p id="welcomeDesc" class="instruction-text">Scegli la tua rotazione:</p>
+        <select id="depotSelectMain">
+            <option value="" disabled selected>Scegli...</option>
+            <optgroup label="Disponibili">
+                <option value="disp_indet">Disponibile 6-2-6-1</option>
+                <option value="disp_det">Disponibile 5-1</option>
+            </optgroup>
+            <optgroup label="Rotazioni">
+                <option value="rot_fnove">Rotazione F.Nove</option>
+                <option value="spez_fnove">Spezzati F.Nove</option>
+                <option value="tc_spez_fnove">T.C. Spezzati F.Nove</option>
+                <option value="rot_proma">Rotazione P.Roma</option>
+                <option value="spez_proma">Spezzati P.Roma</option>
+                <option value="rot_szaccaria">Rotazione S.Zaccaria</option>
+                <option value="spez_szaccaria">Spezzati S.Zaccaria</option>
+                <option value="tc_spez_szaccaria">T.C. Spezzati S.Zaccaria</option>
+                <option value="rot_lido">Rotazione Lido</option>
+                <option value="spez_lido">Spezzati Lido</option>
+                <option value="tc_spez_lido">T.C. Spezzati Lido</option>
+                <option value="rot_linea12">Rotazione Linea 12</option>
+                <option value="rot_linea13">Rotazione Linea 13</option> 
+                <option value="rot_linea14">Rotazione Linea 14 M/N</option>
+                <option value="rot_linea14_mb">Rotazione Linea 14 M/B</option>
+                <option value="rot_17sn">Rotazione Linea 17 S. Nicolò</option>
+                <option value="tc_rot_17sn">T.C. Rotazione 17 S. Nicolò</option>
+                <option value="rot_17tr">Rotazione Linea 17 Tron.</option>
+                <option value="tc_rot_17tr">T.C. Rotazione Linea 17 Tronc.</option>
+            </optgroup>
+        </select>
+        <button id="btnConfRot" class="btn" style="background: #adb5bd" onclick="confermaRotazione()" disabled>Prosegui</button>
+    </div>
+</div>
+
+<div id="stepModal">
+    <div class="modal-content">
+        <h3 id="stepTitle" style="color: var(--turno); margin-top: 0;">Configurazione</h3>
+        <span id="stepDateDisplay" style="font-weight:bold; color:var(--turno); display:block; margin-bottom:10px;"></span>
+        <p id="stepDesc" class="instruction-text"></p>
+        <div id="stepActionArea"></div>
+        <div id="stepButtons">
+            <button id="btnConfirmDate" class="btn" style="background: var(--riposo); display:none;" onclick="procediConfigurazione()">Sì, conferma data</button>
+            <button id="btnConfirmFinal" class="btn" style="background: var(--riposo); display:none;" onclick="attivaRotazioneFinale()">Conferma e Attiva</button>
+            <button id="btnBackStep" class="btn" style="background: #adb5bd; display:none;" onclick="tornaAllaRotazione()">Indietro (Cambia Rotazione)</button>
+            <button id="btnCloseStep" class="btn" style="background: #f8f9fa; color: #525f7f; margin-top: 15px;" onclick="chiudiStep()">Chiudi</button>
+        </div>
+    </div>
+</div>
+
+<div id="editModal" onclick="chiudiEditSeSfondo(event)">
+    <div class="modal-content">
+        <h3 id="modalDate" style="margin-top:0;">Data</h3>
+        
+        <div id="avvisoVariantiArea" style="display: none; background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 10px; color: #856404; padding: 12px; margin-bottom: 15px; font-size: 14px; font-weight: bold; line-height: 1.4; text-align: left;"></div>
+        
+        <div id="infoTurniArea" style="font-size:0.9em; margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:10px; text-align:left; color:#525f7f; display:none;"></div>
+        
+        <button id="btnVisualizzaTurno" class="btn" style="background: #2dce89; margin-bottom: 15px; display: none;" onclick="apriImmagineTurno()">Mostra Immagine Turno</button>
+        
+        <input type="text" id="singleTurnoSelect" placeholder="Inserisci il turno" oninput="this.value = this.value.toUpperCase(); abilitaSalvataggio();" onkeydown="if(event.key === 'Enter') salvaCambioSingolo();">
+        
+        <button id="btnSalvaCambio" class="btn" style="background: #32325d" onclick="salvaCambioSingolo()" disabled>Salva Cambio</button>
+        <button class="btn" style="background: #adb5bd;" onclick="resetGiornoSingolo()">Ripristina Originale</button>
+        <button class="btn" style="background: #11cdef;" onclick="apriAltroModal()">Altro (Note, Nebbia, Straord, Buoni, Sospesi...)</button>
+        <button class="btn" style="background: #f8f9fa; color: #525f7f; margin-top: 15px;" onclick="chiudiEdit()">Chiudi</button>
+    </div>
+</div>
+
+<div id="altroModal" onclick="chiudiAltroSeSfondo(event)">
+    <div class="modal-content">
+        <h3 style="margin-top:0; color: var(--text);">Altre Opzioni</h3>
+        
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: left; border: 2px solid #e9ecef;">
+            
+            <label style="display: flex; align-items: center; font-size: 15px; color: #525f7f; margin-bottom: 10px; font-weight: bold; cursor: pointer;">
+                <input type="checkbox" id="checkSospesoRiposoAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #f5365c;">
+                Sospeso Riposo
+            </label>
+
+            <label style="display: flex; align-items: center; font-size: 15px; color: #525f7f; margin-bottom: 10px; font-weight: bold; cursor: pointer;">
+                <input type="checkbox" id="checkNebbiaAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #5e72e4;">
+                🌫️ Indennità Nebbia
+            </label>
+            
+            <label style="display: flex; align-items: center; font-size: 15px; color: #525f7f; margin-bottom: 10px; font-weight: bold; cursor: pointer;">
+                <input type="checkbox" id="checkBuonoPastoAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #f1c40f;">
+                🍝 Buono Pasto Utilizzato
+            </label>
+
+            <label style="display: flex; align-items: center; font-size: 15px; color: #525f7f; font-weight: bold; cursor: pointer;">
+                <input type="checkbox" id="checkStraordinarioAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #5e72e4;" onchange="toggleStraordinarioAltro()">
+                ⏱️ Straordinario
+            </label>
+            
+            <div id="straordinarioInputsAltro" style="display: none; margin-top: 10px; flex-direction: row; gap: 10px;">
+                <input type="number" id="oreStraordAltro" placeholder="Ore" min="0" style="flex: 1; padding: 12px; margin: 0; border: 2px solid #e9ecef; border-radius: 10px; font-size: 15px;">
+                <input type="number" id="minutiStraordAltro" placeholder="Minuti" min="0" max="59" style="flex: 1; padding: 12px; margin: 0; border: 2px solid #e9ecef; border-radius: 10px; font-size: 15px;">
+            </div>
+
+            <label style="display: flex; align-items: center; font-size: 15px; color: #525f7f; margin-top: 15px; font-weight: bold; cursor: pointer;">
+                <input type="checkbox" id="checkPermessoSPAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #f5365c;" onchange="togglePermessoSPAltro()">
+                💸 Permesso Senza Paga
+            </label>
+            
+            <div id="permessoSPInputsAltro" style="display: none; margin-top: 10px; flex-direction: row; gap: 10px;">
+                <input type="number" id="orePermessoSPAltro" placeholder="Ore" min="0" style="flex: 1; padding: 12px; margin: 0; border: 2px solid #e9ecef; border-radius: 10px; font-size: 15px;">
+                <input type="number" id="minutiPermessoSPAltro" placeholder="Minuti" min="0" max="59" style="flex: 1; padding: 12px; margin: 0; border: 2px solid #e9ecef; border-radius: 10px; font-size: 15px;">
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 15px 0;">
+            
+            <label style="display: block; font-size: 15px; color: #525f7f; margin-bottom: 8px; font-weight: bold;">📝 Note:</label>
+            <textarea id="notaAltro" placeholder="Scrivi una nota per questo giorno..." style="width: 100%; box-sizing: border-box; padding: 10px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 70px;"></textarea>
+        </div>
+
+        <div style="text-align: left; margin-bottom: 10px; color: #525f7f; font-weight: bold; font-size: 15px;">Colore Sfondo:</div>
+        <div style="display: flex; justify-content: center; flex-wrap: wrap; margin-bottom: 15px;">
+            <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreAltro('#f1c40f', this)"></div>
+            <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreAltro('#fd7e14', this)"></div>
+            <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreAltro('#f5365c', this)"></div>
+            <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreAltro('#e83e8c', this)"></div>
+            <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreAltro('#8965e0', this)"></div>
+            <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreAltro('#5e72e4', this)"></div>
+            <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreAltro('#11cdef', this)"></div>
+            <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreAltro('#2dce89', this)"></div>
+        </div>
+        <button class="btn" style="background: #e9ecef; color: #32325d; margin-top: 0; padding: 10px; font-size: 14px;" onclick="selezionaColoreAltro('', null)">Rimuovi Colore</button>
+
+        <button class="btn" style="background: #32325d; margin-top: 20px;" onclick="salvaAltro()">Salva</button>
+        <button class="btn" style="background: #f8f9fa; color: #525f7f; margin-top: 10px;" onclick="chiudiAltroModal()">Annulla</button>
+    </div>
+</div>
+
+<div id="imageModal" style="z-index: 10000; overflow: hidden;" onclick="chiudiSeSfondo(event)">
+    <div style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; font-size: 35px; color: white; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10001;" onclick="chiudiImageModal()">&times;</div>
+    <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px; padding-bottom: 80px; position: relative;">
+        <img id="turnoImage" src="" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain;">
+        <div id="imageBanner" style="position: relative; z-index: 10001; margin-top: 15px; background: rgba(0,0,0,0.7); color: #fff; padding: 10px 20px; border-radius: 12px; font-size: 13px; text-align: center; max-width: 90%; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+            ⚠️ Controllare sempre i turni ufficiali e la presenza di eventuali varianti ai turni.
+        </div>
+    </div>
+    <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #11cdef; color: white; border: none; padding: 12px 24px; border-radius: 20px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 10001;">📥 Scarica</button>
+</div>
+
+<div id="calendar"></div>
+
+<div class="disclaimer-banner">
+    ⚠️ Questo è uno strumento non ufficiale che può presentare errori. L'ordine dei turni cambia periodicamente, I turni a lungo termine vanno quindi considerati indicativi.
+</div>
+
+<script>
+    // --- ROTAZIONI FERIE PROGRAMMATE (Popolate dinamicamente da JSON) ---
+    let ROT_FERIE_INV = [];
+    let ROT_FERIE_EST = [];
+
+    // --- FUNZIONI MENU LATERALE ---
+    function apriMenuLaterale() { 
+        document.getElementById('sidebar').classList.add('open'); 
+        document.getElementById('sidebar-overlay').style.display = 'block'; 
+    }
+
+    function chiudiMenuLaterale() { 
+        document.getElementById('sidebar').classList.remove('open'); 
+        document.getElementById('sidebar-overlay').style.display = 'none'; 
+    }
+    
+    // --- FUNZIONI MENU DESTRO E MODIFICA MULTIPLA ---
+    function apriMenuDestro() {
+        document.getElementById('right-sidebar').classList.add('open');
+        document.getElementById('sidebar-overlay').style.display = 'block';
+    }
+
+    function chiudiMenuDestro() {
+        document.getElementById('right-sidebar').classList.remove('open');
+        document.getElementById('sidebar-overlay').style.display = 'none';
+    }
+    
+    function apriMultiEdit() {
+        chiudiMenuDestro();
+        document.getElementById('multiEditModal').style.display = 'block';
+    }
+
+    function chiudiMultiEdit() {
+        document.getElementById('multiEditModal').style.display = 'none';
+    }
+    
+    // --- GESTIONE FERIE PROGRAMMATE ---
+    function apriFerieModal() {
+        chiudiMenuDestro();
+        let estSelect = document.getElementById('ferieEstiveBase');
+        let invSelect = document.getElementById('ferieInvernaliBase');
+        let estScambio = document.getElementById('ferieEstiveScambio');
+        let invScambio = document.getElementById('ferieInvernaliScambio');
+
+        // Popolamento select se vuote
+        if(estSelect.options.length <= 1) {
+            ROT_FERIE_EST.forEach((f, i) => {
+                estSelect.innerHTML += `<option value="${i}">${f.n}</option>`;
+                estScambio.innerHTML += `<option value="${i}">${f.n}</option>`;
+            });
+            ROT_FERIE_INV.forEach((f, i) => {
+                invSelect.innerHTML += `<option value="${i}">${f.n}</option>`;
+                invScambio.innerHTML += `<option value="${i}">${f.n}</option>`;
+            });
+        }
+
+        let currYear = new Date().getFullYear();
+        document.getElementById('ferieAnnoBase').value = state.ferie?.baseAnno || currYear;
+        document.getElementById('ferieEstiveBase').value = state.ferie?.baseEstiva ?? -1;
+        document.getElementById('ferieInvernaliBase').value = state.ferie?.baseInvernale ?? -1;
+        
+        document.getElementById('ferieScambioAnno').value = currYear;
+        aggiornaScambiUI(currYear);
+
+        document.getElementById('ferieScambioAnno').addEventListener('change', (e) => aggiornaScambiUI(e.target.value));
+        
+        // Imposta tab iniziale
+        switchFerieTab('base');
+        document.getElementById('ferieModal').style.display = 'block';
+    }
+
+    function switchFerieTab(tab) {
+        if(tab === 'base') {
+            document.getElementById('ferieBaseSection').style.display = 'block';
+            document.getElementById('ferieScambioSection').style.display = 'none';
+            document.getElementById('btnTabFerieBase').style.background = '#20c997';
+            document.getElementById('btnTabFerieBase').style.color = 'white';
+            document.getElementById('btnTabFerieScambio').style.background = 'white';
+            document.getElementById('btnTabFerieScambio').style.color = '#20c997';
+        } else {
+            document.getElementById('ferieBaseSection').style.display = 'none';
+            document.getElementById('ferieScambioSection').style.display = 'block';
+            document.getElementById('btnTabFerieScambio').style.background = '#20c997';
+            document.getElementById('btnTabFerieScambio').style.color = 'white';
+            document.getElementById('btnTabFerieBase').style.background = 'white';
+            document.getElementById('btnTabFerieBase').style.color = '#20c997';
+        }
+    }
+
+    function chiudiFerieModal() {
+        document.getElementById('ferieModal').style.display = 'none';
+    }
+
+    function aggiornaScambiUI(year) {
+        if (!state.ferie || !state.ferie.scambi || !state.ferie.scambi[year]) {
+            document.getElementById('ferieEstiveScambio').value = -1;
+            document.getElementById('ferieInvernaliScambio').value = -1;
+        } else {
+            document.getElementById('ferieEstiveScambio').value = state.ferie.scambi[year].estiva ?? -1;
+            document.getElementById('ferieInvernaliScambio').value = state.ferie.scambi[year].invernale ?? -1;
+        }
+    }
+
+    function salvaFerie() {
+        if (!state.ferie) {
+            state.ferie = { version: VERSIONE_FERIE, scambi: {} };
+        }
+        state.ferie.version = VERSIONE_FERIE; 
+        
+        let annoBase = parseInt(document.getElementById('ferieAnnoBase').value);
+        if (!annoBase) { 
+            alert("Inserisci un anno di base valido."); 
+            return; 
+        }
+        
+        state.ferie.baseAnno = annoBase;
+        state.ferie.baseEstiva = parseInt(document.getElementById('ferieEstiveBase').value);
+        state.ferie.baseInvernale = parseInt(document.getElementById('ferieInvernaliBase').value);
+
+        let annoScambio = document.getElementById('ferieScambioAnno').value;
+        if (annoScambio) {
+            let sEst = parseInt(document.getElementById('ferieEstiveScambio').value);
+            let sInv = parseInt(document.getElementById('ferieInvernaliScambio').value);
+            
+            if (sEst !== -1 || sInv !== -1) {
+                if (!state.ferie.scambi) state.ferie.scambi = {};
+                if (!state.ferie.scambi[annoScambio]) state.ferie.scambi[annoScambio] = {};
+                
+                if (sEst !== -1) state.ferie.scambi[annoScambio].estiva = sEst;
+                if (sInv !== -1) state.ferie.scambi[annoScambio].invernale = sInv;
+            }
+        }
+        
+        salvaERicarica();
+    }
+
+    function resetFerie() {
+        if(confirm("Vuoi cancellare tutte le tue configurazioni delle Ferie Programmate (incluse quelle di scambio)?")) {
+            state.ferie = { version: VERSIONE_FERIE, scambi: {} };
+            let boost = new Date().getTime() + 5000;
+            salvaERicarica(boost);
+        }
+    }
+
+    function isDateInRange(dStr, startStr, endStr, year) {
+        let d = new Date(year, parseInt(dStr.split('-')[1])-1, parseInt(dStr.split('-')[2]));
+        let s = new Date(year, parseInt(startStr.split('-')[0])-1, parseInt(startStr.split('-')[1]));
+        let e = new Date(year, parseInt(endStr.split('-')[0])-1, parseInt(endStr.split('-')[1]));
+        return d >= s && d <= e;
+    }
+
+    function getFerieGiorno(dStr) {
+        if(!state.ferie || !state.ferie.baseAnno) return null;
+        let year = parseInt(dStr.split('-')[0]);
+        let r = [];
+
+        // Check Estiva
+        let iEst = state.ferie.baseEstiva;
+        if (iEst !== -1 && iEst !== null && iEst !== undefined && ROT_FERIE_EST.length > 0) {
+            let idxEst = (iEst + (year - state.ferie.baseAnno)) % ROT_FERIE_EST.length;
+            if(idxEst < 0) idxEst += ROT_FERIE_EST.length; 
+            
+            if(state.ferie.scambi && state.ferie.scambi[year] && state.ferie.scambi[year].estiva !== undefined) {
+                idxEst = state.ferie.scambi[year].estiva;
+            }
+            let pEst = ROT_FERIE_EST[idxEst];
+            if(pEst && isDateInRange(dStr, pEst.s, pEst.e, year)) r.push("FEP");
+        }
+
+        // Check Invernale
+        let iInv = state.ferie.baseInvernale;
+        if (iInv !== -1 && iInv !== null && iInv !== undefined && ROT_FERIE_INV.length > 0) {
+            let idxInv = (iInv + (year - state.ferie.baseAnno)) % ROT_FERIE_INV.length;
+            if(idxInv < 0) idxInv += ROT_FERIE_INV.length;
+            
+            if(state.ferie.scambi && state.ferie.scambi[year] && state.ferie.scambi[year].invernale !== undefined) {
+                idxInv = state.ferie.scambi[year].invernale;
+            }
+            let pInv = ROT_FERIE_INV[idxInv];
+            if(pInv && isDateInRange(dStr, pInv.s, pInv.e, year)) r.push("FEP");
+        }
+
+        let uniqueR = [...new Set(r)];
+        return uniqueR.length > 0 ? uniqueR.join(" + ") : null;
+    }
+
+    // --- FUNZIONI SINCRONIZZAZIONE PDF BIBBIA ---
+    async function elaboraPdfBibbia(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        chiudiMenuDestro();
+        
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            
+            let fullText = "";
+            let righeTesto = []; 
+
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                
+                let righeY = {};
+                textContent.items.forEach(item => {
+                    fullText += item.str + " ";
+                    let y = Math.round(item.transform[5]); 
+                    if (!righeY[y]) righeY[y] = [];
+                    righeY[y].push(item.str.trim());
+                });
+                
+                let yKeys = Object.keys(righeY).sort((a, b) => b - a);
+                yKeys.forEach(y => righeTesto.push(righeY[y].join(" ")));
+            }
+
+            const mesiMap = { "gennaio": 1, "febbraio": 2, "marzo": 3, "aprile": 4, "maggio": 5, "giugno": 6, "luglio": 7, "agosto": 8, "settembre": 9, "ottobre": 10, "novembre": 11, "dicembre": 12 };
+            let monthMatch = fullText.match(/mese di ([a-z]+) (\d{4})/i);
+            
+            if (!monthMatch) {
+                alert("Impossibile trovare il mese e l'anno di riferimento nel PDF. Verifica il file.");
+                event.target.value = ""; 
+                return;
+            }
+            
+            let mese = mesiMap[monthMatch[1].toLowerCase()];
+            let anno = parseInt(monthMatch[2]);
+            
+            let knownShifts = new Set(["DISP", "RI", "AL", "FER", "FEP", "FES", "MAL", "PERM", "KMAL"]);
+            Object.values(state.dbCache || {}).forEach(db => {
+                Object.keys(db).forEach(k => knownShifts.add(k.split('_')[0]));
+            });
+            let sortedShifts = Array.from(knownShifts).sort((a, b) => b.length - a.length);
+
+            let turniLetti = {};
+            
+            righeTesto.forEach(testoRiga => {
+                let matchGiorno = testoRiga.match(/(?:^|\s)(\d{2})\s(?:lun|mar|mer|gio|ven|sab|dom)(?:\s|$)/i);
+                if (matchGiorno) {
+                    let giornoNum = matchGiorno[1];
+                    let dStr = `${anno}-${String(mese).padStart(2, '0')}-${String(giornoNum).padStart(2, '0')}`;
+                    
+                    let turnoTrovato = null;
+                    for (let code of sortedShifts) {
+                        let regex = new RegExp(`\\b${code}\\b`, 'i');
+                        if (regex.test(testoRiga)) {
+                            turnoTrovato = code.toUpperCase();
+                            break;
+                        }
+                    }
+                    if (turnoTrovato) {
+                        turniLetti[dStr] = turnoTrovato;
+                    }
+                }
+            });
+
+            let turniAttuali = calcolaTurni();
+            window.pendingPdfChanges = [];
+            
+            for (let dStr in turniLetti) {
+                let turnoLetto = turniLetti[dStr];
+                let [dAnno, dMese, dGiorno] = dStr.split('-');
+                if (parseInt(dAnno) !== anno || parseInt(dMese) !== mese) continue;
+
+                let turnoEsistenteObj = turniAttuali.find(e => e.start === dStr && !e.title.includes('FERIE') && e.title !== 'FEP');
+                let turnoEsistentePulito = turnoEsistenteObj ? turnoEsistenteObj.title.replace(/ 🌫️| ⏱️| 📝|\(Sospeso\)| 🍝| 💸/g, '').trim().toUpperCase() : "";
+                
+                if (turnoEsistentePulito !== turnoLetto) {
+                    window.pendingPdfChanges.push({
+                        date: dStr,
+                        giornoTesto: `${parseInt(dGiorno)} ${monthMatch[1].toLowerCase()}`,
+                        oldShift: turnoEsistentePulito || "Nessuno",
+                        newShift: turnoLetto
+                    });
+                }
+            }
+            
+            event.target.value = "";
+            
+            if (window.pendingPdfChanges.length === 0) {
+                alert(`Sincronizzazione completata!\n\nMese analizzato: ${monthMatch[1].toUpperCase()} ${anno}\nNessuna modifica necessaria, il calendario è già allineato al PDF.`);
+                return;
+            }
+            
+            // Popola modale di conferma
+            let listHtml = "";
+            window.pendingPdfChanges.forEach((change, idx) => {
+                listHtml += `
+                    <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #eee; cursor: pointer;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="pdfSyncCheck_${idx}" checked style="width: 20px; height: 20px; margin: 0; accent-color: #e83e8c;">
+                            <span style="font-size: 15px; color: #32325d; font-weight: bold; text-transform: capitalize;">${change.giornoTesto}</span>
+                        </div>
+                        <div style="font-size: 14px; color: #525f7f; text-align: right;">
+                            <span style="text-decoration: line-through; color: #adb5bd; margin-right: 5px;">${change.oldShift}</span> 
+                            <span style="font-weight: bold; color: #5e72e4;">➔ ${change.newShift}</span>
+                        </div>
+                    </label>
+                `;
+            });
+            
+            document.getElementById('pdfSyncList').innerHTML = listHtml;
+            document.getElementById('pdfSyncModal').style.display = 'block';
+
+        } catch (error) {
+            console.error("Errore lettura PDF:", error);
+            alert("Si è verificato un errore durante l'elaborazione del PDF.");
+            event.target.value = "";
+        }
+    }
+    
+    function chiudiPdfSyncModal() {
+        document.getElementById('pdfSyncModal').style.display = 'none';
+        window.pendingPdfChanges = [];
+    }
+
+    function applicaModifichePdf() {
+        let applicate = 0;
+        if (window.pendingPdfChanges) {
+            window.pendingPdfChanges.forEach((change, idx) => {
+                let checkbox = document.getElementById(`pdfSyncCheck_${idx}`);
+                if (checkbox && checkbox.checked) {
+                    state.variazioni[change.date] = change.newShift;
+                    applicate++;
+                }
+            });
+        }
+        
+        chiudiPdfSyncModal();
+        alert(`Sincronizzazione applicata!\nModifiche registrate: ${applicate}`);
+        salvaERicarica();
+    }
+
+    // --- FUNZIONI COLORI ROTAZIONE ---
+    let tempColoriRotazione = {};
+
+    function apriColoriRotazione() {
+        chiudiMenuDestro();
+        tempColoriRotazione = { ...(state.coloriRotazione || {}) };
+        
+        const giorniDaColorare = ['riposo', 1, 2, 3, 4, 5, 6];
+        for(let i of giorniDaColorare) {
+            let container = document.querySelector('#coloriRotazioneModal .day-' + i);
+            if(container) {
+                container.querySelectorAll('.color-circle').forEach(c => {
+                    c.classList.remove('selected');
+                    let cColor = c.getAttribute('data-color') || "";
+                    let targetColor = tempColoriRotazione[i] || "";
+                    if (cColor === targetColor) {
+                        c.classList.add('selected');
+                    }
+                });
+            }
+        }
+        document.getElementById('coloriRotazioneModal').style.display = 'block';
+    }
+
+    function chiudiColoriRotazione() {
+        document.getElementById('coloriRotazioneModal').style.display = 'none';
+    }
+
+    function selezionaColoreRotazione(giorno, hex, el) {
+        if (hex) {
+            tempColoriRotazione[giorno] = hex;
+        } else {
+            delete tempColoriRotazione[giorno];
+        }
+        
+        let container = document.querySelector('#coloriRotazioneModal .day-' + giorno);
+        if(container) {
+            container.querySelectorAll('.color-circle').forEach(c => c.classList.remove('selected'));
+        }
+        if(el) el.classList.add('selected');
+    }
+
+    function salvaColoriRotazione() {
+        if (!state.coloriRotazione) state.coloriRotazione = {};
+        const giorniDaColorare = ['riposo', 1, 2, 3, 4, 5, 6];
+        for(let i of giorniDaColorare) {
+            if (tempColoriRotazione[i]) {
+                state.coloriRotazione[i] = tempColoriRotazione[i];
+            } else {
+                delete state.coloriRotazione[i];
+            }
+        }
+        salvaERicarica();
+    }
+
+    function salvaModificaMultipla() {
+        const startDateStr = document.getElementById('multiStart').value;
+        const endDateStr = document.getElementById('multiEnd').value;
+        const turnoVal = document.getElementById('multiTurno').value.trim().toUpperCase();
+        const escludiRiposi = document.getElementById('checkEscludiRiposi').checked;
+
+        if (!startDateStr || !endDateStr) { alert("Seleziona entrambe le date."); return; }
+        if (startDateStr > endDateStr) { alert("La data di inizio deve essere precedente o uguale a quella di fine."); return; }
+        
+        if (!turnoVal) { 
+            if(!confirm("Hai lasciato il campo vuoto. Vuoi CANCELLARE le modifiche per questo periodo e ripristinare i turni base?")) return; 
+        }
+
+        let currentDate = creaDataSicura(startDateStr);
+        let endDate = creaDataSicura(endDateStr);
+
+        while (currentDate <= endDate) {
+            let dStr = dateToLocalISO(currentDate);
+            
+            let saltaGiorno = false;
+            if (escludiRiposi) {
+                let varCorrente = state.variazioni[dStr];
+                let eRiposoManual = (varCorrente === "RI" || varCorrente === "RIPOSO" || varCorrente === "AL");
+                let eRiposoStrutturale = (!varCorrente && isGiornoRiposo(dStr));
+                if (eRiposoManual || eRiposoStrutturale) {
+                    saltaGiorno = true;
+                }
+            }
+
+            if (!saltaGiorno) {
+                if (!turnoVal) {
+                    delete state.variazioni[dStr]; 
+                } else {
+                    state.variazioni[dStr] = turnoVal; 
+                }
+            }
+            
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        salvaERicarica();
+    }
+
+    // --- FUNZIONI PDF TIPO 2 ---
+    function apriPdfTipo2Modal() {
+        chiudiMenuDestro();
+        let currDate = new Date();
+        document.getElementById('pdfTipo2Mese').value = String(currDate.getMonth() + 1).padStart(2, '0');
+        document.getElementById('pdfTipo2Anno').value = currDate.getFullYear();
+        document.getElementById('pdfTipo2Modal').style.display = 'block';
+    }
+
+    function chiudiPdfTipo2Modal() {
+        document.getElementById('pdfTipo2Modal').style.display = 'none';
+    }
+
+    function generaPdfTipo2() {
+        let mese = document.getElementById('pdfTipo2Mese').value;
+        let anno = document.getElementById('pdfTipo2Anno').value;
+        let meseNome = new Date(anno, parseInt(mese)-1, 1).toLocaleDateString('it-IT', { month: 'long' });
+        meseNome = meseNome.charAt(0).toUpperCase() + meseNome.slice(1);
+
+        let html = `
+        <div style="font-family: Arial, sans-serif; font-size: 12px; padding: 10px; color: #000; background: white; width: 100%; box-sizing: border-box;">
+            <h2 style="margin-bottom: 15px; text-align: center; font-size: 18px;">Bibbia ${meseNome} ${anno}</h2>
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #000; background-color: #f8f9fa;">
+                        <th style="padding: 6px 8px;">Data</th>
+                        <th style="padding: 6px 8px;">Turno</th>
+                        <th style="padding: 6px 8px;">Loc. Monta</th>
+                        <th style="padding: 6px 8px;">Dalle</th>
+                        <th style="padding: 6px 8px;">Alle</th>
+                        <th style="padding: 6px 8px;">Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        const turni = calcolaTurni();
+        const dateChiavi = Object.keys(state.dbCache || {}).sort();
+        const giorniInMese = new Date(anno, mese, 0).getDate();
+        const giorniSettimana = ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
+
+        for (let d = 1; d <= giorniInMese; d++) {
+            let dStr = `${anno}-${mese}-${String(d).padStart(2, '0')}`;
+            let dObj = new Date(anno, parseInt(mese)-1, d);
+            let giornoNome = giorniSettimana[dObj.getDay()];
+            let ev = turni.find(t => t.start === dStr && !t.title.includes('FERIE') && t.title !== 'FEP');
+            
+            let titolo = ev ? ev.title.replace(/ 🌫️| ⏱️| 📝|\(Sospeso\)| 🍝| 💸/g, '').trim() : "";
+            let codiceBase = titolo.toUpperCase();
+
+            let locMonta = "", dalle = "", alle = "", note = "";
+
+            if (state.note[dStr]) note = state.note[dStr].substring(0, 30) + (state.note[dStr].length > 30 ? "..." : "");
+
+            if (codiceBase !== "RI" && codiceBase !== "RIPOSO" && codiceBase !== "AL" && codiceBase !== "DISP" && codiceBase !== "") {
+                let dbCorrente = {};
+                const dSelezionataNum = stringToNum(dStr);
+                for (let i = dateChiavi.length - 1; i >= 0; i--) { 
+                    if (dSelezionataNum >= stringToNum(dateChiavi[i])) { 
+                        dbCorrente = state.dbCache[dateChiavi[i]]; 
+                        break; 
+                    } 
+                }
+                
+                let chiaveTrovata = trovaChiaveEsatta(dbCorrente, codiceBase, dStr);
+                let dettagli = dbCorrente[chiaveTrovata];
+
+                if (dettagli) {
+                    locMonta = dettagli.luogoInizio || "";
+                    dalle = dettagli.inizio || "";
+                    alle = dettagli.fine || "";
+                    if (dettagli.inizio2 && dettagli.fine2) {
+                        alle += ` (Ripr: ${dettagli.inizio2}-${dettagli.fine2})`;
+                    }
+                }
+            }
+
+            let bg = dObj.getDay() === 0 ? "background-color: #f9f9f9;" : "";
+
+            html += `
+            <tr style="border-bottom: 1px solid #ddd; ${bg} page-break-inside: avoid;">
+                <td style="padding: 5px 8px;">${String(d).padStart(2, '0')} ${giornoNome}</td>
+                <td style="padding: 5px 8px; font-weight: bold;">${titolo}</td>
+                <td style="padding: 5px 8px;">${locMonta}</td>
+                <td style="padding: 5px 8px;">${dalle}</td>
+                <td style="padding: 5px 8px;">${alle}</td>
+                <td style="padding: 5px 8px; font-size: 10px;">${note}</td>
+            </tr>`;
+        }
+
+        html += `
+                </tbody>
+            </table>
+        </div>`;
+
+        let wrapper = document.createElement('div');
+        wrapper.innerHTML = html;
+
+        chiudiPdfTipo2Modal();
+
+        const opt = {
+            margin:       10,
+            filename:     `Bibbia_${meseNome}_${anno}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+
+        html2pdf().set(opt).from(wrapper).save();
+    }
+
+    // --- LOGICA CAMBIO BIBBIA ---
+    function apriCambioBibbia() {
+        chiudiMenuDestro();
+        document.getElementById('cambioBibbiaModal').style.display = 'block';
+    }
+    
+    function chiudiCambioBibbia() {
+        document.getElementById('cambioBibbiaModal').style.display = 'none';
+    }
+    
+    function confermaCambioBibbia() {
+        state.depositoAttivo = null;
+        delete state.riposoStart;
+        delete state.rotazioneStart;
+        delete state.turnoIndex;
+        delete state.history;
+        delete state.futureConfig;
+        delete state.baseDataFutura;
+        delete state.tcPattern;
+        state.setupStep = 0;
+        
+        let boost = new Date().getTime() + 5000;
+        salvaERicarica(boost);
+    }
+
+    // --- CORE ---
+    const VERSIONE_TURNI = "1.0.1"; 
+    let VERSIONE_FERIE = "1.0.0"; 
+    const DATA_INIZIO_NUOVI_TURNI = "2026-03-28"; 
+    
+    const AVVISO_VARIANTI = true;
+
+    let state = JSON.parse(localStorage.getItem('myTurniApp')) || { 
+        version: "0", 
+        variazioni: {}, 
+        colori: {}, 
+        nebbia: {}, 
+        straordinario: {}, 
+        sospesoRiposo: {}, 
+        note: {}, 
+        buonoPasto: {}, 
+        permessoSP: {}, 
+        setupStep: 0, 
+        dbCache: {}, 
+        rotCache: {}, 
+        dispCache: {}, 
+        ferie: {} 
+    };
+
+    if (!state.colori) state.colori = {}; 
+    if (!state.nebbia) state.nebbia = {};
+    if (!state.straordinario) state.straordinario = {};
+    if (!state.sospesoRiposo) state.sospesoRiposo = {};
+    if (!state.note) state.note = {};
+    if (!state.buonoPasto) state.buonoPasto = {};
+    if (!state.permessoSP) state.permessoSP = {};
+    if (!state.dispCache) state.dispCache = {};
+    if (!state.coloriRotazione) state.coloriRotazione = {}; 
+
+    let selectedDate, tempRotDate, calendar;
+    let currentImagePath = "";
+    let imgBaseFallback = ""; 
+    let pzInstance = null; 
+    let tempColoreAltro = "";
+    let variantiData = {};
+
+    function stringToNum(s) { 
+        if(!s) return 0; 
+        let p = s.split('-'); 
+        return Math.floor(Date.UTC(p[0], p[1]-1, p[2]) / 86400000); 
+    }
+
+    function formattaData(d) { 
+        let dataObj = new Date(d); 
+        let mese = dataObj.toLocaleDateString('it-IT', { month: 'long' }); 
+        return dataObj.getDate() + ' ' + mese.charAt(0).toUpperCase() + mese.slice(1); 
+    }
+    
+    function salvaLocal(timestampManuale = null) { 
+        state.lastUpdate = timestampManuale || new Date().getTime(); 
+        let copiaDati = JSON.parse(JSON.stringify(state)); 
+        delete copiaDati.dbCache; 
+        delete copiaDati.rotCache; 
+        delete copiaDati.dispCache; 
+        localStorage.setItem('myTurniApp', JSON.stringify(copiaDati)); 
+        if (typeof window.syncToCloud === 'function') { 
+            window.syncToCloud(copiaDati); 
+        }
+    }
+
+    function salvaERicarica(timestampManuale = null) {
+        state.lastUpdate = timestampManuale || new Date().getTime();
+        let copiaDati = JSON.parse(JSON.stringify(state));
+        delete copiaDati.dbCache;
+        delete copiaDati.rotCache;
+        delete copiaDati.dispCache;
+        localStorage.setItem('myTurniApp', JSON.stringify(copiaDati));
+        document.body.style.opacity = '0.6';
+        if (typeof window.syncToCloud === 'function' && window.utenteLoggato) {
+            Promise.race([
+                window.syncToCloud(copiaDati),
+                new Promise(resolve => setTimeout(resolve, 800))
+            ]).then(() => { location.reload(); });
+        } else { location.reload(); }
+    }
+
+    function estraiDataDaNome(nome) { 
+        const match = nome.match(/\d{4}-\d{2}-\d{2}/); 
+        return match ? match[0] : null; 
+    }
+
+    function dateToLocalISO(d) { 
+        return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0'); 
+    }
+
+    function creaDataSicura(dataStr) { 
+        if(!dataStr) return new Date(); 
+        let p = dataStr.split('-'); 
+        return new Date(p[0], p[1] - 1, p[2], 12, 0, 0); 
+    }
+
+    function trovaChiaveEsatta(db, codiceBase, dateStr) {
+        if (!db || !codiceBase) return codiceBase;
+        let codiciDaCercare = [codiceBase];
+        let matchB = codiceBase.match(/^([1-9])B(\d{2})$/);
+        if (matchB) {
+            let linea = matchB[1]; let finale = matchB[2];
+            let letteraPilota = (linea === '1' || linea === '2') ? 'C' : 'P';
+            let regex = new RegExp(`^${linea}[A-Z]${finale}$`);
+            let trovati = Object.keys(db).filter(k => regex.test(k));
+            if (trovati.length > 0) codiciDaCercare.push(...trovati);
+            else codiciDaCercare.push(`${linea}${letteraPilota}${finale}`);
+        } else {
+            let match50 = codiceBase.match(/^([A-Z0-9]+?)(\d{2})$/);
+            if (match50) {
+                let pref = match50[1]; let num = parseInt(match50[2], 10);
+                if (num >= 50) codiciDaCercare.push(pref + String(num - 50).padStart(2, '0'));
+            }
+        }
+        let giornoIdx = creaDataSicura(dateStr).getDay(); 
+        let targetDay = giornoIdx === 0 ? 7 : giornoIdx; 
+        const dayMap = { "LUN": 1, "MAR": 2, "MER": 3, "GIO": 4, "VEN": 5, "SAB": 6, "DOM": 7 };
+        for (let codCercato of codiciDaCercare) {
+            let keys = Object.keys(db).filter(k => k === codCercato || k.startsWith(codCercato + "_"));
+            let exactMatch = null; let genericMatch = null;
+            for (let k of keys) {
+                if (k === codCercato) { genericMatch = k; continue; }
+                let suffix = k.substring(codCercato.length + 1); 
+                if (suffix.includes("-")) {
+                    let parts = suffix.split("-");
+                    if (parts.length === 2 && dayMap[parts[0]] && dayMap[parts[1]]) {
+                        let start = dayMap[parts[0]]; let end = dayMap[parts[1]];
+                        if (start <= end) { if (targetDay >= start && targetDay <= end) exactMatch = k; }
+                        else { if (targetDay >= start || targetDay <= end) exactMatch = k; }
+                    }
+                } else { if (dayMap[suffix] && dayMap[suffix] === targetDay) exactMatch = k; }
+            }
+            if (exactMatch) return exactMatch;
+            if (genericMatch) return genericMatch;
+        }
+        return codiceBase; 
+    }
+
+    function getRotazionePerData(dateStr) {
+        const dSelezionata = stringToNum(dateStr);
+        const dateChiavi = Object.keys(state.rotCache || {}).sort();
+        if (dateChiavi.length === 0) return null;
+        let rotCorrente = state.rotCache[dateChiavi[0]]; 
+        for (let i = dateChiavi.length - 1; i >= 0; i--) { if (dSelezionata >= stringToNum(dateChiavi[i])) { rotCorrente = state.rotCache[dateChiavi[i]]; break; } }
+        return rotCorrente;
+    }
+
+    function getDispPerData(dateStr) {
+        const dSelezionata = stringToNum(dateStr);
+        const dateChiavi = Object.keys(state.dispCache || {}).sort();
+        if (dateChiavi.length === 0) return null;
+        let dispCorrente = state.dispCache[dateChiavi[0]]; 
+        for (let i = dateChiavi.length - 1; i >= 0; i--) { if (dSelezionata >= stringToNum(dateChiavi[i])) { dispCorrente = state.dispCache[dateChiavi[i]]; break; } }
+        return dispCorrente;
+    }
+
+    function trovaDataCambioProssimo(dataRifStr) {
+        const rif = stringToNum(dataRifStr);
+        const dateChiavi = Object.keys(state.rotCache || {}).sort();
+        const futura = dateChiavi.find(d => stringToNum(d) > rif);
+        return futura || null;
+    }
+
+    function scaricaPDF() {
+        chiudiMenuDestro();
+        const element = document.getElementById('calendar');
+        let titleEl = document.querySelector('.fc-toolbar-title');
+        let meseTesto = titleEl ? titleEl.innerText.replace(/ /g, "_") : "Calendario";
+        const originalWidth = element.style.width;
+        element.style.width = '700px';
+        calendar.setOption('height', 960); 
+        calendar.updateSize();
+        const opt = {
+            margin: [10, 5, 10, 5], 
+            filename: `Turni_${meseTesto}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, windowWidth: 800 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        const buttons = document.querySelectorAll('.fc-button'); 
+        buttons.forEach(b => b.style.display = 'none');
+        setTimeout(() => {
+            html2pdf().set(opt).from(element).save().then(() => {
+                buttons.forEach(b => b.style.display = ''); 
+                element.style.width = originalWidth;
+                calendar.setOption('height', 'auto'); 
+                calendar.updateSize();
+            });
+        }, 300);
+    }
+
+    // --- NUOVA FUNZIONE CARICAMENTO DATI DINAMICI DA MAPPA ---
+    async function caricaDatiEsterniDinamici() {
+        try {
+            const nocache = "?v=" + new Date().getTime();
+            const resMappa = await fetch("mappa_file.json" + nocache);
+            if (!resMappa.ok) throw new Error("Mappa file non trovata");
+            const mappa = await resMappa.json();
+            const albero = mappa.albero || [];
+
+            // 1. Ferie
+            if (albero.includes("rotazione_ferie.json")) {
+                const resFerie = await fetch("rotazione_ferie.json" + nocache);
+                if (resFerie.ok) {
+                    const datiFerie = await resFerie.json();
+                    if (datiFerie.versione) VERSIONE_FERIE = datiFerie.versione;
+                    ROT_FERIE_INV = datiFerie.invernali || [];
+                    ROT_FERIE_EST = datiFerie.estive || [];
+                }
+            }
+
+            // 2. Varianti
+            if (albero.includes("presenza_varianti.json")) {
+                const resVar = await fetch("presenza_varianti.json" + nocache);
+                if (resVar.ok) variantiData = await resVar.json();
+            }
+
+            // 3. Cache Dati (Info, Rotazioni, Disponibili)
+            state.dbCache = {};
+            state.rotCache = {};
+            state.dispCache = {};
+
+            for (let file of albero) {
+                const dataInizio = estraiDataDaNome(file);
+                if (!dataInizio) continue;
+
+                if (file.startsWith("info_turni_")) {
+                    const res = await fetch(file + nocache);
+                    if (res.ok) state.dbCache[dataInizio] = await res.json();
+                } else if (file.startsWith("rotazioni_")) {
+                    const res = await fetch(file + nocache);
+                    if (res.ok) state.rotCache[dataInizio] = await res.json();
+                } else if (file.startsWith("turni_disp_")) {
+                    const res = await fetch(file + nocache);
+                    if (res.ok) state.dispCache[dataInizio] = await res.json();
+                }
+            }
+            salvaLocal();
+        } catch (e) { console.error("Errore caricamento dinamico", e); }
+    }
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Carica dinamicamente invece degli array hardcoded
+        await caricaDatiEsterniDinamici();
+
+        if (!state.ferie) state.ferie = { version: VERSIONE_FERIE, scambi: {} };
+        else if (state.ferie.version !== VERSIONE_FERIE) {
+            let avevaConfigurato = state.ferie.baseAnno !== undefined;
+            state.ferie = { version: VERSIONE_FERIE, scambi: {} };
+            salvaLocal(new Date().getTime() + 5000);
+            if (avevaConfigurato) alert("⚠️ Aggiornamento Rotazione Ferie: reinserire gruppo base.");
+        }
+
+        if (!state.depositoAttivo) { document.getElementById('welcomeModal').style.display = 'block'; } 
+        else if (state.version !== VERSIONE_TURNI) {
+            if (state.depositoAttivo.startsWith('disp_') || !RESET_DOPO_AGGIORNAMENTO[state.depositoAttivo]) {
+                state.version = VERSIONE_TURNI; salvaLocal(new Date().getTime() + 5000); 
+                aggiornaUI(); inizializzaCalendario();
+            } else {
+                const dataLimiteObj = new Date(DATA_INIZIO_NUOVI_TURNI); 
+                const dataMenoUnoObj = new Date(dataLimiteObj);
+                dataMenoUnoObj.setDate(dataMenoUnoObj.getDate() - 1);
+                document.getElementById('welcomeTitle').innerText = "Aggiornamento Turni";
+                document.getElementById('welcomeDesc').innerText = `Dal ${formattaData(DATA_INIZIO_NUOVI_TURNI)} nuova rotazione.`;
+                document.getElementById('depotSelectMain').style.display = 'none';
+                document.getElementById('btnConfRot').disabled = false;
+                document.getElementById('btnConfRot').style.background = 'var(--turno)';
+                document.getElementById('btnConfRot').innerText = "Avvia Aggiornamento";
+                document.getElementById('welcomeModal').style.display = 'block';
+            }
+        } else { aggiornaUI(); inizializzaCalendario(); checkGuida(); }
+        
+        document.getElementById('depotSelectMain').addEventListener('change', () => {
+            document.getElementById('btnConfRot').disabled = false; 
+            document.getElementById('btnConfRot').style.background = 'var(--turno)';
+        });
+    });
+
+    function confermaRotazione() {
+        if (!state.depositoAttivo) { state.depositoAttivo = document.getElementById('depotSelectMain').value; state.setupStep = 1; } 
+        else if (state.version !== VERSIONE_TURNI) { state.history = { riposoStart: state.riposoStart, rotazioneStart: state.turnoIndex, depositoAttivo: state.depositoAttivo, tcPattern: state.tcPattern }; }
+        state.version = VERSIONE_TURNI; document.getElementById('welcomeModal').style.display = 'none';
+        if (!state.riposoStart || state.setupStep < 3) { aggiornaUI(); inizializzaCalendario(); checkGuida(); salvaLocal(new Date().getTime() + 5000); } 
+        else { avviaRiconfigurazioneAggiornamento(); }
+    }
+
+    function tornaAllaRotazione() { state.setupStep = 0; state.depositoAttivo = null; salvaERicarica(); }
+    function checkGuida() { if (state.setupStep === 1) { document.getElementById('stepTitle').innerText = "Passo 2"; document.getElementById('stepDesc').innerText = "Seleziona un riposo singolo."; document.getElementById('btnConfirmDate').style.display = "none"; document.getElementById('btnBackStep').style.display = "block"; document.getElementById('btnCloseStep').style.display = "block"; document.getElementById('btnCloseStep').innerText = "Seleziona"; document.getElementById('stepModal').style.display = 'block'; } }
+    function abilitaSalvataggio() { document.getElementById('btnSalvaCambio').disabled = false; }
+
+    async function gestisciInterazione(date) {
+        selectedDate = date;
+        if (state.setupStep === 1) { document.getElementById('stepDateDisplay').innerText = formattaData(date); document.getElementById('stepDesc').innerText = "È un riposo?"; document.getElementById('btnConfirmDate').style.display = "block"; document.getElementById('btnBackStep').style.display = "none"; document.getElementById('btnCloseStep').style.display = "block"; document.getElementById('stepModal').style.display = 'block'; } 
+        else {
+            document.getElementById('modalDate').innerText = formattaData(date);
+            let areaVarianti = document.getElementById('avvisoVariantiArea'); areaVarianti.style.display = 'none'; 
+            if (AVVISO_VARIANTI && variantiData && variantiData.hasOwnProperty(date)) { let lineeData = variantiData[date]; areaVarianti.innerHTML = "⚠️ Attenzione varianti service: " + (lineeData || "tutte"); areaVarianti.style.display = 'block'; }
+            let turniCalc = calcolaTurni();
+            let turnoCorrenteObj = turniCalc.find(e => e.start === date && !e.title.includes('FERIE') && e.title !== 'FEP');
+            let nomeTurnoCompleto = turnoCorrenteObj ? turnoCorrenteObj.title : "Nessun turno";
+            let nomeTurnoPulito = nomeTurnoCompleto.replace(/ 🌫️| ⏱️| 📝|\(Sospeso\)| 🍝| 💸/g, '').trim();
+            document.getElementById('singleTurnoSelect').style.display = 'block';
+            let htmlInfo = `<strong>Turno attuale:</strong> ${nomeTurnoPulito} ${state.variazioni[date] ? '(Modificato)' : ''}`;
+            const dateChiavi = Object.keys(state.dbCache || {}).sort(); 
+            let dbCorrente = {}; let dataAttiva = dateChiavi[0] || "2026-03-02";
+            const dSelezionata = stringToNum(date);
+            for (let i = dateChiavi.length - 1; i >= 0; i--) { if (dSelezionata >= stringToNum(dateChiavi[i])) { dbCorrente = state.dbCache[dateChiavi[i]]; dataAttiva = dateChiavi[i]; break; } }
+            let chiaveTrovata = trovaChiaveEsatta(dbCorrente, nomeTurnoPulito.toUpperCase(), date); 
+            let dettagli = dbCorrente[chiaveTrovata];
+            if (dettagli) { htmlInfo += `<hr><b>Inizio:</b> ${dettagli.inizio} (${dettagli.luogoInizio})<br><b>Fine:</b> ${dettagli.fine} (${dettagli.luogoFine})`; }
+            document.getElementById('infoTurniArea').innerHTML = htmlInfo; document.getElementById('infoTurniArea').style.display = "block"; popolaCambio();
+            const btnImmagine = document.getElementById('btnVisualizzaTurno'); 
+            let isRiposo = ['RI','RIPOSO','AL'].includes(nomeTurnoPulito.toUpperCase());
+            if (!isRiposo && !['DISP','NESSUN TURNO'].includes(nomeTurnoPulito.toUpperCase())) {
+                currentImagePath = `turni_${dataAttiva}/${(chiaveTrovata !== nomeTurnoPulito.toUpperCase() && dbCorrente[chiaveTrovata]) ? chiaveTrovata : nomeTurnoPulito.toUpperCase()}.jpg`;
+                imgBaseFallback = `turni_${dataAttiva}/${nomeTurnoPulito.toUpperCase()}.jpg`;
+                btnImmagine.style.display = 'block';
+            } else { btnImmagine.style.display = 'none'; }
+            document.getElementById('editModal').style.display = 'block';
+        }
+    }
+
+    function apriAltroModal() {
+        document.getElementById('editModal').style.display = 'none';
+        document.getElementById('checkSospesoRiposoAltro').checked = !!state.sospesoRiposo[selectedDate];
+        document.getElementById('checkNebbiaAltro').checked = !!state.nebbia[selectedDate];
+        document.getElementById('checkBuonoPastoAltro').checked = !!state.buonoPasto[selectedDate];
+        let hasStraord = !!state.straordinario[selectedDate]; 
+        document.getElementById('checkStraordinarioAltro').checked = hasStraord;
+        document.getElementById('straordinarioInputsAltro').style.display = hasStraord ? 'flex' : 'none';
+        document.getElementById('oreStraordAltro').value = hasStraord ? state.straordinario[selectedDate].ore : '';
+        document.getElementById('minutiStraordAltro').value = hasStraord ? state.straordinario[selectedDate].minuti : '';
+        let hasPermessoSP = !!state.permessoSP[selectedDate]; 
+        document.getElementById('checkPermessoSPAltro').checked = hasPermessoSP;
+        document.getElementById('permessoSPInputsAltro').style.display = hasPermessoSP ? 'flex' : 'none';
+        document.getElementById('orePermessoSPAltro').value = hasPermessoSP ? state.permessoSP[selectedDate].ore : '';
+        document.getElementById('minutiPermessoSPAltro').value = hasPermessoSP ? state.permessoSP[selectedDate].minuti : '';
+        document.getElementById('notaAltro').value = state.note[selectedDate] || "";
+        tempColoreAltro = state.colori[selectedDate] || ""; aggiornaSelezioneColoreUI();
+        document.getElementById('altroModal').style.display = 'block';
+    }
+
+    function chiudiAltroModal() { document.getElementById('altroModal').style.display = 'none'; document.getElementById('editModal').style.display = 'block'; }
+    function chiudiAltroSeSfondo(event) { if (event.target.id === 'altroModal') chiudiAltroModal(); }
+    function toggleStraordinarioAltro() { document.getElementById('straordinarioInputsAltro').style.display = document.getElementById('checkStraordinarioAltro').checked ? 'flex' : 'none'; }
+    function togglePermessoSPAltro() { document.getElementById('permessoSPInputsAltro').style.display = document.getElementById('checkPermessoSPAltro').checked ? 'flex' : 'none'; }
+    function selezionaColoreAltro(hex, el) { tempColoreAltro = hex; aggiornaSelezioneColoreUI(); }
+    function aggiornaSelezioneColoreUI() { document.querySelectorAll('.color-circle').forEach(c => { c.classList.remove('selected'); if (tempColoreAltro && c.getAttribute('data-color') === tempColoreAltro) c.classList.add('selected'); }); }
+
+    function salvaAltro() {
+        if (document.getElementById('checkSospesoRiposoAltro').checked) state.sospesoRiposo[selectedDate] = true; else delete state.sospesoRiposo[selectedDate];
+        if (document.getElementById('checkNebbiaAltro').checked) state.nebbia[selectedDate] = true; else delete state.nebbia[selectedDate];
+        if (document.getElementById('checkBuonoPastoAltro').checked) state.buonoPasto[selectedDate] = true; else delete state.buonoPasto[selectedDate];
+        if (document.getElementById('checkStraordinarioAltro').checked) state.straordinario[selectedDate] = { ore: document.getElementById('oreStraordAltro').value || "0", minuti: document.getElementById('minutiStraordAltro').value || "0" }; else delete state.straordinario[selectedDate];
+        if (document.getElementById('checkPermessoSPAltro').checked) state.permessoSP[selectedDate] = { ore: document.getElementById('orePermessoSPAltro').value || "0", minuti: document.getElementById('minutiPermessoSPAltro').value || "0" }; else delete state.permessoSP[selectedDate];
+        const nV = document.getElementById('notaAltro').value.trim(); if (nV) state.note[selectedDate] = nV; else delete state.note[selectedDate];
+        if (tempColoreAltro) state.colori[selectedDate] = tempColoreAltro; else delete state.colori[selectedDate];
+        salvaERicarica(); 
+    }
+
+    function apriImmagineTurno() { if (!currentImagePath) return; let img = document.getElementById('turnoImage'); img.onerror = erroreImmagine; img.src = currentImagePath; if (pzInstance) pzInstance.reset(); document.getElementById('imageModal').style.display = 'block'; }
+    function chiudiImageModal() { document.getElementById('imageModal').style.display = 'none'; document.getElementById('turnoImage').removeAttribute('src'); if (pzInstance) pzInstance.reset(); }
+    function chiudiSeSfondo(event) { if (['imageModal','imageFlexContainer'].includes(event.target.id)) chiudiImageModal(); }
+    function chiudiEditSeSfondo(event) { if (event.target.id === 'editModal') chiudiEdit(); }
+    function erroreImmagine() { let img = document.getElementById('turnoImage'); if (imgBaseFallback) { currentImagePath = imgBaseFallback; img.src = imgBaseFallback; imgBaseFallback = ""; } else { img.onerror = null; alert("Immagine non trovata."); chiudiImageModal(); } }
+    function scaricaImmagineTurno() { if (!currentImagePath) return; const a = document.createElement('a'); a.href = currentImagePath; a.download = currentImagePath.split('/').pop(); a.click(); }
+    function apriJumpModal() { const yS = document.getElementById('jumpYear'); if(yS.options.length === 0) { let cY = new Date().getFullYear(); for(let i = cY - 2; i <= cY + 5; i++) { let o = document.createElement('option'); o.value = i; o.text = i; if(i === cY) o.selected = true; yS.appendChild(o); } } document.getElementById('jumpMonth').value = (new Date().getMonth() + 1).toString().padStart(2, '0'); document.getElementById('jumpModal').style.display = 'block'; }
+    function chiudiJumpModal() { document.getElementById('jumpModal').style.display = 'none'; }
+    function eseguiSalto() { calendar.gotoDate(document.getElementById('jumpYear').value + '-' + document.getElementById('jumpMonth').value + '-01'); chiudiJumpModal(); }
+
+    function procediConfigurazione() {
+        state.riposoStart = selectedDate; document.getElementById('btnBackStep').style.display = "none";
+        if (state.depositoAttivo.startsWith('disp_')) { state.setupStep = 3; salvaERicarica(); } 
+        else if (state.depositoAttivo.startsWith('tc_')) {
+            document.getElementById('stepTitle').innerText = "Settimana Successiva"; document.getElementById('stepDesc').innerHTML = `6 giorni successivi: turni doppi o alternati con DISP?`;
+            document.getElementById('stepActionArea').innerHTML = `<button class="btn" style="background: var(--turno);" onclick="impostaTcPattern('doppio')">Doppi</button><button class="btn" style="background: var(--disp); color:#32325d; margin-top:10px;" onclick="impostaTcPattern('disp')">Alternati</button>`;
+            document.getElementById('btnConfirmDate').style.display = "none"; 
+        } else { avviaSelezioneTurnoIniziale(); }
+    }
+
+    function impostaTcPattern(pattern) { state.tcPattern = pattern; state.turnoIndex = 0; let d = creaDataSicura(selectedDate); d.setDate(d.getDate() + 1); state.rotazioneStart = dateToLocalISO(d); let dF = trovaDataCambioProssimo(state.rotazioneStart); if (dF) state.futureConfig = { dataInizio: dF, turnoIndex: 0, tcPattern: pattern }; state.setupStep = 3; salvaERicarica(); }
+    function avviaSelezioneTurnoIniziale() { state.setupStep = 2; let d = creaDataSicura(selectedDate); d.setDate(d.getDate() + 1); tempRotDate = dateToLocalISO(d); document.getElementById('btnConfirmDate').style.display = "none"; document.getElementById('btnCloseStep').style.display = "none"; document.getElementById('stepDesc').innerHTML = `Turno il <strong style="color:var(--turno);">${formattaData(tempRotDate)}</strong>?`; document.getElementById('stepActionArea').innerHTML = `<select id="tSel"><option value="" disabled selected>Scegli...</option>${getOptionsTurni()}</select>`; document.getElementById('btnConfirmFinal').style.display = "block"; document.getElementById('stepModal').style.display = 'block'; }
+    function avviaRiconfigurazioneAggiornamento() { if (state.depositoAttivo.startsWith('tc_')) { state.futureConfig = { dataInizio: DATA_INIZIO_NUOVI_TURNI, turnoIndex: 0, tcPattern: state.history.tcPattern }; state.setupStep = 4; salvaERicarica(); return; } let d = creaDataSicura(DATA_INIZIO_NUOVI_TURNI); let dS = dateToLocalISO(d); while(isGiornoRiposo(dS)) { d.setDate(d.getDate() + 1); dS = dateToLocalISO(d); } tempRotDate = dS; document.getElementById('stepDesc').innerHTML = `Dal ${formattaData(DATA_INIZIO_NUOVI_TURNI)} nuova rotazione. Turno il <strong style="color:var(--turno);">${formattaData(tempRotDate)}</strong>?`; document.getElementById('stepActionArea').innerHTML = `<select id="tSel"><option value="" disabled selected>Scegli...</option>${getOptionsTurni()}</select>`; document.getElementById('btnConfirmFinal').style.display = "block"; document.getElementById('stepModal').style.display = 'block'; }
+
+    function isGiornoRiposoBase(curr, cfg) { if (!cfg.riposoStart) return false; let ref = stringToNum(cfg.riposoStart); if (cfg.depositoAttivo === 'disp_det') return (((curr - ref) % 6 + 6) % 6 === 0); let pos = ((curr - ref + 6) % 15 + 15) % 15; return (pos === 6 || pos === 13 || pos === 14); }
+    function isGiornoRiposo(dStr) { if (['RI','RIPOSO','AL'].includes(state.variazioni[dStr])) return true; let cfg = (state.history && stringToNum(dStr) < stringToNum(DATA_INIZIO_NUOVI_TURNI)) ? state.history : state; return isGiornoRiposoBase(stringToNum(dStr), cfg); }
+
+    function attivaRotazioneFinale() {
+        const valStr = document.getElementById('tSel').value; if (!valStr) return;
+        if (valStr === "RIPOSO") { let d = creaDataSicura(tempRotDate); d.setDate(d.getDate() + 1); let dS = dateToLocalISO(d); while(isGiornoRiposo(dS)) { d.setDate(d.getDate() + 1); dS = dateToLocalISO(d); } tempRotDate = dS; document.getElementById('stepDesc').innerHTML = `Turno il <strong style="color:var(--turno);">${formattaData(tempRotDate)}</strong>?`; document.getElementById('stepActionArea').innerHTML = `<select id="tSel"><option value="" disabled selected>Scegli...</option>${getOptionsTurni()}</select>`; return; }
+        const val = parseInt(valStr); if (state.setupStep === 2) { state.turnoIndex = val; state.rotazioneStart = tempRotDate; let dF = trovaDataCambioProssimo(tempRotDate); if (dF) { state.setupStep = 4; state.baseDataFutura = dF; let dFut = creaDataSicura(dF); let dFS = dateToLocalISO(dFut); while(isGiornoRiposo(dFS)) { dFut.setDate(dFut.getDate() + 1); dFS = dateToLocalISO(dFut); } tempRotDate = dFS; document.getElementById('stepDesc').innerHTML = `Dal ${formattaData(state.baseDataFutura)} nuova rotazione. Turno il <strong style="color:var(--turno);">${formattaData(tempRotDate)}</strong>?`; document.getElementById('stepActionArea').innerHTML = `<select id="tSel"><option value="" disabled selected>Scegli...</option>${getOptionsTurni()}</select>`; return; } } 
+        else if (state.setupStep === 4) state.futureConfig = { dataInizio: tempRotDate, turnoIndex: val };
+        else if (state.setupStep === 3) { state.turnoIndex = val; state.rotazioneStart = tempRotDate; }
+        state.setupStep = 3; salvaERicarica(); 
+    }
+
+    function calcolaTurni() {
+        if (!state.riposoStart) return [];
+        let evs = [], today = new Date(); today.setHours(12, 0, 0, 0); 
+        let limitTurni = 365, limitRiposi = 1825, todayNum = stringToNum(dateToLocalISO(today)); 
+        if (state.rotazioneStart) { let dist = Math.abs(todayNum - stringToNum(state.rotazioneStart)); limitTurni = dist + 365; limitRiposi = dist + 1825; }
+        if (state.futureConfig && state.futureConfig.dataInizio) { let dist = Math.abs(todayNum - stringToNum(state.futureConfig.dataInizio)); if (dist+365 > limitTurni) limitTurni = dist+365; if (dist+1825 > limitRiposi) limitRiposi = dist+1825; }
+        let processati = new Set(); 
+        for (let i = -60; i < limitRiposi; i++) {
+            let dObj = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i, 12, 0, 0); 
+            let dStr = dateToLocalISO(dObj); let curr = stringToNum(dStr); processati.add(dStr);
+            let fA = getFerieGiorno(dStr); if (fA) evs.push({ title: fA, start: dStr, allDay: true, className: 'bg-ferie', myOrder: 1 }); 
+            let customColor = (state.colori && state.colori[dStr]) ? state.colori[dStr] : null;
+            let cfgB = (state.history && curr < stringToNum(DATA_INIZIO_NUOVI_TURNI)) ? state.history : state;
+            if (!customColor && state.coloriRotazione) {
+                if (isGiornoRiposo(dStr)) { if (state.coloriRotazione['riposo']) customColor = state.coloriRotazione['riposo']; } 
+                else { let idxG = 1; for (let k = curr - 1; k >= curr - 10; k--) { if (isGiornoRiposoBase(k, cfgB)) break; idxG++; } if (idxG <= 6 && state.coloriRotazione[idxG]) customColor = state.coloriRotazione[idxG]; }
+            }
+            let tC = (customColor === '#f1c40f') ? '#32325d' : '#ffffff';
+            let addon = (state.nebbia[dStr]?" 🌫️":"")+(state.straordinario[dStr]?" ⏱️":"")+(state.buonoPasto[dStr]?" 🍝":"")+(state.sospesoRiposo[dStr]?" (Sospeso)":"")+(state.permessoSP[dStr]?" 💸":"")+(state.note[dStr]?" 📝":"");
+            if (state.variazioni[dStr]) { let ev = { title: state.variazioni[dStr] + addon, start: dStr, allDay: true, myOrder: 2 }; if (customColor) { ev.backgroundColor = customColor; ev.textColor = tC; } else ev.className = ['RI','RIPOSO','AL'].includes(state.variazioni[dStr]) ? 'bg-riposo' : 'bg-modificato'; evs.push(ev); continue; }
+            if (isGiornoRiposo(dStr)) { let tr = 'RI'; if (cfgB.riposoStart && cfgB.depositoAttivo !== 'disp_det') { if (((curr - stringToNum(cfgB.riposoStart) + 6) % 15 + 15) % 15 === 13) tr = 'AL'; } let ev = { title: tr + addon, start: dStr, allDay: true, myOrder: 2 }; if (customColor) { ev.backgroundColor = customColor; ev.textColor = tC; } else ev.className = 'bg-riposo'; evs.push(ev); } 
+            else if (i < limitTurni) {
+                const rules = getRotazionePerData(dStr); let t = "";
+                if (cfgB.depositoAttivo.startsWith('disp_')) t = "DISP"; 
+                else if (cfgB.rotazioneStart) {
+                    let active = (state.futureConfig && curr >= stringToNum(state.futureConfig.dataInizio)) ? { s: state.futureConfig.dataInizio, i: state.futureConfig.turnoIndex, p: state.futureConfig.tcPattern } : { s: cfgB.rotazioneStart, i: cfgB.turnoIndex, p: cfgB.tcPattern };
+                    let refRot = stringToNum(active.s), w = 0; if (curr >= refRot) { for (let j = refRot; j < curr; j++) if (!isGiornoRiposoBase(j, cfgB)) w++; } else { for (let j = refRot; j > curr; j--) if (!isGiornoRiposoBase(j, cfgB)) w--; }
+                    let refRip = stringToNum(cfgB.riposoStart), sP = ((refRot - refRip + 6) % 15 + 15) % 15, off = [1, 3, 5, 8, 10, 12].includes(sP) ? 1 : 0;
+                    const list = (rules && rules[cfgB.depositoAttivo]) ? rules[cfgB.depositoAttivo] : [];
+                    if (list.length > 0) {
+                        if (cfgB.depositoAttivo.startsWith('tc_')) { let cP = ((curr - refRip + 6) % 15 + 15) % 15, isB2 = (cP >= 7 && cP <= 12), k = isB2 ? (cP - 7) : cP, p = active.p || cfgB.p || 'doppio', isAlt = (p === 'disp') ? isB2 : !isB2, idx = Math.floor(k / 2); t = list[idx>=list.length?list.length-1:idx].toUpperCase(); if (isAlt) { let dOE = (cfgB.depositoAttivo === 'tc_spez_lido'); if ((dOE && k % 2 === 0) || (!dOE && k % 2 !== 0)) t = "DISP"; } } 
+                        else { let exp = [], oToE = []; for (let j = 0; j < list.length; j++) { oToE[j] = exp.length; let cT = list[j].toUpperCase(); if (cT.includes('+')) { let p = cT.split('+'); exp.push(p[0].trim()); if (p.length > 1) exp.push(p[1].trim()); } else { exp.push(cT); exp.push(cT); } } let L = exp.length, bIdx = oToE[active.i], bS = bIdx - (bIdx % 2), idxE = (bS + w + off) % L; t = exp[idxE < 0 ? idxE + L : idxE]; }
+                        let dR = getDispPerData(dStr); if (dR) { let nG = ["DOMENICA", "LUNEDI", "MARTEDI", "MERCOLEDI", "GIOVEDI", "VENERDI", "SABATO"][dObj.getDay()]; let rG = dR[nG] || dR[nG.toLowerCase()] || dR[dObj.getDay().toString()]; if (rG && Array.isArray(rG) && rG.map(x => x.toUpperCase()).includes(t)) t = "DISP"; }
+                    }
+                }
+                if (t !== "") { let ev = { title: t + addon, start: dStr, allDay: true, myOrder: 2 }; if (customColor) { ev.backgroundColor = customColor; ev.textColor = tC; } else ev.className = (t==='DISP' ? 'bg-disp' : 'bg-turno'); evs.push(ev); }
+            }
+        }
+        return evs;
+    }
+
+    function getOptionsTurni() { let d = new Date(); d.setHours(12,0,0,0); const rot = getRotazionePerData(tempRotDate || dateToLocalISO(d)); if (!rot || !rot[state.depositoAttivo]) return ""; let hD = "", hT = "", dA = false, hR = `<option value="RIPOSO" style="font-weight:bold; color:var(--riposo);">RIPOSO</option>`; rot[state.depositoAttivo].map((n, i) => ({ n: n.toUpperCase(), i: i })).sort((a, b) => a.n.localeCompare(b.n, undefined, {numeric: true})).forEach(item => { if (item.n === "DISP") { if (!dA) { hD = `<option value="${item.i}">DISP</option>`; dA = true; } } else { hT += `<option value="${item.i}">${item.n}</option>`; } }); return hR + hD + hT; }
+    function salvaCambioSingolo() { const val = document.getElementById('singleTurnoSelect').value.trim().toUpperCase(); if(val) { state.variazioni[selectedDate] = val; } salvaERicarica(); }
+    function resetGiornoSingolo() { delete state.variazioni[selectedDate]; delete state.colori[selectedDate]; delete state.nebbia[selectedDate]; delete state.straordinario[selectedDate]; delete state.sospesoRiposo[selectedDate]; delete state.note[selectedDate]; delete state.buonoPasto[selectedDate]; delete state.permessoSP[selectedDate]; salvaERicarica(); }
+    function aggiornaUI() { document.getElementById('activeDepotLabel').innerText = state.depositoAttivo || "Configurazione"; }
+    function apriReset() { chiudiMenuDestro(); document.getElementById('resetModal').style.display = 'block'; }
+    function chiudiReset() { document.getElementById('resetModal').style.display = 'none'; }
+    async function confermaReset() { document.body.style.opacity = "0.5"; if(typeof window.deleteCloudData === 'function') await window.deleteCloudData(); localStorage.removeItem('myTurniApp'); location.href = "index.html"; }
+    function apriBackup() { chiudiMenuDestro(); document.getElementById('backupModal').style.display = 'block'; }
+    function chiudiBackup() { document.getElementById('backupModal').style.display = 'none'; }
+    function chiudiStep() { document.getElementById('stepModal').style.display = 'none'; }
+    function chiudiEdit() { document.getElementById('editModal').style.display = 'none'; }
+    function esportaDatiSuFile() { const data = localStorage.getItem('myTurniApp'); if(!data) return; const blob = new Blob([data], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `backup_turni_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url); }
+    function importaDatiDaFile(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { let parsed = JSON.parse(e.target.result); parsed.lastUpdate = new Date().getTime(); localStorage.setItem('myTurniApp', JSON.stringify(parsed)); alert("Backup ripristinato!"); location.reload(); } catch (err) { alert("Errore file."); } }; reader.readAsText(file); }
+    function popolaCambio() { document.getElementById('singleTurnoSelect').value = ''; document.getElementById('btnSalvaCambio').disabled = true; }
+    function apriIcsModal() { chiudiMenuDestro(); document.getElementById('icsModal').style.display = 'block'; }
+    function chiudiIcsModal() { document.getElementById('icsModal').style.display = 'none'; }
+    function esportaICS() { const sD = document.getElementById('icsStartDate').value, eD = document.getElementById('icsEndDate').value; if (!sD || !eD || sD > eD) { alert("Date non valide."); return; } const tF = calcolaTurni().filter(t => t.start >= sD && t.start <= eD); if (tF.length === 0) { alert("Nessun turno."); return; } let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//MyTurniApp//IT\r\nCALSCALE:GREGORIAN\r\n"; const dC = Object.keys(state.dbCache || {}).sort(); tF.forEach(t => { const dP = t.start.split('-'); let d = creaDataSicura(t.start); d.setDate(d.getDate() + 1); const nP = dateToLocalISO(d).split('-'); let pT = t.title.replace(/ 🌫️| ⏱️| 📝|\(Sospeso\)| 🍝| 💸/g, '').trim(); const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + "Z"; let dbC = {}; const dSN = stringToNum(t.start); for (let i = dC.length - 1; i >= 0; i--) if (dSN >= stringToNum(dC[i])) { dbC = state.dbCache[dC[i]]; break; } let cT = trovaChiaveEsatta(dbC, pT.toUpperCase(), t.start), det = dbC[cT], oT = "", desc = "", loc = ""; if (det && det.inizio) { oT = ` (${det.inizio} - ${det.fine})`; desc = `Inizio: ${det.inizio} (${det.luogoInizio})\\nFine: ${det.fine} (${det.luogoFine})`; loc = det.luogoInizio; } ics += "BEGIN:VEVENT\r\nUID:" + t.start + "-" + pT + "@myturniapp\r\nDTSTAMP:" + now + "\r\nDTSTART;VALUE=DATE:" + dP[0]+dP[1]+dP[2] + "\r\nDTEND;VALUE=DATE:" + nP[0]+nP[1]+nP[2] + "\r\nSUMMARY:" + pT + oT + "\r\n" + (desc?"DESCRIPTION:"+desc+"\r\n":"") + (loc?"LOCATION:"+loc+"\r\n":"") + "END:VEVENT\r\n"; }); ics += "END:VCALENDAR"; const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' })); const a = document.createElement('a'); a.href = url; a.download = `turni.ics`; a.click(); chiudiIcsModal(); }
+    function inizializzaCalendario() { calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView: 'dayGridMonth', locale: 'it', firstDay: 1, height: 'auto', eventOrder: 'myOrder', buttonText: { today: 'Oggi' }, customButtons: { btnSalto: { text: '🔍', click: apriJumpModal } }, headerToolbar: { left: 'prev,next', center: 'title', right: 'btnSalto today' }, dateClick: (i) => gestisciInterazione(i.dateStr), eventClick: (info) => gestisciInterazione(info.event.startStr), events: (i, success) => success(calcolaTurni()) }); calendar.render(); }
+</script>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4",
+      authDomain: "utility-haze.firebaseapp.com",
+      projectId: "utility-haze",
+      storageBucket: "utility-haze.firebasestorage.app",
+      messagingSenderId: "686237947418",
+      appId: "1:686237947418:web:f03ba19ab8fff43110a3a3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    window.utenteLoggato = null;
+
+    window.deleteCloudData = async () => { if (window.utenteLoggato) try { await deleteDoc(doc(db, "utenti", window.utenteLoggato)); } catch(e) {} };
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            window.utenteLoggato = user.uid;
+            try {
+                const docSnap = await getDoc(doc(db, "utenti", window.utenteLoggato));
+                if (docSnap.exists()) {
+                    let dC = docSnap.data(), dL = JSON.parse(localStorage.getItem('myTurniApp')) || state;
+                    if ((dC.lastUpdate || 0) >= (dL.lastUpdate || 0)) { Object.assign(state, dC); localStorage.setItem('myTurniApp', JSON.stringify(state)); } 
+                    else if (typeof window.syncToCloud === 'function') window.syncToCloud(dL);
+                    if (typeof calendar !== 'undefined') calendar.refetchEvents(); 
+                } else { let sS = { ...state }; delete sS.dbCache; delete sS.rotCache; delete sS.dispCache; await setDoc(doc(db, "utenti", window.utenteLoggato), sS); }
+            } catch(e) {}
+        } else { window.utenteLoggato = null; }
+    });
+
+    window.syncToCloud = async (s) => { if (window.utenteLoggato) try { await setDoc(doc(db, "utenti", window.utenteLoggato), s); } catch(e) {} };
+</script>
+</body>
+</html>

@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utility - Buoni Pasto</title>
+
+    <script data-goatcounter="https://hazev.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+
+    <style>
+        /* --- STILI GLOBALI UNIFICATI --- */
+        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --danger: #dc3545; --success: #28a745; }
+        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* HEADER */
+        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
+        
+        /* MENU LATERALE */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
+        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; }
+        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+
+        /* AREA CONTENUTI SPECIFICA */
+        .content-area { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; align-items: center; }
+        
+        .counter-container { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 5px; width: 100%; }
+        .btn-counter { background-color: var(--primary); color: white; border: none; font-size: 30px; font-weight: bold; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: opacity 0.3s, transform 0.2s; }
+        .btn-counter:active { transform: scale(0.95); }
+        .count-display { font-size: 60px; font-weight: bold; color: var(--primary); min-width: 80px; text-align: center; }
+
+        /* PULSANTI SCALATA VELOCE (TONDINI) */
+        .quick-actions { 
+            display: flex; gap: 15px; width: 100%; 
+            justify-content: center; align-items: center; 
+            margin-bottom: 15px; 
+            position: relative; 
+        }
+        
+        .btn-quick { 
+            background-color: white; color: var(--danger); border: 2px solid var(--danger); 
+            width: 55px; height: 55px; border-radius: 50%; 
+            font-size: 18px; font-weight: bold; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.08); 
+        }
+        .btn-quick:active { background-color: var(--danger); color: white; transform: scale(0.90); }
+
+        .settings-btn { 
+            background: none; border: none; font-size: 24px; cursor: pointer; color: #888; 
+            transition: transform 0.2s; display: flex; align-items: center; justify-content: center; 
+            padding: 0; position: absolute; right: 10px; 
+        }
+        .settings-btn:active { transform: rotate(45deg); }
+
+        /* --- STILE INTERRUTTORE --- */
+        .integration-box { background: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box; margin-bottom: 5px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* BANNER INFORMATIVO E DISCLAIMER */
+        .info-banner { padding: 12px 15px; background-color: #e9ecef; border-left: 4px solid var(--primary); border-radius: 8px; color: #495057; font-size: 13px; line-height: 1.4; width: 100%; box-sizing: border-box; }
+        .disclaimer-banner { margin-top: 5px; padding: 15px; background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 12px; color: #856404; font-size: 13px; text-align: center; line-height: 1.4; width: 100%; box-sizing: border-box; }
+
+        .btn-calc-main { background-color: var(--primary); color: white; border: none; padding: 16px; font-size: 18px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; margin-top: 5px; }
+        .btn-calc-main:active { transform: translateY(2px); }
+
+        /* MODALI (WIZARD, CALCOLATORE E IMPOSTAZIONI) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 3000; padding: 15px; box-sizing: border-box; }
+        .modal-content { background-color: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+        .modal-content h3 { margin-top: 0; color: var(--primary); }
+        
+        .instruction-text { font-size: 14px; color: #555; margin-bottom: 20px; line-height: 1.5; }
+        
+        .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; text-align: left; }
+        .input-group label { font-size: 14px; font-weight: bold; color: #555; }
+        .input-group input, .input-group textarea { padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 16px; width: 100%; box-sizing: border-box; font-family: inherit; }
+        
+        .btn-esegui { background-color: var(--success); color: white; border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-bottom: 10px; }
+        .btn-chiudi { background-color: #6c757d; color: white; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-bottom: 10px;}
+        .btn-outline { background-color: white; color: var(--primary); border: 2px solid var(--primary); padding: 12px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-bottom: 10px; }
+        
+        .risultato { margin-top: 15px; font-size: 20px; font-weight: bold; color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
+        <h2>Buoni Pasto</h2>
+        <div style="width: 50px;"></div>
+    </div>
+
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3 style="margin:0; color:white;">Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+        </div>
+        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
+        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
+        <a href="rotazioni.html" class="sidebar-link">👥 Rotazioni (test)</a>
+        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
+        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link">🕒 Orari Navigazione</a>
+        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
+        <a href="link.html" class="sidebar-link">🔗 Link</a>
+        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
+        <a href="buoni.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">🍝 Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
+        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+    </div>
+
+    <div class="content-area">
+        
+        <div class="counter-container">
+            <button class="btn-counter btn-minus" onclick="modificaBuoni(-1)">-</button>
+            <div class="count-display" id="buoni-count">0</div>
+            <button class="btn-counter btn-plus" onclick="modificaBuoni(1)">+</button>
+        </div>
+
+        <div class="quick-actions">
+            <button class="btn-quick" id="btn-quick-1" onclick="modificaBuoni(-2)">-2</button>
+            <button class="btn-quick" id="btn-quick-2" onclick="modificaBuoni(-5)">-5</button>
+            <button class="btn-quick" id="btn-quick-3" onclick="modificaBuoni(-10)">-10</button>
+            <button class="settings-btn" onclick="apriImpostazioni()">⚙️</button>
+        </div>
+
+        <div class="integration-box">
+            <div style="text-align: left; flex-grow: 1;">
+                <div style="font-weight: bold; color: var(--primary); font-size: 16px;">Integrazione Calendario</div>
+                <div style="font-size: 12px; color: #666; margin-top: 4px;">Calcola i buoni in automatico</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="toggleInt" onchange="gestisciToggleIntegrazione()">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="info-banner">
+            ℹ️ <strong>Nota Bene:</strong> I buoni pasto non maturano in presenza di Riposi (<strong>RI, AL</strong>), Ferie (<strong>FER, FEP, FES</strong>), Malattia (<strong>KMAL</strong>) o permessi vari (<strong>PRT, KNOP, AVIS, KINF</strong>).
+        </div>
+
+        <button class="btn-calc-main" onclick="apriCalcolatore()">Calcolatore Buoni</button>
+
+        <div class="disclaimer-banner">
+            ⚠️ La responsabilità dell'inserimento e della verifica dei dati è unicamente dell'utente.
+        </div>
+    </div>
+
+    <div id="modal-settings" class="modal">
+        <div class="modal-content">
+            <h3>⚙️ Impostazioni Pulsanti</h3>
+            <p class="instruction-text" style="font-size: 14px;">
+                Personalizza i valori da sottrarre con i 3 tondini rapidi.
+            </p>
+            <div class="input-group" style="flex-direction: row; gap: 10px;">
+                <div style="flex: 1; text-align: center;">
+                    <label style="display: block; margin-bottom: 5px;">Tasto 1</label>
+                    <input type="number" id="quick-val-1" style="text-align: center; font-weight: bold; color: var(--danger);">
+                </div>
+                <div style="flex: 1; text-align: center;">
+                    <label style="display: block; margin-bottom: 5px;">Tasto 2</label>
+                    <input type="number" id="quick-val-2" style="text-align: center; font-weight: bold; color: var(--danger);">
+                </div>
+                <div style="flex: 1; text-align: center;">
+                    <label style="display: block; margin-bottom: 5px;">Tasto 3</label>
+                    <input type="number" id="quick-val-3" style="text-align: center; font-weight: bold; color: var(--danger);">
+                </div>
+            </div>
+            <button class="btn-esegui" onclick="salvaImpostazioni()">Salva Impostazioni</button>
+            <button class="btn-chiudi" onclick="chiudiImpostazioni()">Chiudi</button>
+        </div>
+    </div>
+
+    <div id="wizard-step1" class="modal">
+        <div class="modal-content">
+            <h3>⚠️ Attenzione</h3>
+            <p class="instruction-text">
+                Attivando l'integrazione, l'app aggiungerà <b>automaticamente</b> i buoni pasto in base ai turni presenti nel tuo calendario.<br><br>
+                Affinché il calcolo sia esatto, assicurati di aggiornare sempre il calendario inserendo <b>Ferie, Malattie, Sospesi Riposo, ecc.</b><br>Sei pronto per iniziare?
+            </p>
+            <button class="btn-esegui" onclick="vaiAWizard2()">Sì, continua</button>
+            <button class="btn-chiudi" onclick="chiudiWizard()">Annulla</button>
+        </div>
+    </div>
+
+    <div id="wizard-step2" class="modal">
+        <div class="modal-content">
+            <h3>Saldo Attuale</h3>
+            <p class="instruction-text">
+                Conosci già quanti buoni pasto hai a disposizione attualmente (compreso il turno di oggi)?
+            </p>
+            <div id="scelta-saldo-btn">
+                <button class="btn-esegui" onclick="mostraInputSaldo()">Sì, inserisco il numero</button>
+                <button class="btn-outline" onclick="passaACalcolatore()">No, calcoliamolo</button>
+            </div>
+            
+            <div id="input-saldo-area" style="display: none;">
+                <div class="input-group">
+                    <label>Inserisci i buoni a tua disposizione:</label>
+                    <input type="number" id="wizard-buoni-manuali" placeholder="Es. 12" style="font-size: 20px; text-align: center; font-weight: bold; color: var(--primary);">
+                </div>
+                <button class="btn-esegui" onclick="salvaSaldoEAttiva()">Salva e Attiva Integrazione</button>
+            </div>
+            
+            <button class="btn-chiudi" onclick="chiudiWizard()" style="margin-top: 15px;">Annulla</button>
+        </div>
+    </div>
+
+    <div id="modal-calcolatore" class="modal">
+        <div class="modal-content">
+            <h3>Calcolatore Buoni</h3>
+            
+            <button class="btn-outline" onclick="precompilaDaCalendario()" style="font-size: 14px; padding: 10px; margin-bottom: 20px;">🪄 Precompila con dati Calendario</button>
+
+            <div class="input-group">
+                <label>Presenze mese corrente</label>
+                <input type="number" id="pres-corrente" placeholder="0">
+                
+                <label>Presenze mese passato</label>
+                <input type="number" id="pres-passato" placeholder="0">
+                
+                <label>Buoni caricati sulla tessera</label>
+                <input type="number" id="buoni-tessera" placeholder="0">
+            </div>
+
+            <button class="btn-esegui" onclick="eseguiCalcolo()">Calcola Risultato</button>
+            <div id="btn-attiva-dopo-calcolo" style="display: none;">
+                <button class="btn-esegui" style="background-color: var(--primary);" onclick="salvaCalcoloEAttiva()">Salva e Attiva Integrazione</button>
+            </div>
+            <button class="btn-chiudi" onclick="chiudiCalcolatore()">Chiudi</button>
+            
+            <div class="risultato" id="risultato-calcolo"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- FUNZIONI DI SUPPORTO DATE SENZA FUSO ORARIO ---
+        function formatStr(d) {
+            return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+        }
+
+        const DATA_INIZIO_NUOVI_TURNI = "2026-03-02";
+
+        function stringToNum(s) { 
+            if(!s) return 0; 
+            let p = s.split('-'); 
+            return Math.floor(new Date(p[0], p[1]-1, p[2], 12, 0, 0).getTime() / 86400000); 
+        }
+
+        function isGiornoRiposoBase(curr, cfg) {
+            if (!cfg || !cfg.riposoStart) return false;
+            let ref = stringToNum(cfg.riposoStart);
+            if (cfg.depositoAttivo === 'disp_det') return (((curr - ref) % 6 + 6) % 6 === 0);
+            let pos = ((curr - ref + 6) % 15 + 15) % 15;
+            return (pos === 6 || pos === 13 || pos === 14);
+        }
+
+        // --- SISTEMA FERIE PROGRAMMATE (Integrato dal calendario) ---
+        let ROT_FERIE_INV = [];
+        let ROT_FERIE_EST = [];
+
+        async function caricaFerie() {
+            try {
+                const resFerie = await fetch("rotazione_ferie.json?v=" + new Date().getTime());
+                if (resFerie.ok) {
+                    const datiFerie = await resFerie.json();
+                    if (datiFerie.invernali) ROT_FERIE_INV = datiFerie.invernali;
+                    if (datiFerie.estive) ROT_FERIE_EST = datiFerie.estive;
+                }
+            } catch (e) {
+                console.error("Errore caricamento file ferie programmate", e);
+            }
+        }
+
+        function isDateInRange(dStr, startStr, endStr, year) {
+            let d = new Date(year, parseInt(dStr.split('-')[1])-1, parseInt(dStr.split('-')[2]));
+            let s = new Date(year, parseInt(startStr.split('-')[0])-1, parseInt(startStr.split('-')[1]));
+            let e = new Date(year, parseInt(endStr.split('-')[0])-1, parseInt(endStr.split('-')[1]));
+            return d >= s && d <= e;
+        }
+
+        function getFerieGiorno(dStr, state) {
+            if(!state.ferie || !state.ferie.baseAnno) return null;
+            let year = parseInt(dStr.split('-')[0]);
+            let r = [];
+
+            // Check Estiva
+            let iEst = state.ferie.baseEstiva;
+            if (iEst !== -1 && iEst !== null && iEst !== undefined && ROT_FERIE_EST.length > 0) {
+                let idxEst = (iEst + (year - state.ferie.baseAnno)) % ROT_FERIE_EST.length;
+                if(idxEst < 0) idxEst += ROT_FERIE_EST.length; 
+                
+                if(state.ferie.scambi && state.ferie.scambi[year] && state.ferie.scambi[year].estiva !== undefined) {
+                    idxEst = state.ferie.scambi[year].estiva;
+                }
+                let pEst = ROT_FERIE_EST[idxEst];
+                if(pEst && isDateInRange(dStr, pEst.s, pEst.e, year)) r.push("FEP");
+            }
+
+            // Check Invernale
+            let iInv = state.ferie.baseInvernale;
+            if (iInv !== -1 && iInv !== null && iInv !== undefined && ROT_FERIE_INV.length > 0) {
+                let idxInv = (iInv + (year - state.ferie.baseAnno)) % ROT_FERIE_INV.length;
+                if(idxInv < 0) idxInv += ROT_FERIE_INV.length;
+                
+                if(state.ferie.scambi && state.ferie.scambi[year] && state.ferie.scambi[year].invernale !== undefined) {
+                    idxInv = state.ferie.scambi[year].invernale;
+                }
+                let pInv = ROT_FERIE_INV[idxInv];
+                if(pInv && isDateInRange(dStr, pInv.s, pInv.e, year)) r.push("FEP");
+            }
+
+            return r.length > 0 ? "FEP" : null;
+        }
+
+
+        // --- FUNZIONE CENTRALE CHE DETERMINA SE SPETTA IL BUONO ---
+        function isBuonoMaturato(dStr, state, esclusiArray, ignoraUso = false) {
+            let isSospeso = state.sospesoRiposo && state.sospesoRiposo[dStr];
+            let isBuonoUsato = state.buonoPasto && state.buonoPasto[dStr]; 
+            
+            // Se stiamo calcolando le presenze, non ci interessa se il buono è già stato usato!
+            if (!ignoraUso && isBuonoUsato) return false;
+            
+            let turnoVal = (state.variazioni && state.variazioni[dStr]) ? state.variazioni[dStr].toUpperCase() : "";
+
+            // Verifica ferie programmate generate automaticamente (se non ci sono variazioni manuali per quel giorno)
+            if (!turnoVal) {
+                let ferieProg = getFerieGiorno(dStr, state);
+                if (ferieProg) {
+                    turnoVal = ferieProg; // Assegna "FEP" per bloccare il buono
+                }
+            }
+
+            if (turnoVal) {
+                if (esclusiArray.includes(turnoVal)) {
+                    if (isSospeso && (turnoVal === "RI" || turnoVal === "RIPOSO" || turnoVal === "AL" || turnoVal === "FER" || turnoVal === "FEP")) return true;
+                    return false;
+                }
+                return true;
+            }
+
+            let cfg = (state.history && stringToNum(dStr) < stringToNum(DATA_INIZIO_NUOVI_TURNI)) ? state.history : state;
+            if (isGiornoRiposoBase(stringToNum(dStr), cfg)) {
+                if (isSospeso) return true;
+                return false;
+            }
+
+            return true;
+        }
+
+        // --- FUNZIONI MENU LATERALE ---
+        function apriMenuLaterale() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; }
+        function chiudiMenuLaterale() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; }
+
+        // --- VARIABILI GLOBALI E INIT ---
+        let buoniAttuali = parseInt(localStorage.getItem('buoni_salvati')) || 0;
+        let integrazioneAttiva = localStorage.getItem('buoni_integrazione_attiva') === 'true';
+        let quickVals = JSON.parse(localStorage.getItem('buoni_quick_vals')) || [2, 5, 10];
+        
+        const TURNI_ESCLUSI_FISSI = ["RI", "RIPOSO", "AL", "FER", "FEP", "FES", "FERIE", "PRT", "MAL", "MALATTIA", "KMAL", "KNOP", "AVIS", "KINF"];
+
+        // Trasformato in async per aspettare il file json delle ferie
+        window.addEventListener('DOMContentLoaded', async () => {
+            await caricaFerie(); // Carica prima le ferie!
+            inizializzaTondini();
+            if (integrazioneAttiva) {
+                sincronizzaBuoni();
+            } else {
+                document.getElementById('buoni-count').innerText = buoniAttuali;
+            }
+        });
+
+        // --- INIZIALIZZAZIONE TONDINI RAPIDI ---
+        function inizializzaTondini() {
+            for(let i=0; i<3; i++) {
+                let btn = document.getElementById(`btn-quick-${i+1}`);
+                if(btn) {
+                    btn.innerText = `-${quickVals[i]}`;
+                    btn.onclick = () => modificaBuoni(-quickVals[i]);
+                }
+            }
+        }
+
+        function sincronizzaBuoni() {
+            document.getElementById('toggleInt').checked = true;
+            
+            let esclusiArray = [...TURNI_ESCLUSI_FISSI];
+            let state = JSON.parse(localStorage.getItem('myTurniApp')) || { variazioni: {} };
+            
+            let oggi = new Date();
+            oggi.setHours(0, 0, 0, 0); 
+            
+            let baseDataStr = localStorage.getItem('buoni_base_data');
+            let baseSaldo = parseInt(localStorage.getItem('buoni_base_saldo'));
+            
+            if (!baseDataStr || isNaN(baseSaldo)) {
+                impostaSaldoDaInput(buoniAttuali);
+                baseDataStr = localStorage.getItem('buoni_base_data');
+                baseSaldo = parseInt(localStorage.getItem('buoni_base_saldo'));
+            }
+            
+            let p = baseDataStr.split('-');
+            let baseDateObj = new Date(p[0], p[1]-1, p[2], 0, 0, 0);
+            
+            let thirtyDaysAgo = new Date(oggi);
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            while (baseDateObj < thirtyDaysAgo) {
+                baseDateObj.setDate(baseDateObj.getDate() + 1);
+                let dStr = formatStr(baseDateObj);
+                if (isBuonoMaturato(dStr, state, esclusiArray)) {
+                    baseSaldo++;
+                }
+            }
+            
+            baseDataStr = formatStr(baseDateObj);
+            localStorage.setItem('buoni_base_data', baseDataStr);
+            localStorage.setItem('buoni_base_saldo', baseSaldo);
+            
+            let dinamici = 0;
+            let calcDate = new Date(baseDateObj);
+            calcDate.setDate(calcDate.getDate() + 1);
+            
+            while (calcDate <= oggi) {
+                let dStr = formatStr(calcDate);
+                if (isBuonoMaturato(dStr, state, esclusiArray)) {
+                    dinamici++;
+                }
+                calcDate.setDate(calcDate.getDate() + 1);
+            }
+            
+            buoniAttuali = baseSaldo + dinamici;
+            if (buoniAttuali < 0) buoniAttuali = 0;
+            
+            document.getElementById('buoni-count').innerText = buoniAttuali;
+            localStorage.setItem('buoni_salvati', buoniAttuali);
+            if (typeof window.syncBuoniToCloud === 'function') window.syncBuoniToCloud();
+        }
+
+        // --- SISTEMA DI ANCORAGGIO SALDO ---
+        function impostaSaldoDaInput(inputValore) {
+            let state = JSON.parse(localStorage.getItem('myTurniApp')) || { variazioni: {} };
+            let esclusiArray = [...TURNI_ESCLUSI_FISSI];
+            
+            let oggi = new Date();
+            oggi.setHours(0, 0, 0, 0);
+            
+            let thirtyDaysAgo = new Date(oggi);
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            let thirtyDaysAgoStr = formatStr(thirtyDaysAgo);
+            
+            let maturatiUltimi30 = 0;
+            let d = new Date(thirtyDaysAgo);
+            d.setDate(d.getDate() + 1);
+            while(d <= oggi) {
+                let dStr = formatStr(d);
+                if (isBuonoMaturato(dStr, state, esclusiArray)) maturatiUltimi30++;
+                d.setDate(d.getDate() + 1);
+            }
+            
+            let baseSaldo = inputValore - maturatiUltimi30;
+            
+            localStorage.setItem('buoni_base_saldo', baseSaldo);
+            localStorage.setItem('buoni_base_data', thirtyDaysAgoStr);
+            localStorage.setItem('buoni_salvati', inputValore);
+            
+            buoniAttuali = inputValore;
+            document.getElementById('buoni-count').innerText = buoniAttuali;
+        }
+
+        // --- GESTIONE MANUALE (+ e -) ---
+        function modificaBuoni(valore) {
+            buoniAttuali += valore;
+            if (buoniAttuali < 0) buoniAttuali = 0;
+            
+            document.getElementById('buoni-count').innerText = buoniAttuali;
+            localStorage.setItem('buoni_salvati', buoniAttuali);
+            
+            if (integrazioneAttiva) {
+                impostaSaldoDaInput(buoniAttuali);
+            }
+            if (typeof window.syncBuoniToCloud === 'function') window.syncBuoniToCloud();
+        }
+
+        // --- IMPOSTAZIONI TONDINI ---
+        function apriImpostazioni() {
+            document.getElementById('quick-val-1').value = quickVals[0];
+            document.getElementById('quick-val-2').value = quickVals[1];
+            document.getElementById('quick-val-3').value = quickVals[2];
+            document.getElementById('modal-settings').style.display = 'flex';
+        }
+
+        function chiudiImpostazioni() {
+            document.getElementById('modal-settings').style.display = 'none';
+        }
+
+        function salvaImpostazioni() {
+            let v1 = Math.abs(parseInt(document.getElementById('quick-val-1').value)) || 2;
+            let v2 = Math.abs(parseInt(document.getElementById('quick-val-2').value)) || 5;
+            let v3 = Math.abs(parseInt(document.getElementById('quick-val-3').value)) || 10;
+            
+            quickVals = [v1, v2, v3];
+            localStorage.setItem('buoni_quick_vals', JSON.stringify(quickVals));
+            
+            inizializzaTondini();
+            chiudiImpostazioni();
+        }
+
+        // --- GESTIONE TOGGLE E WIZARD ---
+        let isWizardOpen = false;
+
+        function gestisciToggleIntegrazione() {
+            const toggle = document.getElementById('toggleInt');
+            if (toggle.checked) {
+                toggle.checked = false; 
+                document.getElementById('wizard-step1').style.display = 'flex';
+                isWizardOpen = true;
+            } else {
+                integrazioneAttiva = false;
+                localStorage.setItem('buoni_integrazione_attiva', 'false');
+                if (typeof window.syncBuoniToCloud === 'function') window.syncBuoniToCloud();
+            }
+        }
+
+        function vaiAWizard2() {
+            document.getElementById('wizard-step1').style.display = 'none';
+            document.getElementById('wizard-step2').style.display = 'flex';
+            document.getElementById('scelta-saldo-btn').style.display = 'block';
+            document.getElementById('input-saldo-area').style.display = 'none';
+        }
+
+        function chiudiWizard() {
+            document.getElementById('wizard-step1').style.display = 'none';
+            document.getElementById('wizard-step2').style.display = 'none';
+            isWizardOpen = false;
+        }
+
+        function mostraInputSaldo() {
+            document.getElementById('scelta-saldo-btn').style.display = 'none';
+            document.getElementById('input-saldo-area').style.display = 'block';
+            document.getElementById('wizard-buoni-manuali').value = buoniAttuali;
+        }
+
+        function salvaSaldoEAttiva() {
+            let val = parseInt(document.getElementById('wizard-buoni-manuali').value);
+            if (!isNaN(val) && val >= 0) {
+                impostaSaldoDaInput(val);
+                attivaIntegrazioneFinale();
+                chiudiWizard();
+                if (typeof window.syncBuoniToCloud === 'function') window.syncBuoniToCloud();
+            } else {
+                alert("Inserisci un numero valido.");
+            }
+        }
+
+        function passaACalcolatore() {
+            chiudiWizard();
+            apriCalcolatore(true); 
+        }
+
+        function attivaIntegrazioneFinale() {
+            integrazioneAttiva = true;
+            localStorage.setItem('buoni_integrazione_attiva', 'true');
+            document.getElementById('toggleInt').checked = true;
+            if (typeof window.syncBuoniToCloud === 'function') window.syncBuoniToCloud();
+        }
+
+        // --- CALCOLATORE MODALE ---
+        let calcolatoreDaWizard = false;
+
+        function apriCalcolatore(daWizard = false) {
+            calcolatoreDaWizard = daWizard;
+            document.getElementById('modal-calcolatore').style.display = 'flex';
+            document.getElementById('risultato-calcolo').innerText = ''; 
+            document.getElementById('btn-attiva-dopo-calcolo').style.display = 'none';
+        }
+
+        function chiudiCalcolatore() {
+            document.getElementById('modal-calcolatore').style.display = 'none';
+        }
+
+        function eseguiCalcolo() {
+            const presCorrente = parseInt(document.getElementById('pres-corrente').value) || 0;
+            const presPassato = parseInt(document.getElementById('pres-passato').value) || 0;
+            const buoniTessera = parseInt(document.getElementById('buoni-tessera').value) || 0;
+            
+            let nuovoSaldo = presCorrente + presPassato + buoniTessera - 62;
+            if (nuovoSaldo < 0) nuovoSaldo = 0;
+
+            document.getElementById('risultato-calcolo').innerText = "Saldo: " + nuovoSaldo;
+            buoniAttuali = nuovoSaldo; 
+            
+            if (calcolatoreDaWizard) {
+                document.getElementById('btn-attiva-dopo-calcolo').style.display = 'block';
+            } else {
+                impostaSaldoDaInput(buoniAttuali);
+            }
+        }
+
+        function salvaCalcoloEAttiva() {
+            impostaSaldoDaInput(buoniAttuali);
+            chiudiCalcolatore();
+            attivaIntegrazioneFinale();
+        }
+
+        // --- PRECOMPILA CON DATI CALENDARIO ---
+        function precompilaDaCalendario() {
+            let esclusiArray = [...TURNI_ESCLUSI_FISSI];
+            let state = JSON.parse(localStorage.getItem('myTurniApp')) || { variazioni: {} };
+            
+            let oggi = new Date();
+            let meseCorrente = oggi.getMonth();
+            let annoCorrente = oggi.getFullYear();
+            
+            let mesePassato = meseCorrente - 1;
+            let annoPassato = annoCorrente;
+            if (mesePassato < 0) { mesePassato = 11; annoPassato--; }
+
+            let presenzeCorrente = calcolaPresenzeInMese(1, oggi.getDate(), meseCorrente, annoCorrente, state, esclusiArray);
+            
+            let ultimoGiornoPassato = new Date(annoPassato, mesePassato + 1, 0).getDate();
+            let presenzePassato = calcolaPresenzeInMese(1, ultimoGiornoPassato, mesePassato, annoPassato, state, esclusiArray);
+
+            document.getElementById('pres-corrente').value = presenzeCorrente;
+            document.getElementById('pres-passato').value = presenzePassato;
+            
+            alert("Dati precompilati in base al calendario!");
+        }
+
+        function calcolaPresenzeInMese(giornoInizio, giornoFine, mese, anno, state, esclusiArray) {
+            let conteggio = 0;
+            for (let i = giornoInizio; i <= giornoFine; i++) {
+                let d = new Date(anno, mese, i, 0, 0, 0);
+                let dStr = formatStr(d);
+                // Passiamo "true" alla funzione per dirgli: "Ignora se il buono è già stato usato!"
+                if (isBuonoMaturato(dStr, state, esclusiArray, true)) {
+                    conteggio++;
+                }
+            }
+            return conteggio;
+        }
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4",
+          authDomain: "utility-haze.firebaseapp.com",
+          projectId: "utility-haze",
+          storageBucket: "utility-haze.firebasestorage.app",
+          messagingSenderId: "686237947418",
+          appId: "1:686237947418:web:f03ba19ab8fff43110a3a3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        window.utenteLoggato = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                window.utenteLoggato = user.uid;
+                try {
+                    const docRef = doc(db, "utenti", window.utenteLoggato);
+                    const docSnap = await getDoc(docRef);
+
+                    if (docSnap.exists()) {
+                        let datiCloud = docSnap.data();
+                        
+                        // Se ci sono dati sui buoni nel cloud, aggiorna il telefono
+                        if (datiCloud.buoni_pasto_totali !== undefined) {
+                            localStorage.setItem('buoni_salvati', datiCloud.buoni_pasto_totali);
+                            localStorage.setItem('buoni_integrazione_attiva', datiCloud.buoni_integrazione === true ? 'true' : 'false');
+                            
+                            // Aggiorna l'interfaccia senza ricaricare la pagina
+                            buoniAttuali = parseInt(datiCloud.buoni_pasto_totali);
+                            integrazioneAttiva = datiCloud.buoni_integrazione === true;
+                            document.getElementById('buoni-count').innerText = buoniAttuali;
+                            document.getElementById('toggleInt').checked = integrazioneAttiva;
+                        } else {
+                            // MIGRAZIONE: Se il cloud non ha ancora i buoni ma il telefono li ha, caricali!
+                            if (localStorage.getItem('buoni_salvati') !== null) {
+                                if (typeof window.syncBuoniToCloud === 'function') window.syncBuoniToCloud();
+                            }
+                        }
+                    } else {
+                        // MIGRAZIONE: Se il documento cloud non esiste, carica i dati del telefono
+                        if (localStorage.getItem('buoni_salvati') !== null) {
+                            if (typeof window.syncBuoniToCloud === 'function') window.syncBuoniToCloud();
+                        }
+                    }
+                } catch(e) { console.error("Errore Cloud Buoni:", e); }
+            }
+        });
+
+        // Funzione per sparare i dati al cloud
+        window.syncBuoniToCloud = async () => {
+            if (window.utenteLoggato) {
+                try {
+                    const docRef = doc(db, "utenti", window.utenteLoggato);
+                    // Usiamo merge: true per non cancellare i turni del calendario!
+                    await setDoc(docRef, {
+                        buoni_pasto_totali: buoniAttuali,
+                        buoni_integrazione: integrazioneAttiva
+                    }, { merge: true });
+                } catch(e) { console.error("Errore Sync Cloud Buoni:", e); }
+            }
+        };
+    </script>
+</body>
+</html>
+ 

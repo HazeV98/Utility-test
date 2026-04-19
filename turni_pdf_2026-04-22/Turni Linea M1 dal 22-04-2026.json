@@ -1,0 +1,214 @@
+{
+  "M101_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "5:00",
+      "arrivo_luogo": "DEP.S.NICOLO'",
+      "arrivo_ora": "5:35"
+    },
+    {
+      "partenza_luogo": "DEP.S.NICOLO'",
+      "partenza_ora": "6:10",
+      "arrivo_luogo": "DEP.S.NICOLO'",
+      "arrivo_ora": "6:40"
+    },
+    {
+      "partenza_luogo": "DEP.S.NICOLO'",
+      "partenza_ora": "6:40",
+      "arrivo_luogo": "S.NICOLO'",
+      "arrivo_ora": "6:45"
+    },
+    {
+      "partenza_luogo": "S.NICOLO'",
+      "partenza_ora": "6:45",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "7:10"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "7:20",
+      "arrivo_luogo": "S.NICOLO'",
+      "arrivo_ora": "7:45"
+    },
+    {
+      "partenza_luogo": "S.NICOLO'",
+      "partenza_ora": "7:45",
+      "arrivo_luogo": "DEP.S.NICOLO'",
+      "arrivo_ora": "7:50"
+    },
+    {
+      "partenza_luogo": "DEP.S.NICOLO'",
+      "partenza_ora": "7:50",
+      "arrivo_luogo": "DEP.S.NICOLO'",
+      "arrivo_ora": "8:10"
+    },
+    {
+      "partenza_luogo": "DEP.S.NICOLO'",
+      "partenza_ora": "8:20",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "8:55"
+    }
+  ],
+  "M101_VEN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "5:50",
+      "arrivo_luogo": "DEP.S.NICOLO'",
+      "arrivo_ora": "6:25"
+    },
+    {
+      "partenza_luogo": "DEP.S.NICOLO'",
+      "partenza_ora": "7:00",
+      "arrivo_luogo": "DEP.S.NICOLO'",
+      "arrivo_ora": "7:30"
+    },
+    {
+      "partenza_luogo": "DEP.S.NICOLO'",
+      "partenza_ora": "7:30",
+      "arrivo_luogo": "S.NICOLO'",
+      "arrivo_ora": "7:35"
+    },
+    {
+      "partenza_luogo": "S.NICOLO'",
+      "partenza_ora": "7:35",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "8:00"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "8:10",
+      "arrivo_luogo": "S.NICOLO'",
+      "arrivo_ora": "8:35"
+    },
+    {
+      "partenza_luogo": "S.NICOLO'",
+      "partenza_ora": "8:35",
+      "arrivo_luogo": "DEP.S.NICOLO'",
+      "arrivo_ora": "8:40"
+    },
+    {
+      "partenza_luogo": "DEP.S.NICOLO'",
+      "partenza_ora": "8:40",
+      "arrivo_luogo": "DEP.S.NICOLO'",
+      "arrivo_ora": "9:00"
+    },
+    {
+      "partenza_luogo": "DEP.S.NICOLO'",
+      "partenza_ora": "9:10",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "9:45"
+    }
+  ],
+  "M104_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "14:00",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "14:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "16:05",
+      "arrivo_luogo": "DEP.S.NICOLO'",
+      "arrivo_ora": "16:35"
+    },
+    {
+      "partenza_luogo": "DEP.S.NICOLO'",
+      "partenza_ora": "17:05",
+      "arrivo_luogo": "DEP.S.NICOLO'",
+      "arrivo_ora": "17:35"
+    },
+    {
+      "partenza_luogo": "DEP.S.NICOLO'",
+      "partenza_ora": "17:35",
+      "arrivo_luogo": "S.NICOLO'",
+      "arrivo_ora": "17:40"
+    },
+    {
+      "partenza_luogo": "S.NICOLO'",
+      "partenza_ora": "17:40",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "18:05"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "18:15",
+      "arrivo_luogo": "S.NICOLO'",
+      "arrivo_ora": "18:40"
+    },
+    {
+      "partenza_luogo": "S.NICOLO'",
+      "partenza_ora": "18:40",
+      "arrivo_luogo": "DEP.S.NICOLO'",
+      "arrivo_ora": "18:45"
+    },
+    {
+      "partenza_luogo": "DEP.S.NICOLO'",
+      "partenza_ora": "18:45",
+      "arrivo_luogo": "DEP.S.NICOLO'",
+      "arrivo_ora": "19:05"
+    },
+    {
+      "partenza_luogo": "DEP.S.NICOLO'",
+      "partenza_ora": "19:05",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "20:05"
+    }
+  ],
+  "M104_VEN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "14:00",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "14:35"
+    },
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "16:05",
+      "arrivo_luogo": "DEP.S.NICOLO'",
+      "arrivo_ora": "16:35"
+    },
+    {
+      "partenza_luogo": "DEP.S.NICOLO'",
+      "partenza_ora": "17:05",
+      "arrivo_luogo": "DEP.S.NICOLO'",
+      "arrivo_ora": "17:35"
+    },
+    {
+      "partenza_luogo": "DEP.S.NICOLO'",
+      "partenza_ora": "17:35",
+      "arrivo_luogo": "S.NICOLO'",
+      "arrivo_ora": "17:40"
+    },
+    {
+      "partenza_luogo": "S.NICOLO'",
+      "partenza_ora": "17:40",
+      "arrivo_luogo": "P.SABBIONI",
+      "arrivo_ora": "18:05"
+    },
+    {
+      "partenza_luogo": "P.SABBIONI",
+      "partenza_ora": "18:15",
+      "arrivo_luogo": "S.NICOLO'",
+      "arrivo_ora": "18:40"
+    },
+    {
+      "partenza_luogo": "S.NICOLO'",
+      "partenza_ora": "18:40",
+      "arrivo_luogo": "DEP.S.NICOLO'",
+      "arrivo_ora": "18:45"
+    },
+    {
+      "partenza_luogo": "DEP.S.NICOLO'",
+      "partenza_ora": "18:45",
+      "arrivo_luogo": "DEP.S.NICOLO'",
+      "arrivo_ora": "19:05"
+    },
+    {
+      "partenza_luogo": "DEP.S.NICOLO'",
+      "partenza_ora": "19:05",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "20:05"
+    }
+  ]
+}

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utility - Bacheca Avvisi</title>
+    <meta name="theme-color" content="#0056b3">
+
+    <style>
+        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --danger: #dc3545; --success: #28a745; --warning: #ffc107;}
+        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
+        
+        /* MENU LATERALE */
+        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 5999; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 6000; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
+        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; text-transform: none; }
+        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+
+        .view-container { width: 100%; max-width: 400px; display: none; flex-direction: column; gap: 15px; text-align: center; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; margin-bottom: 15px; position: relative; border-left: 5px solid var(--primary); }
+        
+        .msg-date { font-size: 11px; color: #888; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
+        .msg-text { font-size: 15px; line-height: 1.5; color: #444; white-space: pre-wrap; margin-bottom: 10px; }
+        .msg-link { display: inline-block; background: #e9ecef; color: var(--primary); padding: 10px 15px; border-radius: 8px; font-size: 14px; text-decoration: none; font-weight: bold; margin-top: 5px; word-break: break-all; width: box-sizing: border-box; }
+
+        .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; transition: opacity 0.2s; margin-top: 10px; }
+        .btn-action:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-delete { position: absolute; top: 15px; right: 15px; background: var(--danger); color: white; border: none; border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
+        
+        .input-field { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; max-height: 90vh; overflow-y: auto;}
+
+        .status-message { color: #666; text-align: center; margin-top: 20px; font-size: 15px; }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3 style="margin:0; color:white;">Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+        </div>
+        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
+        <a href="bacheca_utility.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">📢 Bacheca Avvisi</a>
+        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
+        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
+        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link">🕒 Orari Navigazione</a>
+        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
+        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
+        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
+    </div>
+
+    <div class="header">
+        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
+        <h2>📢 Avvisi</h2>
+        <div style="width: 50px;"></div>
+    </div>
+
+    <div id="view-loading" class="view-container" style="display: flex;">
+        <div class="status-message">Caricamento messaggi in corso...</div>
+    </div>
+
+    <div id="view-main" class="view-container">
+        <button id="btn-admin-add" class="btn-action" style="display: none; margin-top: 0; margin-bottom: 15px;" onclick="apriModaleNuovo()">+ Aggiungi Messaggio</button>
+        
+        <div id="lista-messaggi"></div>
+    </div>
+
+    <div id="modal-nuovo" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-nuovo')">
+        <div class="modal-content">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('modal-nuovo').style.display='none'">&times;</span>
+            <h3 style="margin-top: 5px; color: var(--primary);">Nuovo Avviso</h3>
+            
+            <label style="font-size: 12px; font-weight: bold; color: #666;">Testo del messaggio:</label>
+            <textarea id="msgTesto" class="input-field" rows="5" placeholder="Scrivi qui la comunicazione..."></textarea>
+            
+            <label style="font-size: 12px; font-weight: bold; color: #666;">Link Esterno (Opzionale):</label>
+            <input type="url" id="msgLink" class="input-field" placeholder="es. https://www.google.it o link Drive">
+            
+            <button id="btn-pubblica" class="btn-action" onclick="pubblicaMessaggio()">Pubblica Avviso</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+        // Rimosso import dello Storage per evitare blocchi
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
+            authDomain: "utility-haze.firebaseapp.com", 
+            projectId: "utility-haze", 
+            messagingSenderId: "686237947418", 
+            appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" 
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const isAdmin = localStorage.getItem('dev_mode_active') === 'true';
+
+        window.apriMenuLaterale = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; };
+        window.chiudiMenuLaterale = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; };
+        window.chiudiSeSfondo = (event, id) => { if(event.target.id === id) document.getElementById(id).style.display = 'none'; };
+
+        onAuthStateChanged(auth, (user) => {
+            if (isAdmin) document.getElementById('btn-admin-add').style.display = 'block';
+            caricaBacheca();
+        });
+
+        async function caricaBacheca() {
+            const container = document.getElementById('lista-messaggi');
+            document.getElementById('view-loading').style.display = 'none';
+            document.getElementById('view-main').style.display = 'flex';
+
+            try {
+                const q = query(collection(db, "bacheca_utility"), orderBy("timestamp", "desc"));
+                const snap = await getDocs(q);
+                
+                container.innerHTML = "";
+                let msgs = [];
+                snap.forEach(d => { let m = d.data(); m.id = d.id; msgs.push(m); });
+
+                if (msgs.length === 0) {
+                    container.innerHTML = `<div class="status-message">Nessun avviso in bacheca.</div>`;
+                } else {
+                    localStorage.setItem('ultimo_accesso_bacheca', Date.now());
+
+                    msgs.forEach(m => {
+                        const d = new Date(m.timestamp);
+                        const dataFormattata = d.toLocaleDateString('it-IT') + " alle " + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
+                        
+                        let linkHTML = "";
+                        if (m.link) {
+                            linkHTML = `<a href="${m.link}" target="_blank" class="msg-link">🔗 Apri Link Esterno</a>`;
+                        }
+
+                        let adminBtn = isAdmin ? `<button class="btn-delete" onclick="eliminaMessaggio('${m.id}')">Elimina</button>` : '';
+
+                        container.innerHTML += `
+                            <div class="card">
+                                ${adminBtn}
+                                <div class="msg-date">📅 ${dataFormattata}</div>
+                                <div class="msg-text">${m.testo}</div>
+                                ${linkHTML}
+                            </div>
+                        `;
+                    });
+                }
+            } catch (e) {
+                container.innerHTML = `<div class="status-message" style="color:red;">Errore caricamento: ${e.message}</div>`;
+            }
+        }
+
+        window.apriModaleNuovo = () => {
+            document.getElementById('msgTesto').value = "";
+            document.getElementById('msgLink').value = "";
+            document.getElementById('modal-nuovo').style.display = 'flex';
+        };
+
+        window.pubblicaMessaggio = async () => {
+            const testo = document.getElementById('msgTesto').value.trim();
+            const link = document.getElementById('msgLink').value.trim();
+            const btn = document.getElementById('btn-pubblica');
+
+            if (!testo) return alert("Inserisci il testo del messaggio.");
+
+            btn.innerText = "⏳ Pubblicazione...";
+            btn.disabled = true;
+
+            try {
+                await addDoc(collection(db, "bacheca_utility"), {
+                    testo: testo,
+                    link: link,
+                    timestamp: Date.now()
+                });
+
+                document.getElementById('modal-nuovo').style.display = 'none';
+                btn.innerText = "Pubblica Avviso";
+                btn.disabled = false;
+                caricaBacheca(); 
+
+            } catch (error) {
+                alert("❌ Errore durante la pubblicazione: " + error.message);
+                btn.innerText = "Pubblica Avviso";
+                btn.disabled = false;
+            }
+        };
+
+        window.eliminaMessaggio = async (id) => {
+            if (!confirm("Sei sicuro di voler eliminare questo avviso?")) return;
+            try {
+                await deleteDoc(doc(db, "bacheca_utility", id));
+                caricaBacheca();
+            } catch (e) { alert("Errore durante l'eliminazione."); }
+        };
+    </script>
+</body>
+</html>
+ 

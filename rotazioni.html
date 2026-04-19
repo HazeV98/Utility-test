@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Utility - Database Rotazioni</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0056b3">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
+    
+    <style>
+        /* --- STILI BASE --- */
+        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #dc3545; --info: #17a2b8; }
+        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+
+        .header { width: 100%; max-width: 500px; display: flex; justify-content: space-between; align-items: center; padding: 10px 0 20px 0; box-sizing: border-box; }
+        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
+        h2 { margin: 0; color: var(--primary); font-size: 26px; font-weight: bold; text-align: center; flex-grow: 1; }
+
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 5999; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 6000; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
+        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; }
+        
+        /* SCHERMATE DI ACCESSO (INTRO E LOCK SCREEN) */
+        #intro-screen, #lock-screen { display: none; width: 100%; max-width: 420px; text-align: center; flex-direction: column; align-items: center; box-sizing: border-box; }
+        .lock-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; }
+
+        /* DASHBOARD */
+        #dashboard { display: none; width: 100%; max-width: 500px; box-sizing: border-box; }
+        .dashboard-top-actions { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; width: 100%; }
+        .month-card { background: white; border-radius: 12px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; }
+        .month-card h3 { margin-top: 0; color: var(--primary); text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; text-transform: capitalize; }
+        .btn-grid { display: flex; flex-direction: column; gap: 10px; }
+
+        .file-btn { width: 100%; background-color: var(--primary); color: white; border: none; padding: 14px 10px; font-size: 16px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: opacity 0.2s; box-sizing: border-box;}
+        .file-btn:active { transform: translateY(2px); opacity: 0.9; }
+        .btn-search { background-color: var(--success); } 
+        .btn-table { background-color: var(--info); color: white; }
+        .btn-collega { background-color: #6f42c1; color: white; }
+        .btn-aiuto { background-color: var(--info); color: white; margin-top: 10px; }
+        .btn-global { background-color: #fd7e14; color: white; }
+
+        /* --- MODALI --- */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 7000; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto; position: relative; box-sizing: border-box; }
+        .modal-table-content { max-width: 95%; padding: 15px; display: flex; flex-direction: column; }
+        .close-modal { position: absolute; right: 15px; top: 15px; font-size: 24px; cursor: pointer; color: #666; background: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; }
+        
+        .modulo-ricerca { background: #fafafa; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-top: 15px; }
+        .modulo-ricerca h4 { margin-top: 0; color: var(--primary); margin-bottom: 5px;}
+        .risultato-box { background: #e9ecef; border-left: 4px solid var(--primary); padding: 10px; margin-top: 10px; min-height: 30px; font-size: 14px; }
+        .risultato-box ul { padding-left: 20px; margin: 10px 0 0 0; }
+        .turn-details-box { margin-top: 6px; font-size: 13px; color: #555; background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #ddd; }
+
+        .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 15px; font-family: inherit; }
+        .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; font-size: 16px; margin-top:5px; }
+        .btn-secondary { background: #6c757d; margin-top: 10px; }
+
+        /* --- TABELLA CASCATA --- */
+        .table-wrapper { width: 100%; overflow-x: auto; margin-top: 10px; border: 1px solid #ddd; border-radius: 8px; position: relative; }
+        .rotazioni-table { border-collapse: separate; border-spacing: 0; width: max-content; background: white; font-size: 13px; text-align: center; }
+        .rotazioni-table th, .rotazioni-table td { border-bottom: 1px solid #ddd; border-right: 1px solid #ddd; padding: 10px; white-space: nowrap; min-width: 40px; }
+        .rotazioni-table th { background-color: var(--primary); color: white; position: sticky; top: 0; z-index: 2; border-top: 1px solid var(--primary); }
+        .rotazioni-table td:first-child, .rotazioni-table th:first-child { position: sticky; left: 0; min-width: 160px; max-width: 200px; white-space: normal; line-height: 1.3; }
+        .rotazioni-table td:first-child { background-color: #f9f9f9; font-weight: bold; text-align: left; border-right: 2px solid #aaa; color: var(--primary); font-size: 13px; z-index: 3; }
+        .rotazioni-table th:first-child { z-index: 4; border-right: 2px solid #003d82; }
+
+        .cell-ri { background-color: #5cb85c; color: white; }
+        .cell-al { background-color: #28a745; color: white; font-weight: bold; }
+        .cell-disp { background-color: #ffc107; color: black; font-weight: bold;}
+        .cell-fer { background-color: #20c997; color: white; font-size: 12px; font-weight: bold; }
+        .cell-npl { background-color: #e9ecef; color: #6c757d; font-style: italic; }
+        .row-missing { color: #aaa; font-style: italic; background-color: #fafafa !important; }
+
+        /* --- ADMIN REPORT --- */
+        .admin-report-item { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 14px; }
+        .admin-colleague-badge { display: inline-block; background: var(--info); color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-top: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <button class="hamburger-btn" onclick="toggleMenu(true)">☰</button>
+        <h2>Rotazioni</h2>
+        <div style="width: 50px;"></div>
+    </div>
+
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleMenu(false)"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3 style="margin:0; color:white;">Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px;" onclick="toggleMenu(false)">✕</button>
+        </div>
+        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
+        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
+        <a href="rotazioni.html" class="sidebar-link">👥 Rotazioni (test)</a>
+        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
+        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link">🕒 Orari</a>
+        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
+        <a href="link.html" class="sidebar-link">🔗 Link</a>
+        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
+        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
+        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+    </div>
+
+    <div id="intro-screen">
+        <div class="lock-card">
+            <h3 style="color: var(--primary); margin-top: 0;">Rotazioni 🚧</h3>
+            <p style="font-size: 14px; line-height: 1.6; color: #444; text-align: left; margin-bottom: 20px;">
+                Questa nuova funzione è ancora in fase sperimentale. L'idea è di creare una versione integrata con Utility e con funzioni di ricerca delle rotazioni, per poterla sviluppare ho bisogno che più colleghi possibile condividano la propria bibbia.
+                <br><br>
+                Se vuoi aiutarmi ti chiedo di <b>condividere la tua bibbia</b> (anche se sei disponibile) e fare passaparola chiedendo ad altri colleghi di fare altrettanto.
+                Una volta caricata la tua bibbia nella pagina c'è anche la possibilità di caricare la bibbia per conto di un collega che ti dà il permesso di farlo. 
+                <br><br>
+                Non potendo testare senza dati, all'inizio probabilmente funzionerà male ma ci lavorerò. 
+                <br><br>
+                🔒 <b>Solo chi condividerà la propria bibbia potrà vedere le rotazioni.</b>
+                <br><br>
+                Ringrazio tutti quelli che vorranno condividere la propria bibbia.
+            </p>
+            <button class="btn" onclick="mostraVerificaAccesso()">Avanti ➔</button>
+        </div>
+    </div>
+
+    <div id="lock-screen">
+        <div class="lock-card">
+            <h3 style="color: var(--primary); margin-top: 0;">Verifica Accesso 🔒</h3>
+            <p style="font-size: 14px; line-height: 1.6; color: #444; text-align: left; margin-bottom: 20px;">
+                Per accedere alle rotazioni è necessario che la tua bibbia sia presente nel database.
+                Inserisci i tuoi dati qui sotto: se un collega ha già caricato la bibbia per te entrerai subito, altrimenti potrai procedere con il caricamento.
+            </p>
+            <input type="text" id="lock-cognome" class="input-field" placeholder="Cognome">
+            <input type="text" id="lock-nome" class="input-field" placeholder="Nome">
+            <input type="number" id="lock-prog" class="input-field" placeholder="Numero Progressivo (Opzionale)">
+            <button class="btn" onclick="verificaAccessoAvanti()">Avanti ➔</button>
+        </div>
+    </div>
+
+    <div id="dashboard">
+        <div class="dashboard-top-actions">
+            <button class="file-btn btn-search" onclick="apriModalUploadProprio()">➕ Aggiungi/Aggiorna la tua Bibbia</button>
+            <button class="file-btn btn-search" onclick="apriModal('modal-disclaimer-collega')">🤝 Aggiungi Bibbia Collega</button>
+            <button id="btn-admin" class="file-btn" style="background: #343a40; display: none;" onclick="apriAdminModal()">⚙️ Report Caricamenti</button>
+            
+            <button class="file-btn btn-search" onclick="avviaRicercaGlobale(false)">🔍 Ricerca Turni e Cambi</button>
+            <button class="file-btn btn-search" onclick="avviaRicercaGlobale(true)">🔮 Ricerca Mesi Successivi</button>
+        </div>
+        <div id="container-mesi"></div>
+    </div>
+
+    <div id="modal-disclaimer-collega" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-disclaimer-collega')">
+        <div class="modal-content" style="text-align: center;">
+            <h3 style="margin-top:0; color:#6f42c1;">Bibbia Collega 🤝</h3>
+            <p style="font-size: 14px; line-height: 1.5; color: #444;">
+                Stai per caricare i turni per conto di un altro collega. 
+                <br><br>
+                Assicurati di avere il suo <b>consenso esplicito</b> prima di procedere con la condivisione della sua bibbia nel database.
+            </p>
+            <button class="btn btn-search" style="margin-top: 15px;" onclick="procediUploadCollega()">Continua</button>
+            <button class="btn btn-secondary" onclick="chiudiModal('modal-disclaimer-collega')">Annulla</button>
+        </div>
+    </div>
+
+    <div id="modal-upload" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-upload')">
+        <div class="modal-content">
+            <h3 id="upload-title" style="margin-top:0; color:var(--primary);">Configura e Carica</h3>
+            <p id="upload-subtitle" style="font-size: 13px; color: #666; margin-top: -10px; margin-bottom: 15px;"></p>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <input type="text" id="up-cognome" class="input-field" placeholder="Cognome">
+                <input type="text" id="up-nome" class="input-field" placeholder="Nome">
+            </div>
+            <input type="number" id="up-prog" class="input-field" placeholder="Numero Progressivo (Opzionale)">
+            
+            <select id="up-rotazione" class="input-field">
+                <option value="">-- Seleziona Rotazione --</option>
+            </select>
+            
+            <div style="background: #f8f9fa; border: 2px dashed #ccc; padding: 20px; text-align: center; border-radius: 12px; cursor: pointer; margin-bottom: 15px;" onclick="document.getElementById('pdf-file').click()">
+                <span id="file-label" style="font-weight: bold; color: #666;">Seleziona PDF Bibbia</span>
+                <input type="file" id="pdf-file" style="display:none" accept=".pdf" onchange="handleFileSelect(this)">
+            </div>
+            
+            <button id="btn-submit" class="btn" onclick="uploadBibbia()">🚀 Carica nel Database</button>
+            <button class="btn btn-aiuto" onclick="apriModal('modal-aiuto')">❓ Serve Aiuto?</button>
+            <button class="btn btn-secondary" onclick="chiudiModal('modal-upload')">Annulla</button>
+        </div>
+    </div>
+
+    <div id="modal-aiuto" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-aiuto')">
+        <div class="modal-content">
+            <span class="close-modal" onclick="chiudiModal('modal-aiuto')">&times;</span>
+            <h3 style="margin-top:0; color:var(--info);">ℹ️ Guida al Caricamento</h3>
+            <ul style="padding-left: 20px; color: #444; line-height: 1.5; font-size: 14px;">
+                <li style="margin-bottom: 15px;">
+                    <strong>Non hai il PDF della tua bibbia?</strong><br>
+                    Apri MySpriss, vai nella sezione Report e scarica la tua Bibbia.
+                </li>
+                <li style="margin-bottom: 15px;">
+                    <strong>Non sai come caricare il file?</strong><br>
+                    Invialo a un collega (possibilmente su Telegram) indicando il tuo Nome e Cognome e chiedi di caricarlo per tuo conto tramite il tasto "Aggiungi Bibbia Collega".<br>
+                    Una volta caricato, inserendo i tuoi dati all'accesso della pagina il sistema ti riconoscerà e ti farà entrare automaticamente.
+                </li>
+            </ul>
+            <div style="background: #e9ecef; border-left: 4px solid var(--primary); padding: 12px; border-radius: 4px; font-size: 13px; color: #333;">
+                💻 <strong>Nota:</strong> Se per te è più semplice, puoi usare Utility anche sul tuo computer! Basterà aprire lì il link ed accedere con le tue credenziali. Dal PC sarà molto più semplice caricare la bibbia.
+            </div>
+            <button class="btn" style="margin-top: 20px;" onclick="chiudiModal('modal-aiuto')">Ho capito</button>
+        </div>
+    </div>
+
+    <div id="modal-global-month" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-global-month')">
+        <div class="modal-content" style="text-align: center;">
+            <span class="close-modal" onclick="chiudiModal('modal-global-month')">&times;</span>
+            <h3 style="margin-top:0; color:var(--primary);">Scegli il mese</h3>
+            <p style="font-size: 13px; color: #666;">In quale mese vuoi effettuare la ricerca globale?</p>
+            <div id="global-month-list" class="btn-grid" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+
+    <div id="search-modal" class="modal-overlay" onclick="chiudiSeSfondo(event, 'search-modal')">
+        <div class="modal-content">
+            <span class="close-modal" onclick="chiudiModal('search-modal')">&times;</span>
+            <h3 id="modal-title" style="margin-top:0; color:var(--primary);">Ricerca Turni</h3>
+            <div id="modal-search-sections">
+                <div class="modulo-ricerca">
+                    <h4>Cerca chi fa un turno</h4>
+                    <input type="number" id="input-giorno-turno" class="input-field" min="1" max="31" placeholder="Giorno (Es. 15)">
+                    <input type="text" id="input-codice-turno" class="input-field" placeholder="Turno (es. 1C01, 4P01...)">
+                    <button class="btn" onclick="cercaTurno()">Cerca</button>
+                    <div id="risultato-turno" class="risultato-box"></div>
+                </div>
+                <div class="modulo-ricerca">
+                    <h4>Trova cambi turno</h4>
+                    <input type="number" id="input-giorno-cambio" class="input-field" min="1" max="31" placeholder="Giorno del mese (1-31)">
+                    <select id="select-fase-cambio" class="input-field">
+                        <option value="Terzo">Di Terzo</option>
+                        <option value="Mezzo">Di Mezzo</option>
+                        <option value="Primo">Di Primo</option>
+                        <option value="Riposo">Di Riposo</option>
+                    </select>
+                    <button class="btn" onclick="cercaCambi()">Cerca</button>
+                    <div id="risultato-cambi" class="risultato-box"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="future-search-modal" class="modal-overlay" onclick="chiudiSeSfondo(event, 'future-search-modal')">
+        <div class="modal-content">
+            <span class="close-modal" onclick="chiudiModal('future-search-modal')">&times;</span>
+            <h3 id="future-modal-title" style="margin-top:0; color:var(--primary);">Ricerca Mesi Successivi</h3>
+            <div class="modulo-ricerca" style="margin-top: 0;">
+                <label style="font-size: 14px; font-weight: bold; color: #555; display:block; margin-bottom:5px;">Data:</label>
+                <input type="date" id="input-date-futura" class="input-field" style="margin-bottom: 15px;">
+                <label style="font-size: 14px; font-weight: bold; color: #555; display:block; margin-bottom:5px;">Trova:</label>
+                <select id="select-fase-futura" class="input-field">
+                    <option value="Terzo">Di Terzo (1° o 2° Giorno)</option>
+                    <option value="Mezzo">Di Mezzo (3° o 4° Giorno)</option>
+                    <option value="Primo">Di Primo (5° o 6° Giorno)</option>
+                    <option value="Riposo">Di Riposo (Singolo o Doppio)</option>
+                </select>
+                <button class="btn btn-search" onclick="eseguiRicercaFutura()">Cerca</button>
+                <div id="risultato-futuro" class="risultato-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="table-modal" class="modal-overlay" onclick="chiudiSeSfondo(event, 'table-modal')">
+        <div class="modal-content modal-table-content">
+            <span class="close-modal" onclick="chiudiModal('table-modal')">&times;</span>
+            <h3 id="table-modal-title" style="margin-top:0; color:var(--primary); padding-right: 30px;">Tabella Rotazione</h3>
+            <div id="table-container"></div>
+        </div>
+    </div>
+
+    <div id="imageModal" style="display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); overflow: hidden;" onclick="chiudiSeSfondoModalImg(event)">
+        <div style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; font-size: 35px; color: white; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 20001;" onclick="chiudiImageModal()">&times;</div>
+        <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px; padding-bottom: 80px; position: relative;">
+            <img id="turnoImage" src="" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain;">
+            <div id="imageBanner" style="position: relative; z-index: 20001; margin-top: 15px; background: rgba(0,0,0,0.7); color: #fff; padding: 10px 20px; border-radius: 12px; font-size: 13px; text-align: center; max-width: 90%; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                ⚠️ Controllare sempre la presenza di eventuali varianti ai turni.
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-admin" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-admin')">
+        <div class="modal-content">
+            <span class="close-modal" onclick="chiudiModal('modal-admin')">&times;</span>
+            <h3 style="margin-top:0; color:#343a40;">⚙️ Report Caricamenti</h3>
+            <p style="font-size: 13px; color: #666;">Elenco degli utenti che hanno inserito i dati per il mese corrente e il prossimo.</p>
+            <div id="admin-report-list" style="margin-top: 15px; max-height: 50vh; overflow-y: auto;">
+                <div style="text-align: center; color: #888;">Caricamento in corso...</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, getDocs, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", storageBucket: "utility-haze.firebasestorage.app", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // UID ADMIN
+        const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2"; 
+
+        const ROTATIONS_MAP = {
+            "rot_fnove": "Rotazione Fondamente Nove",
+            "rot_proma": "Rotazione Piazzale Roma",
+            "rot_lido": "Rotazione Lido",
+            "rot_szaccaria": "Rotazione San Zaccaria",
+            "spez_fnove": "Rotazione spezzati Fondamente Nove",
+            "spez_szaccaria": "Rotazione spezzati San Zaccaria",
+            "spez_proma": "Rotazione spezzati Piazzale Roma",
+            "spez_lido": "Rotazione spezzati Lido",
+            "rot_12": "Rotazione linea 12",
+            "rot_13": "Rotazione linea 13",
+            "rot_14mb": "Rotazione linea 14 M/B",
+            "rot_14mn": "Rotazione linea 14 M/N",
+            "rot_17sn": "Rotazione linea 17 San Nicolò",
+            "rot_17tr": "Rotazione linea 17 Tronchetto",
+            "disp_51": "Disponibile 5-1",
+            "disp_6261": "Disponibile 6-2-6-1"
+        };
+
+        let userLoggato = null;
+        let userData = { cognome: "", nome: "", progressivo: "" };
+        let fullDatabaseData = {}; 
+        let isUploadingForColleague = false;
+        
+        // Salvataggio di tutti i doc caricati per la ricerca globale
+        window.allLoadedDocs = [];
+
+        // Dati Ricerca originali
+        window.databaseTurni = []; 
+        window.activePredictors = []; 
+        window.currentSearchDocId = ""; 
+        window.availableImgDirs = []; 
+        window.availableInfoFiles = []; 
+        window.loadedInfoData = {}; 
+        let pzInstance = null;
+
+        // --- MOTORE DI NORMALIZZAZIONE ELASTICA ---
+        function normalizeKey(str1, str2 = "", str3 = "") {
+            let s = `${str1} ${str2} ${str3}`.toLowerCase();
+            let parts = s.replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(Boolean);
+            parts = parts.map(p => /^\d+$/.test(p) ? parseInt(p, 10).toString() : p);
+            parts.sort();
+            return parts.join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initPanzoom();
+            popolaSelectRotazioni();
+            caricaDatiTurniSilenzioso();
+        });
+
+        function popolaSelectRotazioni() {
+            const select = document.getElementById('up-rotazione');
+            for (let key in ROTATIONS_MAP) {
+                let opt = document.createElement('option');
+                opt.value = key; opt.text = ROTATIONS_MAP[key];
+                select.appendChild(opt);
+            }
+        }
+
+        async function caricaDatiTurniSilenzioso() {
+            try {
+                const resMappa = await fetch('mappa_file.json?t=' + new Date().getTime());
+                if (!resMappa.ok) return;
+                const mappa = await resMappa.json();
+                const rootFiles = mappa.albero || mappa.root || [];
+                let imgDirs = rootFiles.filter(f => f.match(/^turni_\d{4}-\d{2}-\d{2}\/?$/));
+                window.availableImgDirs = imgDirs.map(d => d.replace("turni_", "").replace("/", "")).sort(); 
+                let jsonFiles = rootFiles.filter(f => f.match(/^info_turni_\d{4}-\d{2}-\d{2}\.json$/));
+                window.availableInfoFiles = jsonFiles.map(f => f.replace("info_turni_", "").replace(".json", "")).sort();
+                for (let dateStr of window.availableInfoFiles) {
+                    let res = await fetch(`info_turni_${dateStr}.json?t=${new Date().getTime()}`);
+                    if (res.ok) window.loadedInfoData[dateStr] = await res.json();
+                }
+            } catch (e) { console.error("Errore lettura mappa_file", e); }
+        }
+
+        function getEffectiveDate(targetYear, targetMonth, targetDay, availableDatesArray) {
+            let target = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(targetDay).padStart(2, '0')}`;
+            let effective = null;
+            for (let d of availableDatesArray) { if (d <= target) effective = d; else break; }
+            if (!effective && availableDatesArray.length > 0) effective = availableDatesArray[0];
+            return effective;
+        }
+
+        // ==========================================
+        // AUTH E GESTIONE ACCESSO
+        // ==========================================
+        window.mostraVerificaAccesso = () => {
+            document.getElementById('intro-screen').style.display = 'none';
+            document.getElementById('lock-screen').style.display = 'flex';
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userLoggato = user;
+                if(user.uid === ADMIN_UID) document.getElementById('btn-admin').style.display = 'flex';
+                
+                const uDoc = await getDoc(doc(db, "utenti", user.uid));
+                if (uDoc.exists() && uDoc.data().nome && uDoc.data().cognome) {
+                    userData = uDoc.data();
+                    eseguiCheckAccesso();
+                } else {
+                    document.getElementById('intro-screen').style.display = 'flex';
+                }
+            } else { window.location.href = "index.html"; }
+        });
+
+        window.verificaAccessoAvanti = async () => {
+            const cognome = document.getElementById('lock-cognome').value.trim();
+            const nome = document.getElementById('lock-nome').value.trim();
+            const prog = document.getElementById('lock-prog').value.trim();
+            
+            if (!cognome || !nome) return alert("Inserisci Nome e Cognome.");
+            
+            userData = { cognome, nome, progressivo: prog };
+            await setDoc(doc(db, "utenti", userLoggato.uid), userData, { merge: true });
+            eseguiCheckAccesso(true);
+        };
+
+        async function eseguiCheckAccesso(fromButton = false) {
+            const now = new Date();
+            let annoCorr = now.getFullYear(); let meseCorr = now.getMonth() + 1;
+            let annoPros = annoCorr; let mesePros = meseCorr + 1;
+            if (mesePros > 12) { mesePros = 1; annoPros++; }
+
+            const docIdCorr = `${annoCorr}_${String(meseCorr).padStart(2, '0')}`;
+            const docIdPros = `${annoPros}_${String(mesePros).padStart(2, '0')}`;
+            
+            const myNormalizedKey = normalizeKey(userData.cognome, userData.nome, userData.progressivo);
+            let sbloccato = false;
+            
+            let res = await getDoc(doc(db, "rotazioni_turni", docIdCorr));
+            if (res.exists()) { 
+                const d = res.data(); 
+                for (let r in d) { 
+                    let keys = Object.keys(d[r]); 
+                    for(let k of keys) { 
+                        if (normalizeKey(k) === myNormalizedKey) { sbloccato = true; break; } 
+                    } 
+                } 
+            }
+            if (!sbloccato) {
+                res = await getDoc(doc(db, "rotazioni_turni", docIdPros));
+                if (res.exists()) { 
+                    const d = res.data(); 
+                    for (let r in d) { 
+                        let keys = Object.keys(d[r]); 
+                        for(let k of keys) { 
+                            if (normalizeKey(k) === myNormalizedKey) { sbloccato = true; break; } 
+                        } 
+                    } 
+                }
+            }
+
+            if (sbloccato || userLoggato.uid === ADMIN_UID) {
+                document.getElementById('intro-screen').style.display = 'none';
+                document.getElementById('lock-screen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                caricaTuttiIDati();
+            } else {
+                if (fromButton) {
+                    apriModalUploadProprio();
+                } else {
+                    document.getElementById('intro-screen').style.display = 'flex';
+                    document.getElementById('lock-screen').style.display = 'none';
+                    document.getElementById('lock-cognome').value = userData.cognome || "";
+                    document.getElementById('lock-nome').value = userData.nome || "";
+                    document.getElementById('lock-prog').value = userData.progressivo || "";
+                }
+            }
+        }
+
+        async function caricaTuttiIDati() {
+            const snap = await getDocs(collection(db, "rotazioni_turni"));
+            const container = document.getElementById('container-mesi');
+            container.innerHTML = "";
+            let docs = []; 
+            
+            const now = new Date();
+            const currentDocId = `${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const shouldDeleteOld = now.getDate() > 5;
+
+            snap.forEach(d => {
+                if (shouldDeleteOld && d.id < currentDocId) {
+                    deleteDoc(doc(db, "rotazioni_turni", d.id)).catch(e=>console.log(e));
+                    deleteDoc(doc(db, "report_caricamenti", d.id)).catch(e=>console.log(e));
+                } else {
+                    docs.push({id: d.id, data: d.data()});
+                }
+            });
+            
+            docs.sort((a,b) => b.id.localeCompare(a.id));
+            window.allLoadedDocs = docs; // Salvataggio per ricerca globale
+            
+            docs.forEach(docObj => {
+                let card = document.createElement('div'); card.className = "month-card";
+                let [anno, mese] = docObj.id.split('_');
+                const mN = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+                card.innerHTML = `<h3>${mN[parseInt(mese)-1]} ${anno}</h3>`;
+                let btnGrid = document.createElement('div'); btnGrid.className = "btn-grid";
+                
+                for (let rotKey in docObj.data) {
+                    let rotNameLabel = ROTATIONS_MAP[rotKey] || rotKey;
+                    let rotContainer = document.createElement('div');
+                    rotContainer.style.background = "#fafafa"; rotContainer.style.border = "1px solid #ddd"; rotContainer.style.padding = "12px"; rotContainer.style.borderRadius = "10px"; rotContainer.style.marginBottom = "10px";
+                    rotContainer.innerHTML = `<h4 style="margin: 0 0 10px 0; color: var(--primary); font-size: 16px;">${rotNameLabel}</h4>`;
+
+                    let btnTab = document.createElement('button'); btnTab.className = "file-btn btn-table"; btnTab.innerHTML = `📅 Visualizza Tabella`;
+                    btnTab.onclick = () => { fullDatabaseData = docObj.data; apriTabellaCascata(rotNameLabel, docObj.data[rotKey], docObj.id); };
+                    rotContainer.appendChild(btnTab);
+
+                    let btnSearch = document.createElement('button'); btnSearch.className = "file-btn btn-search"; btnSearch.style.marginTop = "8px"; btnSearch.innerHTML = `🔍 Cerca Colleghi e Cambi`;
+                    btnSearch.onclick = () => apriRicercaCorrente(docObj.id, rotNameLabel, docObj.data[rotKey]);
+                    rotContainer.appendChild(btnSearch);
+
+                    let btnFuturo = document.createElement('button'); btnFuturo.className = "file-btn btn-search"; btnFuturo.style.marginTop = "8px"; btnFuturo.innerHTML = `🔮 Ricerca mesi successivi`;
+                    btnFuturo.onclick = () => apriRicercaFuturaFb(docObj.id, rotNameLabel, docObj.data[rotKey]);
+                    rotContainer.appendChild(btnFuturo);
+
+                    btnGrid.appendChild(rotContainer);
+                }
+                card.appendChild(btnGrid);
+                container.appendChild(card);
+            });
+        }
+
+        // ==========================================
+        // GESTIONE MODALI E ADMIN REPORT
+        // ==========================================
+        window.toggleMenu = (o) => { document.getElementById('sidebar').classList.toggle('open', o); document.getElementById('sidebar-overlay').style.display = o ? 'block' : 'none'; };
+        window.apriModal = (id) => document.getElementById(id).style.display = 'flex';
+        window.chiudiModal = (id) => document.getElementById(id).style.display = 'none';
+        window.chiudiSeSfondo = (e, id) => { if (e.target.id === id) window.chiudiModal(id); };
+
+        window.apriModalUploadProprio = () => {
+            isUploadingForColleague = false;
+            document.getElementById('upload-title').innerText = "La tua Bibbia";
+            document.getElementById('upload-title').style.color = "var(--primary)";
+            document.getElementById('upload-subtitle').innerText = "Carica o aggiorna i tuoi turni personali.";
+            document.getElementById('up-cognome').value = userData.cognome || "";
+            document.getElementById('up-nome').value = userData.nome || "";
+            document.getElementById('up-prog').value = userData.progressivo || "";
+            apriModal('modal-upload');
+        };
+
+        window.procediUploadCollega = () => {
+            chiudiModal('modal-disclaimer-collega');
+            isUploadingForColleague = true;
+            document.getElementById('upload-title').innerText = "Bibbia Collega";
+            document.getElementById('upload-title').style.color = "#6f42c1";
+            document.getElementById('upload-subtitle').innerText = "Inserisci i dati esatti del collega per cui stai caricando.";
+            document.getElementById('up-cognome').value = "";
+            document.getElementById('up-nome').value = "";
+            document.getElementById('up-prog').value = "";
+            apriModal('modal-upload');
+        };
+
+        window.apriAdminModal = async () => {
+            apriModal('modal-admin');
+            const list = document.getElementById('admin-report-list');
+            list.innerHTML = "<div style='text-align: center; color: #888;'>Caricamento report in corso...</div>";
+            
+            try {
+                const snap = await getDocs(collection(db, "report_caricamenti"));
+                if (snap.empty) { list.innerHTML = "Nessun dato registrato."; return; }
+                
+                let html = "";
+                snap.forEach(doc => {
+                    let [y, m] = doc.id.split('_');
+                    html += `<h4 style="margin-bottom:5px; border-bottom:1px solid #ccc; padding-bottom:5px;">Mese: ${m}/${y}</h4>`;
+                    const entries = doc.data();
+                    for (let key in entries) {
+                        const rec = entries[key];
+                        html += `
+                            <div class="admin-report-item">
+                                <strong>${key}</strong>
+                                ${rec.isColleague ? `<br><span class="admin-colleague-badge">Caricato da: ${rec.uploaderName}</span>` : `<br><span style="font-size:11px; color:#888;">Caricato da se stesso</span>`}
+                            </div>
+                        `;
+                    }
+                });
+                list.innerHTML = html;
+            } catch (e) {
+                list.innerHTML = "Errore nel caricamento del report.";
+            }
+        };
+
+        // ==========================================
+        // BUILDER TABELLA CON ARMO E COPERTURE AUTO 5 TURNI
+        // ==========================================
+        function controllaArmo(turni1, turni2) {
+            let match = 0;
+            for (let d = 1; d <= 31; d++) {
+                let t1 = turni1[d]; let t2 = turni2[d];
+                if (t1 && t2 && t1.toUpperCase() === t2.toUpperCase()) {
+                    if (!/^(RI|AL|FER|FES|MAL|FEP|KNOP|KINF|NPL|DISP)$/i.test(t1)) match++;
+                }
+            }
+            return match >= 5;
+        }
+
+        function cercaCoperturaFerie(turniRigaSequence) {
+            let infoCoperture = [];
+            let disponibili = { ...fullDatabaseData["disp_51"], ...fullDatabaseData["disp_6261"] };
+            for (let dispName in disponibili) {
+                if (controllaArmo(turniRigaSequence, disponibili[dispName])) {
+                    infoCoperture.push(dispName);
+                }
+            }
+            return infoCoperture;
+        }
+
+        function apriTabellaCascata(rotNameLabel, utenti, docId) {
+            document.getElementById('table-modal-title').innerText = rotNameLabel;
+            const container = document.getElementById('table-container');
+            container.innerHTML = "";
+
+            let [anno, mese] = docId.split('_').map(Number);
+            let numGiorni = new Date(anno, mese, 0).getDate();
+            
+            let nomi = Object.keys(utenti), armi = [], proc = new Set();
+            for (let i = 0; i < nomi.length; i++) {
+                if (proc.has(nomi[i])) continue;
+                let t1 = utenti[nomi[i]];
+                let compNames = [nomi[i]];
+                
+                for (let j = i+1; j < nomi.length; j++) {
+                    if (proc.has(nomi[j])) continue;
+                    if (controllaArmo(t1, utenti[nomi[j]])) { compNames.push(nomi[j]); proc.add(nomi[j]); }
+                }
+                
+                let coperture = cercaCoperturaFerie(t1);
+                
+                let nomeFinale = compNames.join(" - ");
+                if (coperture.length > 0) nomeFinale += `<br><span style="color:var(--info); font-size:11px;">Copertura: ${coperture.join(", ")}</span>`;
+
+                armi.push({ nome: nomeFinale, turni: t1 });
+                proc.add(nomi[i]);
+            }
+
+            let allT = []; armi.forEach(a => Object.values(a.turni).forEach(t => { if(!/^(RI|AL|FER|FES|MAL|FEP|Disp|NPL)$/.test(t) && t) allT.push(t); }));
+            allT.sort(); let tAncora = allT[0] || "RI";
+            armi.sort((a,b) => (Object.keys(a.turni).find(k => a.turni[k] === tAncora) || 99) - (Object.keys(b.turni).find(k => b.turni[k] === tAncora) || 99));
+            
+            let wrap = document.createElement('div'); wrap.className = "table-wrapper";
+            let table = document.createElement('table'); table.className = "rotazioni-table";
+            let head = `<tr><th>Colleghi</th>`; for(let i=1; i<=numGiorni; i++) head += `<th>${i}</th>`;
+            table.innerHTML = `<thead>${head}</tr></thead>`;
+            let tb = document.createElement('tbody'), lastD = 0;
+
+            armi.forEach(a => {
+                let firstD = parseInt(Object.keys(a.turni).find(k => a.turni[k] === tAncora) || 0);
+                if (lastD > 0 && firstD > lastD + 2) {
+                    let rM = `<tr class="row-missing"><td>Dati Mancanti</td>`;
+                    for(let i=1; i<=numGiorni; i++) rM += `<td>-</td>`;
+                    tb.innerHTML += rM + `</tr>`;
+                }
+                let row = `<tr><td>${a.nome.replace(/ - /g, '<br>')}</td>`;
+                for (let d = 1; d <= numGiorni; d++) {
+                    let t = a.turni[d] || "", cls = "";
+                    if (t === "RI") cls = "cell-ri"; else if (t === "AL") cls = "cell-al"; else if (t.toLowerCase() === "disp") cls = "cell-disp"; else if (/^(FER|FES|FEP)$/.test(t)) cls = "cell-fer"; else if (t === "NPL") cls = "cell-npl";
+                    row += `<td class="${cls}">${t}</td>`;
+                }
+                tb.innerHTML += row + `</tr>`; lastD = firstD;
+            });
+            table.appendChild(tb); wrap.appendChild(table); 
+            container.appendChild(wrap);
+            window.apriModal('table-modal');
+        }
+
+        // ==========================================
+        // MOTORE DI UPLOAD E VERIFICA DATE PDF
+        // ==========================================
+        window.handleFileSelect = (el) => { if(el.files[0]) document.getElementById('file-label').innerText = "✅ " + el.files[0].name; };
+        
+        function standardizzaTurno(turno) {
+            if (!turno) return ""; let t = turno.toUpperCase();
+            if (/^(KMAL|KINF|KNOP)$/.test(t)) return "NPL";
+            if (/^(DISP|RI|AL|FER|FES|FEP|MAL|PERM)$/.test(t)) return t === "DISP" ? "Disp" : t;
+            let mS = t.match(/^([1-9])([CPB])(\d{2})$/); if (mS) return `${mS[1]}${(mS[1]<='2'?'C':'P')}${mS[3]}`;
+            let mD = t.match(/^([A-Z0-9]{2})(\d{2})$/); if (mD) { let n = parseInt(mD[2]); if (n >= 50) n -= 50; return `${mD[1]}${String(n).padStart(2, '0')}`; }
+            return t;
+        }
+
+        window.uploadBibbia = async () => {
+            const cognome = document.getElementById('up-cognome').value.trim(); const nome = document.getElementById('up-nome').value.trim();
+            const prog = document.getElementById('up-prog').value.trim(); const rot = document.getElementById('up-rotazione').value;
+            const file = document.getElementById('pdf-file').files[0];
+            
+            if (!cognome || !nome || !rot || !file) return alert("Compila tutti i campi e seleziona il PDF!");
+            document.getElementById('btn-submit').disabled = true;
+            
+            try {
+                if (!isUploadingForColleague) {
+                    userData = { cognome, nome, progressivo: prog };
+                    await setDoc(doc(db, "utenti", userLoggato.uid), userData, { merge: true });
+                }
+
+                const buffer = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument(buffer).promise;
+                let fullText = "", righe = [];
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i); const content = await page.getTextContent(); let rY = {};
+                    content.items.forEach(it => { fullText += it.str + " "; let y = Math.round(it.transform[5]); if (!rY[y]) rY[y] = []; rY[y].push(it.str.trim()); });
+                    Object.keys(rY).sort((a,b)=>b-a).forEach(y => righe.push(rY[y].join(" ")));
+                }
+                const mesi = { "gennaio":"01", "febbraio":"02", "marzo":"03", "aprile":"04", "maggio":"05", "giugno":"06", "luglio":"07", "agosto":"08", "settembre":"09", "ottobre":"10", "novembre":"11", "dicembre":"12" };
+                let mMatch = fullText.match(/mese di ([a-z]+) (\d{4})/i); 
+                
+                if (!mMatch) throw new Error("Impossibile determinare mese e anno dal PDF.");
+                
+                const pdfYear = parseInt(mMatch[2]);
+                const pdfMonth = parseInt(mesi[mMatch[1].toLowerCase()]);
+                const docId = `${pdfYear}_${String(pdfMonth).padStart(2, '0')}`; 
+                
+                const now = new Date();
+                const currentId = `${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (docId < currentId) {
+                    document.getElementById('btn-submit').disabled = false;
+                    return alert(`Errore: Hai caricato la bibbia del mese di ${mMatch[1]} ${mMatch[2]}.\nInserisci la bibbia del mese attuale o successivo.`);
+                }
+
+                let turniLetti = {}; const regT = /\b([1-9][CPB]\d{2}|[A-Z0-9]{2}\d{2}|Disp|RI|AL|FER|FES|FEP|MAL|PERM|KMAL|KINF|KNOP)\b/i;
+                righe.forEach(r => { let mG = r.match(/(?:^|\s)(\d{1,2})\s(?:lun|mar|mer|gio|ven|sab|dom)/i); if (mG) { let tM = r.match(regT); if (tM) turniLetti[parseInt(mG[1])] = standardizzaTurno(tM[1]); } });
+                
+                // SISTEMA ANTI-DUPLICATI: Cerca se c'è già una voce equivalente e ne adotta la formattazione
+                let finalNomeKey = `${cognome} ${nome}${prog ? ' ('+prog+')' : ''}`;
+                const normalizedNewKey = normalizeKey(cognome, nome, prog);
+                
+                try {
+                    let existingDoc = await getDoc(doc(db, "rotazioni_turni", docId));
+                    if (existingDoc.exists()) {
+                        let rotData = existingDoc.data()[rot];
+                        if (rotData) {
+                            for (let existingKey in rotData) {
+                                if (normalizeKey(existingKey) === normalizedNewKey) {
+                                    finalNomeKey = existingKey; // Sovrascrive la chiave esistente
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } catch(e) {}
+                
+                await setDoc(doc(db, "rotazioni_turni", docId), { [rot]: { [finalNomeKey]: turniLetti } }, { merge: true });
+
+                await setDoc(doc(db, "report_caricamenti", docId), {
+                    [finalNomeKey]: {
+                        uploaderUid: userLoggato.uid,
+                        uploaderName: `${userData.cognome || ""} ${userData.nome || ""}`.trim() || "Anonimo",
+                        isColleague: isUploadingForColleague,
+                        timestamp: new Date().toISOString()
+                    }
+                }, { merge: true });
+
+                alert("✅ Caricato con successo!"); location.reload();
+            } catch (e) { alert("Errore: " + e.message); document.getElementById('btn-submit').disabled = false; }
+        };
+
+        // ==========================================
+        // FUNZIONI DI RICERCA GLOBALE E LOCALE
+        // ==========================================
+        window.avviaRicercaGlobale = (isFutura) => {
+            if (!window.allLoadedDocs || window.allLoadedDocs.length === 0) return alert("Nessun dato caricato nel database.");
+            
+            // Se c'è un solo mese disponibile aprirà direttamente quello
+            if (window.allLoadedDocs.length === 1) {
+                apriMeseGlobale(window.allLoadedDocs[0], isFutura);
+                return;
+            }
+
+            // Se ci sono più mesi, chiede in quale mese fare la ricerca globale
+            window.isRicercaFuturaDaAprire = isFutura;
+            const list = document.getElementById('global-month-list');
+            list.innerHTML = "";
+            window.allLoadedDocs.forEach(docObj => {
+                let [anno, mese] = docObj.id.split('_');
+                const mN = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+                let btn = document.createElement('button');
+                btn.className = "file-btn btn-table";
+                btn.innerText = `${mN[parseInt(mese)-1]} ${anno}`;
+                btn.onclick = () => {
+                    chiudiModal('modal-global-month');
+                    apriMeseGlobale(docObj, isFutura);
+                };
+                list.appendChild(btn);
+            });
+            apriModal('modal-global-month');
+        };
+
+        window.apriMeseGlobale = (docObj, isFutura) => {
+            // Unisce i dati di TUTTE le rotazioni in un unico oggetto per la ricerca
+            let allData = {};
+            for(let rotKey in docObj.data) {
+                Object.assign(allData, docObj.data[rotKey]);
+            }
+            
+            let [anno, mese] = docObj.id.split('_');
+            const mN = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+            let label = `Globale - Tutte le Rotazioni (${mN[parseInt(mese)-1]} ${anno})`;
+            
+            if (isFutura) apriRicercaFuturaFb(docObj.id, label, allData);
+            else apriRicercaCorrente(docObj.id, label, allData);
+        };
+
+        window.apriRicercaCorrente = (docId, rotName, data) => {
+            window.currentSearchDocId = docId; window.databaseTurni = [];
+            for (let nome in data) { let turniArr = []; for (let i = 1; i <= 31; i++) turniArr.push(data[nome][i.toString()] || ""); window.databaseTurni.push({ nome: nome, turni: turniArr }); }
+            document.getElementById('modal-title').innerText = "Ricerca: " + rotName;
+            document.getElementById('risultato-turno').innerHTML = ""; document.getElementById('risultato-cambi').innerHTML = "";
+            window.apriModal('search-modal');
+        };
+
+        window.apriRicercaFuturaFb = (docId, rotName, data) => {
+            let [annoStr, meseStr] = docId.split('_'); let m = parseInt(meseStr); let y = parseInt(annoStr);
+            document.getElementById('future-modal-title').innerText = "Mesi Successivi: " + rotName;
+            window.activePredictors = [];
+            for (let nome in data) { let turniMese = []; for (let i = 1; i <= 31; i++) turniMese.push(data[nome][i.toString()] || ""); let p = buildColleaguePredictor(nome, turniMese, m, y); if (p) window.activePredictors.push(p); }
+            document.getElementById('risultato-futuro').innerHTML = ""; window.apriModal('future-search-modal');
+        };
+
+        window.cercaTurno = () => {
+            const giorno = parseInt(document.getElementById('input-giorno-turno').value); const codice = document.getElementById('input-codice-turno').value.trim().toUpperCase();
+            const box = document.getElementById('risultato-turno'); if (!giorno || !codice) return box.innerHTML = "Compila tutti i campi.";
+            let trovati = []; window.databaseTurni.forEach(d => { if (d.turni[giorno - 1] === codice) trovati.push(d.nome); });
+            if (trovati.length > 0) {
+                let [y, m] = window.currentSearchDocId.split('_'); let effInfoDate = getEffectiveDate(y, m, giorno, window.availableInfoFiles);
+                let currentShiftData = effInfoDate ? window.loadedInfoData[effInfoDate] : {}; let effImgDate = getEffectiveDate(y, m, giorno, window.availableImgDirs);
+                let currentImgDir = effImgDate ? `turni_${effImgDate}` : ""; let detailsHtml = `<div style="margin-top: 10px;"><button class="file-btn btn-table" style="font-size: 14px; padding: 10px;" onclick="apriImmagineDaRotazioni('${codice}', '${currentImgDir}')">🖼️ Mostra Immagine Turno</button></div>`;
+                if (currentShiftData && currentShiftData[codice]) { let info = currentShiftData[codice]; detailsHtml = `<div class="turn-details-box">Inizio: <strong>${info.luogoInizio} (${info.inizio})</strong><br>Fine: <strong>${info.luogoFine} (${info.fine})</strong><br><button class="file-btn btn-table" style="padding: 8px 12px; margin-top: 8px;" onclick="apriImmagineDaRotazioni('${codice}', '${currentImgDir}')">🖼️ Mostra Immagine Turno</button></div>`; }
+                box.innerHTML = `<strong>Trovati il giorno ${giorno}:</strong><ul><li>` + trovati.join("</li><li>") + "</li></ul>" + detailsHtml;
+            } else box.innerHTML = "Nessuno trovato.";
+        };
+
+        window.cercaCambi = () => {
+            const giorno = parseInt(document.getElementById('input-giorno-cambio').value); const faseDesiderata = document.getElementById('select-fase-cambio').value;
+            const box = document.getElementById('risultato-cambi'); if (!giorno) return box.innerHTML = "Inserisci il giorno.";
+            let [y, m] = window.currentSearchDocId.split('_'); let effInfoDate = getEffectiveDate(y, m, giorno, window.availableInfoFiles);
+            let currentShiftData = effInfoDate ? window.loadedInfoData[effInfoDate] : {}; let effImgDate = getEffectiveDate(y, m, giorno, window.availableImgDirs);
+            let currentImgDir = effImgDate ? `turni_${effImgDate}` : ""; let risHtml = [];
+            window.databaseTurni.forEach(d => {
+                const analisi = analizzaCicloLavorativo(d.turni, giorno - 1);
+                if (analisi.fase === faseDesiderata) {
+                    if (faseDesiderata === "Riposo" && analisi.tipoRiposo !== "Vuoto") { risHtml.push(`<strong>${d.nome}</strong> - <span style="color:var(--danger);">[Riposo ${analisi.tipoRiposo}]</span>`); } else if (faseDesiderata !== "Riposo") {
+                        let tCod = d.turni[giorno - 1]; let isR = ["AL", "RI", "DISP", "ESPE", "DI", ""].includes(tCod);
+                        if (!isR) { let infoHtml = ""; if (currentShiftData && currentShiftData[tCod]) { let info = currentShiftData[tCod]; infoHtml = `<br>Inizio: <strong>${info.luogoInizio} (${info.inizio})</strong><br>Fine: <strong>${info.luogoFine} (${info.fine})</strong>`; }
+                            risHtml.push(`<strong>${d.nome}</strong> (Giorno lav. ${analisi.giornoEsatto}) <div class="turn-details-box"><strong style="color:var(--primary);">Turno: ${tCod}</strong>${infoHtml}<br><button class="file-btn btn-table" style="padding: 8px 12px; margin-top: 8px;" onclick="apriImmagineDaRotazioni('${tCod}', '${currentImgDir}')">🖼️ Immagine</button></div>`);
+                        } else risHtml.push(`<strong>${d.nome}</strong> (Giorno lav. ${analisi.giornoEsatto}) - [Turno: ${tCod}]`);
+                    }
+                }
+            });
+            box.innerHTML = risHtml.length > 0 ? `<div style="margin-bottom:10px;"><strong>Colleghi trovati:</strong></div><ul><li style='margin-bottom:15px;'>` + risHtml.join("</li><li style='margin-bottom:15px;'>") + "</li></ul>" : "Nessuno trovato.";
+        };
+
+        function analizzaCicloLavorativo(turni, idx) {
+            const tA = turni[idx]; if (tA === "AL" || tA === "RI" || tA === "") { let tipo = "Vuoto"; if (tA === "AL") tipo = ((idx+1 < turni.length && turni[idx+1] === "RI") || turni[idx+1] === "AL") ? "Doppio (Oggi AL)" : "Singolo (AL)"; else if (tA === "RI") tipo = ((idx-1>=0 && (turni[idx-1]==="AL" || turni[idx-1]==="RI")) || (idx+1<turni.length && (turni[idx+1]==="AL" || turni[idx+1]==="RI"))) ? "Doppio (Oggi RI)" : "Singolo (RI)"; return { fase: "Riposo", giornoEsatto: 0, tipoRiposo: tipo }; }
+            let gL = 1, tr = false; for (let i = idx - 1; i >= 0; i--) { if (turni[i] === "AL" || turni[i] === "RI" || turni[i] === "") { tr = true; break; } gL++; } if (tr) return detFase(gL);
+            let pR = 0; for (let i = idx + 1; i < turni.length; i++) { if (turni[i] === "AL" || turni[i] === "RI" || turni[i] === "") break; pR++; } let gS = 6 - pR; return detFase(gS > 0 ? gS : gL);
+        }
+        function detFase(n) { if(n===1||n===2) return{fase:"Terzo",giornoEsatto:n}; if(n===3||n===4) return{fase:"Mezzo",giornoEsatto:n}; if(n===5||n===6) return{fase:"Primo",giornoEsatto:n}; return{fase:"Oltre 6 giorni",giornoEsatto:n}; }
+
+        function stringToNum(s) { if(!s) return 0; let p = s.split('-'); return Math.floor(new Date(p[0], p[1]-1, p[2], 12, 0, 0).getTime() / 86400000); }
+        function buildColleaguePredictor(n, tM, m, y) {
+            let rN = null, aI = tM.findIndex(t => t === "AL");
+            if (aI !== -1) rN = stringToNum(`${y}-${m}-${aI + 1}`) - 7;
+            else { for (let i = 0; i < tM.length; i++) { if (tM[i] === "RI") { let pA = (i-1>=0 && tM[i-1]==="AL"), pR = (i-1>=0 && tM[i-1]==="RI"), nR = (i+1<tM.length && tM[i+1]==="RI"); let dN = stringToNum(`${y}-${m}-${i + 1}`); rN = (pA||pR) ? dN-8 : (nR ? dN-7 : dN); break; } } }
+            return rN === null ? null : { nome: n, refNum: rN };
+        }
+        
+        window.eseguiRicercaFutura = () => {
+            const dateStr = document.getElementById('input-date-futura').value; const faseD = document.getElementById('select-fase-futura').value; const box = document.getElementById('risultato-futuro'); if (!dateStr) return box.innerHTML = "Seleziona la data.";
+            let tN = stringToNum(dateStr), tr = [];
+            window.activePredictors.forEach(p => {
+                let pos = ((tN - p.refNum + 6) % 15 + 15) % 15; let fC = "", iE = "", gL = 0;
+                if (pos === 6) { fC = "Riposo"; iE = "Singolo (RI)"; } else if (pos === 13) { fC = "Riposo"; iE = "Doppio (1° g. AL)"; } else if (pos === 14) { fC = "Riposo"; iE = "Doppio (2° g. RI)"; } else { if (pos>=0 && pos<=5) gL = pos+1; else if (pos>=7 && pos<=12) gL = pos-6; if (gL===1||gL===2) fC="Terzo"; else if (gL===3||gL===4) fC="Mezzo"; else if (gL===5||gL===6) fC="Primo"; }
+                if (fC === faseD) { if (fC === "Riposo") tr.push(`<strong>${p.nome}</strong> - <span style="color:var(--danger);">[${iE}]</span>`); else tr.push(`<strong>${p.nome}</strong> (G. lav. ${gL})`); }
+            });
+            box.innerHTML = tr.length > 0 ? `<strong>Colleghi trovati:</strong><ul><li>` + tr.join("</li><li>") + "</li></ul>" : "Nessuno trovato.";
+        };
+
+        function initPanzoom() {
+            const img = document.getElementById('turnoImage');
+            if (typeof Panzoom !== 'undefined' && !pzInstance) {
+                pzInstance = Panzoom(img, { maxScale: 5, minScale: 1 });
+                document.getElementById('imageFlexContainer').addEventListener('wheel', pzInstance.zoomWithWheel);
+                img.addEventListener('dblclick', (e) => { if (pzInstance.getScale() < 1.1) pzInstance.zoom(1.75, { animate: true }); else pzInstance.reset({ animate: true }); });
+            }
+        }
+
+        window.apriImmagineDaRotazioni = (turno, imgDir) => {
+            if (!imgDir) return alert("Nessuna cartella immagini valida trovata per questa data.");
+            let img = document.getElementById('turnoImage');
+            img.onload = () => { if (pzInstance) pzInstance.reset(); document.getElementById('imageModal').style.display = 'block'; img.onload=null; img.onerror=null; };
+            img.onerror = () => { img.onload = () => { if (pzInstance) pzInstance.reset(); document.getElementById('imageModal').style.display = 'block'; img.onload=null; img.onerror=null; }; img.onerror = () => { alert("Immagine non trovata per " + turno); window.chiudiImageModal(); img.onload=null; img.onerror=null; }; img.src = `${imgDir}/${turno}.png`; };
+            img.src = `${imgDir}/${turno}.jpg`;
+        };
+        
+        window.chiudiSeSfondoModalImg = (e) => { if (e.target.id === 'imageModal' || e.target.id === 'imageFlexContainer') window.chiudiImageModal(); };
+        window.chiudiImageModal = () => { document.getElementById('imageModal').style.display = 'none'; document.getElementById('turnoImage').removeAttribute('src'); if(pzInstance) pzInstance.reset(); };
+
+    </script>
+</body>
+</html>

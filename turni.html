@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Utility - Turni</title>
+
+    <script data-goatcounter="https://hazev.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
+
+    <style>
+        /* --- STILI GLOBALI UNIFICATI --- */
+        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #dc3545;}
+        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* HEADER */
+        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; }
+        
+        /* MENU LATERALE */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
+        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; }
+        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+
+        /* CONTENUTI SPECIFICI E BOTTONI */
+        .content-area { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+        .status-message { text-align: center; color: #666; font-size: 16px; padding: 20px; background: white; border-radius: 10px; }
+        .folder-btn { background-color: white; color: var(--primary); border: 2px solid var(--primary); padding: 18px; font-size: 18px; font-weight: bold; border-radius: 12px; cursor: pointer; text-align: center; }
+        .file-row { display: flex; gap: 8px; width: 100%; align-items: stretch; }
+        .file-btn { flex-grow: 1; background-color: var(--primary); color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .download-btn { width: 55px; background-color: white; color: var(--primary); border: 2px solid var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; }
+        .file-btn:active, .download-btn:active, .folder-btn:active { transform: translateY(2px); }
+        .back-btn { background-color: #6c757d; color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+        .back-btn:active { transform: translateY(2px); }
+
+        /* BARRA DI RICERCA IMMAGINI */
+        .search-container { position: relative; width: 100%; margin-bottom: 5px; }
+        #shiftSearch { width: 100%; padding: 15px; border: 2px solid var(--primary); border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; font-family: inherit; }
+        #shiftSearch:focus { box-shadow: 0 0 5px rgba(0, 86, 179, 0.3); }
+        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 8px; max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: none; margin-top: 5px; }
+        .suggestion-item { padding: 14px 15px; border-bottom: 1px solid #eee; cursor: pointer; color: var(--text-color); display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover, .suggestion-item:active { background-color: #f4f7f6; color: var(--primary); }
+
+        /* MODALE RICERCA CORSE (JSON) */
+        .modal-overlay-search {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 10000; align-items: center; justify-content: center;
+        }
+        .modal-content-search {
+            background: white; padding: 20px; border-radius: 12px; max-width: 90%; width: 400px;
+            max-height: 85vh; overflow-y: auto; position: relative;
+        }
+        .close-modal {
+            position: absolute; right: 15px; top: 15px; font-size: 24px; cursor: pointer; color: #666;
+        }
+        
+        /* BOTTONI SELEZIONE TIPO (PARTENZA/ARRIVO) */
+        .tipo-toggle-container { display: flex; gap: 10px; margin-bottom: 20px; margin-top: 5px; }
+        .btn-tipo { flex: 1; padding: 14px; border: 2px solid #ccc; background: white; color: #555; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .btn-tipo.active { border-color: var(--primary); background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        /* STATO "ANNEBBIATO" PER IL RESTO DEL FORM */
+        #sc-rest-form { opacity: 0.3; pointer-events: none; transition: opacity 0.3s ease; }
+        #sc-rest-form.unlocked { opacity: 1; pointer-events: auto; }
+
+        .sc-form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+        .sc-form-group label { font-size: 14px; font-weight: bold; color: #555; margin-bottom: 5px; }
+        .sc-form-group input, .sc-form-group select {
+            width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; font-family: inherit;
+        }
+        .sc-form-group input:focus, .sc-form-group select:focus { border-color: var(--primary); outline: none; }
+        
+        .risultato-box { background: #e9ecef; border-left: 4px solid var(--primary); padding: 15px; margin-top: 15px; font-size: 15px; line-height: 1.5; border-radius: 0 8px 8px 0; }
+        
+        /* SUGGERIMENTI TENDINA ORARIO JSON */
+        #sc-suggestions {
+            display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; border-radius: 0 0 8px 8px; max-height: 150px; overflow-y: auto; z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: -2px;
+        }
+        .sc-suggestion-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .sc-suggestion-item:last-child { border-bottom: none; }
+        .sc-suggestion-item:hover, .sc-suggestion-item:active { background-color: #f4f7f6; color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
+        <h2>Turni</h2>
+        <div style="width: 50px;"></div>
+    </div>
+
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3 style="margin:0; color:white;">Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+        </div>
+        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
+        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
+        <a href="turni.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">🔄 Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
+        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link">🕒 Orari</a>
+        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
+        <a href="link.html" class="sidebar-link">🔗 Link</a>
+        <a href="contatti.html" class="sidebar-link">📞 Contatti</a>
+        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
+        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+    </div>
+
+    <div id="content-area" class="content-area">
+        <div class="status-message">Caricamento cartelle...</div>
+    </div>
+
+    <div id="imageModal" style="display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); overflow: hidden;" onclick="chiudiSeSfondo(event)">
+        <div style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; font-size: 35px; color: white; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 20001;" onclick="chiudiImageModal()">&times;</div>
+        <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px; padding-bottom: 80px; position: relative;">
+            <img id="turnoImage" src="" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain;">
+            <div id="imageBanner" style="position: relative; z-index: 20001; margin-top: 15px; background: rgba(0,0,0,0.7); color: #fff; padding: 10px 20px; border-radius: 12px; font-size: 13px; text-align: center; max-width: 90%; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                ⚠️ Controllare sempre la presenza di eventuali varianti ai turni.
+            </div>
+        </div>
+        <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #11cdef; color: white; border: none; padding: 12px 24px; border-radius: 20px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 20001;">📥 Scarica</button>
+    </div>
+
+    <div id="searchCorseModal" class="modal-overlay-search" onclick="chiudiSeSfondoSearch(event)">
+        <div class="modal-content-search">
+            <span class="close-modal" onclick="chiudiSearchCorseModal()">&times;</span>
+            <h3 style="margin-top:0; color:var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px;">Cerca Corsa</h3>
+            
+            <div id="sc-status" class="status-message" style="padding: 10px; font-size:14px; display:none;">Caricamento dati in corso...</div>
+            
+            <div id="sc-form" style="display:none; margin-top: 15px;">
+                
+                <div class="tipo-toggle-container">
+                    <button id="btn-partenza" class="btn-tipo" onclick="selezionaTipo('partenza')">🛫 Partenza</button>
+                    <button id="btn-arrivo" class="btn-tipo" onclick="selezionaTipo('arrivo')">🛬 Arrivo</button>
+                </div>
+                <input type="hidden" id="sc-tipo" value="">
+
+                <div id="sc-rest-form">
+                    <div class="sc-form-group">
+                        <label id="label-luogo">Luogo:</label>
+                        <select id="sc-luogo" onchange="aggiornaSuggerimentiOrario()"></select>
+                    </div>
+                    
+                    <div class="sc-form-group">
+                        <label>Giorno:</label>
+                        <input type="date" id="sc-giorno">
+                    </div>
+                    
+                    <div class="sc-form-group" style="position: relative;">
+                        <label id="label-orario">Orario:</label>
+                        <input type="text" id="sc-orario" inputmode="numeric" placeholder="es. 07.30" oninput="formattaOrario(event)" autocomplete="off">
+                        <div id="sc-suggestions"></div>
+                    </div>
+                    
+                    <button class="file-btn" style="width: 100%; border-radius: 8px; margin-top: 5px;" onclick="eseguiRicercaCorsa()">Trova Turno</button>
+                </div>
+
+                <div id="sc-risultato" class="risultato-box" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function apriMenuLaterale() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; }
+        function chiudiMenuLaterale() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; }
+
+        // --- VARIABILI DI STATO (Niente più GitHub API!) ---
+        let numCartelle = 0;
+        let currentImgList = [];
+        let currentImgDir = "";
+        let currentCorseData = null; 
+        let pzInstance = null;
+        let currentImagePath = "";
+        
+        // Mappa Globale del sistema Firebase
+        let mappaAlbero = [];
+
+        async function downloadForzato(url, filename) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(blobUrl);
+            } catch (e) {
+                window.open(url, '_blank');
+            }
+        }
+
+        async function init() {
+            const imgElem = document.getElementById('turnoImage');
+            if (typeof Panzoom !== 'undefined') {
+                pzInstance = Panzoom(imgElem, { maxScale: 5, minScale: 1 });
+                document.getElementById('imageFlexContainer').addEventListener('wheel', pzInstance.zoomWithWheel);
+                
+                function eseguiZoomToggle(e) {
+                    if (!pzInstance) return;
+                    let currentScale = pzInstance.getScale();
+                    if (currentScale < 1.1) pzInstance.zoom(1.75, { animate: true });
+                    else pzInstance.reset({ animate: true });
+                }
+
+                let lastTap = 0;
+                let isPinching = false;
+                imgElem.addEventListener('touchstart', function(e) { if (e.touches.length > 1) { isPinching = true; } });
+                imgElem.addEventListener('touchend', function(e) {
+                    if (isPinching) {
+                        if (e.touches.length === 0) { setTimeout(() => isPinching = false, 300); }
+                        return;
+                    }
+                    let currentTime = new Date().getTime();
+                    let tapLength = currentTime - lastTap;
+                    if (tapLength < 300 && tapLength > 0) {
+                        eseguiZoomToggle(e);
+                        if (e.cancelable) e.preventDefault();
+                    }
+                    lastTap = currentTime;
+                });
+                imgElem.addEventListener('dblclick', function(e) { eseguiZoomToggle(e); });
+            }
+
+            const area = document.getElementById('content-area');
+            try {
+                // 1. CARICAMENTO DELLA NUOVA MAPPA GLOBALE (Locale/Firebase)
+                const resMappa = await fetch('mappa_file.json?t=' + new Date().getTime());
+                if (!resMappa.ok) throw new Error("Mappa file non trovata");
+                
+                const datiMappa = await resMappa.json();
+                mappaAlbero = datiMappa.albero || [];
+
+                // 2. FILTRA LE CARTELLE TURNI
+                const dirs = [...new Set(mappaAlbero
+                    .filter(p => p.startsWith("turni_pdf_") || p.startsWith("turni_varianti_"))
+                    .map(p => p.split('/')[0])
+                )];
+
+                numCartelle = dirs.length;
+                
+                if (numCartelle === 1) { 
+                    caricaFiles(dirs[0]); 
+                } else {
+                    area.innerHTML = ""; 
+                    dirs.sort((a,b) => b.localeCompare(a));
+                    
+                    dirs.forEach(d => {
+                        const btn = document.createElement('button'); 
+                        btn.className = "folder-btn";
+                        btn.onclick = () => caricaFiles(d); 
+                        area.appendChild(btn);
+                        
+                        if (d.includes("varianti")) {
+                            btn.innerText = "Caricamento...";
+                            // Legge il file di testo internamente senza usare API
+                            fetch(`${d}/nome.txt?t=${new Date().getTime()}`)
+                                .then(response => {
+                                    if (response.ok) return response.text();
+                                    throw new Error("File txt assente");
+                                })
+                                .then(testo => {
+                                    btn.innerText = testo.trim() || d.replace("turni_varianti_", "").replace(/_/g, " ");
+                                })
+                                .catch(() => {
+                                    btn.innerText = d.replace("turni_varianti_", "").replace(/_/g, " ");
+                                });
+                        } else {
+                            let label = d.replace("turni_pdf_", "").split("-").reverse().join("-");
+                            btn.innerText = "Turni dal " + label;
+                        }
+                    });
+                }
+            } catch (e) { area.innerHTML = "<div class='status-message'>In attesa di primo caricamento dati...</div>"; }
+        }
+
+        async function caricaFiles(dir) {
+            const area = document.getElementById('content-area'); 
+            area.innerHTML = "<div class='status-message'>Caricamento dati...</div>";
+            
+            let imgDir = "";
+            if (dir.startsWith("turni_pdf_")) {
+                imgDir = dir.replace("turni_pdf_", "turni_");
+            } else if (dir.startsWith("turni_varianti_")) {
+                imgDir = dir.replace("turni_varianti_", "turni_jpg_varianti_");
+            }
+            
+            currentImgDir = imgDir;
+            
+            // Popolamento lista immagini senza server (esclusivo tramite la mappa)
+            currentImgList = mappaAlbero
+                .filter(p => p.startsWith(imgDir + "/") && (p.toLowerCase().endsWith(".jpg") || p.toLowerCase().endsWith(".png")))
+                .map(p => ({ name: p.split('/')[1] }));
+            
+            try {
+                // Leggiamo PDF e JSON usando la mappa
+                let filesInDir = mappaAlbero
+                    .filter(p => p.startsWith(dir + "/") && p.split('/').length === 2)
+                    .map(p => p.split('/')[1]);
+
+                let pdfs = filesInDir.filter(f => f.toLowerCase().endsWith(".pdf")).map(name => ({ name }));
+                let jsons = filesInDir.filter(f => f.toLowerCase().endsWith(".json")).map(name => ({ name }));
+                
+                pdfs.sort((a, b) => {
+                    if (a.name.includes("libro_turni_completo")) return -1;
+                    if (b.name.includes("libro_turni_completo")) return 1;
+                    return a.name.localeCompare(b.name, undefined, {numeric: true});
+                });
+                
+                area.innerHTML = "";
+                
+                if (numCartelle > 1) { 
+                    const b = document.createElement('button'); 
+                    b.className = "back-btn"; 
+                    b.innerText = "← Indietro"; 
+                    b.onclick = init; 
+                    area.appendChild(b); 
+                }
+                
+                // BARRA DI RICERCA IMMAGINI
+                if (currentImgList.length > 0) {
+                    const searchDiv = document.createElement('div');
+                    searchDiv.className = "search-container";
+                    searchDiv.innerHTML = `
+                        <input type="text" id="shiftSearch" placeholder="Cerca turno" autocomplete="off" oninput="filtraTurni()" onfocus="filtraTurni()">
+                        <div id="suggestionsBox" class="suggestions-box"></div>
+                    `;
+                    area.appendChild(searchDiv);
+                }
+                
+                // Generazione Lista PDF
+                pdfs.forEach(f => {
+                    let nomeOrig = f.name;
+                    let nomeVis = "";
+                    if (nomeOrig.includes("libro_turni_completo")) {
+                        nomeVis = "Libro turni completo";
+                    } else {
+                        let n = nomeOrig.replace(/\.pdf$/i, "").replace(/_/g, " ");
+                        n = n.split(/\s+dal\s+/i)[0]; 
+                        n = n.replace(/\s+pdf$/i, "").trim(); 
+                        n = n.replace(/\blinea\b/gi, "linea");
+                        nomeVis = n.charAt(0).toUpperCase() + n.slice(1);
+                    }
+
+                    const row = document.createElement('div'); row.className = "file-row";
+                    if (nomeOrig.includes("libro")) row.style.marginBottom = "10px";
+
+                    const aOpen = document.createElement('a');
+                    aOpen.className = "file-btn"; aOpen.innerText = nomeVis;
+                    // Percorso relativo per Firebase
+                    aOpen.href = `${dir}/${nomeOrig}`;
+                    aOpen.target = "_blank";
+
+                    const aDown = document.createElement('div');
+                    aDown.className = "download-btn"; aDown.innerHTML = "⬇️";
+                    aDown.onclick = () => downloadForzato(`${dir}/${nomeOrig}`, nomeOrig);
+
+                    row.appendChild(aOpen); row.appendChild(aDown);
+
+                    const baseName = nomeOrig.substring(0, nomeOrig.lastIndexOf('.'));
+                    const hasJson = jsons.some(j => j.name.substring(0, j.name.lastIndexOf('.')) === baseName);
+
+                    if (hasJson) {
+                        aDown.style.width = "50px"; 
+                        const btnSearch = document.createElement('button');
+                        btnSearch.className = "file-btn";
+                        btnSearch.style.backgroundColor = "var(--success)";
+                        btnSearch.style.flexGrow = "0";
+                        btnSearch.style.width = "50px";
+                        btnSearch.style.padding = "0";
+                        btnSearch.style.fontSize = "20px";
+                        btnSearch.style.marginLeft = "8px";
+                        btnSearch.innerText = "🔍";
+                        btnSearch.onclick = () => apriRicercaCorse(nomeOrig, dir);
+                        row.appendChild(btnSearch);
+                    }
+
+                    area.appendChild(row);
+                });
+            } catch (e) { area.innerHTML = "<div class='status-message'>Errore caricamento PDF.</div>"; }
+        }
+
+        // --- FUNZIONE PER LA RICERCA DINAMICA IMMAGINI E APERTURA DIRETTA ---
+        function filtraTurni() {
+            const input = document.getElementById('shiftSearch');
+            const box = document.getElementById('suggestionsBox');
+            if (!input || !box) return;
+
+            input.value = input.value.toUpperCase(); 
+            const query = input.value.trim();
+            
+            if (query.length === 0) {
+                box.style.display = 'none';
+                return;
+            }
+
+            const matches = currentImgList.filter(f => {
+                const nomeSenzaExt = f.name.replace(/\.[^/.]+$/, "").toUpperCase();
+                return nomeSenzaExt.includes(query);
+            });
+
+            if (matches.length > 0) {
+                box.innerHTML = '';
+                matches.forEach(m => {
+                    const nomeSenzaExt = m.name.replace(/\.[^/.]+$/, "").toUpperCase();
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    item.innerHTML = `<span>Turno ${nomeSenzaExt}</span> <span>🖼️</span>`;
+                    item.onclick = () => {
+                        apriImmagineTurno(m.name);
+                        box.style.display = 'none';
+                        input.value = ''; 
+                    };
+                    box.appendChild(item);
+                });
+                box.style.display = 'block';
+            } else {
+                box.innerHTML = '<div style="padding: 14px 15px; color: #888;">Nessun turno trovato con questo nome.</div>';
+                box.style.display = 'block';
+            }
+        }
+
+        // --- FUNZIONI MODALE IMMAGINE ---
+        function chiudiSeSfondo(event) { 
+            if (event.target.id === 'imageModal' || event.target.id === 'imageFlexContainer') chiudiImageModal(); 
+        }
+        
+        function chiudiImageModal() {
+            document.getElementById('imageModal').style.display = 'none';
+            document.getElementById('turnoImage').removeAttribute('src');
+            if (pzInstance) { pzInstance.reset(); }
+        }
+
+        function erroreImmagine() {
+            document.getElementById('turnoImage').onerror = null; 
+            alert("L'immagine del turno non è stata trovata.");
+            chiudiImageModal();
+        }
+
+        function scaricaImmagineTurno() {
+            if (!currentImagePath) return;
+            const a = document.createElement('a');
+            a.href = currentImagePath;
+            a.download = currentImagePath.split('/').pop();
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function apriImmagineTurno(nomeFile) {
+            // Percorso Firebase locale
+            currentImagePath = `${currentImgDir}/${nomeFile}`;
+            let imgElement = document.getElementById('turnoImage');
+            imgElement.onerror = erroreImmagine; 
+            imgElement.src = currentImagePath;
+            if (pzInstance) { pzInstance.reset(); }
+            document.getElementById('imageModal').style.display = 'block';
+        }
+
+        function apriImmagineTurnoDallaRicerca(turnoPilota) {
+            if (!currentImgList || currentImgList.length === 0) {
+                alert("Nessuna immagine disponibile per l'apertura rapida.");
+                return;
+            }
+
+            const match = currentImgList.find(f => {
+                const nomeSenzaExt = f.name.replace(/\.[^/.]+$/, "").toUpperCase();
+                return nomeSenzaExt.includes(turnoPilota.toUpperCase());
+            });
+
+            if (match) {
+                apriImmagineTurno(match.name);
+            } else {
+                alert("Immagine per il turno " + turnoPilota + " non trovata nell'archivio.");
+            }
+        }
+
+        // ==========================================
+        // LOGICA RICERCA CORSE (MODALE JSON)
+        // ==========================================
+        function chiudiSeSfondoSearch(event) {
+            if (event.target.id === 'searchCorseModal') {
+                chiudiSearchCorseModal();
+            }
+        }
+
+        function chiudiSearchCorseModal() {
+            document.getElementById('searchCorseModal').style.display = 'none';
+        }
+
+        async function apriRicercaCorse(pdfName, dirName) {
+            document.getElementById('searchCorseModal').style.display = 'flex';
+            document.getElementById('sc-form').style.display = 'none';
+            document.getElementById('sc-risultato').style.display = 'none';
+            const statusEl = document.getElementById('sc-status');
+            
+            document.getElementById('sc-tipo').value = "";
+            document.getElementById('btn-partenza').classList.remove('active');
+            document.getElementById('btn-arrivo').classList.remove('active');
+            document.getElementById('sc-rest-form').classList.remove('unlocked');
+            
+            document.getElementById('label-luogo').innerText = "Luogo:";
+            document.getElementById('label-orario').innerText = "Orario:";
+            document.getElementById('sc-orario').value = "";
+            document.getElementById('sc-giorno').valueAsDate = new Date(); 
+
+            statusEl.style.display = 'block';
+            statusEl.innerText = "Caricamento dati corse in corso...";
+
+            const baseName = pdfName.substring(0, pdfName.lastIndexOf('.'));
+            const jsonName = baseName + ".json";
+            
+            try {
+                // Percorso Firebase locale
+                const url = `${dirName}/${encodeURIComponent(jsonName)}?t=${new Date().getTime()}`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("File dati (JSON) non trovato per questa linea.");
+                
+                currentCorseData = await res.json();
+                
+                statusEl.style.display = 'none';
+                document.getElementById('sc-form').style.display = 'block';
+
+            } catch(e) {
+                statusEl.innerHTML = `<span style='color:var(--danger);'>Errore: ${e.message}</span>`;
+            }
+        }
+
+        function selezionaTipo(tipo) {
+            document.getElementById('sc-tipo').value = tipo;
+            
+            if (tipo === 'partenza') {
+                document.getElementById('btn-partenza').classList.add('active');
+                document.getElementById('btn-arrivo').classList.remove('active');
+                document.getElementById('label-luogo').innerText = "Luogo di partenza:";
+                document.getElementById('label-orario').innerText = "Orario di partenza:";
+            } else {
+                document.getElementById('btn-arrivo').classList.add('active');
+                document.getElementById('btn-partenza').classList.remove('active');
+                document.getElementById('label-luogo').innerText = "Luogo di arrivo:";
+                document.getElementById('label-orario').innerText = "Orario di arrivo:";
+            }
+            
+            document.getElementById('sc-rest-form').classList.add('unlocked');
+            
+            document.getElementById('sc-orario').value = "";
+            document.getElementById('sc-suggestions').style.display = 'none';
+            document.getElementById('sc-risultato').style.display = 'none';
+            popolaLuoghi();
+        }
+
+        function popolaLuoghi() {
+            if (!currentCorseData) return;
+            const tipo = document.getElementById('sc-tipo').value;
+            
+            let luoghi = new Set();
+            for (let turno in currentCorseData) {
+                currentCorseData[turno].forEach(corsa => {
+                    let luogoCorretto = tipo === 'partenza' ? corsa.partenza_luogo : corsa.arrivo_luogo;
+                    if (luogoCorretto) luoghi.add(luogoCorretto.trim());
+                });
+            }
+            
+            let luoghiArr = Array.from(luoghi).sort();
+            let select = document.getElementById('sc-luogo');
+            select.innerHTML = '<option value="">-- Seleziona Luogo --</option>';
+            luoghiArr.forEach(l => {
+                select.innerHTML += `<option value="${l}">${l}</option>`;
+            });
+        }
+
+        function formattaOrario(e) {
+            let val = e.target.value.replace(/\D/g, ''); 
+            if (val.length > 4) val = val.substring(0, 4); 
+            
+            if (val.length > 2) {
+                val = val.substring(0, 2) + '.' + val.substring(2);
+            }
+            
+            e.target.value = val;
+            mostraSuggerimentiOrario(val);
+        }
+
+        function aggiornaSuggerimentiOrario() {
+            const val = document.getElementById('sc-orario').value;
+            mostraSuggerimentiOrario(val);
+        }
+
+        function mostraSuggerimentiOrario(typedVal) {
+            const luogo = document.getElementById('sc-luogo').value;
+            const tipo = document.getElementById('sc-tipo').value;
+            const suggBox = document.getElementById('sc-suggestions');
+            
+            if (!luogo || typedVal.length === 0) {
+                suggBox.style.display = 'none';
+                return;
+            }
+
+            let orari = new Set();
+            for (let turno in currentCorseData) {
+                currentCorseData[turno].forEach(corsa => {
+                    let targetLuogo = tipo === 'partenza' ? corsa.partenza_luogo : corsa.arrivo_luogo;
+                    let targetOra = tipo === 'partenza' ? corsa.partenza_ora : corsa.arrivo_ora;
+
+                    if (targetLuogo && targetLuogo.trim() === luogo) {
+                        if (targetOra) orari.add(targetOra.trim());
+                    }
+                });
+            }
+
+            let orariFormattati = Array.from(orari).map(o => {
+                let p = o.replace('.', ':').split(':');
+                if (p.length < 2) return "";
+                let h = p[0].padStart(2, '0');
+                let m = p[1].padStart(2, '0');
+                return `${h}.${m}`;
+            }).filter(o => o !== "").sort();
+
+            let filtrati = orariFormattati.filter(o => o.startsWith(typedVal));
+
+            if (filtrati.length > 0) {
+                suggBox.innerHTML = '';
+                filtrati.forEach(o => {
+                    let div = document.createElement('div');
+                    div.className = 'sc-suggestion-item';
+                    div.innerText = o;
+                    div.onclick = function() {
+                        document.getElementById('sc-orario').value = o;
+                        suggBox.style.display = 'none';
+                    };
+                    suggBox.appendChild(div);
+                });
+                suggBox.style.display = 'block';
+            } else {
+                suggBox.style.display = 'none';
+            }
+        }
+
+        async function eseguiRicercaCorsa() {
+            const tipo = document.getElementById('sc-tipo').value;
+            const luogo = document.getElementById('sc-luogo').value;
+            const giorno = document.getElementById('sc-giorno').value; 
+            const orarioInput = document.getElementById('sc-orario').value;
+            const box = document.getElementById('sc-risultato');
+
+            if (!luogo || !orarioInput || orarioInput.length < 5) {
+                box.style.display = 'block';
+                box.innerHTML = "<span style='color:var(--danger);'>Seleziona un luogo e inserisci un orario completo (es. 07.30).</span>";
+                return;
+            }
+
+            box.style.display = 'block';
+            box.innerHTML = "Ricerca in corso...";
+
+            let p = orarioInput.split('.');
+            let hInt = parseInt(p[0], 10);
+            let mStr = p[1];
+            
+            let targetFormat1 = `${hInt}:${mStr}`; 
+            let targetFormat2 = `${hInt}.${mStr}`; 
+            let targetFormat3 = `${p[0]}:${mStr}`; 
+
+            let turniTrovati = [];
+
+            for (let turno in currentCorseData) {
+                let corse = currentCorseData[turno];
+                for (let i = 0; i < corse.length; i++) {
+                    let corsa = corse[i];
+                    let targetLuogo = tipo === 'partenza' ? corsa.partenza_luogo : corsa.arrivo_luogo;
+                    let targetOra = tipo === 'partenza' ? corsa.partenza_ora : corsa.arrivo_ora;
+
+                    if (targetLuogo && targetLuogo.trim() === luogo) {
+                        let o = targetOra ? targetOra.trim() : "";
+                        if (o === targetFormat1 || o === targetFormat2 || o === targetFormat3) {
+                            let matchPilota = turno.match(/\d[A-Z0-9]{3}/i);
+                            let nomePilota = matchPilota ? matchPilota[0].toUpperCase() : turno.toUpperCase();
+                            if (!turniTrovati.includes(nomePilota)) turniTrovati.push(nomePilota);
+                        }
+                    }
+                }
+            }
+
+            let etichettaAzione = tipo === 'partenza' ? 'Partenza da' : 'Arrivo a';
+            
+            if (turniTrovati.length > 0) {
+                let dataFormattata = giorno ? giorno.split('-').reverse().join('/') : "Oggi";
+                
+                let rotazioniHtml = "";
+                if (localStorage.getItem('auth_rotazioni')) {
+                    try {
+                        let dateObj;
+                        if (giorno) {
+                            let parts = giorno.split('-');
+                            dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                        } else {
+                            dateObj = new Date();
+                        }
+                        
+                        let dayNum = dateObj.getDate();
+                        let mNames = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
+                        let monthName = mNames[dateObj.getMonth()];
+                        let yearNum = dateObj.getFullYear();
+                        
+                        // Percorso Firebase
+                        let rotUrl = `rotazioni/rotazioni_${monthName}_${yearNum}.json?t=${new Date().getTime()}`;
+                        
+                        let resRot = await fetch(rotUrl);
+                        if (resRot.ok) {
+                            let rotData = await resRot.json();
+                            let colleghiTrovati = [];
+                            
+                            for (let rotName in rotData) {
+                                let dipendenti = rotData[rotName];
+                                for (let nome in dipendenti) {
+                                    let tAssegnato = dipendenti[nome][dayNum.toString()];
+                                    if (tAssegnato) {
+                                        let tClean = tAssegnato.toUpperCase().replace(/\s+/g, '');
+                                        turniTrovati.forEach(tReq => {
+                                            if (tReq.toUpperCase() === tClean) {
+                                                colleghiTrovati.push(`<strong>${tReq}:</strong> ${nome.split(" - ").join(" e ")}`);
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                            
+                            if (colleghiTrovati.length > 0) {
+                                let labelGiorno = giorno ? `${dayNum} ${monthName}` : "Oggi";
+                                rotazioniHtml = `
+                                    <div style="margin-top:15px; padding-top:10px; border-top: 1px dashed #ccc; font-size:15px; color:#444;">
+                                        <div style="color:var(--primary); margin-bottom:5px;"><strong>👥 Assegnazione turni (${labelGiorno}):</strong></div>
+                                        ${colleghiTrovati.join('<br>')}
+                                    </div>`;
+                            }
+                        }
+                    } catch(e) {}
+                }
+
+                let tastiniHtml = turniTrovati.map(t => {
+                    return `<button class="file-btn" style="display:inline-flex; width:auto; margin: 5px 5px 0 0; padding: 10px 15px; font-size: 14px;" onclick="apriImmagineTurnoDallaRicerca('${t}')">🖼️ ${t}</button>`;
+                }).join('');
+
+                box.innerHTML = `<strong>Data Selezionata:</strong> ${dataFormattata}<br>
+                                 <strong>${etichettaAzione}:</strong> ${luogo} alle ${orarioInput}<br>
+                                 <div style="margin-top:15px; color:var(--text-color); font-size:16px;">
+                                    <strong>Turni che effettuano la corsa:</strong><br>
+                                    ${tastiniHtml}
+                                 </div>
+                                 ${rotazioniHtml}`;
+            } else {
+                box.innerHTML = "Nessun turno trovato per questa specifica corsa nel database.";
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const boxImg = document.getElementById('suggestionsBox');
+            const inputImg = document.getElementById('shiftSearch');
+            if (boxImg && inputImg && e.target !== inputImg && !boxImg.contains(e.target)) {
+                boxImg.style.display = 'none';
+            }
+
+            const scSuggBox = document.getElementById('sc-suggestions');
+            const scInputOrario = document.getElementById('sc-orario');
+            if (scSuggBox && scInputOrario && e.target !== scInputOrario && !scSuggBox.contains(e.target)) {
+                scSuggBox.style.display = 'none';
+            }
+        });
+
+        window.onload = init;
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utility - Rubrica Colleghi</title>
+    <meta name="theme-color" content="#0056b3">
+
+    <style>
+        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #dc3545; }
+        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
+
+        /* MENU LATERALE UNIFICATO */
+        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 5999; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 6000; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
+        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; text-transform: none; }
+        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+
+        .view-container { width: 100%; max-width: 400px; display: none; flex-direction: column; gap: 15px; text-align: center; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; }
+        .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; transition: opacity 0.2s; margin-top: 10px; }
+        .btn-action:active { opacity: 0.8; }
+        .btn-danger-outline { background: transparent; color: var(--danger); border: 2px solid var(--danger); padding: 10px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; }
+        #search-bar { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; margin-bottom: 15px; }
+        .contact-item { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid var(--primary); }
+        .contact-info { text-align: left; }
+        .contact-name { font-weight: bold; font-size: 16px; color: var(--primary); margin-bottom: 2px; text-transform: capitalize; }
+        .contact-detail { font-size: 13px; color: #666; margin-bottom: 2px; }
+        .contact-phone { font-size: 14px; color: var(--text-color); font-weight: 500; }
+        .contact-actions { display: flex; gap: 10px; }
+        .action-icon { background: #e9ecef; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px; color: var(--text-color); }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; max-height: 90vh; overflow-y: auto;}
+        .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white;}
+    </style>
+</head>
+<body>
+
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3 style="margin:0; color:white;">Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+        </div>
+        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
+        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
+        <a href="rotazioni.html" class="sidebar-link">👥 Rotazioni (test)</a>
+        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
+        <a href="rubrica.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">📞 Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link">🕒 Orari Navigazione</a>
+        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
+        <a href="link.html" class="sidebar-link">🔗 Link</a>
+        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
+        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
+        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+    </div>
+
+    <div class="header">
+        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
+        <h2>📖 Rubrica</h2>
+        <div style="width: 50px;"></div>
+    </div>
+
+    <div id="view-no-auth" class="view-container">
+        <div class="card" style="text-align: center;">
+            <h3 style="color: var(--danger);">Accesso Richiesto</h3>
+            <p style="color: #666; font-size: 15px; line-height: 1.5;">La rubrica è un'area protetta riservata ai colleghi. Per accedere devi effettuare il login tramite il Cloud nella Home page.</p>
+            <button class="btn-action" style="background-color: var(--primary);" onclick="window.location.href='index.html'">Torna alla Home</button>
+        </div>
+    </div>
+
+    <div id="view-opt-in" class="view-container">
+        <div class="card" style="text-align: center;">
+            <h3 style="color: var(--primary); margin-top: 0;">🤝 Condividi per accedere</h3>
+            <p style="color: #666; font-size: 15px; line-height: 1.5;">Questa rubrica contiene i numeri di telefono dei colleghi che hanno deciso di condividerli. <br><br><b>Solo chi condivide il proprio numero può visualizzare quello degli altri.</b> Vuoi unirti?</p>
+            <div id="strike-warning" style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; font-size: 12px; margin-top: 15px; text-align: left;">
+                ⚠️ <b>Regola Anti-Furbetti:</b> Se revochi ripetutamente la condivisione del numero il sistema ti bloccherà permanentemente l'accesso alla rubrica.
+            </div>
+            <button class="btn-action" onclick="avviaCondivisione()">Condividi il tuo numero</button>
+        </div>
+    </div>
+
+    <div id="view-directory" class="view-container">
+        <input type="text" id="search-bar" placeholder="🔍 Cerca..." oninput="filtraRubrica()">
+        <div id="contacts-list" style="width: 100%;"></div>
+        <button class="btn-danger-outline" onclick="revocaCondivisione()">Smetti di condividere</button>
+    </div>
+
+    <div id="view-blocked" class="view-container">
+        <div class="card" style="text-align: center;">
+            <h3 style="color: var(--danger); margin-top: 0;">🚫 Accesso Bloccato</h3>
+            <p style="color: #666; font-size: 15px; line-height: 1.5;">
+                Hai rimosso il tuo numero dalla rubrica per 3 volte consecutive.<br><br>
+                Per proteggere la community da comportamenti scorretti, il tuo accesso alla funzione rubrica è stato bloccato definitivamente.
+            </p>
+            <button class="btn-action" style="background-color: #6c757d;" onclick="window.location.href='index.html'">Torna alla Home</button>
+        </div>
+    </div>
+
+    <div id="view-loading" class="view-container" style="display: flex;">
+        <p style="color: #666;">Verifica autorizzazioni in corso...</p>
+    </div>
+
+    <div id="profileModal" class="modal-overlay">
+        <div class="modal-content">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('profileModal').style.display='none'">&times;</span>
+            <h3 style="margin-top: 5px; color: #32325d; text-align: center;">Completa il Profilo</h3>
+            <p style="font-size: 13px; color: #666; text-align: center; margin-bottom: 20px;">Per entrare in rubrica abbiamo bisogno dei tuoi dati.</p>
+            
+            <input type="text" id="regNome" class="input-field" placeholder="Nome">
+            <input type="text" id="regCognome" class="input-field" placeholder="Cognome">
+            <input type="number" id="regProgressivo" class="input-field" placeholder="Numero Progressivo (Facoltativo)">
+            <input type="text" id="regSoprannome" class="input-field" placeholder="Soprannome (Facoltativo)">
+            
+            <select id="regMansione" class="input-field">
+                <option value="">-- Seleziona Mansione --</option>
+                <option value="Marinaio">Marinaio</option>
+                <option value="Preposto al comando">Preposto al comando</option>
+                <option value="Comandante">Comandante</option>
+                <option value="Timoniere">Timoniere</option>
+                <option value="Marinaio polivalente">Marinaio polivalente</option>
+                <option value="Direttore di macchina">Direttore di macchina</option>
+            </select>
+
+            <input type="text" id="regMatricola" class="input-field" placeholder="Matricola">
+            <input type="tel" id="regTelefono" class="input-field" placeholder="Numero di Telefono">
+            
+            <button id="btnSalva" class="btn-action" onclick="salvaECondividi()">Salva e Accedi</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4",
+          authDomain: "utility-haze.firebaseapp.com",
+          projectId: "utility-haze",
+          storageBucket: "utility-haze.firebasestorage.app",
+          messagingSenderId: "686237947418",
+          appId: "1:686237947418:web:f03ba19ab8fff43110a3a3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let userDataPrivate = {};
+        let listaContatti = [];
+        const isAdmin = localStorage.getItem('dev_mode_active') === 'true';
+
+        window.apriMenuLaterale = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; };
+        window.chiudiMenuLaterale = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; };
+
+        function nascondiTutto() {
+            document.getElementById('view-no-auth').style.display = 'none';
+            document.getElementById('view-opt-in').style.display = 'none';
+            document.getElementById('view-directory').style.display = 'none';
+            document.getElementById('view-blocked').style.display = 'none';
+            document.getElementById('view-loading').style.display = 'none';
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            nascondiTutto();
+            if (user) {
+                currentUser = user;
+                document.getElementById('view-loading').style.display = 'flex';
+                await caricaStatoUtente();
+            } else {
+                document.getElementById('view-no-auth').style.display = 'flex';
+            }
+        });
+
+        async function caricaStatoUtente() {
+            try {
+                const utenteRef = doc(db, "utenti", currentUser.uid);
+                const utenteSnap = await getDoc(utenteRef);
+                
+                if (utenteSnap.exists()) {
+                    userDataPrivate = utenteSnap.data();
+                    if (userDataPrivate.revoche_rubrica >= 3 && !isAdmin) {
+                        nascondiTutto();
+                        document.getElementById('view-blocked').style.display = 'flex';
+                        try { await deleteDoc(doc(db, "rubrica", currentUser.uid)); } catch(e){}
+                        return;
+                    }
+                }
+
+                if(isAdmin) document.getElementById('strike-warning').style.display = 'none';
+
+                const rubricaRef = doc(db, "rubrica", currentUser.uid);
+                const rubricaSnap = await getDoc(rubricaRef);
+                
+                if (rubricaSnap.exists()) {
+                    // AUTO-SYNC: Allinea istantaneamente i dati se mancano!
+                    const datiRub = rubricaSnap.data();
+                    let updateNeeded = false;
+                    let updates = {};
+
+                    if (userDataPrivate.soprannome !== undefined && datiRub.soprannome !== userDataPrivate.soprannome) {
+                        updates.soprannome = userDataPrivate.soprannome;
+                        updateNeeded = true;
+                    }
+                    if (userDataPrivate.progressivo !== undefined && datiRub.progressivo !== userDataPrivate.progressivo) {
+                        updates.progressivo = userDataPrivate.progressivo;
+                        updateNeeded = true;
+                    }
+
+                    if (updateNeeded) {
+                        await setDoc(rubricaRef, updates, { merge: true });
+                    }
+
+                    nascondiTutto();
+                    document.getElementById('view-directory').style.display = 'flex';
+                    caricaRubricaGenerale();
+                } else {
+                    nascondiTutto();
+                    document.getElementById('view-opt-in').style.display = 'flex';
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        window.avviaCondivisione = function() {
+            const haTuttiIDati = userDataPrivate.nome && userDataPrivate.cognome && userDataPrivate.mansione && userDataPrivate.telefono;
+            if (haTuttiIDati) {
+                salvaCondivisione(userDataPrivate.nome, userDataPrivate.cognome, userDataPrivate.mansione, userDataPrivate.matricola, userDataPrivate.telefono, userDataPrivate.soprannome, userDataPrivate.progressivo);
+            } else {
+                document.getElementById('regNome').value = userDataPrivate.nome || "";
+                document.getElementById('regCognome').value = userDataPrivate.cognome || "";
+                document.getElementById('regProgressivo').value = userDataPrivate.progressivo || "";
+                document.getElementById('regSoprannome').value = userDataPrivate.soprannome || "";
+                document.getElementById('regMansione').value = userDataPrivate.mansione || "";
+                document.getElementById('regMatricola').value = userDataPrivate.matricola || "";
+                document.getElementById('regTelefono').value = userDataPrivate.telefono || "";
+                document.getElementById('profileModal').style.display = 'flex';
+            }
+        };
+
+        window.salvaECondividi = async function() {
+            const n = document.getElementById('regNome').value.trim();
+            const c = document.getElementById('regCognome').value.trim();
+            const s = document.getElementById('regSoprannome').value.trim();
+            const p = document.getElementById('regProgressivo').value.trim();
+            const ms = document.getElementById('regMansione').value;
+            const m = document.getElementById('regMatricola').value.trim();
+            const t = document.getElementById('regTelefono').value.trim();
+            
+            if (!n || !c || !ms || !t) return alert("Dati obbligatori mancanti.");
+            
+            document.getElementById('btnSalva').innerText = "Salvataggio...";
+            try { await setDoc(doc(db, "utenti", currentUser.uid), { nome: n, cognome: c, soprannome: s, progressivo: p, mansione: ms, matricola: m, telefono: t }, { merge: true }); } catch(e){}
+            salvaCondivisione(n, c, ms, m, t, s, p);
+        };
+
+        async function salvaCondivisione(n, c, ms, m, t, s, p) {
+            try {
+                await setDoc(doc(db, "rubrica", currentUser.uid), { nome: n, cognome: c, soprannome: s || "", progressivo: p || "", mansione: ms, matricola: m, telefono: t });
+                document.getElementById('profileModal').style.display = 'none';
+                nascondiTutto();
+                document.getElementById('view-directory').style.display = 'flex';
+                caricaRubricaGenerale();
+            } catch (error) { alert("Errore."); }
+        }
+
+        window.revocaCondivisione = async function() {
+            if(isAdmin) {
+                if(confirm("🛠️ Sei Admin: Revoca senza strike?")) { await deleteDoc(doc(db, "rubrica", currentUser.uid)); location.reload(); }
+                return;
+            }
+            let revocheAttuali = userDataPrivate.revoche_rubrica || 0;
+            if(!confirm(`Attenzione! Ti rimangono ${2-revocheAttuali} tentativi prima del blocco. Continuare?`)) return;
+            
+            try {
+                await deleteDoc(doc(db, "rubrica", currentUser.uid)); 
+                await setDoc(doc(db, "utenti", currentUser.uid), { revoche_rubrica: revocheAttuali + 1 }, { merge: true });
+                location.reload();
+            } catch (error) { alert("Errore."); }
+        };
+
+        async function caricaRubricaGenerale() {
+            const listDiv = document.getElementById('contacts-list');
+            listDiv.innerHTML = "<p style='color:#666;'>Caricamento...</p>";
+            try {
+                const querySnapshot = await getDocs(collection(db, "rubrica"));
+                listaContatti = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if(data.nome && data.cognome) listaContatti.push(data);
+                });
+                listaContatti.sort((a, b) => (a.cognome + " " + a.nome).toLowerCase().localeCompare((b.cognome + " " + b.nome).toLowerCase()));
+                disegnaContatti(listaContatti);
+            } catch (error) { listDiv.innerHTML = "<p>Errore.</p>"; }
+        }
+
+        function disegnaContatti(arrayContatti) {
+            const listDiv = document.getElementById('contacts-list');
+            listDiv.innerHTML = "";
+            if (arrayContatti.length === 0) return listDiv.innerHTML = "<p>Nessun contatto.</p>";
+            
+            arrayContatti.forEach(c => {
+                const item = document.createElement('div'); item.className = "contact-item";
+                const progLabel = c.progressivo ? ` (${c.progressivo})` : "";
+                const nomeCap = c.nome.charAt(0).toUpperCase() + c.nome.slice(1).toLowerCase();
+                const cognomeCap = c.cognome.charAt(0).toUpperCase() + c.cognome.slice(1).toLowerCase();
+                const soprannomeLabel = c.soprannome ? ` <span style="font-style:italic; font-size:14px; color:#888;">"${c.soprannome}"</span>` : "";
+                const numDisplay = c.telefono;
+                const numClean = c.telefono.replace(/\s+/g, '');
+                const waIcon = `<svg viewBox="0 0 24 24" width="22" height="22" fill="#25D366"><path d="M12.031 0C5.385 0 .018 5.366.018 12.012c0 2.125.553 4.197 1.603 6.012L.05 24l6.115-1.604c1.745.965 3.738 1.474 5.866 1.474 6.646 0 12.013-5.366 12.013-12.012S18.677 0 12.031 0zm-.018 21.84c-1.796 0-3.553-.483-5.093-1.396l-.365-.216-3.791.994.996-3.697-.238-.377a9.98 9.98 0 0 1-1.528-5.337C1.994 6.452 6.444 2.016 12.013 2.016c2.705 0 5.247 1.053 7.158 2.966 1.91 1.912 2.964 4.456 2.964 7.165 0 5.564-4.45 10.003-10.012 10.003l-.11-.31zm5.503-7.534c-.302-.151-1.785-.881-2.062-.981-.277-.101-.479-.151-.68.151-.202.302-.781.981-.957 1.182-.176.202-.353.226-.655.075-.302-.151-1.275-.47-2.428-1.503-.896-.803-1.501-1.794-1.677-2.096-.176-.302-.019-.465.132-.616.136-.136.302-.353.453-.53.151-.176.202-.302.302-.504.101-.202.05-.378-.025-.53-.075-.151-.68-1.64-.932-2.245-.245-.59-.495-.51-.68-.52-.176-.01-.378-.01-.58-.01-.202 0-.53.076-.807.378-.277.302-1.058 1.034-1.058 2.52 0 1.487 1.083 2.924 1.234 3.125.151.202 2.132 3.255 5.163 4.561 2.222.956 2.87.805 3.373.68.591-.148 1.785-.73 2.037-1.435.252-.705.252-1.31.176-1.435-.075-.126-.277-.202-.58-.353z"/></svg>`;
+
+                item.innerHTML = `
+                    <div class="contact-info">
+                        <div class="contact-name">${cognomeCap} ${nomeCap}${progLabel}${soprannomeLabel}</div>
+                        <div class="contact-detail">${c.mansione || 'N/D'} | Mat: ${c.matricola || 'N/D'}</div>
+                        <div class="contact-phone">${numDisplay}</div>
+                    </div>
+                    <div class="contact-actions">
+                        <a href="tel:${numClean}" class="action-icon">📞</a>
+                        <a href="https://wa.me/39${numClean}" target="_blank" class="action-icon" style="background:transparent;">${waIcon}</a>
+                    </div>
+                `;
+                listDiv.appendChild(item);
+            });
+        }
+
+        window.filtraRubrica = function() {
+            const t = document.getElementById('search-bar').value.toLowerCase().trim();
+            if (!t) return disegnaContatti(listaContatti);
+            const filtrati = listaContatti.filter(c => {
+                const full = (c.nome + " " + c.cognome + " " + (c.progressivo||"") + " " + (c.soprannome||"") + " " + (c.matricola||"") + " " + (c.telefono||"") + " " + (c.mansione||"")).toLowerCase();
+                return full.includes(t);
+            });
+            disegnaContatti(filtrati);
+        };
+    </script>
+</body>
+</html>
