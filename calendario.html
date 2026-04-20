@@ -7,7 +7,11 @@
     <meta name="theme-color" content="#f7f9fe">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Turni">
+    <meta name="apple-mobile-web-app-title" content="Calendario">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <meta name="theme-color" content="#0056b3">
+
     
     <title>Calendario Turni</title>
 
@@ -137,7 +141,16 @@
         <h3 style="margin:0; color:white;">Azioni</h3>
         <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuDestro()">✕</button>
     </div>
-    <div style="padding: 20px; display: flex; flex-direction: column; gap: 15px;">
+    <div style="padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto;">
+        
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e9ecef;">
+            <h4 style="margin: 0 0 10px 0; color: #32325d; font-size: 15px;">👥 Profili (Bibbie)</h4>
+            <div id="lista-profili-dinamica" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+                </div>
+            <button class="btn btn-reset" style="background: #32325d; color: white; margin:0; width:100%; font-weight: bold;" onclick="avviaNuovoProfilo()">
+                ➕ Aggiungi Profilo
+            </button>
+        </div>
         <button class="btn btn-reset" style="background: #2dce89; margin:0; width:100%;" onclick="apriMultiEdit()">✏️ Modifica Multipla</button>
         <button class="btn btn-reset" style="background: #11cdef; margin:0; width:100%;" onclick="apriColoriRotazione()">🎨 Colori Rotazione</button>
         <hr style="width: 100%; border: 0; border-top: 1px solid #eee;">
@@ -484,6 +497,7 @@
                 <option value="tc_spez_fnove">T.C. Spezzati F.Nove</option>
                 <option value="rot_proma">Rotazione P.Roma</option>
                 <option value="spez_proma">Spezzati P.Roma</option>
+                <option value="ris_proma">Riserva P.Roma</option>
                 <option value="rot_szaccaria">Rotazione S.Zaccaria</option>
                 <option value="spez_szaccaria">Spezzati S.Zaccaria</option>
                 <option value="tc_spez_szaccaria">T.C. Spezzati S.Zaccaria</option>
@@ -501,6 +515,7 @@
             </optgroup>
         </select>
         <button id="btnConfRot" class="btn" style="background: #adb5bd" onclick="confermaRotazione()" disabled>Prosegui</button>
+        <button id="btnSaltaSetup" class="btn" style="background: transparent; color: #525f7f; border: 2px solid #e9ecef; margin-top: 10px;" onclick="saltaConfigurazione()">Salta per ora (Usa i Menu)</button>
     </div>
 </div>
 
@@ -615,6 +630,17 @@
 </div>
 
 <div id="calendar"></div>
+
+<div id="empty-state-calendario" style="display: none; padding: 40px 20px; text-align: center; margin: 20px;">
+    <div style="font-size: 60px; margin-bottom: 20px; opacity: 0.8;">📅</div>
+    <h3 style="color: #32325d; margin-top: 0; font-size: 22px;">Nessun turno attivo</h3>
+    <p style="color: #525f7f; font-size: 16px; line-height: 1.6; max-width: 400px; margin: 0 auto 20px auto;">
+        Usa il menu in alto a destra <b>(⋮)</b> per: <br>
+        • Gestire i Profili (Bibbie)<br>
+        • Importare un Backup
+    </p>
+    <button class="btn" style="background: var(--turno); max-width: 250px;" onclick="document.getElementById('welcomeModal').style.display = 'block';">Avvia Configurazione</button>
+</div>
 
 <div class="disclaimer-banner">
     ⚠️ Questo è uno strumento non ufficiale che può presentare errori. L'ordine dei turni cambia periodicamente, I turni a lungo termine vanno quindi considerati indicativi.
@@ -1199,6 +1225,7 @@
         spez_fnove: false,
         rot_proma: true,
         spez_proma: false,
+        ris_proma: false, 
         rot_szaccaria: false,
         spez_szaccaria: false,
         rot_lido: false,
@@ -1249,6 +1276,205 @@
     let pzInstance = null; 
     let tempColoreAltro = "";
     let variantiData = {};
+
+    // --- MOTORE MULTI-PROFILO E SALTO CONFIGURAZIONE ---
+    function saltaConfigurazione() {
+        document.getElementById('welcomeModal').style.display = 'none';
+        state.setupSkipped = true;
+        salvaLocal();
+        controllaEmptyState();
+    }
+
+    function controllaEmptyState() {
+        if (!state.depositoAttivo && state.setupSkipped) {
+            document.getElementById('calendar').style.display = 'none';
+            document.getElementById('empty-state-calendario').style.display = 'block';
+            document.getElementById('activeDepotLabel').innerText = "In attesa";
+        } else {
+            document.getElementById('calendar').style.display = 'block';
+            document.getElementById('empty-state-calendario').style.display = 'none';
+        }
+    }
+
+    function initProfili() {
+        if (!state.profiliSalvati) {
+            state.profiliSalvati = {};
+            state.profiloAttivoId = "default";
+            
+            if (state.depositoAttivo) {
+                salvaStatoInProfilo("default", "I Miei Turni");
+            } else {
+                state.profiliSalvati["default"] = { 
+                    nome: "I Miei Turni", variazioni: {}, note: {}, colori: {}, ferie: {}, 
+                    version: state.version || "0", setupStep: 0, setupSkipped: false 
+                };
+            }
+        }
+        renderizzaProfiliUI();
+    }
+
+    function salvaStatoInProfilo(id, nome) {
+        let datiProfilo = {
+            nome: nome,
+            depositoAttivo: state.depositoAttivo,
+            riposoStart: state.riposoStart,
+            rotazioneStart: state.rotazioneStart,
+            turnoIndex: state.turnoIndex,
+            tcPattern: state.tcPattern,
+            history: state.history,
+            futureConfig: state.futureConfig,
+            baseDataFutura: state.baseDataFutura,
+            variazioni: state.variazioni || {},
+            note: state.note || {},
+            colori: state.colori || {},
+            ferie: state.ferie || {},
+            setupStep: state.setupStep,
+            setupSkipped: state.setupSkipped,
+            version: state.version || "0" 
+        };
+        state.profiliSalvati[id] = datiProfilo;
+    }
+
+    function cambiaProfilo(idSelezionato) {
+        if (state.profiloAttivoId === idSelezionato) return; 
+        
+        let nomeAttuale = state.profiliSalvati[state.profiloAttivoId] ? state.profiliSalvati[state.profiloAttivoId].nome : "Profilo";
+        salvaStatoInProfilo(state.profiloAttivoId, nomeAttuale);
+        
+        let nuovoProfilo = state.profiliSalvati[idSelezionato];
+        state.profiloAttivoId = idSelezionato;
+        
+        state.depositoAttivo = nuovoProfilo.depositoAttivo;
+        state.riposoStart = nuovoProfilo.riposoStart;
+        state.rotazioneStart = nuovoProfilo.rotazioneStart;
+        state.turnoIndex = nuovoProfilo.turnoIndex;
+        state.tcPattern = nuovoProfilo.tcPattern;
+        state.history = nuovoProfilo.history;
+        state.futureConfig = nuovoProfilo.futureConfig;
+        state.baseDataFutura = nuovoProfilo.baseDataFutura;
+        state.variazioni = nuovoProfilo.variazioni || {};
+        state.note = nuovoProfilo.note || {};
+        state.colori = nuovoProfilo.colori || {};
+        state.ferie = nuovoProfilo.ferie || {};
+        state.setupStep = nuovoProfilo.setupStep || 0;
+        state.setupSkipped = nuovoProfilo.setupSkipped || false;
+        state.version = nuovoProfilo.version || "0"; 
+        
+        chiudiMenuDestro();
+        salvaERicarica();
+    }
+
+    function avviaNuovoProfilo() {
+        let nome = prompt("Inserisci un nome per questo nuovo profilo (es. Moglie, Collega):");
+        if (!nome || nome.trim() === "") return;
+        
+        let nuovoId = "prof_" + new Date().getTime();
+        
+        let nomeAttuale = state.profiliSalvati[state.profiloAttivoId] ? state.profiliSalvati[state.profiloAttivoId].nome : "I Miei Turni";
+        salvaStatoInProfilo(state.profiloAttivoId, nomeAttuale);
+        
+        state.profiliSalvati[nuovoId] = { 
+            nome: nome.trim(), variazioni: {}, note: {}, colori: {}, ferie: {},
+            setupStep: 0, setupSkipped: false, version: "0" 
+        };
+        state.profiloAttivoId = nuovoId;
+        
+        state.depositoAttivo = null;
+        state.riposoStart = null;
+        state.rotazioneStart = null;
+        state.turnoIndex = null;
+        state.history = null;
+        state.futureConfig = null;
+        state.variazioni = {};
+        state.note = {};
+        state.colori = {};
+        state.ferie = {};
+        state.setupStep = 0;
+        state.setupSkipped = false;
+        state.version = "0";
+        
+        chiudiMenuDestro();
+        salvaERicarica();
+    }
+
+    function rinominaProfilo(id) {
+        let p = state.profiliSalvati[id];
+        let nuovoNome = prompt("Rinomina il profilo:", p.nome);
+        if (nuovoNome && nuovoNome.trim() !== "") {
+            p.nome = nuovoNome.trim();
+            if (id === state.profiloAttivoId) {
+                salvaStatoInProfilo(id, p.nome);
+            }
+            salvaERicarica(); 
+        }
+    }
+
+    function eliminaProfilo(id) {
+        let p = state.profiliSalvati[id];
+        let numProfili = Object.keys(state.profiliSalvati).length;
+        
+        if (numProfili <= 1) {
+            alert("Non puoi eliminare l'unico profilo rimasto. Usa 'Reset Totale' se vuoi cancellare tutto.");
+            return;
+        }
+
+        if (confirm(`Sei sicuro di voler eliminare il profilo "${p.nome}" e tutti i suoi turni?`)) {
+            if (id === state.profiloAttivoId) {
+                let altriIds = Object.keys(state.profiliSalvati).filter(k => k !== id);
+                let idFallback = altriIds[0];
+                let fallback = state.profiliSalvati[idFallback];
+                
+                state.profiloAttivoId = idFallback;
+                state.depositoAttivo = fallback.depositoAttivo;
+                state.riposoStart = fallback.riposoStart;
+                state.rotazioneStart = fallback.rotazioneStart;
+                state.turnoIndex = fallback.turnoIndex;
+                state.tcPattern = fallback.tcPattern;
+                state.history = fallback.history;
+                state.futureConfig = fallback.futureConfig;
+                state.variazioni = fallback.variazioni || {};
+                state.note = fallback.note || {};
+                state.colori = fallback.colori || {};
+                state.ferie = fallback.ferie || {};
+                state.setupStep = fallback.setupStep || 0;
+                state.setupSkipped = fallback.setupSkipped || false;
+                state.version = fallback.version || "0";
+            }
+            delete state.profiliSalvati[id];
+            chiudiMenuDestro();
+            salvaERicarica();
+        }
+    }
+
+    function renderizzaProfiliUI() {
+        let container = document.getElementById('lista-profili-dinamica');
+        if (!container || !state.profiliSalvati) return;
+        
+        let html = "";
+        let numProfili = Object.keys(state.profiliSalvati).length;
+
+        for (let id in state.profiliSalvati) {
+            let p = state.profiliSalvati[id];
+            let isAttivo = (id === state.profiloAttivoId);
+            
+            let bg = isAttivo ? 'var(--turno)' : 'white';
+            let color = isAttivo ? 'white' : '#525f7f';
+            let icona = isAttivo ? '🟢' : '⚪';
+            let border = isAttivo ? 'none' : '1px solid #ddd';
+            
+            html += `
+            <div style="display: flex; gap: 5px; width: 100%;">
+                <button class="btn btn-reset" style="background: ${bg}; color: ${color}; border: ${border}; text-align: left; margin: 0; padding: 10px; flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" onclick="cambiaProfilo('${id}')">
+                    ${icona} ${p.nome}
+                </button>
+                <button class="btn btn-reset" style="background: #e9ecef; color: #32325d; margin: 0; padding: 10px; width: 42px; flex-shrink: 0;" onclick="rinominaProfilo('${id}')" title="Rinomina">✏️</button>
+                ${numProfili > 1 ? `
+                <button class="btn btn-reset" style="background: #f5365c; color: white; margin: 0; padding: 10px; width: 42px; flex-shrink: 0;" onclick="eliminaProfilo('${id}')" title="Elimina">🗑️</button>
+                ` : ''}
+            </div>`;
+        }
+        container.innerHTML = html;
+    }
 
     function stringToNum(s) { 
         if(!s) return 0; 
@@ -1529,6 +1755,9 @@
         // Attendi prima il caricamento dei file, per aggiornare VERSIONE_FERIE
         await caricaDatiEsterniDinamici();
 
+        // INIZIALIZZA MOTORE PROFILI
+        initProfili();
+
         // --- CONTROLLO AGGIORNAMENTO FERIE ---
         if (!state.ferie) {
             state.ferie = { version: VERSIONE_FERIE, scambi: {} };
@@ -1581,7 +1810,12 @@
         }
 
         if (!state.depositoAttivo) { 
-            document.getElementById('welcomeModal').style.display = 'block'; 
+            if (state.setupSkipped) {
+                controllaEmptyState();
+                aggiornaUI();
+            } else {
+                document.getElementById('welcomeModal').style.display = 'block'; 
+            }
         } else if (state.version !== VERSIONE_TURNI) {
             const deveResettare = RESET_DOPO_AGGIORNAMENTO[state.depositoAttivo] !== false;
             if (state.depositoAttivo.startsWith('disp_') || !deveResettare) {
@@ -1605,6 +1839,7 @@
             }
         } else {
             aggiornaUI(); 
+            controllaEmptyState(); // <-- Garanzia visibilità
             inizializzaCalendario(); 
             checkGuida();
             
