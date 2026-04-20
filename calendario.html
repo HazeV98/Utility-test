@@ -121,7 +121,7 @@
         <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
     </div>
     <a href="index.html" class="sidebar-link">🏠 Home Page</a>
-    <a href="calendario.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">📅 Calendario</a>
+    <a href="calendario.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--turno); font-weight: bold;">📅 Calendario</a>
     <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
     <a href="turni.html" class="sidebar-link">🔄 Turni</a>
     <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
@@ -1328,6 +1328,11 @@
             note: state.note || {},
             colori: state.colori || {},
             ferie: state.ferie || {},
+            nebbia: state.nebbia || {},
+            straordinario: state.straordinario || {},
+            sospesoRiposo: state.sospesoRiposo || {},
+            buonoPasto: state.buonoPasto || {},
+            permessoSP: state.permessoSP || {},
             setupStep: state.setupStep,
             setupSkipped: state.setupSkipped,
             version: state.version || "0" 
@@ -1356,6 +1361,11 @@
         state.note = nuovoProfilo.note || {};
         state.colori = nuovoProfilo.colori || {};
         state.ferie = nuovoProfilo.ferie || {};
+        state.nebbia = nuovoProfilo.nebbia || {};
+        state.straordinario = nuovoProfilo.straordinario || {};
+        state.sospesoRiposo = nuovoProfilo.sospesoRiposo || {};
+        state.buonoPasto = nuovoProfilo.buonoPasto || {};
+        state.permessoSP = nuovoProfilo.permessoSP || {};
         state.setupStep = nuovoProfilo.setupStep || 0;
         state.setupSkipped = nuovoProfilo.setupSkipped || false;
         state.version = nuovoProfilo.version || "0"; 
@@ -1375,6 +1385,7 @@
         
         state.profiliSalvati[nuovoId] = { 
             nome: nome.trim(), variazioni: {}, note: {}, colori: {}, ferie: {},
+            nebbia: {}, straordinario: {}, sospesoRiposo: {}, buonoPasto: {}, permessoSP: {},
             setupStep: 0, setupSkipped: false, version: "0" 
         };
         state.profiloAttivoId = nuovoId;
@@ -1389,6 +1400,11 @@
         state.note = {};
         state.colori = {};
         state.ferie = {};
+        state.nebbia = {};
+        state.straordinario = {};
+        state.sospesoRiposo = {};
+        state.buonoPasto = {};
+        state.permessoSP = {};
         state.setupStep = 0;
         state.setupSkipped = false;
         state.version = "0";
@@ -1436,6 +1452,11 @@
                 state.note = fallback.note || {};
                 state.colori = fallback.colori || {};
                 state.ferie = fallback.ferie || {};
+                state.nebbia = fallback.nebbia || {};
+                state.straordinario = fallback.straordinario || {};
+                state.sospesoRiposo = fallback.sospesoRiposo || {};
+                state.buonoPasto = fallback.buonoPasto || {};
+                state.permessoSP = fallback.permessoSP || {};
                 state.setupStep = fallback.setupStep || 0;
                 state.setupSkipped = fallback.setupSkipped || false;
                 state.version = fallback.version || "0";
@@ -1458,19 +1479,22 @@
             let isAttivo = (id === state.profiloAttivoId);
             
             let bg = isAttivo ? 'var(--turno)' : 'white';
-            let color = isAttivo ? 'white' : '#525f7f';
+            let color = isAttivo ? 'white' : '#32325d';
             let icona = isAttivo ? '🟢' : '⚪';
-            let border = isAttivo ? 'none' : '1px solid #ddd';
+            let border = isAttivo ? '2px solid var(--turno)' : '1px solid #ddd';
             
+            // Nuovo design a "Scheda" (Card)
             html += `
-            <div style="display: flex; gap: 5px; width: 100%;">
-                <button class="btn btn-reset" style="background: ${bg}; color: ${color}; border: ${border}; text-align: left; margin: 0; padding: 10px; flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" onclick="cambiaProfilo('${id}')">
+            <div style="border: ${border}; border-radius: 12px; overflow: hidden; margin-bottom: 10px; background: ${bg}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <button class="btn btn-reset" style="background: transparent; color: ${color}; border: none; border-radius: 0; text-align: left; margin: 0; padding: 12px 15px; width: 100%; font-weight: bold; font-size: 16px; display: block;" onclick="cambiaProfilo('${id}')">
                     ${icona} ${p.nome}
                 </button>
-                <button class="btn btn-reset" style="background: #e9ecef; color: #32325d; margin: 0; padding: 10px; width: 42px; flex-shrink: 0;" onclick="rinominaProfilo('${id}')" title="Rinomina">✏️</button>
-                ${numProfili > 1 ? `
-                <button class="btn btn-reset" style="background: #f5365c; color: white; margin: 0; padding: 10px; width: 42px; flex-shrink: 0;" onclick="eliminaProfilo('${id}')" title="Elimina">🗑️</button>
-                ` : ''}
+                <div style="display: flex; border-top: 1px solid rgba(0,0,0,0.05); background: ${isAttivo ? 'rgba(255,255,255,0.1)' : '#f8f9fa'};">
+                    <button class="btn btn-reset" style="background: transparent; color: ${isAttivo ? 'white' : '#525f7f'}; border: none; border-radius: 0; border-right: 1px solid rgba(0,0,0,0.05); margin: 0; padding: 8px; flex: 1; font-size: 13px;" onclick="rinominaProfilo('${id}')">✏️ Rinomina</button>
+                    ${numProfili > 1 ? `
+                    <button class="btn btn-reset" style="background: transparent; color: ${isAttivo ? '#ffc9c9' : '#f5365c'}; border: none; border-radius: 0; margin: 0; padding: 8px; flex: 1; font-size: 13px;" onclick="eliminaProfilo('${id}')">🗑️ Elimina</button>
+                    ` : `<div style="flex:1;"></div>`}
+                </div>
             </div>`;
         }
         container.innerHTML = html;
