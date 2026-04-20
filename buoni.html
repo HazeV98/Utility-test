@@ -247,6 +247,21 @@
     </div>
 
     <script>
+        // --- RECUPERO PROFILO ATTIVO ---
+        // Leggiamo subito quale Bibbia stiamo usando per isolare i salvataggi
+        let stateApp = JSON.parse(localStorage.getItem('myTurniApp')) || { variazioni: {} };
+        let pid = stateApp.profiloAttivoId || 'default'; // 'pid' = Profile ID
+
+        // --- MIGRAZIONE DATI VECCHI ---
+        // Se hai un vecchio salvataggio globale, lo passiamo al profilo attuale per non farti perdere i dati
+        if (localStorage.getItem('buoni_salvati') !== null && localStorage.getItem(`buoni_salvati_${pid}`) === null) {
+            localStorage.setItem(`buoni_salvati_${pid}`, localStorage.getItem('buoni_salvati'));
+            localStorage.setItem(`buoni_integrazione_attiva_${pid}`, localStorage.getItem('buoni_integrazione_attiva') || 'false');
+            if(localStorage.getItem('buoni_base_data')) localStorage.setItem(`buoni_base_data_${pid}`, localStorage.getItem('buoni_base_data'));
+            if(localStorage.getItem('buoni_base_saldo')) localStorage.setItem(`buoni_base_saldo_${pid}`, localStorage.getItem('buoni_base_saldo'));
+            if(localStorage.getItem('buoni_quick_vals')) localStorage.setItem(`buoni_quick_vals_${pid}`, localStorage.getItem('buoni_quick_vals'));
+        }
+
         // --- FUNZIONI DI SUPPORTO DATE SENZA FUSO ORARIO ---
         function formatStr(d) {
             return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
@@ -268,7 +283,7 @@
             return (pos === 6 || pos === 13 || pos === 14);
         }
 
-        // --- SISTEMA FERIE PROGRAMMATE (Integrato dal calendario) ---
+        // --- SISTEMA FERIE PROGRAMMATE ---
         let ROT_FERIE_INV = [];
         let ROT_FERIE_EST = [];
 
@@ -297,12 +312,10 @@
             let year = parseInt(dStr.split('-')[0]);
             let r = [];
 
-            // Check Estiva
             let iEst = state.ferie.baseEstiva;
             if (iEst !== -1 && iEst !== null && iEst !== undefined && ROT_FERIE_EST.length > 0) {
                 let idxEst = (iEst + (year - state.ferie.baseAnno)) % ROT_FERIE_EST.length;
                 if(idxEst < 0) idxEst += ROT_FERIE_EST.length; 
-                
                 if(state.ferie.scambi && state.ferie.scambi[year] && state.ferie.scambi[year].estiva !== undefined) {
                     idxEst = state.ferie.scambi[year].estiva;
                 }
@@ -310,39 +323,32 @@
                 if(pEst && isDateInRange(dStr, pEst.s, pEst.e, year)) r.push("FEP");
             }
 
-            // Check Invernale
             let iInv = state.ferie.baseInvernale;
             if (iInv !== -1 && iInv !== null && iInv !== undefined && ROT_FERIE_INV.length > 0) {
                 let idxInv = (iInv + (year - state.ferie.baseAnno)) % ROT_FERIE_INV.length;
                 if(idxInv < 0) idxInv += ROT_FERIE_INV.length;
-                
                 if(state.ferie.scambi && state.ferie.scambi[year] && state.ferie.scambi[year].invernale !== undefined) {
                     idxInv = state.ferie.scambi[year].invernale;
                 }
                 let pInv = ROT_FERIE_INV[idxInv];
                 if(pInv && isDateInRange(dStr, pInv.s, pInv.e, year)) r.push("FEP");
             }
-
             return r.length > 0 ? "FEP" : null;
         }
 
 
-        // --- FUNZIONE CENTRALE CHE DETERMINA SE SPETTA IL BUONO ---
+        // --- FUNZIONE CENTRALE MATURAZIONE ---
         function isBuonoMaturato(dStr, state, esclusiArray, ignoraUso = false) {
             let isSospeso = state.sospesoRiposo && state.sospesoRiposo[dStr];
             let isBuonoUsato = state.buonoPasto && state.buonoPasto[dStr]; 
             
-            // Se stiamo calcolando le presenze, non ci interessa se il buono è già stato usato!
             if (!ignoraUso && isBuonoUsato) return false;
             
             let turnoVal = (state.variazioni && state.variazioni[dStr]) ? state.variazioni[dStr].toUpperCase() : "";
 
-            // Verifica ferie programmate generate automaticamente (se non ci sono variazioni manuali per quel giorno)
             if (!turnoVal) {
                 let ferieProg = getFerieGiorno(dStr, state);
-                if (ferieProg) {
-                    turnoVal = ferieProg; // Assegna "FEP" per bloccare il buono
-                }
+                if (ferieProg) turnoVal = ferieProg;
             }
 
             if (turnoVal) {
@@ -366,16 +372,15 @@
         function apriMenuLaterale() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; }
         function chiudiMenuLaterale() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; }
 
-        // --- VARIABILI GLOBALI E INIT ---
-        let buoniAttuali = parseInt(localStorage.getItem('buoni_salvati')) || 0;
-        let integrazioneAttiva = localStorage.getItem('buoni_integrazione_attiva') === 'true';
-        let quickVals = JSON.parse(localStorage.getItem('buoni_quick_vals')) || [2, 5, 10];
+        // --- VARIABILI GLOBALI (ORA LEGATE AL PROFILO) ---
+        let buoniAttuali = parseInt(localStorage.getItem(`buoni_salvati_${pid}`)) || 0;
+        let integrazioneAttiva = localStorage.getItem(`buoni_integrazione_attiva_${pid}`) === 'true';
+        let quickVals = JSON.parse(localStorage.getItem(`buoni_quick_vals_${pid}`)) || [2, 5, 10];
         
         const TURNI_ESCLUSI_FISSI = ["RI", "RIPOSO", "AL", "FER", "FEP", "FES", "FERIE", "PRT", "MAL", "MALATTIA", "KMAL", "KNOP", "AVIS", "KINF"];
 
-        // Trasformato in async per aspettare il file json delle ferie
         window.addEventListener('DOMContentLoaded', async () => {
-            await caricaFerie(); // Carica prima le ferie!
+            await caricaFerie(); 
             inizializzaTondini();
             if (integrazioneAttiva) {
                 sincronizzaBuoni();
@@ -384,7 +389,6 @@
             }
         });
 
-        // --- INIZIALIZZAZIONE TONDINI RAPIDI ---
         function inizializzaTondini() {
             for(let i=0; i<3; i++) {
                 let btn = document.getElementById(`btn-quick-${i+1}`);
@@ -404,13 +408,13 @@
             let oggi = new Date();
             oggi.setHours(0, 0, 0, 0); 
             
-            let baseDataStr = localStorage.getItem('buoni_base_data');
-            let baseSaldo = parseInt(localStorage.getItem('buoni_base_saldo'));
+            let baseDataStr = localStorage.getItem(`buoni_base_data_${pid}`);
+            let baseSaldo = parseInt(localStorage.getItem(`buoni_base_saldo_${pid}`));
             
             if (!baseDataStr || isNaN(baseSaldo)) {
                 impostaSaldoDaInput(buoniAttuali);
-                baseDataStr = localStorage.getItem('buoni_base_data');
-                baseSaldo = parseInt(localStorage.getItem('buoni_base_saldo'));
+                baseDataStr = localStorage.getItem(`buoni_base_data_${pid}`);
+                baseSaldo = parseInt(localStorage.getItem(`buoni_base_saldo_${pid}`));
             }
             
             let p = baseDataStr.split('-');
@@ -428,8 +432,8 @@
             }
             
             baseDataStr = formatStr(baseDateObj);
-            localStorage.setItem('buoni_base_data', baseDataStr);
-            localStorage.setItem('buoni_base_saldo', baseSaldo);
+            localStorage.setItem(`buoni_base_data_${pid}`, baseDataStr);
+            localStorage.setItem(`buoni_base_saldo_${pid}`, baseSaldo);
             
             let dinamici = 0;
             let calcDate = new Date(baseDateObj);
@@ -447,11 +451,10 @@
             if (buoniAttuali < 0) buoniAttuali = 0;
             
             document.getElementById('buoni-count').innerText = buoniAttuali;
-            localStorage.setItem('buoni_salvati', buoniAttuali);
+            localStorage.setItem(`buoni_salvati_${pid}`, buoniAttuali);
             if (typeof window.syncBuoniToCloud === 'function') window.syncBuoniToCloud();
         }
 
-        // --- SISTEMA DI ANCORAGGIO SALDO ---
         function impostaSaldoDaInput(inputValore) {
             let state = JSON.parse(localStorage.getItem('myTurniApp')) || { variazioni: {} };
             let esclusiArray = [...TURNI_ESCLUSI_FISSI];
@@ -474,21 +477,20 @@
             
             let baseSaldo = inputValore - maturatiUltimi30;
             
-            localStorage.setItem('buoni_base_saldo', baseSaldo);
-            localStorage.setItem('buoni_base_data', thirtyDaysAgoStr);
-            localStorage.setItem('buoni_salvati', inputValore);
+            localStorage.setItem(`buoni_base_saldo_${pid}`, baseSaldo);
+            localStorage.setItem(`buoni_base_data_${pid}`, thirtyDaysAgoStr);
+            localStorage.setItem(`buoni_salvati_${pid}`, inputValore);
             
             buoniAttuali = inputValore;
             document.getElementById('buoni-count').innerText = buoniAttuali;
         }
 
-        // --- GESTIONE MANUALE (+ e -) ---
         function modificaBuoni(valore) {
             buoniAttuali += valore;
             if (buoniAttuali < 0) buoniAttuali = 0;
             
             document.getElementById('buoni-count').innerText = buoniAttuali;
-            localStorage.setItem('buoni_salvati', buoniAttuali);
+            localStorage.setItem(`buoni_salvati_${pid}`, buoniAttuali);
             
             if (integrazioneAttiva) {
                 impostaSaldoDaInput(buoniAttuali);
@@ -496,7 +498,6 @@
             if (typeof window.syncBuoniToCloud === 'function') window.syncBuoniToCloud();
         }
 
-        // --- IMPOSTAZIONI TONDINI ---
         function apriImpostazioni() {
             document.getElementById('quick-val-1').value = quickVals[0];
             document.getElementById('quick-val-2').value = quickVals[1];
@@ -514,13 +515,12 @@
             let v3 = Math.abs(parseInt(document.getElementById('quick-val-3').value)) || 10;
             
             quickVals = [v1, v2, v3];
-            localStorage.setItem('buoni_quick_vals', JSON.stringify(quickVals));
+            localStorage.setItem(`buoni_quick_vals_${pid}`, JSON.stringify(quickVals));
             
             inizializzaTondini();
             chiudiImpostazioni();
         }
 
-        // --- GESTIONE TOGGLE E WIZARD ---
         let isWizardOpen = false;
 
         function gestisciToggleIntegrazione() {
@@ -531,7 +531,7 @@
                 isWizardOpen = true;
             } else {
                 integrazioneAttiva = false;
-                localStorage.setItem('buoni_integrazione_attiva', 'false');
+                localStorage.setItem(`buoni_integrazione_attiva_${pid}`, 'false');
                 if (typeof window.syncBuoniToCloud === 'function') window.syncBuoniToCloud();
             }
         }
@@ -574,12 +574,11 @@
 
         function attivaIntegrazioneFinale() {
             integrazioneAttiva = true;
-            localStorage.setItem('buoni_integrazione_attiva', 'true');
+            localStorage.setItem(`buoni_integrazione_attiva_${pid}`, 'true');
             document.getElementById('toggleInt').checked = true;
             if (typeof window.syncBuoniToCloud === 'function') window.syncBuoniToCloud();
         }
 
-        // --- CALCOLATORE MODALE ---
         let calcolatoreDaWizard = false;
 
         function apriCalcolatore(daWizard = false) {
@@ -617,7 +616,6 @@
             attivaIntegrazioneFinale();
         }
 
-        // --- PRECOMPILA CON DATI CALENDARIO ---
         function precompilaDaCalendario() {
             let esclusiArray = [...TURNI_ESCLUSI_FISSI];
             let state = JSON.parse(localStorage.getItem('myTurniApp')) || { variazioni: {} };
@@ -646,7 +644,6 @@
             for (let i = giornoInizio; i <= giornoFine; i++) {
                 let d = new Date(anno, mese, i, 0, 0, 0);
                 let dStr = formatStr(d);
-                // Passiamo "true" alla funzione per dirgli: "Ignora se il buono è già stato usato!"
                 if (isBuonoMaturato(dStr, state, esclusiArray, true)) {
                     conteggio++;
                 }
@@ -685,25 +682,23 @@
                     if (docSnap.exists()) {
                         let datiCloud = docSnap.data();
                         
-                        // Se ci sono dati sui buoni nel cloud, aggiorna il telefono
-                        if (datiCloud.buoni_pasto_totali !== undefined) {
-                            localStorage.setItem('buoni_salvati', datiCloud.buoni_pasto_totali);
-                            localStorage.setItem('buoni_integrazione_attiva', datiCloud.buoni_integrazione === true ? 'true' : 'false');
+                        // Legge i dati specifici del PROFILO ATTIVO (pid) dal Cloud
+                        if (datiCloud[`buoni_pasto_totali_${pid}`] !== undefined) {
+                            localStorage.setItem(`buoni_salvati_${pid}`, datiCloud[`buoni_pasto_totali_${pid}`]);
+                            localStorage.setItem(`buoni_integrazione_attiva_${pid}`, datiCloud[`buoni_integrazione_${pid}`] === true ? 'true' : 'false');
                             
-                            // Aggiorna l'interfaccia senza ricaricare la pagina
-                            buoniAttuali = parseInt(datiCloud.buoni_pasto_totali);
-                            integrazioneAttiva = datiCloud.buoni_integrazione === true;
+                            buoniAttuali = parseInt(datiCloud[`buoni_pasto_totali_${pid}`]);
+                            integrazioneAttiva = datiCloud[`buoni_integrazione_${pid}`] === true;
+                            
                             document.getElementById('buoni-count').innerText = buoniAttuali;
                             document.getElementById('toggleInt').checked = integrazioneAttiva;
                         } else {
-                            // MIGRAZIONE: Se il cloud non ha ancora i buoni ma il telefono li ha, caricali!
-                            if (localStorage.getItem('buoni_salvati') !== null) {
+                            if (localStorage.getItem(`buoni_salvati_${pid}`) !== null) {
                                 if (typeof window.syncBuoniToCloud === 'function') window.syncBuoniToCloud();
                             }
                         }
                     } else {
-                        // MIGRAZIONE: Se il documento cloud non esiste, carica i dati del telefono
-                        if (localStorage.getItem('buoni_salvati') !== null) {
+                        if (localStorage.getItem(`buoni_salvati_${pid}`) !== null) {
                             if (typeof window.syncBuoniToCloud === 'function') window.syncBuoniToCloud();
                         }
                     }
@@ -711,20 +706,20 @@
             }
         });
 
-        // Funzione per sparare i dati al cloud
         window.syncBuoniToCloud = async () => {
             if (window.utenteLoggato) {
                 try {
                     const docRef = doc(db, "utenti", window.utenteLoggato);
-                    // Usiamo merge: true per non cancellare i turni del calendario!
-                    await setDoc(docRef, {
-                        buoni_pasto_totali: buoniAttuali,
-                        buoni_integrazione: integrazioneAttiva
-                    }, { merge: true });
+                    let dataToSave = {};
+                    
+                    // Salva usando chiavi dinamiche in base al profilo
+                    dataToSave[`buoni_pasto_totali_${pid}`] = buoniAttuali;
+                    dataToSave[`buoni_integrazione_${pid}`] = integrazioneAttiva;
+                    
+                    await setDoc(docRef, dataToSave, { merge: true });
                 } catch(e) { console.error("Errore Sync Cloud Buoni:", e); }
             }
         };
     </script>
 </body>
 </html>
- 
