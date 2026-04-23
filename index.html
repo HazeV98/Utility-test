@@ -67,7 +67,6 @@
         .header-center { display: flex; flex-direction: column; align-items: center; flex: 2; }
         h2 { margin: 0; color: var(--primary); font-size: 30px; font-weight: bold; text-align: center; user-select: none; -webkit-user-select: none; cursor: pointer; display: flex; align-items: center; justify-content: center;}
         
-        /* Nuova classe per la vista Landing Page */
         .view-container { width: 100%; max-width: 400px; display: none; flex-direction: column; align-items: center; }
 
         #install-btn { display: none; background-color: var(--success); color: white; border: none; padding: 8px 14px; font-size: 13px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); white-space: nowrap; animation: pulse 2s infinite; }
@@ -84,7 +83,7 @@
         .telegram-icon { display: inline-block; transition: transform 0.2s ease; }
         .telegram-icon:active { transform: scale(0.9); }
         
-        #ddsReminderModal, #authModal, #profileModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
+        #ddsReminderModal, #authModal, #profileModal, #modal-gestione { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
         
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; color: var(--text-color); max-height: 90vh; overflow-y: auto; }
         .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white;}
@@ -104,22 +103,26 @@
 
     <div id="view-guest" class="view-container" style="display: none; justify-content: center; height: 90vh;">
         <div style="text-align: center; width: 100%; box-sizing: border-box;">
-            
             <h1 style="margin: 0 0 25px 0; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 46px;">
                 <img src="icon-512.png" alt="U" style="height: 50px; margin-right: 2px; margin-bottom: 4px;">tility
             </h1>
-            
             <p style="color: #444; font-size: 16px; line-height: 1.6; margin-bottom: 40px;">
                 Questa è un app non ufficiale gestita da un collega.<br><br>
                 Qui potrai trovare un calendario per i turni, i pdf dei turni, link e contatti utili e varie altre funzioni.<br><br>
                 Accedi o registrati con il tasto qui sotto.
             </p>
-            
             <button class="btn-action" style="background: var(--primary); margin-top: 0; padding: 18px; font-size: 18px; border-radius: 12px;" onclick="apriModalAuth('login')">Accedi</button>
-            
             <div style="margin-top: 25px;">
                 <a href="#" onclick="apriModalAuth('register'); return false;" style="font-size: 15px; color: #0056b3; font-weight: bold; text-decoration: underline;">Non sei registrato? Registrati qui</a>
             </div>
+        </div>
+    </div>
+
+    <div id="view-banned" class="view-container" style="display: none; justify-content: center; height: 90vh;">
+        <div style="background: #fff5f5; padding: 30px; border-radius: 12px; border: 2px solid #ffc9c9; text-align: center; width: 100%; box-sizing: border-box;">
+            <h3 style="color: var(--danger); margin-top: 0;">🚫 Accesso Revocato</h3>
+            <p style="color: #666; font-size: 14px;">Sei stato escluso da questa applicazione da un Amministratore.</p>
+            <button class="btn-action" style="background: var(--danger); width: auto; padding: 10px 20px;" onclick="logout()">Esci dall'Account</button>
         </div>
     </div>
 
@@ -173,6 +176,8 @@
             <a href="generatore.html" id="generatore-btn" class="menu-btn">🔑 Generatore</a>
             <a href="admin.html" id="secret-btn" class="menu-btn">🔒 Admin</a>
         </div>
+
+        <button id="btn-admin-gestione" class="btn-action" style="background: #32325d; display: none; margin-top: 20px; width: 100%;" onclick="apriGestioneAccessi()">🛠️ Gestione Accessi App</button>
     </div> <div id="profileModal">
         <div class="modal-content">
             <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('profileModal').style.display='none'">&times;</span>
@@ -232,16 +237,12 @@
             
             <div id="registerFields" style="display: none; text-align: left;">
                 <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 15px 0;">
-                
                 <label style="font-size: 12px; font-weight: bold; color: #666;">Nome *</label>
                 <input type="text" id="regNome" class="input-field" placeholder="Il tuo nome">
-
                 <label style="font-size: 12px; font-weight: bold; color: #666;">Cognome *</label>
                 <input type="text" id="regCognome" class="input-field" placeholder="Il tuo cognome">
-
                 <label style="font-size: 12px; font-weight: bold; color: #666;">Matricola *</label>
                 <input type="text" id="regMatricola" class="input-field" placeholder="La tua matricola">
-
                 <label style="font-size: 12px; font-weight: bold; color: #666;">Numero omonimia es. 02, 03 ecc (facoltativo)</label>
                 <input type="text" id="regProg" class="input-field" placeholder="es. 02, 03 ecc.">
             </div>
@@ -262,6 +263,24 @@
 
             <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 20px 0;">
             <button class="btn-modal" style="background: #ea4335; color: white; margin:0;" onclick="loginGoogle()">☁️ Accedi con Google</button>
+        </div>
+    </div>
+
+    <div id="modal-gestione" onclick="if(event.target.id === 'modal-gestione') this.style.display='none'">
+        <div class="modal-content" style="max-width: 400px;">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('modal-gestione').style.display='none'">&times;</span>
+            <h3 style="margin-top: 5px; margin-bottom: 15px; color: #32325d;">Utenti App</h3>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <div style="background: var(--primary); color: white; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; flex: 1; text-align: center;">
+                    Totali: <span id="badge-totali">0</span>
+                </div>
+                <div style="background: var(--success); color: white; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; flex: 1; text-align: center;">
+                    Oggi: <span id="badge-oggi">0</span>
+                </div>
+            </div>
+
+            <div id="lista-utenti-accessi" style="margin-top: 15px; max-height: 60vh; overflow-y: auto;"></div>
         </div>
     </div>
 
@@ -371,7 +390,6 @@
             errDiv.style.display = 'block';
         }
 
-        // --- GESTIONE LOGICA LOGIN/REGISTRAZIONE ---
         let currentAuthMode = 'login'; 
 
         window.apriModalAuth = (mode) => {
@@ -511,6 +529,66 @@
             } catch (e) {}
         };
 
+        // --- GESTIONE ACCESSI APP (Pannello Admin) ---
+        window.apriGestioneAccessi = async () => {
+            document.getElementById('modal-gestione').style.display = 'flex';
+            const container = document.getElementById('lista-utenti-accessi');
+            const badgeTotali = document.getElementById('badge-totali');
+            const badgeOggi = document.getElementById('badge-oggi');
+            const oggiStr = new Date().toISOString().split('T')[0];
+
+            container.innerHTML = `<div style="text-align:center; color:#666; padding:20px;">Caricamento in corso...</div>`;
+            badgeTotali.innerText = "0";
+            badgeOggi.innerText = "0";
+
+            try {
+                const snap = await getDocs(collection(db, "utenti"));
+                let html = "";
+                let numeroTotali = 0;
+                let numeroOggi = 0;
+
+                snap.forEach(d => {
+                    const u = d.data();
+                    numeroTotali++;
+                    if (u.last_app_access === oggiStr) {
+                        numeroOggi++;
+                    }
+
+                    const isBanned = u.app_banned === true;
+                    const omo = u.progressivo ? ` ${u.progressivo}` : '';
+                    const fullName = `${u.cognome || ''} ${u.nome || ''}${omo}`.trim() || 'Utente Sconosciuto';
+                    const matr = u.matricola ? `(Matr. ${u.matricola})` : '';
+
+                    const dotOggi = (u.last_app_access === oggiStr) ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:5px;" title="Accesso effettuato oggi"></span>` : '';
+
+                    html += `<div style="display: flex; justify-content: space-between; align-items: center; background: ${isBanned ? '#fff5f5' : '#f8f9fa'}; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid ${isBanned ? '#ffc9c9' : '#e9ecef'};">
+                        <div>
+                            <div style="font-weight:bold; font-size:14px; color: #32325d;">${fullName}${dotOggi}</div>
+                            <div style="font-size: 11px; color: #666;">${matr}</div>
+                        </div>
+                        <button style="background:transparent; border: 2px solid ${isBanned ? 'var(--success)' : 'var(--danger)'}; color: ${isBanned ? 'var(--success)' : 'var(--danger)'}; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer;" 
+                        onclick="toggleAppBan('${d.id}', ${!isBanned})">${isBanned ? 'Sblocca' : 'Blocca'}</button>
+                    </div>`;
+                });
+
+                if (html === "") {
+                    container.innerHTML = `<div style="text-align:center; color:#666; padding:20px;">Nessun utente registrato.</div>`;
+                } else {
+                    container.innerHTML = html;
+                    badgeTotali.innerText = numeroTotali;
+                    badgeOggi.innerText = numeroOggi;
+                }
+            } catch(e) {
+                container.innerHTML = `<div style="text-align:center; color:red; padding:20px;">Errore durante il caricamento.</div>`;
+            }
+        };
+
+        window.toggleAppBan = async (uid, status) => {
+            if (!confirm("Sei sicuro di voler " + (status ? "bloccare" : "sbloccare") + " l'accesso a questo utente?")) return;
+            await setDoc(doc(db, "utenti", uid), { app_banned: status }, { merge: true });
+            apriGestioneAccessi();
+        };
+
         onAuthStateChanged(auth, async (user) => {
             const btnLogin = document.getElementById('btnOpenLogin');
             const btnProfile = document.getElementById('btnOpenProfile');
@@ -520,44 +598,56 @@
             const viewLoading = document.getElementById('view-loading');
             const viewGuest = document.getElementById('view-guest');
             const viewApp = document.getElementById('view-app');
-
-            viewLoading.style.display = 'none'; // Nasconde il caricamento
+            const viewBanned = document.getElementById('view-banned');
 
             if (user) {
-                // Imposta lo sfondo normale per l'app
-                document.body.style.backgroundColor = "var(--bg-color)";
-                viewGuest.style.display = 'none';
-                viewApp.style.display = 'flex';
-
-                const isSuperAdmin = (user.uid === ADMIN_UID);
-                const isCollaboratore = COLLABORATORE_UIDS.includes(user.uid);
-                if (isSuperAdmin) {
-                    document.getElementById('secret-btn').style.display = 'block';
-                    document.getElementById('generatore-btn').style.display = 'block';
-                    document.getElementById('adminBadge').style.display = 'block';
-                    document.getElementById('adminBadge').innerHTML = 'Account Amministratore';
-                    localStorage.setItem('dev_mode_active', 'true');
-                    localStorage.setItem('generatore_sbloccato', 'true');
-                } else if (isCollaboratore) {
-                    document.getElementById('generatore-btn').style.display = 'block'; 
-                    document.getElementById('adminBadge').style.display = 'block';
-                    document.getElementById('adminBadge').innerHTML = 'Account Collaboratore';
-                    localStorage.setItem('generatore_sbloccato', 'true');
-                }
-
-                document.getElementById('authModal').style.display = 'none';
-                btnLogin.style.display = 'none';
-                btnProfile.style.display = 'block';
-                statusText.style.display = 'block';
-                statusText.innerHTML = `☁️ Online`;
-                profileEmail.value = user.email;
-
-                window.controllaNotificheBacheca();
-
                 try {
                     const docRef = doc(db, "utenti", user.uid);
                     const docSnap = await getDoc(docRef);
                     let data = docSnap.exists() ? docSnap.data() : {};
+
+                    viewLoading.style.display = 'none'; // Nasconde solo dopo la lettura di Firestore
+
+                    // Se l'utente è bannato dall'app globale
+                    if (data.app_banned === true) {
+                        document.body.style.backgroundColor = "white";
+                        viewGuest.style.display = 'none';
+                        viewApp.style.display = 'none';
+                        viewBanned.style.display = 'flex';
+                        return;
+                    }
+
+                    // Imposta lo sfondo normale per l'app
+                    document.body.style.backgroundColor = "var(--bg-color)";
+                    viewGuest.style.display = 'none';
+                    viewApp.style.display = 'flex';
+                    viewBanned.style.display = 'none';
+
+                    const isSuperAdmin = (user.uid === ADMIN_UID);
+                    const isCollaboratore = COLLABORATORE_UIDS.includes(user.uid);
+                    if (isSuperAdmin) {
+                        document.getElementById('secret-btn').style.display = 'block';
+                        document.getElementById('generatore-btn').style.display = 'block';
+                        document.getElementById('btn-admin-gestione').style.display = 'block'; // TASTO GESTIONE APP
+                        document.getElementById('adminBadge').style.display = 'block';
+                        document.getElementById('adminBadge').innerHTML = 'Account Amministratore';
+                        localStorage.setItem('dev_mode_active', 'true');
+                        localStorage.setItem('generatore_sbloccato', 'true');
+                    } else if (isCollaboratore) {
+                        document.getElementById('generatore-btn').style.display = 'block'; 
+                        document.getElementById('adminBadge').style.display = 'block';
+                        document.getElementById('adminBadge').innerHTML = 'Account Collaboratore';
+                        localStorage.setItem('generatore_sbloccato', 'true');
+                    }
+
+                    document.getElementById('authModal').style.display = 'none';
+                    btnLogin.style.display = 'none';
+                    btnProfile.style.display = 'block';
+                    statusText.style.display = 'block';
+                    statusText.innerHTML = `☁️ Online`;
+                    profileEmail.value = user.email;
+
+                    window.controllaNotificheBacheca();
 
                     const localDati = JSON.parse(localStorage.getItem('backup_profilo_haze') || "{}");
                     let dbAggiornato = false;
@@ -565,6 +655,13 @@
                     if (!data.nome && localDati.nome) { data.nome = localDati.nome; dbAggiornato = true; }
                     if (!data.cognome && localDati.cognome) { data.cognome = localDati.cognome; dbAggiornato = true; }
                     if (!data.matricola && localDati.matricola) { data.matricola = localDati.matricola; dbAggiornato = true; }
+
+                    // Aggiorna ultimo accesso
+                    const oggiStr = new Date().toISOString().split('T')[0];
+                    if (data.last_app_access !== oggiStr) {
+                        data.last_app_access = oggiStr;
+                        dbAggiornato = true;
+                    }
 
                     if (dbAggiornato) { await setDoc(docRef, data, { merge: true }); }
                     if (data.nome || data.cognome) { localStorage.setItem('backup_profilo_haze', JSON.stringify(data)); }
@@ -582,12 +679,16 @@
                         document.getElementById('profileStrikes').style.display = 'block';
                         document.getElementById('strikeCount').innerText = strikes;
                     }
-                } catch(e) {}
+                } catch(e) {
+                    viewLoading.style.display = 'none';
+                }
             } else {
+                viewLoading.style.display = 'none';
                 // Imposta lo sfondo bianco per la landing page
                 document.body.style.backgroundColor = "white";
                 viewGuest.style.display = 'flex';
                 viewApp.style.display = 'none';
+                viewBanned.style.display = 'none';
 
                 btnLogin.style.display = 'block';
                 btnProfile.style.display = 'none';
