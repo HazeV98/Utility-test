@@ -60,7 +60,24 @@
 
     <style>
         :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #dc3545; }
-        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; transition: background-color 0.3s ease;}
+        
+        /* Modificato il body per includere lo sfondo cover fisso */
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: var(--bg-color); 
+            background-image: url('background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: var(--text-color); 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+        
         .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: flex-start; margin-top: 10px; margin-bottom: 30px; position: relative; }
         .header-side { flex: 1; display: flex; align-items: center; }
         .header-side.right { justify-content: flex-end; }
@@ -608,17 +625,13 @@
 
                     viewLoading.style.display = 'none'; // Nasconde solo dopo la lettura di Firestore
 
-                    // Se l'utente è bannato dall'app globale
                     if (data.app_banned === true) {
-                        document.body.style.backgroundColor = "white";
                         viewGuest.style.display = 'none';
                         viewApp.style.display = 'none';
                         viewBanned.style.display = 'flex';
                         return;
                     }
 
-                    // Imposta lo sfondo normale per l'app
-                    document.body.style.backgroundColor = "var(--bg-color)";
                     viewGuest.style.display = 'none';
                     viewApp.style.display = 'flex';
                     viewBanned.style.display = 'none';
@@ -628,7 +641,7 @@
                     if (isSuperAdmin) {
                         document.getElementById('secret-btn').style.display = 'block';
                         document.getElementById('generatore-btn').style.display = 'block';
-                        document.getElementById('btn-admin-gestione').style.display = 'block'; // TASTO GESTIONE APP
+                        document.getElementById('btn-admin-gestione').style.display = 'block';
                         document.getElementById('adminBadge').style.display = 'block';
                         document.getElementById('adminBadge').innerHTML = 'Account Amministratore';
                         localStorage.setItem('dev_mode_active', 'true');
@@ -684,8 +697,7 @@
                 }
             } else {
                 viewLoading.style.display = 'none';
-                // Imposta lo sfondo bianco per la landing page
-                document.body.style.backgroundColor = "white";
+                
                 viewGuest.style.display = 'flex';
                 viewApp.style.display = 'none';
                 viewBanned.style.display = 'none';
