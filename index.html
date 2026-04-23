@@ -65,7 +65,11 @@
         .header-side { flex: 1; display: flex; align-items: center; }
         .header-side.right { justify-content: flex-end; }
         .header-center { display: flex; flex-direction: column; align-items: center; flex: 2; }
-        h2 { margin: 0; color: var(--primary); font-size: 30px; font-weight: bold; text-align: center; user-select: none; -webkit-user-select: none; cursor: pointer; }
+        h2 { margin: 0; color: var(--primary); font-size: 30px; font-weight: bold; text-align: center; user-select: none; -webkit-user-select: none; cursor: pointer; display: flex; align-items: center; justify-content: center;}
+        
+        /* Nuova classe per la vista Landing Page */
+        .view-container { width: 100%; max-width: 400px; display: none; flex-direction: column; align-items: center; }
+
         #install-btn { display: none; background-color: var(--success); color: white; border: none; padding: 8px 14px; font-size: 13px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); white-space: nowrap; animation: pulse 2s infinite; }
         .btn-login { background-color: #ea4335; color: white; border: none; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none; }
         .btn-header-alt { background-color: var(--primary); color: white; border: none; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none; }
@@ -74,12 +78,13 @@
         .menu-btn { background-color: var(--primary); color: white; border: none; padding: 18px; font-size: 18px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s ease; text-align: center; text-decoration: none; display: block; font-weight: 500; }
         .menu-btn:active { transform: translateY(2px); opacity: 0.9; }
         .btn-oggi { background-color: var(--success); font-size: 20px; box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3); }
+        .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; transition: opacity 0.2s; margin-top: 10px; }
         .feedback-section { margin-top: 40px; margin-bottom: 20px; text-align: center; max-width: 350px; }
         .feedback-section p { color: #666; font-size: 14px; margin-bottom: 15px; }
         .telegram-icon { display: inline-block; transition: transform 0.2s ease; }
         .telegram-icon:active { transform: scale(0.9); }
         
-        #ddsReminderModal, #authModal, #profileModal, #loginPromptModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
+        #ddsReminderModal, #authModal, #profileModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
         
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; color: var(--text-color); max-height: 90vh; overflow-y: auto; }
         .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white;}
@@ -93,65 +98,76 @@
 </head>
 <body>
 
-    <div class="header">
-        <div class="header-side">
-            <button id="btnOpenLogin" class="btn-login" onclick="document.getElementById('authModal').style.display='flex'">☁️ Login</button>
-            <button id="btnOpenProfile" class="btn-header-alt" onclick="document.getElementById('profileModal').style.display='flex'">👤 Profilo</button>
-        </div>
-        <div class="header-center">
-            <h2 id="main-title">Utility</h2>
-            <div id="user-status" style="font-size: 11px; color: var(--success); font-weight: bold; display: none; margin-top: 4px;"></div>
-        </div>
-        <div class="header-side right">
-            <button id="install-btn">Installa</button>
-            <div id="icona-bacheca" style="position: relative; cursor: pointer; margin-left: 15px;" onclick="window.location.href='bacheca_utility.html'">
-                <span style="font-size: 26px;">📢</span>
-                <div id="badge-messaggi" style="display: none; position: absolute; top: -5px; right: -8px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: bold; width: 18px; height: 18px; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">0</div>
+    <div id="view-guest" class="view-container" style="display: flex; justify-content: center; height: 90vh;">
+        <div style="background: white; padding: 35px 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; width: 100%; box-sizing: border-box;">
+            
+            <h1 style="margin: 0 0 20px 0; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 38px;">
+                <img src="icon-512.png" alt="U" style="height: 42px; margin-right: 2px; margin-bottom: 4px;">tility
+            </h1>
+            
+            <p style="color: #555; font-size: 15px; line-height: 1.6; margin-bottom: 30px;">
+                Questa è un app non ufficiale gestita da un collega, qui potrai trovare un calendario per i turni, i pdf dei turni, link e contatti utili e varie altre funzioni, accedi o registrati con il tasto qui sotto.
+            </p>
+            
+            <button class="btn-action" style="background: var(--primary); margin-top: 0;" onclick="apriModalAuth('login')">Accedi</button>
+            
+            <div style="margin-top: 20px;">
+                <a href="#" onclick="apriModalAuth('register'); return false;" style="font-size: 14px; color: #0056b3; font-weight: bold; text-decoration: underline;">Non sei registrato? Registrati qui</a>
             </div>
         </div>
     </div>
 
-    <div id="banner-nuovo-messaggio" style="display: none; background: #ffc107; color: #856404; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 10px; width: 100%; max-width: 400px; cursor: pointer; border: 1px solid #ffeeba; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.location.href='bacheca_utility.html'">
-        🔔 Nuovo avviso in Bacheca Utility! Clicca per leggere.
-    </div>
-
-    <div id="banner-dds-alert" style="display: none; background: #f5365c; color: white; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 20px; width: 100%; max-width: 400px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" onclick="window.location.href='bacheca_utility.html'">
-        ⚠️ Attenzione nuova DDS: <span id="titolo-dds-text"></span>
-    </div>
-
-    <div class="menu-grid">
-        <a href="calendario.html?oggi=true" class="menu-btn btn-oggi">Turno di Oggi</a>
-        <a href="calendario.html" class="menu-btn">📅 Calendario</a>
-        <a href="dati_calendario.html" class="menu-btn">📊 Statistiche</a>
-        <a href="rotazioni.html" class="menu-btn">👥 Rotazioni (test)</a>
-        <a href="rotazionef9.html" id="rotazioni-btn" class="menu-btn">👥  Rotazione F.Nove</a> 
-        <a href="turni.html" class="menu-btn">🔄 Turni</a>
-        <a href="bacheca_turni.html" class="menu-btn">🔄 Bacheca Turni</a> 
-        <a href="rubrica.html" class="menu-btn">📞 Rubrica Colleghi</a>
-        <a href="rotazione_ferie.html" class="menu-btn">🌴 Rotazione Ferie</a>
-        <a href="orari.html" class="menu-btn">🕒 Orari Navigazione</a>
-        <a href="documenti.html" class="menu-btn">📄 Documenti</a>
-        <a href="link.html" class="menu-btn">🔗 Link</a>
-        <a href="contatti.html" class="menu-btn">📇 Contatti</a>
-        <a href="buoni.html" class="menu-btn">🍝 Buoni Pasto</a>
-        <a href="dds.html" class="menu-btn">📂 Archivio DDS</a>
-        <a href="guida.html" class="menu-btn" style="background-color: #6c757d;">📖 Guida</a>
-        
-        <a href="generatore.html" id="generatore-btn" class="menu-btn">🔑 Generatore</a>
-        <a href="admin.html" id="secret-btn" class="menu-btn">🔒 Admin</a>
-    </div>
-
-    <div id="loginPromptModal">
-        <div class="modal-content" style="text-align: center;">
-            <h3 style="margin-top: 0; color: var(--primary);">☁️ Esegui l'accesso</h3>
-            <p style="font-size: 14px; color: #555; line-height: 1.5;">
-                Esegui l'accesso in alto a sinistra per salvare i tuoi dati. Avrai accesso ai tuoi dati da qualsiasi dispositivo in cui farai il login, riceverai gli avvisi e avrai accesso a tutte le funzioni di Utility.
-            </p>
-            <button class="btn-modal" style="background-color: var(--primary); color: white; margin-top: 15px;" onclick="document.getElementById('loginPromptModal').style.display='none'">Ho capito, chiudi</button>
+    <div id="view-app" class="view-container" style="display: none; width: 100%;">
+        <div class="header">
+            <div class="header-side">
+                <button id="btnOpenLogin" class="btn-login" onclick="apriModalAuth('login')">☁️ Login</button>
+                <button id="btnOpenProfile" class="btn-header-alt" onclick="document.getElementById('profileModal').style.display='flex'">👤 Profilo</button>
+            </div>
+            <div class="header-center">
+                <h2 id="main-title">
+                    <img src="icon-512.png" alt="U" style="height: 32px; margin-right: 1px; margin-bottom: 2px; pointer-events: none;">tility
+                </h2>
+                <div id="user-status" style="font-size: 11px; color: var(--success); font-weight: bold; display: none; margin-top: 4px;"></div>
+            </div>
+            <div class="header-side right">
+                <button id="install-btn">Installa</button>
+                <div id="icona-bacheca" style="position: relative; cursor: pointer; margin-left: 15px;" onclick="window.location.href='bacheca_utility.html'">
+                    <span style="font-size: 26px;">📢</span>
+                    <div id="badge-messaggi" style="display: none; position: absolute; top: -5px; right: -8px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: bold; width: 18px; height: 18px; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">0</div>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <div id="profileModal">
+        <div id="banner-nuovo-messaggio" style="display: none; background: #ffc107; color: #856404; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 10px; width: 100%; max-width: 400px; cursor: pointer; border: 1px solid #ffeeba; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.location.href='bacheca_utility.html'">
+            🔔 Nuovo avviso in Bacheca Utility! Clicca per leggere.
+        </div>
+
+        <div id="banner-dds-alert" style="display: none; background: #f5365c; color: white; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 20px; width: 100%; max-width: 400px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" onclick="window.location.href='bacheca_utility.html'">
+            ⚠️ Attenzione nuova DDS: <span id="titolo-dds-text"></span>
+        </div>
+
+        <div class="menu-grid">
+            <a href="calendario.html?oggi=true" class="menu-btn btn-oggi">Turno di Oggi</a>
+            <a href="calendario.html" class="menu-btn">📅 Calendario</a>
+            <a href="dati_calendario.html" class="menu-btn">📊 Statistiche</a>
+            <a href="rotazioni.html" class="menu-btn">👥 Rotazioni (test)</a>
+            <a href="rotazionef9.html" id="rotazioni-btn" class="menu-btn">👥  Rotazione F.Nove</a> 
+            <a href="turni.html" class="menu-btn">🔄 Turni</a>
+            <a href="bacheca_turni.html" class="menu-btn">🔄 Bacheca Turni</a> 
+            <a href="rubrica.html" class="menu-btn">📞 Rubrica Colleghi</a>
+            <a href="rotazione_ferie.html" class="menu-btn">🌴 Rotazione Ferie</a>
+            <a href="orari.html" class="menu-btn">🕒 Orari Navigazione</a>
+            <a href="documenti.html" class="menu-btn">📄 Documenti</a>
+            <a href="link.html" class="menu-btn">🔗 Link</a>
+            <a href="contatti.html" class="menu-btn">📇 Contatti</a>
+            <a href="buoni.html" class="menu-btn">🍝 Buoni Pasto</a>
+            <a href="dds.html" class="menu-btn">📂 Archivio DDS</a>
+            <a href="guida.html" class="menu-btn" style="background-color: #6c757d;">📖 Guida</a>
+            
+            <a href="generatore.html" id="generatore-btn" class="menu-btn">🔑 Generatore</a>
+            <a href="admin.html" id="secret-btn" class="menu-btn">🔒 Admin</a>
+        </div>
+    </div> <div id="profileModal">
         <div class="modal-content">
             <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('profileModal').style.display='none'">&times;</span>
             <h3 style="margin-top: 5px; color: #32325d; text-align: center;">Profilo Utente</h3>
@@ -203,20 +219,41 @@
     <div id="authModal">
         <div class="modal-content" style="text-align: center;">
             <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('authModal').style.display='none'">&times;</span>
-            <h3 style="margin-top: 5px; color: #32325d;">Backup Cloud</h3>
+            <h3 id="authModalTitle" style="margin-top: 5px; color: #32325d;">☁️ Accedi</h3>
             
             <input type="email" id="emailInput" placeholder="La tua email" class="input-field">
             <input type="password" id="passwordInput" placeholder="Password" class="input-field">
             
+            <div id="registerFields" style="display: none; text-align: left;">
+                <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 15px 0;">
+                
+                <label style="font-size: 12px; font-weight: bold; color: #666;">Nome *</label>
+                <input type="text" id="regNome" class="input-field" placeholder="Il tuo nome">
+
+                <label style="font-size: 12px; font-weight: bold; color: #666;">Cognome *</label>
+                <input type="text" id="regCognome" class="input-field" placeholder="Il tuo cognome">
+
+                <label style="font-size: 12px; font-weight: bold; color: #666;">Matricola *</label>
+                <input type="text" id="regMatricola" class="input-field" placeholder="La tua matricola">
+
+                <label style="font-size: 12px; font-weight: bold; color: #666;">Numero omonimia es. 02, 03 ecc (facoltativo)</label>
+                <input type="text" id="regProg" class="input-field" placeholder="es. 02, 03 ecc.">
+            </div>
+
             <div id="authError" style="color: var(--danger); font-size: 13px; margin-bottom: 15px; font-weight: bold; display: none;"></div>
 
-            <div style="text-align: right; margin-bottom: 15px;">
+            <div id="loginExtras" style="text-align: right; margin-bottom: 15px;">
                 <a href="#" onclick="recuperaPassword(); return false;" style="font-size: 12px; color: #0056b3; font-weight: bold;">Password dimenticata?</a>
             </div>
+
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <button class="btn-modal" style="background: #32325d; color: white; margin:0;" onclick="loginEmail()">Accedi</button>
-                <button class="btn-modal" style="background: #11cdef; color: white; margin:0;" onclick="registraEmail()">Registrati</button>
+                <button id="btnEseguiAuth" class="btn-modal" style="background: #32325d; color: white; margin:0;" onclick="eseguiAuth()">Accedi</button>
             </div>
+
+            <div id="authSwitchText" style="margin-top: 15px;">
+                <a href="#" id="authSwitchLink" onclick="switchAuthMode(); return false;" style="font-size: 13px; color: #0056b3; font-weight: bold; text-decoration: underline;">Non sei registrato? Registrati qui</a>
+            </div>
+
             <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 20px 0;">
             <button class="btn-modal" style="background: #ea4335; color: white; margin:0;" onclick="loginGoogle()">☁️ Accedi con Google</button>
         </div>
@@ -328,13 +365,88 @@
             errDiv.style.display = 'block';
         }
 
+        // --- GESTIONE LOGICA LOGIN/REGISTRAZIONE ---
+        let currentAuthMode = 'login'; 
+
+        window.apriModalAuth = (mode) => {
+            currentAuthMode = mode;
+            window.aggiornaUIAuth();
+            document.getElementById('authError').style.display = 'none';
+            document.getElementById('authModal').style.display = 'flex';
+        };
+
+        window.switchAuthMode = () => {
+            currentAuthMode = currentAuthMode === 'login' ? 'register' : 'login';
+            window.aggiornaUIAuth();
+        };
+
+        window.aggiornaUIAuth = () => {
+            const title = document.getElementById('authModalTitle');
+            const btnEsegui = document.getElementById('btnEseguiAuth');
+            const registerFields = document.getElementById('registerFields');
+            const loginExtras = document.getElementById('loginExtras');
+            const switchLink = document.getElementById('authSwitchLink');
+
+            if (currentAuthMode === 'login') {
+                title.innerText = "☁️ Accedi";
+                btnEsegui.innerText = "Accedi";
+                registerFields.style.display = "none";
+                loginExtras.style.display = "block";
+                switchLink.innerText = "Non sei registrato? Registrati qui";
+            } else {
+                title.innerText = "📝 Registrati";
+                btnEsegui.innerText = "Registrati";
+                registerFields.style.display = "block";
+                loginExtras.style.display = "none";
+                switchLink.innerText = "Sei già registrato? Accedi qui";
+            }
+        };
+
+        window.eseguiAuth = async () => {
+            document.getElementById('authError').style.display = 'none';
+            const email = document.getElementById('emailInput').value.trim();
+            const pwd = document.getElementById('passwordInput').value;
+            const btnEsegui = document.getElementById('btnEseguiAuth');
+
+            if (!email || !pwd) { mostraErroreAuth("Inserisci email e password."); return; }
+
+            btnEsegui.disabled = true; btnEsegui.innerText = "⏳...";
+
+            if (currentAuthMode === 'login') {
+                try {
+                    await signInWithEmailAndPassword(auth, email, pwd);
+                    document.getElementById('authModal').style.display = 'none';
+                } catch (error) { mostraErroreAuth("Email o Password errata."); }
+            } else {
+                const nome = document.getElementById('regNome').value.trim();
+                const cognome = document.getElementById('regCognome').value.trim();
+                const matricola = document.getElementById('regMatricola').value.trim();
+                const prog = document.getElementById('regProg').value.trim();
+
+                if (!nome || !cognome || !matricola) {
+                    mostraErroreAuth("Compila Nome, Cognome e Matricola.");
+                    btnEsegui.disabled = false; btnEsegui.innerText = "Registrati";
+                    return;
+                }
+
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, pwd);
+                    const profileData = { nome: nome, cognome: cognome, matricola: matricola, progressivo: prog };
+
+                    await setDoc(doc(db, "utenti", userCredential.user.uid), profileData, { merge: true });
+                    await setDoc(doc(db, "rubrica", userCredential.user.uid), profileData, { merge: true });
+                    localStorage.setItem('backup_profilo_haze', JSON.stringify(profileData));
+
+                    document.getElementById('authModal').style.display = 'none';
+                } catch (error) { mostraErroreAuth("Errore durante la registrazione. Forse l'email è già in uso o la password è debole."); }
+            }
+            btnEsegui.disabled = false; btnEsegui.innerText = currentAuthMode === 'login' ? "Accedi" : "Registrati";
+        };
+
         window.loginGoogle = async () => { try { await signInWithPopup(auth, provider); } catch(error) { mostraErroreAuth("Errore durante l'accesso con Google."); }};
-        window.loginEmail = async () => { document.getElementById('authError').style.display = 'none'; try { await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passwordInput').value); } catch (error) { mostraErroreAuth("Email o Password errata."); }};
-        window.registraEmail = async () => { document.getElementById('authError').style.display = 'none'; try { await createUserWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passwordInput').value); } catch (error) { mostraErroreAuth("Errore durante la registrazione."); }};
         window.recuperaPassword = async () => { const email = document.getElementById('emailInput').value; if (!email) { mostraErroreAuth("Inserisci prima la tua email."); return; } try { await sendPasswordResetEmail(auth, email); mostraErroreAuth("Email inviata!", true); } catch (error) { mostraErroreAuth("Errore invio email."); }};
         window.logout = () => { signOut(auth); document.getElementById('profileModal').style.display='none'; };
 
-        // MODIFICATA: Salva anche in locale
         window.salvaProfilo = async () => {
             const user = auth.currentUser;
             if (!user) return;
@@ -351,7 +463,6 @@
                 telefono: document.getElementById('profileTelefono').value.trim() 
             };
 
-            // Backup locale immediato
             localStorage.setItem('backup_profilo_haze', JSON.stringify(profileData));
 
             try {
@@ -394,15 +505,19 @@
             } catch (e) {}
         };
 
-        let isFirstLoad = true;
         onAuthStateChanged(auth, async (user) => {
             const btnLogin = document.getElementById('btnOpenLogin');
             const btnProfile = document.getElementById('btnOpenProfile');
             const statusText = document.getElementById('user-status');
             const profileEmail = document.getElementById('profileEmail');
+            
+            const viewGuest = document.getElementById('view-guest');
+            const viewApp = document.getElementById('view-app');
 
             if (user) {
-                document.getElementById('loginPromptModal').style.display = 'none';
+                viewGuest.style.display = 'none';
+                viewApp.style.display = 'flex';
+
                 const isSuperAdmin = (user.uid === ADMIN_UID);
                 const isCollaboratore = COLLABORATORE_UIDS.includes(user.uid);
                 if (isSuperAdmin) {
@@ -433,24 +548,15 @@
                     const docSnap = await getDoc(docRef);
                     let data = docSnap.exists() ? docSnap.data() : {};
 
-                    // --- SISTEMA DI RIPRISTINO "PARACADUTE" (Anche in Index) ---
                     const localDati = JSON.parse(localStorage.getItem('backup_profilo_haze') || "{}");
                     let dbAggiornato = false;
 
-                    // Se mancano dati nel DB ma ci sono in locale, ripristina
                     if (!data.nome && localDati.nome) { data.nome = localDati.nome; dbAggiornato = true; }
                     if (!data.cognome && localDati.cognome) { data.cognome = localDati.cognome; dbAggiornato = true; }
                     if (!data.matricola && localDati.matricola) { data.matricola = localDati.matricola; dbAggiornato = true; }
 
-                    if (dbAggiornato) {
-                        await setDoc(docRef, data, { merge: true });
-                    }
-                    
-                    // Se il DB ha dati freschi, aggiorna il backup locale
-                    if (data.nome || data.cognome) {
-                        localStorage.setItem('backup_profilo_haze', JSON.stringify(data));
-                    }
-                    // -----------------------------------------------------------
+                    if (dbAggiornato) { await setDoc(docRef, data, { merge: true }); }
+                    if (data.nome || data.cognome) { localStorage.setItem('backup_profilo_haze', JSON.stringify(data)); }
 
                     document.getElementById('profileNome').value = data.nome || '';
                     document.getElementById('profileCognome').value = data.cognome || '';
@@ -467,14 +573,15 @@
                     }
                 } catch(e) {}
             } else {
+                viewGuest.style.display = 'flex';
+                viewApp.style.display = 'none';
+
                 btnLogin.style.display = 'block';
                 btnProfile.style.display = 'none';
                 statusText.style.display = 'none';
                 document.getElementById('banner-nuovo-messaggio').style.display = 'none';
                 document.getElementById('banner-dds-alert').style.display = 'none';
-                if (isFirstLoad) document.getElementById('loginPromptModal').style.display = 'flex';
             }
-            isFirstLoad = false;
         });
     </script>
 </body>
