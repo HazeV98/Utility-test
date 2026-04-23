@@ -60,7 +60,7 @@
 
     <style>
         :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #dc3545; }
-        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; transition: background-color 0.3s ease;}
         .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: flex-start; margin-top: 10px; margin-bottom: 30px; position: relative; }
         .header-side { flex: 1; display: flex; align-items: center; }
         .header-side.right { justify-content: flex-end; }
@@ -73,7 +73,7 @@
         #install-btn { display: none; background-color: var(--success); color: white; border: none; padding: 8px 14px; font-size: 13px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); white-space: nowrap; animation: pulse 2s infinite; }
         .btn-login { background-color: #ea4335; color: white; border: none; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none; }
         .btn-header-alt { background-color: var(--primary); color: white; border: none; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none; }
-        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); } 50% { transform: scale(1.05); box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4); } 100% { transform: scale(1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); } }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
         .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 400px; }
         .menu-btn { background-color: var(--primary); color: white; border: none; padding: 18px; font-size: 18px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s ease; text-align: center; text-decoration: none; display: block; font-weight: 500; }
         .menu-btn:active { transform: translateY(2px); opacity: 0.9; }
@@ -98,21 +98,30 @@
 </head>
 <body>
 
-    <div id="view-guest" class="view-container" style="display: flex; justify-content: center; height: 90vh;">
-        <div style="background: white; padding: 35px 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; width: 100%; box-sizing: border-box;">
+    <div id="view-loading" class="view-container" style="display: flex; justify-content: center; align-items: center; height: 90vh; width: 100%;">
+        <div style="color: var(--primary); font-size: 18px; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+            <img src="icon-512.png" alt="Logo" style="height: 60px; animation: pulse 1.5s infinite;">
+            <span style="opacity: 0.8;">Verifica in corso...</span>
+        </div>
+    </div>
+
+    <div id="view-guest" class="view-container" style="display: none; justify-content: center; height: 90vh;">
+        <div style="text-align: center; width: 100%; box-sizing: border-box;">
             
-            <h1 style="margin: 0 0 20px 0; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 38px;">
-                <img src="icon-512.png" alt="U" style="height: 42px; margin-right: 2px; margin-bottom: 4px;">tility
+            <h1 style="margin: 0 0 25px 0; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 46px;">
+                <img src="icon-512.png" alt="U" style="height: 50px; margin-right: 2px; margin-bottom: 4px;">tility
             </h1>
             
-            <p style="color: #555; font-size: 15px; line-height: 1.6; margin-bottom: 30px;">
-                Questa è un app non ufficiale gestita da un collega, qui potrai trovare un calendario per i turni, i pdf dei turni, link e contatti utili e varie altre funzioni, accedi o registrati con il tasto qui sotto.
+            <p style="color: #444; font-size: 16px; line-height: 1.6; margin-bottom: 40px;">
+                Questa è un app non ufficiale gestita da un collega.<br><br>
+                Qui potrai trovare un calendario per i turni, i pdf dei turni, link e contatti utili e varie altre funzioni.<br><br>
+                Accedi o registrati con il tasto qui sotto.
             </p>
             
-            <button class="btn-action" style="background: var(--primary); margin-top: 0;" onclick="apriModalAuth('login')">Accedi</button>
+            <button class="btn-action" style="background: var(--primary); margin-top: 0; padding: 18px; font-size: 18px; border-radius: 12px;" onclick="apriModalAuth('login')">Accedi</button>
             
-            <div style="margin-top: 20px;">
-                <a href="#" onclick="apriModalAuth('register'); return false;" style="font-size: 14px; color: #0056b3; font-weight: bold; text-decoration: underline;">Non sei registrato? Registrati qui</a>
+            <div style="margin-top: 25px;">
+                <a href="#" onclick="apriModalAuth('register'); return false;" style="font-size: 15px; color: #0056b3; font-weight: bold; text-decoration: underline;">Non sei registrato? Registrati qui</a>
             </div>
         </div>
     </div>
@@ -219,7 +228,7 @@
     <div id="authModal">
         <div class="modal-content" style="text-align: center;">
             <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('authModal').style.display='none'">&times;</span>
-            <h3 id="authModalTitle" style="margin-top: 5px; color: #32325d;">☁️ Accedi</h3>
+            <h2 id="authModalTitle" style="margin-top: 5px; margin-bottom: 20px; color: #32325d; font-size: 26px;">☁️ Accedi</h2>
             
             <input type="email" id="emailInput" placeholder="La tua email" class="input-field">
             <input type="password" id="passwordInput" placeholder="Password" class="input-field">
@@ -511,10 +520,15 @@
             const statusText = document.getElementById('user-status');
             const profileEmail = document.getElementById('profileEmail');
             
+            const viewLoading = document.getElementById('view-loading');
             const viewGuest = document.getElementById('view-guest');
             const viewApp = document.getElementById('view-app');
 
+            viewLoading.style.display = 'none'; // Nasconde il caricamento
+
             if (user) {
+                // Imposta lo sfondo normale per l'app
+                document.body.style.backgroundColor = "var(--bg-color)";
                 viewGuest.style.display = 'none';
                 viewApp.style.display = 'flex';
 
@@ -573,6 +587,8 @@
                     }
                 } catch(e) {}
             } else {
+                // Imposta lo sfondo bianco per la landing page
+                document.body.style.backgroundColor = "white";
                 viewGuest.style.display = 'flex';
                 viewApp.style.display = 'none';
 
