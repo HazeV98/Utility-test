@@ -220,5 +220,23 @@
     "nome": "Dragone Rosanna",
     "data_creazione": "2026-04-18",
     "attivo": true
+  },
+  {
+    "codice": "OM215L",
+    "nome": "Vianello Nicolò",
+    "data_creazione": "2026-04-20",
+    "attivo": true
+  },
+  {
+    "codice": "7B21DJ",
+    "nome": "Bonaldo Michele",
+    "data_creazione": "2026-04-21",
+    "attivo": true
+  },
+  {
+    "codice": "N3KSII",
+    "nome": "Novello Manuel",
+    "data_creazione": "2026-04-21",
+    "attivo": true
   }
 ]

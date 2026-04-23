@@ -4,51 +4,85 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Utility - Contatti</title>
+    <meta name="theme-color" content="#0056b3">
+
+    <script>
+        // --- SISTEMA DI PULIZIA CACHE E AGGIORNAMENTO FORZATO ---
+        const PAGE_RELOAD_KEY = 'reloaded_' + window.location.pathname;
+
+        if (!sessionStorage.getItem(PAGE_RELOAD_KEY)) {
+            sessionStorage.setItem(PAGE_RELOAD_KEY, 'true');
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(regs => {
+                    regs.forEach(reg => reg.update());
+                });
+            }
+            const url = new URL(window.location.href);
+            url.searchParams.set('nocache', new Date().getTime());
+            window.location.replace(url.toString());
+        } else {
+            const APP_VERSION = "1.2"; 
+            if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
+                if ('caches' in window) {
+                    caches.keys().then((names) => {
+                        names.forEach(name => caches.delete(name));
+                    });
+                }
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then((registrations) => {
+                        registrations.forEach(registration => registration.unregister());
+                    });
+                }
+                localStorage.setItem('app_version_cache', APP_VERSION);
+                window.location.reload(true);
+            }
+        }
+    </script>
+
     <style>
         /* --- STILI GLOBALI UNIFICATI --- */
-        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; }
+        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --danger: #dc3545; --success: #28a745; --warning: #ffc107;}
         body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         
         /* HEADER */
-        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
-        h2 { margin: 0; color: var(--primary); font-size: 24px; }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
         
         /* MENU LATERALE */
-        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 5999; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 6000; transition: left 0.3s ease; display: flex; flex-direction: column; }
         .sidebar.open { left: 0; }
         .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
-        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; }
+        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; text-transform: none;}
         .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
 
-        /* AREA CONTENUTI SPECIFICA */
-        .content-area { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 20px; }
+        /* VISTE E MODALI (NUOVI) */
+        .view-container { width: 100%; max-width: 400px; display: none; flex-direction: column; gap: 15px; text-align: center; }
+        .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; transition: opacity 0.2s; margin-top: 10px; }
+        .btn-action:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-outline { background-color: transparent; border: 2px solid var(--primary); color: var(--primary); padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .input-field { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; max-height: 90vh; overflow-y: auto;}
         .status-message { text-align: center; color: #666; font-size: 16px; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        
-        .category-block { display: flex; flex-direction: column; gap: 10px; }
+        .user-list-item { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e9ecef; }
+        .user-banned { background: #fff5f5; border-color: #ffc9c9; }
+
+        /* STILI CONTATTI ORIGINALI */
+        .category-block { display: flex; flex-direction: column; gap: 10px; text-align: left; }
         .category-title { font-size: 14px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; margin-top: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
         
-        /* NUOVA RIGA CONTATTO */
         .contact-row { display: flex; gap: 8px; width: 100%; align-items: stretch; }
-
         .link-btn { flex-grow: 1; background-color: white; color: var(--primary); border: 2px solid var(--primary); padding: 16px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: space-between; transition: background-color 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .link-btn:active { transform: translateY(2px); background-color: #f8f9fa; }
         
-        /* TASTO COPIA */
         .copy-btn { width: 55px; background-color: white; color: var(--primary); border: 2px solid var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .copy-btn:active { transform: translateY(2px); background-color: #e9ecef; }
-        
         .link-icon { font-size: 20px; }
     </style>
 </head>
 <body>
-
-    <div class="header">
-        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
-        <h2>Contatti</h2>
-        <div style="width: 50px;"></div>
-    </div>
 
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
     <div id="sidebar" class="sidebar">
@@ -57,49 +91,124 @@
             <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
         </div>
         <a href="index.html" class="sidebar-link">🏠 Home Page</a>
+        <a href="bacheca_utility.html" class="sidebar-link">📢 Bacheca Avvisi</a>
         <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
-        <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
         <a href="turni.html" class="sidebar-link">🔄 Turni</a>
         <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
         <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
         <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
-        <a href="orari.html" class="sidebar-link">🕒 Orari</a>
+        <a href="orari.html" class="sidebar-link">🕒 Orari Navigazione</a>
         <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
-        <a href="link.html" class="sidebar-link">🔗 Link</a>
-        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
+        <a href="contatti.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">📇 Contatti</a>
         <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
-        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
-        <a href="guida.html" class="sidebar-link">📖 Guida</a>
     </div>
 
-    <div id="content-area" class="content-area">
-        <div class="status-message">Caricamento contatti...</div>
+    <div class="header">
+        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
+        <h2>📇 Contatti</h2>
+        <div style="width: 50px;"></div>
     </div>
 
-    <script>
-        // --- FUNZIONI MENU LATERALE ---
-        function apriMenuLaterale() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; }
-        function chiudiMenuLaterale() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; }
+    <div id="view-loading" class="view-container" style="display: flex;">
+        <div class="status-message">Verifica autorizzazioni...</div>
+    </div>
 
-        // --- FUNZIONE COPIA TESTO ---
-        function copiaTesto(testo, btn) {
-            navigator.clipboard.writeText(testo).then(() => {
-                const iconaOriginale = btn.innerHTML;
-                btn.innerHTML = "✅"; // Feedback visivo
-                btn.style.borderColor = "#28a745";
-                btn.style.color = "#28a745";
-                
-                setTimeout(() => {
-                    btn.innerHTML = iconaOriginale;
-                    btn.style.borderColor = "";
-                    btn.style.color = "";
-                }, 1500);
-            }).catch(err => {
-                console.error('Errore nella copia: ', err);
-            });
+    <div id="view-denied" class="view-container" style="align-items: center; justify-content: center; height: 50vh;">
+        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center;">
+            <h3 style="color: var(--danger); margin-top: 0;">Accesso Negato</h3>
+            <p style="color: #666; font-size: 14px;">Devi effettuare il login nella Home Page per accedere alla rubrica aziendale.</p>
+            <button class="btn-action" style="background: var(--primary); width: auto; padding: 10px 20px;" onclick="window.location.href='index.html'">Torna alla Home</button>
+        </div>
+    </div>
+
+    <div id="view-banned" class="view-container" style="align-items: center; justify-content: center; height: 50vh;">
+        <div style="background: #fff5f5; padding: 30px; border-radius: 12px; border: 2px solid #ffc9c9; text-align: center;">
+            <h3 style="color: var(--danger); margin-top: 0;">🚫 Accesso Revocato</h3>
+            <p style="color: #666; font-size: 14px;">Sei stato escluso dalla visualizzazione di questa pagina da un Amministratore.</p>
+            <button class="btn-action" style="background: var(--danger); width: auto; padding: 10px 20px;" onclick="window.location.href='index.html'">Torna alla Home</button>
+        </div>
+    </div>
+
+    <div id="view-profile-required" class="view-container">
+        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left;">
+            <h3 style="margin-top: 0; color: var(--primary); text-align: center;">Completa il Profilo</h3>
+            <p style="font-size: 13px; color: #555; margin-bottom: 20px; text-align: center;">Per visualizzare i contatti è obbligatorio inserire i tuoi dati anagrafici reali.</p>
+            
+            <label style="font-size: 12px; font-weight: bold; color: #666;">Nome *</label>
+            <input type="text" id="req-nome" class="input-field" placeholder="Il tuo nome">
+            
+            <label style="font-size: 12px; font-weight: bold; color: #666;">Cognome *</label>
+            <input type="text" id="req-cognome" class="input-field" placeholder="Il tuo cognome">
+            
+            <label style="font-size: 12px; font-weight: bold; color: #666;">Matricola *</label>
+            <input type="text" id="req-matricola" class="input-field" placeholder="La tua matricola">
+
+            <label style="font-size: 12px; font-weight: bold; color: #666;">Omonimia (Facoltativo)</label>
+            <input type="text" id="req-prog" class="input-field" placeholder="Es. 02, 03...">
+
+            <button id="btn-save-profile" class="btn-action" onclick="salvaProfiloObbligatorio()">Salva e Accedi</button>
+        </div>
+    </div>
+
+    <div id="view-main" class="view-container">
+        <button id="btn-admin-gestione" class="btn-action" style="background: #32325d; display: none; margin-top: 0; margin-bottom: 10px;" onclick="apriGestioneAccessi()">🛠️ Gestione Accessi Utenti</button>
+        
+        <div id="content-area" style="display: flex; flex-direction: column; gap: 10px;"></div>
+    </div>
+
+    <div id="modal-gestione" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-gestione')">
+        <div class="modal-content" style="max-width: 400px;">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('modal-gestione').style.display='none'">&times;</span>
+            <h3 style="margin-top: 5px; margin-bottom: 15px; color: #32325d;">Utenti Autorizzati</h3>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <div style="background: var(--primary); color: white; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; flex: 1; text-align: center;">
+                    Totali: <span id="badge-totali">0</span>
+                </div>
+                <div style="background: var(--success); color: white; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; flex: 1; text-align: center;">
+                    Oggi: <span id="badge-oggi">0</span>
+                </div>
+            </div>
+
+            <p style="font-size: 12px; color: #666;">Elenco di tutti coloro che hanno avuto accesso a questa pagina.</p>
+            
+            <div id="lista-utenti-accessi" style="margin-top: 15px; max-height: 60vh; overflow-y: auto;">
+                <div class="status-message">Caricamento utenti...</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
+            authDomain: "utility-haze.firebaseapp.com", 
+            projectId: "utility-haze", 
+            messagingSenderId: "686237947418", 
+            appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" 
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2"; 
+
+        window.apriMenuLaterale = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; };
+        window.chiudiMenuLaterale = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; };
+        window.chiudiSeSfondo = (event, id) => { if(event.target.id === id) document.getElementById(id).style.display = 'none'; };
+
+        function nascondiTutto() {
+            document.getElementById('view-loading').style.display = 'none';
+            document.getElementById('view-denied').style.display = 'none';
+            document.getElementById('view-banned').style.display = 'none';
+            document.getElementById('view-profile-required').style.display = 'none';
+            document.getElementById('view-main').style.display = 'none';
         }
 
-        // --- LOGICA CARICAMENTO DATI ---
+        // --- FUNZIONE ORIGINALE LETTURA DATI ---
         async function caricaContatti() {
             const area = document.getElementById('content-area');
             try {
@@ -144,14 +253,13 @@
                             btn.innerHTML = `<span>${contatto.nome}</span> <span class="link-icon">📞</span>`;
                         }
                         
-                        // Tasto Copia
                         const copyBtn = document.createElement('div');
                         copyBtn.className = "copy-btn";
                         copyBtn.innerHTML = "📋";
                         copyBtn.title = "Copia";
                         copyBtn.onclick = (e) => {
-                            e.preventDefault(); // Evita che il click attivi il link se annidato male
-                            copiaTesto(contatto.valore, copyBtn);
+                            e.preventDefault(); 
+                            window.copiaTesto(contatto.valore, copyBtn);
                         };
 
                         row.appendChild(btn);
@@ -161,14 +269,204 @@
 
                     area.appendChild(block);
                 });
-
             } catch (error) {
                 area.innerHTML = `<div class="status-message">Errore nel caricamento dei dati.</div>`;
             }
         }
 
-        window.onload = caricaContatti;
+        window.copiaTesto = (testo, btn) => {
+            navigator.clipboard.writeText(testo).then(() => {
+                const iconaOriginale = btn.innerHTML;
+                btn.innerHTML = "✅"; 
+                btn.style.borderColor = "#28a745";
+                btn.style.color = "#28a745";
+                setTimeout(() => {
+                    btn.innerHTML = iconaOriginale;
+                    btn.style.borderColor = "";
+                    btn.style.color = "";
+                }, 1500);
+            }).catch(err => console.error('Errore nella copia: ', err));
+        };
+
+        // --- LOGICA PROTEZIONE ACCESSI E FIREBASE ---
+        onAuthStateChanged(auth, async (user) => {
+            nascondiTutto();
+            
+            if (!user) {
+                document.getElementById('view-denied').style.display = 'flex';
+                return;
+            }
+
+            if (user.uid === ADMIN_UID) {
+                document.getElementById('btn-admin-gestione').style.display = 'block';
+            }
+
+            document.getElementById('view-loading').style.display = 'flex';
+
+            try {
+                const docRef = doc(db, "utenti", user.uid);
+                const docSnap = await getDoc(docRef);
+                
+                let data = docSnap.exists() ? docSnap.data() : {};
+
+                if (data.contatti_banned === true) {
+                    nascondiTutto();
+                    document.getElementById('view-banned').style.display = 'flex';
+                    return;
+                }
+
+                if (!data.nome || !data.cognome || !data.matricola) {
+                    nascondiTutto();
+                    document.getElementById('req-nome').value = data.nome || "";
+                    document.getElementById('req-cognome').value = data.cognome || "";
+                    document.getElementById('req-matricola').value = data.matricola || "";
+                    document.getElementById('req-prog').value = data.progressivo || "";
+                    document.getElementById('view-profile-required').style.display = 'block';
+                    return;
+                }
+
+                // Autorizzato: mostra i contatti
+                nascondiTutto();
+                document.getElementById('view-main').style.display = 'flex';
+                caricaContatti();
+
+                // Tracciamento
+                const oggiStr = new Date().toISOString().split('T')[0];
+                if (data.contatti_access !== true || data.last_contatti_access !== oggiStr) {
+                    await setDoc(docRef, { 
+                        contatti_access: true,
+                        last_contatti_access: oggiStr
+                    }, { merge: true });
+                }
+
+            } catch (error) {
+                console.error("Errore verifica", error);
+                document.getElementById('view-loading').innerHTML = "<div class='status-message' style='color:red;'>Errore di connessione.</div>";
+            }
+        });
+
+        window.salvaProfiloObbligatorio = async () => {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const nome = document.getElementById('req-nome').value.trim();
+            const cognome = document.getElementById('req-cognome').value.trim();
+            const matricola = document.getElementById('req-matricola').value.trim();
+            const prog = document.getElementById('req-prog').value.trim();
+
+            if (!nome || !cognome || !matricola) {
+                alert("Compila tutti i campi contrassegnati con l'asterisco (*).");
+                return;
+            }
+
+            const btn = document.getElementById('btn-save-profile');
+            btn.innerText = "⏳ Salvataggio...";
+            btn.disabled = true;
+
+            const oggiStr = new Date().toISOString().split('T')[0];
+            const profileData = { 
+                nome: nome, 
+                cognome: cognome, 
+                matricola: matricola,
+                progressivo: prog,
+                contatti_access: true,
+                last_contatti_access: oggiStr
+            };
+
+            try {
+                await setDoc(doc(db, "utenti", user.uid), profileData, { merge: true });
+                const rubricaRef = doc(db, "rubrica", user.uid);
+                const rubricaSnap = await getDoc(rubricaRef);
+                if (rubricaSnap.exists()) await setDoc(rubricaRef, profileData, { merge: true });
+                
+                location.reload();
+            } catch (e) {
+                alert("Errore durante il salvataggio.");
+                btn.innerText = "Salva e Accedi";
+                btn.disabled = false;
+            }
+        };
+
+        window.apriGestioneAccessi = async () => {
+            document.getElementById('modal-gestione').style.display = 'flex';
+            const container = document.getElementById('lista-utenti-accessi');
+            const badgeTotali = document.getElementById('badge-totali');
+            const badgeOggi = document.getElementById('badge-oggi');
+            const oggiStr = new Date().toISOString().split('T')[0];
+            
+            container.innerHTML = `<div class="status-message">Caricamento utenti in corso...</div>`;
+            badgeTotali.innerText = "0";
+            badgeOggi.innerText = "0";
+
+            try {
+                const snap = await getDocs(collection(db, "utenti"));
+                let html = "";
+                let numeroTotali = 0;
+                let numeroOggi = 0;
+                
+                snap.forEach(d => {
+                    const u = d.data();
+                    const uid = d.id;
+                    
+                    if (u.contatti_access === true) {
+                        numeroTotali++;
+                        if (u.last_contatti_access === oggiStr) {
+                            numeroOggi++;
+                        }
+
+                        const isBanned = u.contatti_banned === true;
+                        
+                        // RECUPERO E FORMATTAZIONE DEL NUMERO DI OMONIMIA
+                        const omonimia = u.progressivo ? ` ${u.progressivo}` : '';
+                        
+                        // Piccolo indicatore verde se l'utente è entrato oggi
+                        const dotOggi = (u.last_contatti_access === oggiStr) ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:5px;" title="Accesso effettuato oggi"></span>` : '';
+                        
+                        // Nome + Cognome + Eventuale omonimia attaccata
+                        const fullName = `${u.cognome || ''} ${u.nome || ''}${omonimia}`.trim() || 'Utente Sconosciuto';
+                        const matr = u.matricola ? `(Matr. ${u.matricola})` : '';
+                        
+                        let btnHtml = isBanned 
+                            ? `<button class="btn-outline" style="color:var(--success); border-color:var(--success);" onclick="toggleBan('${uid}', false)">Sblocca</button>` 
+                            : `<button class="btn-outline" style="color:var(--danger); border-color:var(--danger);" onclick="toggleBan('${uid}', true)">Blocca</button>`;
+
+                        html += `
+                            <div class="user-list-item ${isBanned ? 'user-banned' : ''}">
+                                <div>
+                                    <div style="font-weight: bold; font-size: 14px; color: #32325d;">${fullName}${dotOggi}</div>
+                                    <div style="font-size: 11px; color: #666;">${matr}</div>
+                                </div>
+                                <div>${btnHtml}</div>
+                            </div>
+                        `;
+                    }
+                });
+
+                if (html === "") {
+                    container.innerHTML = `<div class="status-message">Nessun utente ha ancora registrato l'accesso.</div>`;
+                } else {
+                    container.innerHTML = html;
+                    badgeTotali.innerText = numeroTotali;
+                    badgeOggi.innerText = numeroOggi;
+                }
+
+            } catch (e) {
+                container.innerHTML = `<div class="status-message" style="color:red;">Errore: ${e.message}</div>`;
+            }
+        };
+
+        window.toggleBan = async (targetUid, banStatus) => {
+            const conf = confirm(`Sei sicuro di voler ${banStatus ? 'BLOCCARE' : 'SBLOCCARE'} questo utente?`);
+            if (!conf) return;
+
+            try {
+                await setDoc(doc(db, "utenti", targetUid), { contatti_banned: banStatus }, { merge: true });
+                apriGestioneAccessi();
+            } catch (e) {
+                alert("Errore durante l'operazione.");
+            }
+        };
+
     </script>
 </body>
 </html>
- 

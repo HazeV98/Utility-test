@@ -6,6 +6,39 @@
     <title>Utility - Bacheca Avvisi</title>
     <meta name="theme-color" content="#0056b3">
 
+    <script>
+        // --- SISTEMA DI PULIZIA CACHE E AGGIORNAMENTO FORZATO ---
+        const PAGE_RELOAD_KEY = 'reloaded_' + window.location.pathname;
+
+        if (!sessionStorage.getItem(PAGE_RELOAD_KEY)) {
+            sessionStorage.setItem(PAGE_RELOAD_KEY, 'true');
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(regs => {
+                    regs.forEach(reg => reg.update());
+                });
+            }
+            const url = new URL(window.location.href);
+            url.searchParams.set('nocache', new Date().getTime());
+            window.location.replace(url.toString());
+        } else {
+            const APP_VERSION = "1.2"; 
+            if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
+                if ('caches' in window) {
+                    caches.keys().then((names) => {
+                        names.forEach(name => caches.delete(name));
+                    });
+                }
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then((registrations) => {
+                        registrations.forEach(registration => registration.unregister());
+                    });
+                }
+                localStorage.setItem('app_version_cache', APP_VERSION);
+                window.location.reload(true);
+            }
+        }
+    </script>
+
     <style>
         :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --danger: #dc3545; --success: #28a745; --warning: #ffc107;}
         body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
@@ -21,22 +54,38 @@
         .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; text-transform: none; }
         .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
 
+        /* VISTE SICUREZZA */
         .view-container { width: 100%; max-width: 400px; display: none; flex-direction: column; gap: 15px; text-align: center; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; margin-bottom: 15px; position: relative; border-left: 5px solid var(--primary); }
         
-        .msg-date { font-size: 11px; color: #888; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
+        /* BACHECA CARDS */
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; margin-bottom: 15px; position: relative; border-left: 5px solid var(--primary); }
+        .card.card-dds { border-left-color: #f5365c; background-color: #fffafb; }
+        .msg-date { font-size: 11px; color: #888; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; padding-right: 140px; min-height: 15px; }
+        .msg-title-dds { font-size: 16px; color: #f5365c; font-weight: bold; margin-bottom: 8px; }
         .msg-text { font-size: 15px; line-height: 1.5; color: #444; white-space: pre-wrap; margin-bottom: 10px; }
         .msg-link { display: inline-block; background: #e9ecef; color: var(--primary); padding: 10px 15px; border-radius: 8px; font-size: 14px; text-decoration: none; font-weight: bold; margin-top: 5px; word-break: break-all; width: box-sizing: border-box; }
 
+        /* PULSANTI E INPUT */
         .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; transition: opacity 0.2s; margin-top: 10px; }
         .btn-action:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-outline { background-color: transparent; border: 2px solid var(--primary); color: var(--primary); padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-delete { position: absolute; top: 15px; right: 15px; background: var(--danger); color: white; border: none; border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
         
         .input-field { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white; }
+        
+        /* MODALI E ADMIN LIST */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; max-height: 90vh; overflow-y: auto;}
-
         .status-message { color: #666; text-align: center; margin-top: 20px; font-size: 15px; }
+        .user-list-item { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e9ecef; }
+        .user-banned { background: #fff5f5; border-color: #ffc9c9; }
+
+        /* CHECKBOX E DATE TAGS */
+        .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; }
+        .checkbox-grid label { background: #f8f9fa; padding: 8px; border-radius: 6px; border: 1px solid #e9ecef; display: flex; align-items: center; gap: 5px; }
+        .date-tag { display: inline-flex; align-items: center; background-color: #f5365c; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 5px; }
+        .date-tag-remove { margin-left: 8px; cursor: pointer; font-weight: bold; color: #ffccd5; }
+        .date-tag-remove:hover { color: white; }
     </style>
 </head>
 <body>
@@ -67,13 +116,75 @@
     </div>
 
     <div id="view-loading" class="view-container" style="display: flex;">
-        <div class="status-message">Caricamento messaggi in corso...</div>
+        <div class="status-message">Verifica autorizzazioni...</div>
+    </div>
+
+    <div id="view-denied" class="view-container" style="align-items: center; justify-content: center; height: 50vh;">
+        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center;">
+            <h3 style="color: var(--danger); margin-top: 0;">Accesso Negato</h3>
+            <p style="color: #666; font-size: 14px;">Devi effettuare il login nella Home Page per vedere questa bacheca e ricevere gli avvisi.</p>
+            <button class="btn-action" style="background: var(--primary); width: auto; padding: 10px 20px;" onclick="window.location.href='index.html'">Torna alla Home</button>
+        </div>
+    </div>
+
+    <div id="view-banned" class="view-container" style="align-items: center; justify-content: center; height: 50vh;">
+        <div style="background: #fff5f5; padding: 30px; border-radius: 12px; border: 2px solid #ffc9c9; text-align: center;">
+            <h3 style="color: var(--danger); margin-top: 0;">🚫 Accesso Revocato</h3>
+            <p style="color: #666; font-size: 14px;">Sei stato escluso dalla visualizzazione di questa bacheca da un Amministratore.</p>
+            <button class="btn-action" style="background: var(--danger); width: auto; padding: 10px 20px;" onclick="window.location.href='index.html'">Torna alla Home</button>
+        </div>
+    </div>
+
+    <div id="view-profile-required" class="view-container">
+        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left;">
+            <h3 style="margin-top: 0; color: var(--primary); text-align: center;">Completa il Profilo</h3>
+            <p style="font-size: 13px; color: #555; margin-bottom: 20px; text-align: center;">Per visualizzare la bacheca è obbligatorio inserire i tuoi dati anagrafici reali.</p>
+            
+            <label style="font-size: 12px; font-weight: bold; color: #666;">Nome *</label>
+            <input type="text" id="req-nome" class="input-field" placeholder="Il tuo nome">
+            
+            <label style="font-size: 12px; font-weight: bold; color: #666;">Cognome *</label>
+            <input type="text" id="req-cognome" class="input-field" placeholder="Il tuo cognome">
+            
+            <label style="font-size: 12px; font-weight: bold; color: #666;">Matricola *</label>
+            <input type="text" id="req-matricola" class="input-field" placeholder="La tua matricola">
+
+            <label style="font-size: 12px; font-weight: bold; color: #666;">Nuemro Omonimia (Facoltativo)</label>
+            <input type="text" id="req-prog" class="input-field" placeholder="Es. 02, 03...">
+
+            <button id="btn-save-profile" class="btn-action" onclick="salvaProfiloObbligatorio()">Salva e Accedi</button>
+        </div>
     </div>
 
     <div id="view-main" class="view-container">
-        <button id="btn-admin-add" class="btn-action" style="display: none; margin-top: 0; margin-bottom: 15px;" onclick="apriModaleNuovo()">+ Aggiungi Messaggio</button>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px; margin-top: 0;">
+            <button id="btn-admin-add" class="btn-action" style="display: none; margin-top: 0; flex: 1;" onclick="apriModaleNuovo()">+ Pubblica Avviso</button>
+            <button id="btn-admin-gestione" class="btn-action" style="background: #32325d; display: none; margin-top: 0; flex: 1;" onclick="apriGestioneAccessi()">🛠️ Gestione Accessi</button>
+        </div>
         
         <div id="lista-messaggi"></div>
+    </div>
+
+    <div id="modal-gestione" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-gestione')">
+        <div class="modal-content" style="max-width: 400px;">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('modal-gestione').style.display='none'">&times;</span>
+            <h3 style="margin-top: 5px; margin-bottom: 15px; color: #32325d;">
+                Utenti Autorizzati
+            </h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <div style="background: var(--primary); color: white; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; flex: 1; text-align: center;">
+                    Totali: <span id="badge-totali">0</span>
+                </div>
+                <div style="background: var(--success); color: white; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; flex: 1; text-align: center;">
+                    Oggi: <span id="badge-oggi">0</span>
+                </div>
+            </div>
+            <p style="font-size: 12px; color: #666;">Gestisci gli accessi alla Bacheca Utility.</p>
+            
+            <div id="lista-utenti-accessi" style="margin-top: 15px; max-height: 60vh; overflow-y: auto;">
+                <div class="status-message">Caricamento utenti...</div>
+            </div>
+        </div>
     </div>
 
     <div id="modal-nuovo" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-nuovo')">
@@ -81,21 +192,124 @@
             <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('modal-nuovo').style.display='none'">&times;</span>
             <h3 style="margin-top: 5px; color: var(--primary);">Nuovo Avviso</h3>
             
-            <label style="font-size: 12px; font-weight: bold; color: #666;">Testo del messaggio:</label>
-            <textarea id="msgTesto" class="input-field" rows="5" placeholder="Scrivi qui la comunicazione..."></textarea>
+            <label style="font-size: 13px; font-weight: bold; color: #555;">Tipo di Annuncio:</label>
+            <select id="pub-tipo" class="input-field" onchange="toggleCampiDDS()">
+                <option value="normale">Messaggio Normale</option>
+                <option value="dds">Avviso DDS</option>
+            </select>
+
+            <div id="area-dds" style="display: none; background: #fffafb; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #f5c6cb;">
+                <label style="font-size: 12px; font-weight: bold; color: #f5365c;">Titolo DDS:</label>
+                <input type="text" id="pub-titolo-dds" class="input-field" placeholder="Es. Variante Linea 1" style="margin-bottom: 15px;">
+                
+                <label style="font-size: 12px; font-weight: bold; color: #f5365c;">Date di Validità:</label>
+                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                    <input type="text" id="pub-date-dds-display" class="input-field" placeholder="Nessuna data selezionata" readonly style="margin-bottom: 0; cursor: pointer;" onclick="apriDatePicker()">
+                    <button class="btn-action" style="margin-top: 0; width: auto; padding: 12px 15px;" onclick="apriDatePicker()">📅</button>
+                </div>
+            </div>
+
+            <label style="font-size: 13px; font-weight: bold; color: #555;">Destinatari (Target):</label>
+            <select id="pub-target" class="input-field" onchange="toggleAreaTarget()">
+                <option value="tutti">Visibile a Tutti</option>
+                <option value="selezione">Solo Rotazioni Selezionate...</option>
+            </select>
+
+            <div id="area-target" style="display: none; margin-bottom: 15px; max-height: 200px; overflow-y: auto;">
+                <div class="checkbox-grid">
+                    <label><input type="checkbox" class="target-check" value="rot_fnove"> Rot F.Nove</label>
+                    <label><input type="checkbox" class="target-check" value="spez_fnove"> Spez F.Nove</label>
+                    <label><input type="checkbox" class="target-check" value="tc_spez_fnove"> TC Spez F.Nove</label>
+                    <label><input type="checkbox" class="target-check" value="rot_proma"> Rot P.Roma</label>
+                    <label><input type="checkbox" class="target-check" value="spez_proma"> Spez P.Roma</label>
+                    <label><input type="checkbox" class="target-check" value="ris_proma"> Ris P.Roma</label>
+                    <label><input type="checkbox" class="target-check" value="rot_szaccaria"> Rot S.Zac</label>
+                    <label><input type="checkbox" class="target-check" value="spez_szaccaria"> Spez S.Zac</label>
+                    <label><input type="checkbox" class="target-check" value="tc_spez_szaccaria"> TC Spez S.Zac</label>
+                    <label><input type="checkbox" class="target-check" value="rot_lido"> Rot Lido</label>
+                    <label><input type="checkbox" class="target-check" value="spez_lido"> Spez Lido</label>
+                    <label><input type="checkbox" class="target-check" value="tc_spez_lido"> TC Spez Lido</label>
+                    <label><input type="checkbox" class="target-check" value="rot_linea12"> Rot Linea 12</label>
+                    <label><input type="checkbox" class="target-check" value="rot_linea13"> Rot Linea 13</label>
+                    <label><input type="checkbox" class="target-check" value="rot_linea14"> Rot Linea 14</label>
+                    <label><input type="checkbox" class="target-check" value="rot_linea14_mb"> Rot 14 M/B</label>
+                    <label><input type="checkbox" class="target-check" value="rot_17sn"> Rot 17 SN</label>
+                    <label><input type="checkbox" class="target-check" value="tc_rot_17sn"> TC Rot 17 SN</label>
+                    <label><input type="checkbox" class="target-check" value="rot_17tr"> Rot 17 TR</label>
+                    <label><input type="checkbox" class="target-check" value="tc_rot_17tr"> TC Rot 17 TR</label>
+                    <label><input type="checkbox" class="target-check" value="disp_indet"> Disponibili</label>
+                </div>
+            </div>
+
+            <label style="font-size: 14px; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 8px; margin-top: 15px; margin-bottom: 10px;">
+                <input type="checkbox" id="pub-has-sondaggio" onchange="toggleSondaggio()" style="transform: scale(1.2);"> 📊 Aggiungi Sondaggio
+            </label>
             
-            <label style="font-size: 12px; font-weight: bold; color: #666;">Link Esterno (Opzionale):</label>
+            <div id="area-sondaggio" style="display: none; background: #eef2ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--primary);">
+                <label style="font-size: 13px; color: #555; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-weight: bold;">
+                    <input type="checkbox" id="pub-multi-risposta"> Consenti risposte multiple
+                </label>
+
+                <label style="font-size: 12px; font-weight: bold; color: var(--primary);">Opzioni di voto (minimo 2):</label>
+                <div id="lista-opzioni-sondaggio" style="margin-top: 10px;">
+                    </div>
+                <button class="btn-outline" style="width: 100%; padding: 8px; margin-top: 5px; font-size: 13px;" onclick="aggiungiOpzioneSondaggio()">➕ Aggiungi un'opzione</button>
+            </div>
+
+            <label style="font-size: 13px; font-weight: bold; color: #555;">Data di Scadenza (Auto-Elimina):</label>
+            <input type="date" id="pub-scadenza" class="input-field">
+
+            <label style="font-size: 13px; font-weight: bold; color: #555;">Testo del messaggio:</label>
+            <textarea id="msgTesto" class="input-field" rows="4" placeholder="Scrivi qui la comunicazione..."></textarea>
+            
+            <label style="font-size: 13px; font-weight: bold; color: #555;">Link Esterno (Opzionale):</label>
             <input type="url" id="msgLink" class="input-field" placeholder="es. https://www.google.it o link Drive">
             
             <button id="btn-pubblica" class="btn-action" onclick="pubblicaMessaggio()">Pubblica Avviso</button>
         </div>
     </div>
 
+    <div id="modal-date-picker" class="modal-overlay" style="z-index: 6000;">
+        <div class="modal-content" style="max-width: 300px; text-align: center;">
+            <h3 style="margin-top: 0; color: var(--primary);">Scegli Date</h3>
+            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Seleziona una data alla volta e clicca il tasto '+'</p>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="date" id="input-date-single" class="input-field" style="margin-bottom: 0;">
+                <button class="btn-action" style="width: 50px; margin-top: 0; padding: 10px;" onclick="aggiungiDataSingola()">+</button>
+            </div>
+
+            <div id="date-tags-container" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px; justify-content: center; min-height: 40px;">
+                </div>
+
+            <button class="btn-action" style="background-color: var(--primary);" onclick="chiudiDatePicker()">Fatto</button>
+        </div>
+    </div>
+
+    <div id="modal-letture" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-letture')" style="z-index: 6000;">
+        <div class="modal-content" style="max-width: 350px;">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('modal-letture').style.display='none'">&times;</span>
+            <h3 style="margin-top: 5px; color: var(--primary);">👁️ Visualizzazioni</h3>
+            <div id="lista-letture" style="margin-top: 15px; max-height: 50vh; overflow-y: auto;">
+                <div class="status-message">Caricamento in corso...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-voti" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-voti')" style="z-index: 6000;">
+        <div class="modal-content" style="max-width: 350px;">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('modal-voti').style.display='none'">&times;</span>
+            <h3 style="margin-top: 5px; color: var(--primary);">📊 Dettaglio Voti</h3>
+            <div id="lista-voti-dettaglio" style="margin-top: 15px; max-height: 50vh; overflow-y: auto;">
+                <div class="status-message">Caricamento in corso...</div>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-        // Rimosso import dello Storage per evitare blocchi
-        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, getDoc, setDoc, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -108,104 +322,484 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const isAdmin = localStorage.getItem('dev_mode_active') === 'true';
+        const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2"; 
+        const COLLABORATORE_UIDS = ["INSERISCI_QUI_UID_1", "INSERISCI_QUI_UID_2"]; 
+        let isPrivilegedUser = false;
+        let ddsDatesArray = [];
+        let currentUserFullName = "Utente Sconosciuto"; 
 
         window.apriMenuLaterale = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; };
         window.chiudiMenuLaterale = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; };
         window.chiudiSeSfondo = (event, id) => { if(event.target.id === id) document.getElementById(id).style.display = 'none'; };
 
-        onAuthStateChanged(auth, (user) => {
-            if (isAdmin) document.getElementById('btn-admin-add').style.display = 'block';
-            caricaBacheca();
+        window.toggleCampiDDS = () => {
+            const isDDS = document.getElementById('pub-tipo').value === 'dds';
+            document.getElementById('area-dds').style.display = isDDS ? 'block' : 'none';
+        };
+
+        window.toggleAreaTarget = () => {
+            const isSelezione = document.getElementById('pub-target').value === 'selezione';
+            document.getElementById('area-target').style.display = isSelezione ? 'block' : 'none';
+        };
+
+        window.toggleSondaggio = () => {
+            const area = document.getElementById('area-sondaggio');
+            const isChecked = document.getElementById('pub-has-sondaggio').checked;
+            area.style.display = isChecked ? 'block' : 'none';
+            if (isChecked && document.getElementById('lista-opzioni-sondaggio').children.length === 0) {
+                aggiungiOpzioneSondaggio("Sì");
+                aggiungiOpzioneSondaggio("No");
+            }
+        };
+
+        window.aggiungiOpzioneSondaggio = (valoreDefault = "") => {
+            const div = document.createElement('input');
+            div.type = 'text'; div.className = 'input-field opzione-sondaggio';
+            div.placeholder = 'Testo opzione (es. Sì, No, Forse)';
+            div.style.marginBottom = '8px'; div.value = valoreDefault;
+            document.getElementById('lista-opzioni-sondaggio').appendChild(div);
+        };
+
+        window.apriDatePicker = () => { document.getElementById('modal-date-picker').style.display = 'flex'; aggiornaUI_DatePicker(); };
+        window.chiudiDatePicker = () => { document.getElementById('modal-date-picker').style.display = 'none'; document.getElementById('pub-date-dds-display').value = ddsDatesArray.length === 0 ? "" : ddsDatesArray.join(", "); };
+        window.aggiungiDataSingola = () => { const val = document.getElementById('input-date-single').value; if (!val) return; if (!ddsDatesArray.includes(val)) { ddsDatesArray.push(val); ddsDatesArray.sort(); aggiornaUI_DatePicker(); } document.getElementById('input-date-single').value = ""; };
+        window.rimuoviDataSingola = (dateStr) => { ddsDatesArray = ddsDatesArray.filter(d => d !== dateStr); aggiornaUI_DatePicker(); };
+        function aggiornaUI_DatePicker() {
+            const container = document.getElementById('date-tags-container');
+            container.innerHTML = "";
+            if(ddsDatesArray.length === 0) { container.innerHTML = `<span style="color:#aaa; font-size: 13px;">Nessuna data aggiunta.</span>`; } 
+            else { ddsDatesArray.forEach(d => { container.innerHTML += `<div class="date-tag">${d} <span class="date-tag-remove" onclick="rimuoviDataSingola('${d}')">✖</span></div>`; }); }
+        }
+
+        function nascondiTutto() {
+            document.querySelectorAll('.view-container').forEach(v => v.style.display = 'none');
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            nascondiTutto();
+            
+            if (user) {
+                isPrivilegedUser = (user.uid === ADMIN_UID) || COLLABORATORE_UIDS.includes(user.uid);
+                if (isPrivilegedUser) document.getElementById('btn-admin-add').style.display = 'block';
+                if (user.uid === ADMIN_UID) document.getElementById('btn-admin-gestione').style.display = 'block';
+
+                document.getElementById('view-loading').style.display = 'flex';
+
+                try {
+                    const docRef = doc(db, "utenti", user.uid);
+                    const docSnap = await getDoc(docRef);
+                    let data = docSnap.exists() ? docSnap.data() : {};
+
+                    if (data.bacheca_banned === true) {
+                        nascondiTutto();
+                        document.getElementById('view-banned').style.display = 'flex';
+                        return;
+                    }
+
+                    const localDati = JSON.parse(localStorage.getItem('backup_profilo_haze') || "{}");
+                    let dbAggiornato = false;
+
+                    if (!data.nome && localDati.nome) { data.nome = localDati.nome; dbAggiornato = true; }
+                    if (!data.cognome && localDati.cognome) { data.cognome = localDati.cognome; dbAggiornato = true; }
+                    if (data.matricola === undefined && localDati.matricola !== undefined) { data.matricola = localDati.matricola; dbAggiornato = true; }
+
+                    if (dbAggiornato) {
+                        await setDoc(docRef, { nome: data.nome, cognome: data.cognome, matricola: data.matricola, progressivo: localDati.progressivo || "" }, { merge: true });
+                    }
+
+                    if (!data.nome || !data.cognome || data.matricola === undefined || data.matricola === "") {
+                        nascondiTutto();
+                        document.getElementById('req-nome').value = data.nome || localDati.nome || "";
+                        document.getElementById('req-cognome').value = data.cognome || localDati.cognome || "";
+                        document.getElementById('req-matricola').value = data.matricola || localDati.matricola || "";
+                        document.getElementById('req-prog').value = data.progressivo || localDati.progressivo || "";
+                        document.getElementById('view-profile-required').style.display = 'block';
+                        return;
+                    }
+
+                    const omo = data.progressivo ? ` ${data.progressivo}` : '';
+                    currentUserFullName = `${data.cognome || ''} ${data.nome || ''}${omo}`.trim();
+
+                    nascondiTutto();
+                    document.getElementById('view-main').style.display = 'flex';
+                    caricaBacheca();
+
+                    // --- TRACCIAMENTO ACCESSI ---
+                    const oggiStr = new Date().toISOString().split('T')[0];
+                    if (data.bacheca_access !== true || data.last_bacheca_access !== oggiStr) {
+                        await setDoc(docRef, { 
+                            bacheca_access: true,
+                            last_bacheca_access: oggiStr
+                        }, { merge: true });
+                    }
+
+                } catch (error) {
+                    console.error("Errore verifica", error);
+                    document.getElementById('view-loading').innerHTML = "<div class='status-message' style='color:red;'>Errore di connessione.</div>";
+                }
+            } else {
+                document.getElementById('view-denied').style.display = 'flex';
+            }
         });
+
+        window.salvaProfiloObbligatorio = async () => {
+            const user = auth.currentUser;
+            if (!user) return;
+            const nome = document.getElementById('req-nome').value.trim();
+            const cognome = document.getElementById('req-cognome').value.trim();
+            const matricola = document.getElementById('req-matricola').value.trim();
+            const prog = document.getElementById('req-prog').value.trim();
+
+            if (!nome || !cognome || !matricola) { alert("Compila tutti i campi obbligatori (*)."); return; }
+
+            const btn = document.getElementById('btn-save-profile');
+            btn.innerText = "⏳..."; btn.disabled = true;
+
+            const oggiStr = new Date().toISOString().split('T')[0];
+            const profileData = { 
+                nome: nome, 
+                cognome: cognome, 
+                matricola: matricola, 
+                progressivo: prog, 
+                bacheca_access: true,
+                last_bacheca_access: oggiStr
+            };
+
+            localStorage.setItem('backup_profilo_haze', JSON.stringify(profileData));
+
+            try {
+                await setDoc(doc(db, "utenti", user.uid), profileData, { merge: true });
+                const rubricaRef = doc(db, "rubrica", user.uid);
+                const rubricaSnap = await getDoc(rubricaRef);
+                if (rubricaSnap.exists()) await setDoc(rubricaRef, profileData, { merge: true });
+                location.reload();
+            } catch (e) { alert("Errore salvataggio."); btn.innerText = "Salva"; btn.disabled = false; }
+        };
+
+        // --- FUNZIONE AGGIORNATA CON IL CONTATORE ---
+        window.apriGestioneAccessi = async () => {
+            document.getElementById('modal-gestione').style.display = 'flex';
+            const container = document.getElementById('lista-utenti-accessi');
+            const badgeTotali = document.getElementById('badge-totali');
+            const badgeOggi = document.getElementById('badge-oggi');
+            const oggiStr = new Date().toISOString().split('T')[0];
+
+            container.innerHTML = `<div class="status-message">Caricamento in corso...</div>`;
+            badgeTotali.innerText = "0";
+            badgeOggi.innerText = "0";
+
+            try {
+                const snap = await getDocs(collection(db, "utenti"));
+                let html = "";
+                let numeroTotali = 0;
+                let numeroOggi = 0;
+                
+                snap.forEach(d => {
+                    const u = d.data();
+                    if (u.bacheca_access === true) {
+                        numeroTotali++;
+                        if (u.last_bacheca_access === oggiStr) {
+                            numeroOggi++;
+                        }
+                        
+                        const isBanned = u.bacheca_banned === true;
+                        const omo = u.progressivo ? ` ${u.progressivo}` : '';
+                        const fullName = `${u.cognome || ''} ${u.nome || ''}${omo}`.trim() || 'Utente Sconosciuto';
+                        const matr = u.matricola ? `(Matr. ${u.matricola})` : '';
+                        
+                        const dotOggi = (u.last_bacheca_access === oggiStr) ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:5px;" title="Accesso effettuato oggi"></span>` : '';
+                        
+                        let btnHtml = isBanned 
+                            ? `<button class="btn-outline" style="color:var(--success); border-color:var(--success);" onclick="toggleBan('${d.id}', false)">Sblocca</button>` 
+                            : `<button class="btn-outline" style="color:var(--danger); border-color:var(--danger);" onclick="toggleBan('${d.id}', true)">Blocca</button>`;
+
+                        html += `<div class="user-list-item ${isBanned ? 'user-banned' : ''}">
+                                <div><div style="font-weight: bold; font-size: 14px; color: #32325d;">${fullName}${dotOggi}</div>
+                                <div style="font-size: 11px; color: #666;">${matr}</div></div>
+                                <div>${btnHtml}</div></div>`;
+                    }
+                });
+                
+                if (html === "") {
+                    container.innerHTML = `<div class="status-message">Nessun utente ha ancora registrato l'accesso.</div>`;
+                } else {
+                    container.innerHTML = html;
+                    badgeTotali.innerText = numeroTotali;
+                    badgeOggi.innerText = numeroOggi;
+                }
+            } catch (e) { container.innerHTML = `<div class="status-message" style="color:red;">Errore.</div>`; }
+        };
+
+        window.toggleBan = async (targetUid, banStatus) => {
+            if (!confirm(`Sei sicuro di voler ${banStatus ? 'BLOCCARE' : 'SBLOCCARE'} questo utente dalla bacheca?`)) return;
+            try {
+                await setDoc(doc(db, "utenti", targetUid), { bacheca_banned: banStatus }, { merge: true });
+                apriGestioneAccessi();
+            } catch (e) { alert("Errore operazione."); }
+        };
+
+        async function segnaComeLetto(msgId) {
+            const user = auth.currentUser;
+            if (!user) return;
+            const key = 'letto_' + msgId;
+            if (localStorage.getItem(key)) return; 
+            try {
+                const readRef = doc(db, "bacheca_utility", msgId, "letture", user.uid);
+                await setDoc(readRef, { nome: currentUserFullName, data_lettura: Date.now() }, { merge: true });
+                localStorage.setItem(key, 'true');
+            } catch(e) { console.log("Impossibile salvare la lettura"); }
+        }
 
         async function caricaBacheca() {
             const container = document.getElementById('lista-messaggi');
-            document.getElementById('view-loading').style.display = 'none';
-            document.getElementById('view-main').style.display = 'flex';
+            const stateApp = JSON.parse(localStorage.getItem('myTurniApp')) || {};
+            const pid = stateApp.profiloAttivoId || 'default';
+            const profileObj = stateApp.profiliSalvati ? stateApp.profiliSalvati[pid] : stateApp;
+            const rotazioneUtente = profileObj ? profileObj.depositoAttivo : null;
+            const oggiStr = new Date().toISOString().split('T')[0];
 
             try {
                 const q = query(collection(db, "bacheca_utility"), orderBy("timestamp", "desc"));
                 const snap = await getDocs(q);
                 
                 container.innerHTML = "";
-                let msgs = [];
-                snap.forEach(d => { let m = d.data(); m.id = d.id; msgs.push(m); });
+                let msgsMostrati = 0;
 
-                if (msgs.length === 0) {
-                    container.innerHTML = `<div class="status-message">Nessun avviso in bacheca.</div>`;
-                } else {
-                    localStorage.setItem('ultimo_accesso_bacheca', Date.now());
+                snap.forEach(d => { 
+                    let m = d.data(); 
+                    m.id = d.id; 
+                    
+                    if (m.scadenza && m.scadenza < oggiStr) return; 
+                    if (!isPrivilegedUser && m.target && m.target !== "tutti") {
+                        if (!rotazioneUtente || !m.target.includes(rotazioneUtente)) return;
+                    }
 
-                    msgs.forEach(m => {
-                        const d = new Date(m.timestamp);
-                        const dataFormattata = d.toLocaleDateString('it-IT') + " alle " + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
-                        
-                        let linkHTML = "";
-                        if (m.link) {
-                            linkHTML = `<a href="${m.link}" target="_blank" class="msg-link">🔗 Apri Link Esterno</a>`;
-                        }
+                    segnaComeLetto(m.id);
+                    msgsMostrati++;
+                    const dataObj = new Date(m.timestamp);
+                    const dataFormattata = dataObj.toLocaleDateString('it-IT') + " alle " + dataObj.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
+                    
+                    let extraHTML = "";
+                    let cardClass = "card";
 
-                        let adminBtn = isAdmin ? `<button class="btn-delete" onclick="eliminaMessaggio('${m.id}')">Elimina</button>` : '';
+                    if (m.tipo === "dds") {
+                        cardClass += " card-dds";
+                        extraHTML += `<div class="msg-title-dds">⚠️ DDS: ${m.titolo_dds}</div>`;
+                        if (m.date_validita) extraHTML += `<div style="font-size: 13px; color: #f5365c; margin-bottom: 5px;">📅 Date valide: <b>${m.date_validita}</b></div>`;
+                    }
 
-                        container.innerHTML += `
-                            <div class="card">
-                                ${adminBtn}
-                                <div class="msg-date">📅 ${dataFormattata}</div>
-                                <div class="msg-text">${m.testo}</div>
-                                ${linkHTML}
-                            </div>
-                        `;
-                    });
-                }
-            } catch (e) {
-                container.innerHTML = `<div class="status-message" style="color:red;">Errore caricamento: ${e.message}</div>`;
-            }
+                    if (m.target && m.target !== "tutti" && isPrivilegedUser) {
+                        extraHTML += `<div style="font-size: 10px; background: #eef2ff; color: var(--primary); display: inline-block; padding: 2px 6px; border-radius: 4px; margin-bottom: 8px;">🎯 Mirato a specifiche rotazioni</div><br>`;
+                    }
+
+                    if (m.link) extraHTML += `<a href="${m.link}" target="_blank" class="msg-link">🔗 Apri Link Esterno</a>`;
+
+                    let sondaggioHTML = "";
+                    if (m.sondaggio_opzioni && m.sondaggio_opzioni.length > 0) {
+                        sondaggioHTML = `<div id="sondaggio-${m.id}" style="margin-top: 15px;"><div style="font-size:12px; color:#888;">📊 Caricamento sondaggio in corso...</div></div>`;
+                        let isMulti = m.sondaggio_multi === true;
+                        calcolaSondaggio(m.id, m.sondaggio_opzioni, isMulti);
+                    }
+
+                    let adminBtn = isPrivilegedUser ? `<button class="btn-delete" onclick="eliminaMessaggio('${m.id}')">Elimina</button>` : '';
+                    let infoBtn = (auth.currentUser && auth.currentUser.uid === ADMIN_UID) 
+                        ? `<button class="btn-outline" style="position: absolute; top: 15px; right: 80px; padding: 4px 8px; font-size: 11px; background: white; z-index: 10;" onclick="mostraLetture('${m.id}')">👁️ Visite</button>` 
+                        : '';
+
+                    container.innerHTML += `
+                        <div class="${cardClass}">
+                            ${adminBtn}
+                            ${infoBtn}
+                            <div class="msg-date">📅 Pubblicato il ${dataFormattata}</div>
+                            ${extraHTML}
+                            <div class="msg-text">${m.testo}</div>
+                            ${sondaggioHTML}
+                        </div>
+                    `;
+                });
+
+                if (msgsMostrati === 0) container.innerHTML = `<div class="status-message">Nessun avviso in bacheca.</div>`;
+            } catch (e) { container.innerHTML = `<div class="status-message" style="color:red;">Errore caricamento: ${e.message}</div>`; }
         }
 
+        window.calcolaSondaggio = async (msgId, opzioni, isMulti) => {
+            try {
+                const snap = await getDocs(collection(db, "bacheca_utility", msgId, "voti"));
+                let conteggi = {};
+                opzioni.forEach(opt => conteggi[opt] = 0);
+                
+                let mieScelte = []; let totPartecipanti = 0; 
+
+                snap.forEach(d => {
+                    const v = d.data();
+                    let scelteUtente = Array.isArray(v.scelte) ? v.scelte : (v.scelta ? [v.scelta] : []);
+                    if (scelteUtente.length > 0) {
+                        totPartecipanti++;
+                        scelteUtente.forEach(s => { if (conteggi[s] !== undefined) conteggi[s]++; });
+                    }
+                    if (d.id === auth.currentUser.uid) mieScelte = scelteUtente;
+                });
+
+                let adminVotiBtn = (auth.currentUser && auth.currentUser.uid === ADMIN_UID) 
+                    ? `<button class="btn-outline" style="padding: 3px 8px; font-size: 11px; background: white; margin-left: 8px;" onclick="mostraVotiDettaglio('${msgId}')">👁️ Chi ha votato</button>` 
+                    : '';
+
+                let tipoText = isMulti ? "(Risposte multiple)" : "(Risposta singola)";
+                let html = `<div style="background: #f4f7f6; padding: 15px; border-radius: 12px; border: 1px solid #e9ecef;">
+                        <div style="font-size: 14px; font-weight: bold; color: var(--primary); margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center;">
+                                <span>📊 Sondaggio</span>
+                                ${adminVotiBtn}
+                            </div>
+                            <span style="font-weight: normal; font-size: 12px; color: #666;">${totPartecipanti} partecipanti</span>
+                        </div>
+                        <div style="font-size: 11px; color: #888; margin-bottom: 12px;">${tipoText}</div>`;
+
+                opzioni.forEach(opt => {
+                    const isMio = mieScelte.includes(opt);
+                    const voti = conteggi[opt];
+                    const percentuale = totPartecipanti > 0 ? Math.round((voti / totPartecipanti) * 100) : 0;
+                    const testoVoti = isMulti ? `${voti} voti` : `${voti} (${percentuale}%)`;
+                    const btnStyle = isMio ? "background: var(--primary); color: white; border-color: var(--primary);" : "background: white; color: var(--primary); border-color: var(--primary);";
+                    const safeOpt = opt.replace(/'/g, "\\'"); 
+                    
+                    html += `<button class="btn-outline" style="width: 100%; margin-bottom: 8px; text-align: left; display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; ${btnStyle}" onclick="inviaVotoSondaggio('${msgId}', '${safeOpt}', ${isMulti})">
+                            <span style="font-weight: bold; font-size: 15px;">${isMio ? '✅ ' : ''}${opt}</span>
+                            <span style="font-size: 13px;">${testoVoti}</span>
+                        </button>`;
+                });
+                html += `</div>`;
+                document.getElementById(`sondaggio-${msgId}`).innerHTML = html;
+            } catch(e) { document.getElementById(`sondaggio-${msgId}`).innerHTML = `<div style="color:red; font-size:12px;">Errore caricamento voti.</div>`; }
+        };
+
+        window.inviaVotoSondaggio = async (msgId, scelta, isMulti) => {
+            const user = auth.currentUser;
+            if (!user) return;
+            try {
+                const votoRef = doc(db, "bacheca_utility", msgId, "voti", user.uid);
+                if (isMulti) {
+                    const docSnap = await getDoc(votoRef);
+                    let attuali = docSnap.exists() ? (Array.isArray(docSnap.data().scelte) ? docSnap.data().scelte : (docSnap.data().scelta ? [docSnap.data().scelta] : [])) : [];
+                    attuali = attuali.includes(scelta) ? attuali.filter(s => s !== scelta) : [...attuali, scelta];
+                    await setDoc(votoRef, { scelte: attuali, timestamp: Date.now() }, { merge: true });
+                } else {
+                    await setDoc(votoRef, { scelte: [scelta], timestamp: Date.now() }, { merge: true });
+                }
+                caricaBacheca(); 
+            } catch(e) { alert("Errore durante la votazione."); }
+        };
+
+        window.mostraLetture = async (msgId) => {
+            document.getElementById('modal-letture').style.display = 'flex';
+            const container = document.getElementById('lista-letture');
+            container.innerHTML = `<div class="status-message">Caricamento in corso...</div>`;
+            try {
+                const snap = await getDocs(collection(db, "bacheca_utility", msgId, "letture"));
+                let html = "";
+                snap.forEach(d => {
+                    const data = d.data();
+                    const dateStr = new Date(data.data_lettura).toLocaleDateString('it-IT') + " - " + new Date(data.data_lettura).toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
+                    html += `<div style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-weight: bold; font-size: 14px; color: #32325d;">${data.nome}</div>
+                            <div style="font-size: 11px; color: #888;">${dateStr}</div></div>`;
+                });
+                container.innerHTML = html || `<div class="status-message">Nessuno ha ancora visualizzato.</div>`;
+            } catch(e) { container.innerHTML = `<div class="status-message" style="color:red;">Errore.</div>`; }
+        };
+
+        window.mostraVotiDettaglio = async (msgId) => {
+            document.getElementById('modal-voti').style.display = 'flex';
+            const container = document.getElementById('lista-voti-dettaglio');
+            container.innerHTML = `<div class="status-message">Caricamento in corso...</div>`;
+
+            try {
+                const snapVoti = await getDocs(collection(db, "bacheca_utility", msgId, "voti"));
+                if (snapVoti.empty) {
+                    container.innerHTML = `<div class="status-message">Nessuno ha ancora votato.</div>`;
+                    return;
+                }
+
+                const snapUtenti = await getDocs(collection(db, "utenti"));
+                let mappaUtenti = {};
+                snapUtenti.forEach(d => {
+                    const u = d.data();
+                    const omo = u.progressivo ? ` ${u.progressivo}` : '';
+                    mappaUtenti[d.id] = `${u.cognome || ''} ${u.nome || ''}${omo}`.trim() || 'Utente Sconosciuto';
+                });
+
+                let html = "";
+                snapVoti.forEach(d => {
+                    const v = d.data();
+                    const userName = mappaUtenti[d.id] || 'Utente Sconosciuto';
+                    let scelte = Array.isArray(v.scelte) ? v.scelte.join(", ") : (v.scelta || "Nessuna scelta");
+                    const dateStr = v.timestamp ? new Date(v.timestamp).toLocaleDateString('it-IT') + " - " + new Date(v.timestamp).toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'}) : '';
+
+                    html += `
+                        <div style="padding: 10px; border-bottom: 1px solid #eee;">
+                            <div style="font-weight: bold; font-size: 14px; color: #32325d;">${userName}</div>
+                            <div style="font-size: 13px; color: var(--primary); margin-top: 4px;">Scelta: <b>${scelte}</b></div>
+                            <div style="font-size: 11px; color: #888; margin-top: 2px;">${dateStr}</div>
+                        </div>`;
+                });
+
+                container.innerHTML = html;
+            } catch(e) {
+                container.innerHTML = `<div class="status-message" style="color:red;">Errore: ${e.message}</div>`;
+            }
+        };
+
         window.apriModaleNuovo = () => {
-            document.getElementById('msgTesto').value = "";
-            document.getElementById('msgLink').value = "";
+            document.getElementById('msgTesto').value = ""; document.getElementById('msgLink').value = ""; document.getElementById('pub-titolo-dds').value = ""; document.getElementById('pub-date-dds-display').value = ""; document.getElementById('pub-scadenza').value = ""; 
+            ddsDatesArray = []; document.getElementById('pub-has-sondaggio').checked = false; document.getElementById('pub-multi-risposta').checked = false; document.getElementById('lista-opzioni-sondaggio').innerHTML = ""; toggleSondaggio();
             document.getElementById('modal-nuovo').style.display = 'flex';
         };
 
         window.pubblicaMessaggio = async () => {
-            const testo = document.getElementById('msgTesto').value.trim();
-            const link = document.getElementById('msgLink').value.trim();
+            const user = auth.currentUser;
+            if (!user) return;
+            const tipo = document.getElementById('pub-tipo').value; 
+            const testo = document.getElementById('msgTesto').value.trim(); 
+            const link = document.getElementById('msgLink').value.trim(); 
+            const scadenza = document.getElementById('pub-scadenza').value; 
             const btn = document.getElementById('btn-pubblica');
 
-            if (!testo) return alert("Inserisci il testo del messaggio.");
+            if (!testo) return alert("Inserisci il testo.");
 
-            btn.innerText = "⏳ Pubblicazione...";
-            btn.disabled = true;
-
-            try {
-                await addDoc(collection(db, "bacheca_utility"), {
-                    testo: testo,
-                    link: link,
-                    timestamp: Date.now()
-                });
-
-                document.getElementById('modal-nuovo').style.display = 'none';
-                btn.innerText = "Pubblica Avviso";
-                btn.disabled = false;
-                caricaBacheca(); 
-
-            } catch (error) {
-                alert("❌ Errore durante la pubblicazione: " + error.message);
-                btn.innerText = "Pubblica Avviso";
-                btn.disabled = false;
+            let arraySondaggio = []; let isMulti = false;
+            if (document.getElementById('pub-has-sondaggio').checked) {
+                isMulti = document.getElementById('pub-multi-risposta').checked;
+                document.querySelectorAll('.opzione-sondaggio').forEach(inp => { if (inp.value.trim()) arraySondaggio.push(inp.value.trim()); });
+                if (arraySondaggio.length < 2) return alert("Inserisci almeno 2 opzioni per il sondaggio.");
             }
+
+            let targetVal = "tutti";
+            if (document.getElementById('pub-target').value === 'selezione') {
+                targetVal = Array.from(document.querySelectorAll('.target-check:checked')).map(cb => cb.value);
+                if (targetVal.length === 0) return alert("Seleziona almeno una rotazione dal target.");
+            }
+
+            let dataToSave = { tipo, testo, link, target: targetVal, scadenza: scadenza || null, timestamp: Date.now(), autore: user.email.split('@')[0], uid: user.uid, sondaggio_opzioni: arraySondaggio, sondaggio_multi: isMulti };
+
+            if (tipo === 'dds') {
+                const titoloDds = document.getElementById('pub-titolo-dds').value.trim(); const dateDds = ddsDatesArray.join(", "); 
+                if (!titoloDds) return alert("Inserisci il titolo della DDS.");
+                dataToSave.titolo_dds = titoloDds; dataToSave.date_validita = dateDds;
+            }
+
+            btn.innerText = "⏳ Pubblicazione..."; btn.disabled = true;
+            try {
+                await setDoc(doc(db, "bacheca_utility", "msg_" + Date.now()), dataToSave);
+                document.getElementById('modal-nuovo').style.display = 'none';
+                alert("✅ Annuncio pubblicato!"); caricaBacheca(); 
+            } catch (error) { alert("❌ Errore durante la pubblicazione."); } 
+            finally { btn.innerText = "Pubblica Avviso"; btn.disabled = false; }
         };
 
         window.eliminaMessaggio = async (id) => {
             if (!confirm("Sei sicuro di voler eliminare questo avviso?")) return;
-            try {
-                await deleteDoc(doc(db, "bacheca_utility", id));
-                caricaBacheca();
-            } catch (e) { alert("Errore durante l'eliminazione."); }
+            try { await deleteDoc(doc(db, "bacheca_utility", id)); caricaBacheca(); } catch (e) { alert("Errore durante l'eliminazione."); }
         };
     </script>
 </body>
 </html>
- 

@@ -142,7 +142,7 @@
             </p>
             <input type="text" id="lock-cognome" class="input-field" placeholder="Cognome">
             <input type="text" id="lock-nome" class="input-field" placeholder="Nome">
-            <input type="number" id="lock-prog" class="input-field" placeholder="Numero Progressivo (Opzionale)">
+            <input type="text" id="lock-prog" class="input-field" placeholder="Numero omonimia es. 02, 03 ecc. (Opzionale)">
             <button class="btn" onclick="verificaAccessoAvanti()">Avanti ➔</button>
         </div>
     </div>
@@ -181,7 +181,7 @@
                 <input type="text" id="up-cognome" class="input-field" placeholder="Cognome">
                 <input type="text" id="up-nome" class="input-field" placeholder="Nome">
             </div>
-            <input type="number" id="up-prog" class="input-field" placeholder="Numero Progressivo (Opzionale)">
+            <input type="text" id="up-prog" class="input-field" placeholder="Numero omonimia es. 02, 03 ecc. (Opzionale)">
             
             <select id="up-rotazione" class="input-field">
                 <option value="">-- Seleziona Rotazione --</option>
@@ -615,7 +615,8 @@
             for (let d = 1; d <= 31; d++) {
                 let t1 = turni1[d]; let t2 = turni2[d];
                 if (t1 && t2 && t1.toUpperCase() === t2.toUpperCase()) {
-                    if (!/^(RI|AL|FER|FES|MAL|FEP|KNOP|KINF|NPL|DISP)$/i.test(t1)) match++;
+                    // Ignora esplicitamente riposi, ferie e QUALSIASI variante di Disp (es. Disp51)
+                    if (!/^(RI|AL|FER|FES|MAL|FEP|PERM|KNOP|KINF|NPL|DISP.*)$/i.test(t1)) match++;
                 }
             }
             return match >= 5;
@@ -660,32 +661,122 @@
                 proc.add(nomi[i]);
             }
 
-            let allT = []; armi.forEach(a => Object.values(a.turni).forEach(t => { if(!/^(RI|AL|FER|FES|MAL|FEP|Disp|NPL)$/.test(t) && t) allT.push(t); }));
-            allT.sort(); let tAncora = allT[0] || "RI";
-            armi.sort((a,b) => (Object.keys(a.turni).find(k => a.turni[k] === tAncora) || 99) - (Object.keys(b.turni).find(k => b.turni[k] === tAncora) || 99));
-            
+            // --- NUOVO MOTORE DELLA CASCATA (Topologico + Calendario Diretto) ---
+            const isValid = t => t && !/^(RI|AL|FER|FES|MAL|FEP|PERM|KNOP|KINF|NPL|DISP.*)$/i.test(t);
+
+            // Mappiamo la sequenza master per il fallback
+            let nextShiftMap = {};
+            armi.forEach(a => {
+                let prevValid = null;
+                for (let d = 1; d <= numGiorni; d++) {
+                    let t = a.turni[d];
+                    if (isValid(t)) {
+                        if (prevValid && prevValid !== t && !nextShiftMap[prevValid]) {
+                            nextShiftMap[prevValid] = t;
+                        }
+                        prevValid = t;
+                    }
+                }
+            });
+
+            let masterSequence = [];
+            let startNodes = Object.keys(nextShiftMap);
+            if (startNodes.length > 0) {
+                let current = startNodes[0];
+                let visited = new Set();
+                let prevMap = {};
+                for(let k in nextShiftMap) prevMap[nextShiftMap[k]] = k;
+                while(prevMap[current] && !visited.has(prevMap[current])) {
+                    current = prevMap[current];
+                    visited.add(current);
+                }
+                visited.clear();
+                while(current && !visited.has(current)) {
+                    masterSequence.push(current);
+                    visited.add(current);
+                    current = nextShiftMap[current];
+                }
+            } else {
+                let allT = new Set();
+                armi.forEach(a => Object.values(a.turni).filter(isValid).forEach(t => allT.add(t)));
+                masterSequence = Array.from(allT).sort();
+            }
+
+            let N = masterSequence.length;
+
+            // 4. Ordinamento finale e corretto
+            armi.sort((a, b) => {
+                // Metodo 1: Offset Temporale Diretto (infallibile)
+                // Cerca se fanno lo stesso turno e calcola lo scarto dei giorni
+                let directOffsets = [];
+                for(let d = 1; d <= numGiorni; d++) {
+                    let tA = a.turni[d];
+                    if (isValid(tA)) {
+                        for(let db = 1; db <= numGiorni; db++) {
+                            if (b.turni[db] === tA) {
+                                directOffsets.push(db - d);
+                            }
+                        }
+                    }
+                }
+                
+                if (directOffsets.length > 0) {
+                    let avgOffset = directOffsets.reduce((sum, val) => sum + val, 0) / directOffsets.length;
+                    // Se avgOffset > 0 significa che B fa lo stesso turno in un giorno successivo ad A.
+                    // Quindi B deve stare SOTTO A (restituiamo -1 per tenere A in alto)
+                    if (Math.abs(avgOffset) > 0.1) return avgOffset > 0 ? -1 : 1; 
+                }
+
+                // Metodo 2: Correzione Wrap-Around (per chi non si incrocia)
+                let diffs = [];
+                for (let d = 1; d <= numGiorni; d++) {
+                    let idxA = masterSequence.indexOf(a.turni[d]);
+                    let idxB = masterSequence.indexOf(b.turni[d]);
+                    if (idxA !== -1 && idxB !== -1) {
+                        let diff = idxA - idxB;
+                        // Correggiamo l'effetto "Pac-Man" della ruota
+                        if (N > 0) {
+                            if (diff > N / 2) diff -= N;
+                            else if (diff < -N / 2) diff += N;
+                        }
+                        diffs.push(diff);
+                    }
+                }
+                
+                if (diffs.length > 0) {
+                    let sum = diffs.reduce((acc, val) => acc + val, 0);
+                    return sum > 0 ? -1 : 1;
+                }
+                
+                return 0;
+            });
+
+            // --- DISEGNO DELLA TABELLA ---
             let wrap = document.createElement('div'); wrap.className = "table-wrapper";
             let table = document.createElement('table'); table.className = "rotazioni-table";
-            let head = `<tr><th>Colleghi</th>`; for(let i=1; i<=numGiorni; i++) head += `<th>${i}</th>`;
+            
+            let head = `<tr><th>Colleghi</th>`; 
+            for(let i=1; i<=numGiorni; i++) head += `<th>${i}</th>`;
             table.innerHTML = `<thead>${head}</tr></thead>`;
-            let tb = document.createElement('tbody'), lastD = 0;
+            
+            let tb = document.createElement('tbody');
 
             armi.forEach(a => {
-                let firstD = parseInt(Object.keys(a.turni).find(k => a.turni[k] === tAncora) || 0);
-                if (lastD > 0 && firstD > lastD + 2) {
-                    let rM = `<tr class="row-missing"><td>Dati Mancanti</td>`;
-                    for(let i=1; i<=numGiorni; i++) rM += `<td>-</td>`;
-                    tb.innerHTML += rM + `</tr>`;
-                }
                 let row = `<tr><td>${a.nome.replace(/ - /g, '<br>')}</td>`;
                 for (let d = 1; d <= numGiorni; d++) {
                     let t = a.turni[d] || "", cls = "";
-                    if (t === "RI") cls = "cell-ri"; else if (t === "AL") cls = "cell-al"; else if (t.toLowerCase() === "disp") cls = "cell-disp"; else if (/^(FER|FES|FEP)$/.test(t)) cls = "cell-fer"; else if (t === "NPL") cls = "cell-npl";
+                    if (t === "RI") cls = "cell-ri"; 
+                    else if (t === "AL") cls = "cell-al"; 
+                    else if (/^disp/i.test(t)) cls = "cell-disp";
+                    else if (/^(FER|FES|FEP)$/.test(t)) cls = "cell-fer"; 
+                    else if (t === "NPL") cls = "cell-npl";
                     row += `<td class="${cls}">${t}</td>`;
                 }
-                tb.innerHTML += row + `</tr>`; lastD = firstD;
+                tb.innerHTML += row + `</tr>`;
             });
-            table.appendChild(tb); wrap.appendChild(table); 
+            
+            table.appendChild(tb); 
+            wrap.appendChild(table); 
             container.appendChild(wrap);
             window.apriModal('table-modal');
         }
@@ -742,7 +833,7 @@
                     return alert(`Errore: Hai caricato la bibbia del mese di ${mMatch[1]} ${mMatch[2]}.\nInserisci la bibbia del mese attuale o successivo.`);
                 }
 
-                let turniLetti = {}; const regT = /\b([1-9][CPB]\d{2}|[A-Z0-9]{2}\d{2}|Disp|RI|AL|FER|FES|FEP|MAL|PERM|KMAL|KINF|KNOP)\b/i;
+                let turniLetti = {}; const regT = /\b([1-9][CPB]\d{2}|[A-Z0-9]{2}\d{2}|Disp.*|RI|AL|FER|FES|FEP|MAL|PERM|KMAL|KINF|KNOP)\b/i;
                 righe.forEach(r => { let mG = r.match(/(?:^|\s)(\d{1,2})\s(?:lun|mar|mer|gio|ven|sab|dom)/i); if (mG) { let tM = r.match(regT); if (tM) turniLetti[parseInt(mG[1])] = standardizzaTurno(tM[1]); } });
                 
                 // SISTEMA ANTI-DUPLICATI: Cerca se c'è già una voce equivalente e ne adotta la formattazione
@@ -865,7 +956,7 @@
                 if (analisi.fase === faseDesiderata) {
                     if (faseDesiderata === "Riposo" && analisi.tipoRiposo !== "Vuoto") { risHtml.push(`<strong>${d.nome}</strong> - <span style="color:var(--danger);">[Riposo ${analisi.tipoRiposo}]</span>`); } else if (faseDesiderata !== "Riposo") {
                         let tCod = d.turni[giorno - 1]; let isR = ["AL", "RI", "DISP", "ESPE", "DI", ""].includes(tCod);
-                        if (!isR) { let infoHtml = ""; if (currentShiftData && currentShiftData[tCod]) { let info = currentShiftData[tCod]; infoHtml = `<br>Inizio: <strong>${info.luogoInizio} (${info.inizio})</strong><br>Fine: <strong>${info.luogoFine} (${info.fine})</strong>`; }
+                        if (!isR && !/^disp/i.test(tCod)) { let infoHtml = ""; if (currentShiftData && currentShiftData[tCod]) { let info = currentShiftData[tCod]; infoHtml = `<br>Inizio: <strong>${info.luogoInizio} (${info.inizio})</strong><br>Fine: <strong>${info.luogoFine} (${info.fine})</strong>`; }
                             risHtml.push(`<strong>${d.nome}</strong> (Giorno lav. ${analisi.giornoEsatto}) <div class="turn-details-box"><strong style="color:var(--primary);">Turno: ${tCod}</strong>${infoHtml}<br><button class="file-btn btn-table" style="padding: 8px 12px; margin-top: 8px;" onclick="apriImmagineDaRotazioni('${tCod}', '${currentImgDir}')">🖼️ Immagine</button></div>`);
                         } else risHtml.push(`<strong>${d.nome}</strong> (Giorno lav. ${analisi.giornoEsatto}) - [Turno: ${tCod}]`);
                     }

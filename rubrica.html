@@ -26,7 +26,7 @@
         .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; transition: opacity 0.2s; margin-top: 10px; }
         .btn-action:active { opacity: 0.8; }
         .btn-danger-outline { background: transparent; color: var(--danger); border: 2px solid var(--danger); padding: 10px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; }
-        #search-bar { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; margin-bottom: 15px; }
+        #search-bar { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; }
         .contact-item { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid var(--primary); }
         .contact-info { text-align: left; }
         .contact-name { font-weight: bold; font-size: 16px; color: var(--primary); margin-bottom: 2px; text-transform: capitalize; }
@@ -91,6 +91,9 @@
 
     <div id="view-directory" class="view-container">
         <input type="text" id="search-bar" placeholder="🔍 Cerca..." oninput="filtraRubrica()">
+        <div style="font-size: 13px; color: #6c757d; margin-top: -2px; margin-bottom: 12px; margin-left: 4px; font-weight: bold; text-align: left; width: 100%;">
+            <span id="contatore-contatti">0</span> contatti
+        </div>
         <div id="contacts-list" style="width: 100%;"></div>
         <button class="btn-danger-outline" onclick="revocaCondivisione()">Smetti di condividere</button>
     </div>
@@ -118,7 +121,7 @@
             
             <input type="text" id="regNome" class="input-field" placeholder="Nome">
             <input type="text" id="regCognome" class="input-field" placeholder="Cognome">
-            <input type="number" id="regProgressivo" class="input-field" placeholder="Numero Progressivo (Facoltativo)">
+            <input type="text" id="regProgressivo" class="input-field" placeholder="Numero es. 02, 03 ecc. (Facoltativo)">
             <input type="text" id="regSoprannome" class="input-field" placeholder="Soprannome (Facoltativo)">
             
             <select id="regMansione" class="input-field">
@@ -306,8 +309,15 @@
 
         function disegnaContatti(arrayContatti) {
             const listDiv = document.getElementById('contacts-list');
+            const contatore = document.getElementById('contatore-contatti');
+            
+            // AGGIORNA IL CONTATORE
+            if (contatore) {
+                contatore.innerText = arrayContatti.length;
+            }
+
             listDiv.innerHTML = "";
-            if (arrayContatti.length === 0) return listDiv.innerHTML = "<p>Nessun contatto.</p>";
+            if (arrayContatti.length === 0) return listDiv.innerHTML = "<p>Nessun contatto trovato.</p>";
             
             arrayContatti.forEach(c => {
                 const item = document.createElement('div'); item.className = "contact-item";

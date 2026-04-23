@@ -7,20 +7,34 @@
 
     <script>
         // --- SISTEMA DI PULIZIA CACHE E AGGIORNAMENTO FORZATO ---
-        const APP_VERSION = "1.1"; // Cambia questo numero in futuro per forzare nuovi aggiornamenti
-        if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
-            if ('caches' in window) {
-                caches.keys().then((names) => {
-                    names.forEach(name => caches.delete(name));
-                });
-            }
+        const PAGE_RELOAD_KEY = 'reloaded_' + window.location.pathname;
+
+        if (!sessionStorage.getItem(PAGE_RELOAD_KEY)) {
+            sessionStorage.setItem(PAGE_RELOAD_KEY, 'true');
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then((registrations) => {
-                    registrations.forEach(registration => registration.unregister());
+                navigator.serviceWorker.getRegistrations().then(regs => {
+                    regs.forEach(reg => reg.update());
                 });
             }
-            localStorage.setItem('app_version_cache', APP_VERSION);
-            window.location.reload(true);
+            const url = new URL(window.location.href);
+            url.searchParams.set('nocache', new Date().getTime());
+            window.location.replace(url.toString());
+        } else {
+            const APP_VERSION = "1.2"; 
+            if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
+                if ('caches' in window) {
+                    caches.keys().then((names) => {
+                        names.forEach(name => caches.delete(name));
+                    });
+                }
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then((registrations) => {
+                        registrations.forEach(registration => registration.unregister());
+                    });
+                }
+                localStorage.setItem('app_version_cache', APP_VERSION);
+                window.location.reload(true);
+            }
         }
     </script>
 
@@ -64,7 +78,9 @@
         .feedback-section p { color: #666; font-size: 14px; margin-bottom: 15px; }
         .telegram-icon { display: inline-block; transition: transform 0.2s ease; }
         .telegram-icon:active { transform: scale(0.9); }
-        #ddsReminderModal, #authModal, #profileModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
+        
+        #ddsReminderModal, #authModal, #profileModal, #loginPromptModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
+        
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; color: var(--text-color); max-height: 90vh; overflow-y: auto; }
         .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white;}
         .btn-modal { border: none; border-radius: 8px; padding: 12px; cursor: pointer; font-weight: bold; font-size: 14px; width: 100%; margin-top: 10px; }
@@ -95,8 +111,12 @@
         </div>
     </div>
 
-    <div id="banner-nuovo-messaggio" style="display: none; background: #ffc107; color: #856404; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 20px; width: 100%; max-width: 400px; cursor: pointer; border: 1px solid #ffeeba; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.location.href='bacheca_utility.html'">
+    <div id="banner-nuovo-messaggio" style="display: none; background: #ffc107; color: #856404; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 10px; width: 100%; max-width: 400px; cursor: pointer; border: 1px solid #ffeeba; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.location.href='bacheca_utility.html'">
         🔔 Nuovo avviso in Bacheca Utility! Clicca per leggere.
+    </div>
+
+    <div id="banner-dds-alert" style="display: none; background: #f5365c; color: white; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 20px; width: 100%; max-width: 400px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" onclick="window.location.href='bacheca_utility.html'">
+        ⚠️ Attenzione nuova DDS: <span id="titolo-dds-text"></span>
     </div>
 
     <div class="menu-grid">
@@ -104,12 +124,12 @@
         <a href="calendario.html" class="menu-btn">📅 Calendario</a>
         <a href="dati_calendario.html" class="menu-btn">📊 Statistiche</a>
         <a href="rotazioni.html" class="menu-btn">👥 Rotazioni (test)</a>
+        <a href="rotazionef9.html" id="rotazioni-btn" class="menu-btn">👥  Rotazione F.Nove</a> 
         <a href="turni.html" class="menu-btn">🔄 Turni</a>
         <a href="bacheca_turni.html" class="menu-btn">🔄 Bacheca Turni</a> 
         <a href="rubrica.html" class="menu-btn">📞 Rubrica Colleghi</a>
         <a href="rotazione_ferie.html" class="menu-btn">🌴 Rotazione Ferie</a>
         <a href="orari.html" class="menu-btn">🕒 Orari Navigazione</a>
-        <a href="rotazionef9.html" id="rotazioni-btn" class="menu-btn">👥  Rotazione F.Nove</a>
         <a href="documenti.html" class="menu-btn">📄 Documenti</a>
         <a href="link.html" class="menu-btn">🔗 Link</a>
         <a href="contatti.html" class="menu-btn">📇 Contatti</a>
@@ -119,6 +139,16 @@
         
         <a href="generatore.html" id="generatore-btn" class="menu-btn">🔑 Generatore</a>
         <a href="admin.html" id="secret-btn" class="menu-btn">🔒 Admin</a>
+    </div>
+
+    <div id="loginPromptModal">
+        <div class="modal-content" style="text-align: center;">
+            <h3 style="margin-top: 0; color: var(--primary);">☁️ Esegui l'accesso</h3>
+            <p style="font-size: 14px; color: #555; line-height: 1.5;">
+                Esegui l'accesso in alto a sinistra per salvare i tuoi dati. Avrai accesso ai tuoi dati da qualsiasi dispositivo in cui farai il login, riceverai gli avvisi e avrai accesso a tutte le funzioni di Utility.
+            </p>
+            <button class="btn-modal" style="background-color: var(--primary); color: white; margin-top: 15px;" onclick="document.getElementById('loginPromptModal').style.display='none'">Ho capito, chiudi</button>
+        </div>
     </div>
 
     <div id="profileModal">
@@ -141,8 +171,8 @@
             <label style="font-size: 12px; color: #666; font-weight: bold;">Cognome:</label>
             <input type="text" id="profileCognome" class="input-field" placeholder="Inserisci cognome">
             
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Numero Progressivo (Facoltativo):</label>
-            <input type="text" id="profileProgressivo" class="input-field" placeholder="es. Mario Rossi 02 -> 02">
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Numero omonimia (Facoltativo):</label>
+            <input type="text" id="profileProgressivo" class="input-field" placeholder="es. 02, 03 ecc.">
             
             <label style="font-size: 12px; color: #666; font-weight: bold;">Soprannome:</label>
             <input type="text" id="profileSoprannome" class="input-field" placeholder="Soprannome (Facoltativo)">
@@ -232,8 +262,41 @@
         titleTrigger.addEventListener('mouseup', () => clearTimeout(holdTimer));
         titleTrigger.addEventListener('touchend', () => clearTimeout(holdTimer));
 
-        function checkLocalDDSReminders() {} 
-        function checkDDSUpdates() {}
+        function checkLocalDDSReminders() {
+            const dObj = new Date();
+            const localToday = dObj.getFullYear() + "-" + String(dObj.getMonth() + 1).padStart(2, '0') + "-" + String(dObj.getDate()).padStart(2, '0');
+            if (localStorage.getItem('last_dds_reminder') === localToday) return;
+
+            const reqDB = indexedDB.open("UtilityDB");
+            reqDB.onsuccess = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains("archivio_dds")) return;
+                const tx = db.transaction("archivio_dds", "readonly");
+                const store = tx.objectStore("archivio_dds");
+                const reqAll = store.getAll();
+                reqAll.onsuccess = () => {
+                    const ddsList = reqAll.result || [];
+                    const validToday = ddsList.filter(item => item.dateValidita && item.dateValidita.includes(localToday));
+
+                    if (validToday.length > 0) {
+                        let html = "";
+                        validToday.forEach(item => {
+                            html += `<div style="background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #d63384;">
+                                        <div style="font-weight: bold; color: #32325d;">${item.titolo}</div>
+                                        ${item.note ? `<div style="font-size: 12px; color: #666; margin-top: 4px;">${item.note}</div>` : ''}
+                                     </div>`;
+                        });
+                        document.getElementById('ddsReminderList').innerHTML = html;
+                        document.getElementById('ddsReminderModal').style.display = 'flex';
+                        document.getElementById('chiudi-dds-btn').onclick = () => {
+                            document.getElementById('ddsReminderModal').style.display = 'none';
+                            localStorage.setItem('last_dds_reminder', localToday);
+                        };
+                    }
+                };
+            };
+        }
+        document.addEventListener('DOMContentLoaded', checkLocalDDSReminders);
     </script>
 
     <script type="module">
@@ -254,6 +317,9 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
+        
+        const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2"; 
+        const COLLABORATORE_UIDS = ["INSERISCI_QUI_UID_1", "INSERISCI_QUI_UID_2"]; 
 
         function mostraErroreAuth(msg, isSuccess = false) {
             const errDiv = document.getElementById('authError');
@@ -262,119 +328,73 @@
             errDiv.style.display = 'block';
         }
 
-        window.loginGoogle = async () => {
-            try { 
-                await signInWithPopup(auth, provider); 
-            } catch(error) { 
-                mostraErroreAuth("Errore durante l'accesso con Google."); 
-            }
-        };
-
-        window.loginEmail = async () => {
-            document.getElementById('authError').style.display = 'none';
-            try {
-                await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passwordInput').value);
-            } catch (error) {
-                let msg = "Errore durante l'accesso.";
-                if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') msg = "Email o Password errata.";
-                else if (error.code === 'auth/invalid-email') msg = "Formato email non valido.";
-                mostraErroreAuth(msg);
-            }
-        };
-
-        window.registraEmail = async () => {
-            document.getElementById('authError').style.display = 'none';
-            try {
-                await createUserWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passwordInput').value);
-            } catch (error) {
-                let msg = "Errore durante la registrazione.";
-                if (error.code === 'auth/email-already-in-use') msg = "Questa email è già registrata.";
-                else if (error.code === 'auth/weak-password') msg = "La password deve avere almeno 6 caratteri.";
-                else if (error.code === 'auth/invalid-email') msg = "Formato email non valido.";
-                mostraErroreAuth(msg);
-            }
-        };
-
-        window.recuperaPassword = async () => {
-            document.getElementById('authError').style.display = 'none';
-            const email = document.getElementById('emailInput').value;
-            if (!email) {
-                mostraErroreAuth("Inserisci prima la tua email nel campo qui sopra.");
-                return;
-            }
-            try {
-                await sendPasswordResetEmail(auth, email);
-                mostraErroreAuth("Email di recupero inviata! Controlla la tua casella.", true);
-            } catch (error) {
-                mostraErroreAuth("Impossibile inviare l'email. Controlla l'indirizzo inserito.");
-            }
-        };
-
+        window.loginGoogle = async () => { try { await signInWithPopup(auth, provider); } catch(error) { mostraErroreAuth("Errore durante l'accesso con Google."); }};
+        window.loginEmail = async () => { document.getElementById('authError').style.display = 'none'; try { await signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passwordInput').value); } catch (error) { mostraErroreAuth("Email o Password errata."); }};
+        window.registraEmail = async () => { document.getElementById('authError').style.display = 'none'; try { await createUserWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passwordInput').value); } catch (error) { mostraErroreAuth("Errore durante la registrazione."); }};
+        window.recuperaPassword = async () => { const email = document.getElementById('emailInput').value; if (!email) { mostraErroreAuth("Inserisci prima la tua email."); return; } try { await sendPasswordResetEmail(auth, email); mostraErroreAuth("Email inviata!", true); } catch (error) { mostraErroreAuth("Errore invio email."); }};
         window.logout = () => { signOut(auth); document.getElementById('profileModal').style.display='none'; };
 
+        // MODIFICATA: Salva anche in locale
         window.salvaProfilo = async () => {
             const user = auth.currentUser;
             if (!user) return;
-
             const btn = document.getElementById('btnSalvaProfilo');
-            btn.innerText = "⏳ Salvataggio...";
-            btn.disabled = true;
+            btn.innerText = "⏳ Salvataggio..."; btn.disabled = true;
 
-            const nome = document.getElementById('profileNome').value.trim();
-            const cognome = document.getElementById('profileCognome').value.trim();
-            const progressivo = document.getElementById('profileProgressivo').value.trim();
-            const soprannome = document.getElementById('profileSoprannome').value.trim();
-            const mansione = document.getElementById('profileMansione').value;
-            const matricola = document.getElementById('profileMatricola').value.trim();
-            const telefono = document.getElementById('profileTelefono').value.trim();
+            const profileData = { 
+                nome: document.getElementById('profileNome').value.trim(), 
+                cognome: document.getElementById('profileCognome').value.trim(), 
+                progressivo: document.getElementById('profileProgressivo').value.trim(), 
+                soprannome: document.getElementById('profileSoprannome').value.trim(), 
+                mansione: document.getElementById('profileMansione').value, 
+                matricola: document.getElementById('profileMatricola').value.trim(), 
+                telefono: document.getElementById('profileTelefono').value.trim() 
+            };
 
-            const profileData = { nome: nome, cognome: cognome, progressivo: progressivo, soprannome: soprannome, mansione: mansione, matricola: matricola, telefono: telefono };
+            // Backup locale immediato
+            localStorage.setItem('backup_profilo_haze', JSON.stringify(profileData));
 
             try {
                 const docRef = doc(db, "utenti", user.uid);
                 await setDoc(docRef, profileData, { merge: true });
-
                 const rubricaRef = doc(db, "rubrica", user.uid);
                 const rubricaSnap = await getDoc(rubricaRef);
-                if (rubricaSnap.exists()) {
-                    await setDoc(rubricaRef, profileData, { merge: true });
-                }
-
-                alert("✅ Profilo salvato correttamente!");
+                if (rubricaSnap.exists()) await setDoc(rubricaRef, profileData, { merge: true });
+                alert("✅ Profilo salvato!");
                 document.getElementById('profileModal').style.display = 'none';
-            } catch (e) {
-                console.error(e);
-                alert("❌ Errore durante il salvataggio.");
-            } finally {
-                btn.innerText = "Salva Modifiche";
-                btn.disabled = false;
-            }
+            } catch (e) { alert("❌ Errore durante il salvataggio."); } 
+            finally { btn.innerText = "Salva Modifiche"; btn.disabled = false; }
         };
 
         window.controllaNotificheBacheca = async () => {
             try {
                 const ultimoAccesso = parseInt(localStorage.getItem('ultimo_accesso_bacheca')) || 0;
                 const snap = await getDocs(collection(db, "bacheca_utility"));
-                
-                let messaggiNonLetti = 0;
+                const stateApp = JSON.parse(localStorage.getItem('myTurniApp')) || {};
+                const profileObj = stateApp.profiliSalvati ? stateApp.profiliSalvati[stateApp.profiloAttivoId || 'default'] : stateApp;
+                const rotazioneUtente = profileObj ? profileObj.depositoAttivo : null;
+                const oggiStr = new Date().toISOString().split('T')[0];
+                let nonLetti = 0; let ddsTitolo = "";
                 snap.forEach(d => {
                     const m = d.data();
-                    if (m.timestamp > ultimoAccesso) {
-                        messaggiNonLetti++;
-                    }
+                    if (m.scadenza && m.scadenza < oggiStr) return; 
+                    if (m.target && m.target !== "tutti" && (!rotazioneUtente || !m.target.includes(rotazioneUtente))) return;
+                    if (m.timestamp > ultimoAccesso) nonLetti++;
+                    if (m.tipo === "dds") ddsTitolo = m.titolo_dds;
                 });
-
-                if (messaggiNonLetti > 0) {
-                    const badge = document.getElementById('badge-messaggi');
-                    badge.innerText = messaggiNonLetti;
-                    badge.style.display = 'flex';
+                if (nonLetti > 0) {
+                    document.getElementById('badge-messaggi').innerText = nonLetti;
+                    document.getElementById('badge-messaggi').style.display = 'flex';
                     document.getElementById('banner-nuovo-messaggio').style.display = 'block';
                 }
-            } catch (e) { console.error("Errore controllo notifiche", e); }
+                if (ddsTitolo) {
+                    document.getElementById('titolo-dds-text').innerText = ddsTitolo;
+                    document.getElementById('banner-dds-alert').style.display = 'block';
+                }
+            } catch (e) {}
         };
 
-        window.controllaNotificheBacheca();
-
+        let isFirstLoad = true;
         onAuthStateChanged(auth, async (user) => {
             const btnLogin = document.getElementById('btnOpenLogin');
             const btnProfile = document.getElementById('btnOpenProfile');
@@ -382,8 +402,24 @@
             const profileEmail = document.getElementById('profileEmail');
 
             if (user) {
+                document.getElementById('loginPromptModal').style.display = 'none';
+                const isSuperAdmin = (user.uid === ADMIN_UID);
+                const isCollaboratore = COLLABORATORE_UIDS.includes(user.uid);
+                if (isSuperAdmin) {
+                    document.getElementById('secret-btn').style.display = 'block';
+                    document.getElementById('generatore-btn').style.display = 'block';
+                    document.getElementById('adminBadge').style.display = 'block';
+                    document.getElementById('adminBadge').innerHTML = 'Account Amministratore';
+                    localStorage.setItem('dev_mode_active', 'true');
+                    localStorage.setItem('generatore_sbloccato', 'true');
+                } else if (isCollaboratore) {
+                    document.getElementById('generatore-btn').style.display = 'block'; 
+                    document.getElementById('adminBadge').style.display = 'block';
+                    document.getElementById('adminBadge').innerHTML = 'Account Collaboratore';
+                    localStorage.setItem('generatore_sbloccato', 'true');
+                }
+
                 document.getElementById('authModal').style.display = 'none';
-                document.getElementById('authError').style.display = 'none'; 
                 btnLogin.style.display = 'none';
                 btnProfile.style.display = 'block';
                 statusText.style.display = 'block';
@@ -395,39 +431,50 @@
                 try {
                     const docRef = doc(db, "utenti", user.uid);
                     const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        document.getElementById('profileNome').value = data.nome || '';
-                        document.getElementById('profileCognome').value = data.cognome || '';
-                        document.getElementById('profileProgressivo').value = data.progressivo || '';
-                        document.getElementById('profileSoprannome').value = data.soprannome || '';
-                        document.getElementById('profileMansione').value = data.mansione || '';
-                        document.getElementById('profileMatricola').value = data.matricola || '';
-                        document.getElementById('profileTelefono').value = data.telefono || '';
-                        
-                        const isAdmin = localStorage.getItem('dev_mode_active') === 'true';
-                        const strikes = data.revoche_rubrica || 0;
-                        
-                        if (strikes > 0 && !isAdmin) {
-                            document.getElementById('profileStrikes').style.display = 'block';
-                            document.getElementById('strikeCount').innerText = strikes;
-                            if (strikes >= 3) {
-                                document.getElementById('profileStrikes').style.color = '#721c24';
-                                document.getElementById('profileStrikes').style.backgroundColor = '#f8d7da';
-                                document.getElementById('profileStrikes').style.borderColor = '#f5c6cb';
-                                document.getElementById('profileStrikes').innerHTML = '🚫 <b>Accesso Rubrica Bloccato:</b> Limite revoche superato.';
-                            }
-                        } else {
-                            document.getElementById('profileStrikes').style.display = 'none';
-                        }
+                    let data = docSnap.exists() ? docSnap.data() : {};
+
+                    // --- SISTEMA DI RIPRISTINO "PARACADUTE" (Anche in Index) ---
+                    const localDati = JSON.parse(localStorage.getItem('backup_profilo_haze') || "{}");
+                    let dbAggiornato = false;
+
+                    // Se mancano dati nel DB ma ci sono in locale, ripristina
+                    if (!data.nome && localDati.nome) { data.nome = localDati.nome; dbAggiornato = true; }
+                    if (!data.cognome && localDati.cognome) { data.cognome = localDati.cognome; dbAggiornato = true; }
+                    if (!data.matricola && localDati.matricola) { data.matricola = localDati.matricola; dbAggiornato = true; }
+
+                    if (dbAggiornato) {
+                        await setDoc(docRef, data, { merge: true });
                     }
-                } catch(e) { console.error("Errore caricamento profilo:", e); }
-                
+                    
+                    // Se il DB ha dati freschi, aggiorna il backup locale
+                    if (data.nome || data.cognome) {
+                        localStorage.setItem('backup_profilo_haze', JSON.stringify(data));
+                    }
+                    // -----------------------------------------------------------
+
+                    document.getElementById('profileNome').value = data.nome || '';
+                    document.getElementById('profileCognome').value = data.cognome || '';
+                    document.getElementById('profileProgressivo').value = data.progressivo || '';
+                    document.getElementById('profileSoprannome').value = data.soprannome || '';
+                    document.getElementById('profileMansione').value = data.mansione || '';
+                    document.getElementById('profileMatricola').value = data.matricola || '';
+                    document.getElementById('profileTelefono').value = data.telefono || '';
+                    
+                    const strikes = data.revoche_rubrica || 0;
+                    if (strikes > 0 && !(isSuperAdmin || isCollaboratore)) {
+                        document.getElementById('profileStrikes').style.display = 'block';
+                        document.getElementById('strikeCount').innerText = strikes;
+                    }
+                } catch(e) {}
             } else {
                 btnLogin.style.display = 'block';
                 btnProfile.style.display = 'none';
                 statusText.style.display = 'none';
+                document.getElementById('banner-nuovo-messaggio').style.display = 'none';
+                document.getElementById('banner-dds-alert').style.display = 'none';
+                if (isFirstLoad) document.getElementById('loginPromptModal').style.display = 'flex';
             }
+            isFirstLoad = false;
         });
     </script>
 </body>
