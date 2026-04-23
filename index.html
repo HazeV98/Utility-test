@@ -61,7 +61,6 @@
     <style>
         :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #dc3545; }
         
-        /* Modificato il body: Sfondo SVG Vettoriale proporzionato */
         body { 
             font-family: Arial, sans-serif; 
             background-color: var(--bg-color); 
@@ -91,10 +90,53 @@
         .btn-login { background-color: #ea4335; color: white; border: none; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none; }
         .btn-header-alt { background-color: var(--primary); color: white; border: none; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none; }
         @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
-        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 400px; }
-        .menu-btn { background-color: var(--primary); color: white; border: none; padding: 18px; font-size: 18px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s ease; text-align: center; text-decoration: none; display: block; font-weight: 500; }
-        .menu-btn:active { transform: translateY(2px); opacity: 0.9; }
-        .btn-oggi { background-color: var(--success); font-size: 20px; box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3); }
+        
+        /* NUOVO LAYOUT: App Grid Stile iOS/Android */
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px 5px;
+            width: 100%;
+            max-width: 400px;
+            padding: 10px 5px;
+            box-sizing: border-box;
+        }
+        .app-btn {
+            display: block;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .app-btn:active { transform: scale(0.9); }
+        .app-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 8px auto;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #0056b3, #003d82);
+            color: white;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .app-icon.oggi { background: linear-gradient(135deg, #28a745, #1e7e34); box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4); }
+        .app-icon.gray { background: linear-gradient(135deg, #6c757d, #5a6268); }
+        .app-label {
+            font-size: 11px;
+            color: #1a1a1a;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.2;
+            text-shadow: 0px 1px 2px rgba(255,255,255,0.8);
+            word-wrap: break-word;
+        }
+
+        /* Gestione tasti Admin nascosti */
+        #secret-btn, #generatore-btn, #rotazioni-btn { display: none; }
+        #secret-btn .app-icon, #generatore-btn .app-icon { background: linear-gradient(135deg, #dc3545, #bd2130); }
+
         .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; transition: opacity 0.2s; margin-top: 10px; }
         .feedback-section { margin-top: 40px; margin-bottom: 20px; text-align: center; max-width: 350px; }
         .feedback-section p { color: #666; font-size: 14px; margin-bottom: 15px; }
@@ -106,8 +148,6 @@
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; color: var(--text-color); max-height: 90vh; overflow-y: auto; }
         .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white;}
         .btn-modal { border: none; border-radius: 8px; padding: 12px; cursor: pointer; font-weight: bold; font-size: 14px; width: 100%; margin-top: 10px; }
-        #secret-btn, #generatore-btn { display: none; background-color: var(--danger); }
-        #rotazioni-btn { display: none; }
         
         #profileStrikes { font-size: 12px; color: #856404; background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; display: none; border: 1px solid #ffeeba; }
         #adminBadge { display: none; background: #cce5ff; color: #004085; border: 1px dashed #0056b3; padding: 8px; border-radius: 8px; text-align: center; font-size: 13px; font-weight: bold; margin-bottom: 15px; }
@@ -173,26 +213,80 @@
             ⚠️ Attenzione nuova DDS: <span id="titolo-dds-text"></span>
         </div>
 
-        <div class="menu-grid">
-            <a href="calendario.html?oggi=true" class="menu-btn btn-oggi">Turno di Oggi</a>
-            <a href="calendario.html" class="menu-btn">📅 Calendario</a>
-            <a href="dati_calendario.html" class="menu-btn">📊 Statistiche</a>
-            <a href="rotazioni.html" class="menu-btn">👥 Rotazioni (test)</a>
-            <a href="rotazionef9.html" id="rotazioni-btn" class="menu-btn">👥  Rotazione F.Nove</a> 
-            <a href="turni.html" class="menu-btn">🔄 Turni</a>
-            <a href="bacheca_turni.html" class="menu-btn">🔄 Bacheca Turni</a> 
-            <a href="rubrica.html" class="menu-btn">📞 Rubrica Colleghi</a>
-            <a href="rotazione_ferie.html" class="menu-btn">🌴 Rotazione Ferie</a>
-            <a href="orari.html" class="menu-btn">🕒 Orari Navigazione</a>
-            <a href="documenti.html" class="menu-btn">📄 Documenti</a>
-            <a href="link.html" class="menu-btn">🔗 Link</a>
-            <a href="contatti.html" class="menu-btn">📇 Contatti</a>
-            <a href="buoni.html" class="menu-btn">🍝 Buoni Pasto</a>
-            <a href="dds.html" class="menu-btn">📂 Archivio DDS</a>
-            <a href="guida.html" class="menu-btn" style="background-color: #6c757d;">📖 Guida</a>
+        <div class="app-grid">
+            <a href="calendario.html?oggi=true" class="app-btn">
+                <div class="app-icon oggi">🎯</div>
+                <div class="app-label">Oggi</div>
+            </a>
+            <a href="calendario.html" class="app-btn">
+                <div class="app-icon">📅</div>
+                <div class="app-label">Calendario</div>
+            </a>
+            <a href="dati_calendario.html" class="app-btn">
+                <div class="app-icon">📊</div>
+                <div class="app-label">Statistiche</div>
+            </a>
+            <a href="rotazioni.html" class="app-btn">
+                <div class="app-icon">👥</div>
+                <div class="app-label">Rotazioni<br>(test)</div>
+            </a>
+            <a href="rotazionef9.html" id="rotazioni-btn" class="app-btn">
+                <div class="app-icon">🚢</div>
+                <div class="app-label">Rotazione<br>F.Nove</div>
+            </a>
+            <a href="turni.html" class="app-btn">
+                <div class="app-icon">🔄</div>
+                <div class="app-label">Turni</div>
+            </a>
+            <a href="bacheca_turni.html" class="app-btn">
+                <div class="app-icon">📌</div>
+                <div class="app-label">Bacheca<br>Turni</div>
+            </a>
+            <a href="rubrica.html" class="app-btn">
+                <div class="app-icon">📞</div>
+                <div class="app-label">Rubrica</div>
+            </a>
+            <a href="rotazione_ferie.html" class="app-btn">
+                <div class="app-icon">🌴</div>
+                <div class="app-label">Rotazione<br>Ferie</div>
+            </a>
+            <a href="orari.html" class="app-btn">
+                <div class="app-icon">🕒</div>
+                <div class="app-label">Orari<br>Navigaz.</div>
+            </a>
+            <a href="documenti.html" class="app-btn">
+                <div class="app-icon">📄</div>
+                <div class="app-label">Documenti</div>
+            </a>
+            <a href="link.html" class="app-btn">
+                <div class="app-icon">🔗</div>
+                <div class="app-label">Link</div>
+            </a>
+            <a href="contatti.html" class="app-btn">
+                <div class="app-icon">📇</div>
+                <div class="app-label">Contatti</div>
+            </a>
+            <a href="buoni.html" class="app-btn">
+                <div class="app-icon">🍝</div>
+                <div class="app-label">Buoni<br>Pasto</div>
+            </a>
+            <a href="dds.html" class="app-btn">
+                <div class="app-icon">📂</div>
+                <div class="app-label">Archivio<br>DDS</div>
+            </a>
+            <a href="guida.html" class="app-btn">
+                <div class="app-icon gray">📖</div>
+                <div class="app-label">Guida</div>
+            </a>
             
-            <a href="generatore.html" id="generatore-btn" class="menu-btn">🔑 Generatore</a>
-            <a href="admin.html" id="secret-btn" class="menu-btn">🔒 Admin</a>
+            <a href="generatore.html" id="generatore-btn" class="app-btn">
+                <div class="app-icon">🔑</div>
+                <div class="app-label">Generatore</div>
+            </a>
+            <a href="admin.html" id="secret-btn" class="app-btn">
+                <div class="app-icon">🔒</div>
+                <div class="app-label">Admin</div>
+            </a>
         </div>
 
         <button id="btn-admin-gestione" class="btn-action" style="background: #32325d; display: none; margin-top: 20px; width: 100%;" onclick="apriGestioneAccessi()">🛠️ Gestione Accessi App</button>
@@ -635,7 +729,7 @@
                         return;
                     }
 
-                    // Ripristiniamo lo sfondo vettoriale con le nuove proporzioni
+                    // Ripristiniamo lo sfondo vettoriale per l'app
                     document.body.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23a4c5e3'/%3E%3Cpath d='M0,60 C25,80 45,80 65,55 C80,35 90,35 100,55 L100,0 L0,0 Z' fill='%23ffffff'/%3E%3Cpath d='M0,40 C20,60 40,60 60,40 C80,20 90,20 100,45 L100,0 L0,0 Z' fill='%23a9dfcd'/%3E%3C/svg%3E")`;
                     
                     viewGuest.style.display = 'none';
@@ -703,7 +797,6 @@
             } else {
                 viewLoading.style.display = 'none';
                 
-                // Mantiene lo sfondo vettoriale
                 document.body.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23a4c5e3'/%3E%3Cpath d='M0,60 C25,80 45,80 65,55 C80,35 90,35 100,55 L100,0 L0,0 Z' fill='%23ffffff'/%3E%3Cpath d='M0,40 C20,60 40,60 60,40 C80,20 90,20 100,45 L100,0 L0,0 Z' fill='%23a9dfcd'/%3E%3C/svg%3E")`;
                 
                 viewGuest.style.display = 'flex';
