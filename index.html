@@ -6,32 +6,20 @@
     <title>Utility</title>
 
     <script>
-        // --- SISTEMA DI PULIZIA CACHE E AGGIORNAMENTO FORZATO ---
         const PAGE_RELOAD_KEY = 'reloaded_' + window.location.pathname;
-
         if (!sessionStorage.getItem(PAGE_RELOAD_KEY)) {
             sessionStorage.setItem(PAGE_RELOAD_KEY, 'true');
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(regs => {
-                    regs.forEach(reg => reg.update());
-                });
+                navigator.serviceWorker.getRegistrations().then(regs => { regs.forEach(reg => reg.update()); });
             }
             const url = new URL(window.location.href);
             url.searchParams.set('nocache', new Date().getTime());
             window.location.replace(url.toString());
         } else {
-            const APP_VERSION = "1.2"; 
+            const APP_VERSION = "1.4"; 
             if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
-                if ('caches' in window) {
-                    caches.keys().then((names) => {
-                        names.forEach(name => caches.delete(name));
-                    });
-                }
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then((registrations) => {
-                        registrations.forEach(registration => registration.unregister());
-                    });
-                }
+                if ('caches' in window) { caches.keys().then((names) => { names.forEach(name => caches.delete(name)); }); }
+                if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then((registrations) => { registrations.forEach(registration => registration.unregister()); }); }
                 localStorage.setItem('app_version_cache', APP_VERSION);
                 window.location.reload(true);
             }
@@ -42,7 +30,6 @@
         const urlParams = new URLSearchParams(window.location.search);
         const datiImportati = urlParams.get('dati');
         const codiceImportato = urlParams.get('codice');
-
         if (datiImportati || codiceImportato) {
             if (datiImportati) localStorage.setItem('myTurniApp', datiImportati);
             if (codiceImportato) localStorage.setItem('auth_rotazioni', codiceImportato);
@@ -51,7 +38,6 @@
     </script>
 
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
-    
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <meta name="theme-color" content="#0056b3">
@@ -59,98 +45,71 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <style>
-        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #dc3545; }
+        :root { --primary: #0056b3; --success: #28a745; --danger: #dc3545; --text-color: #333; }
         
         body { 
             font-family: Arial, sans-serif; 
-            background-color: var(--bg-color); 
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23a4c5e3'/%3E%3Cpath d='M0,60 C25,80 45,80 65,55 C80,35 90,35 100,55 L100,0 L0,0 Z' fill='%23ffffff'/%3E%3Cpath d='M0,40 C20,60 40,60 60,40 C80,20 90,20 100,45 L100,0 L0,0 Z' fill='%23a9dfcd'/%3E%3C/svg%3E");
+            background-color: #f4f7f6; 
             background-size: cover;
             background-position: center top;
             background-attachment: fixed;
             background-repeat: no-repeat;
             color: var(--text-color); 
-            margin: 0; 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            transition: background-color 0.3s ease;
+            margin: 0; padding: 20px; 
+            display: flex; flex-direction: column; align-items: center; 
+            transition: background-image 0.3s ease;
         }
         
         .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: flex-start; margin-top: 10px; margin-bottom: 30px; position: relative; }
-        .header-side { flex: 1; display: flex; align-items: center; }
+        .header-side { flex: 1; display: flex; align-items: center; gap: 8px; }
         .header-side.right { justify-content: flex-end; }
-        .header-center { display: flex; flex-direction: column; align-items: center; flex: 2; }
-        h2 { margin: 0; color: var(--primary); font-size: 30px; font-weight: bold; text-align: center; user-select: none; -webkit-user-select: none; cursor: pointer; display: flex; align-items: center; justify-content: center;}
+        .header-center { display: flex; flex-direction: column; align-items: center; flex: 2; justify-content: center;}
+        h2 { margin: 0; color: var(--primary); font-size: 30px; font-weight: bold; text-align: center; user-select: none; -webkit-user-select: none; display: flex; align-items: center; justify-content: center;}
         
         .view-container { width: 100%; max-width: 400px; display: none; flex-direction: column; align-items: center; }
 
         #install-btn { display: none; background-color: var(--success); color: white; border: none; padding: 8px 14px; font-size: 13px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); white-space: nowrap; animation: pulse 2s infinite; }
-        .btn-login { background-color: #ea4335; color: white; border: none; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none; }
-        .btn-header-alt { background-color: var(--primary); color: white; border: none; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none; }
+        .btn-header-alt { background-color: var(--primary); color: white; border: none; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .btn-header-icon { background: rgba(255,255,255,0.8); border: none; font-size: 20px; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.15); backdrop-filter: blur(5px); }
+        
         @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
-        
-        /* NUOVO LAYOUT: App Grid Stile iOS/Android */
-        .app-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 25px 5px;
-            width: 100%;
-            max-width: 400px;
-            padding: 10px 5px;
-            box-sizing: border-box;
-        }
-        .app-btn {
-            display: block;
-            text-decoration: none;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-        .app-btn:active { transform: scale(0.9); }
-        .app-icon {
-            width: 60px;
-            height: 60px;
-            margin: 0 auto 8px auto;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #0056b3, #003d82);
-            color: white;
-            font-size: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        }
-        .app-icon.oggi { background: linear-gradient(135deg, #28a745, #1e7e34); box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4); }
-        .app-icon.gray { background: linear-gradient(135deg, #6c757d, #5a6268); }
-        .app-label {
-            font-size: 11px;
-            color: #1a1a1a;
-            font-weight: bold;
-            text-align: center;
-            line-height: 1.2;
-            text-shadow: 0px 1px 2px rgba(255,255,255,0.8);
-            word-wrap: break-word;
-        }
 
-        /* Gestione tasti Admin nascosti */
-        #secret-btn, #generatore-btn, #rotazioni-btn { display: none; }
-        #secret-btn .app-icon, #generatore-btn .app-icon { background: linear-gradient(135deg, #dc3545, #bd2130); }
+        /* --- STILI LAYOUT DINAMICO --- */
+        #app-container { width: 100%; max-width: 400px; }
+        
+        /* GRIGLIA */
+        .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px 5px; padding: 10px 5px; box-sizing: border-box; }
+        .app-grid .app-btn { display: block; text-decoration: none; cursor: pointer; position: relative; }
+        .app-grid .app-btn:active { transform: scale(0.9); transition: transform 0.1s; }
+        .app-grid .app-icon { width: 60px; height: 60px; margin: 0 auto 8px auto; border-radius: 16px; color: white; font-size: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: background 0.3s; }
+        .app-grid .app-label { font-size: 11px; color: #1a1a1a; font-weight: bold; text-align: center; line-height: 1.2; text-shadow: 0px 1px 2px rgba(255,255,255,0.8); word-wrap: break-word; }
 
-        .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; transition: opacity 0.2s; margin-top: 10px; }
-        .feedback-section { margin-top: 40px; margin-bottom: 20px; text-align: center; max-width: 350px; }
-        .feedback-section p { color: #666; font-size: 14px; margin-bottom: 15px; }
-        .telegram-icon { display: inline-block; transition: transform 0.2s ease; }
-        .telegram-icon:active { transform: scale(0.9); }
+        /* LISTA */
+        .app-list { display: flex; flex-direction: column; gap: 12px; padding: 10px; box-sizing: border-box; }
+        .app-list .app-btn { display: flex; align-items: center; background: rgba(255,255,255,0.85); padding: 12px 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.08); text-decoration: none; position: relative; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.4); }
+        .app-list .app-btn:active { transform: scale(0.98); background: rgba(255,255,255,1); }
+        .app-list .app-icon { width: 45px; height: 45px; margin: 0 15px 0 0; border-radius: 12px; color: white; font-size: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .app-list .app-label { font-size: 15px; color: #333; font-weight: bold; margin: 0; text-shadow: none; flex: 1; }
+
+        /* WIGGLE & EDIT MODE */
+        @keyframes wiggle { 0% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } 100% { transform: rotate(-2deg); } }
+        .wiggle-mode .app-btn { animation: wiggle 0.3s infinite; }
+        .edit-badge { position: absolute; top: -8px; right: 0px; background: white; color: #333; border-radius: 50%; width: 26px; height: 26px; display: flex; justify-content: center; align-items: center; box-shadow: 0 3px 6px rgba(0,0,0,0.3); font-size: 14px; z-index: 10; border: 1px solid #ddd; }
+        .app-list .edit-badge { top: 50%; right: 15px; transform: translateY(-50%); }
+
+        .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; }
         
-        #ddsReminderModal, #authModal, #profileModal, #modal-gestione { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
-        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; color: var(--text-color); max-height: 90vh; overflow-y: auto; }
         .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white;}
         .btn-modal { border: none; border-radius: 8px; padding: 12px; cursor: pointer; font-weight: bold; font-size: 14px; width: 100%; margin-top: 10px; }
         
-        #profileStrikes { font-size: 12px; color: #856404; background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; display: none; border: 1px solid #ffeeba; }
-        #adminBadge { display: none; background: #cce5ff; color: #004085; border: 1px dashed #0056b3; padding: 8px; border-radius: 8px; text-align: center; font-size: 13px; font-weight: bold; margin-bottom: 15px; }
+        /* IMPOSTAZIONI SPECIFICHE */
+        .color-picker-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #e9ecef; }
+        .color-picker-row label { font-size: 13px; font-weight: bold; color: #555; }
+        input[type="color"] { width: 40px; height: 40px; border: none; border-radius: 8px; cursor: pointer; padding: 0; background: transparent; }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: 2px solid #ccc; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -165,13 +124,11 @@
                 <img src="icon-512.png" alt="U" style="height: 50px; margin-right: 2px; margin-bottom: 4px;">tility
             </h1>
             <p style="color: #444; font-size: 16px; line-height: 1.6; margin-bottom: 40px;">
-                Questa è un app non ufficiale gestita da un collega.<br><br>
-                Qui potrai trovare un calendario per i turni, i pdf dei turni, link e contatti utili e varie altre funzioni.<br><br>
-                Accedi o registrati con il tasto qui sotto.
+                Questa è un app non ufficiale gestita da un collega.<br>Accedi o registrati con il tasto qui sotto.
             </p>
-            <button class="btn-action" style="background: var(--primary); margin-top: 0; padding: 18px; font-size: 18px; border-radius: 12px;" onclick="apriModalAuth('login')">Accedi</button>
+            <button class="btn-action" style="background: var(--primary); margin-top: 0; padding: 18px; border-radius: 12px;" onclick="apriModal('authModal', 'login')">Accedi</button>
             <div style="margin-top: 25px;">
-                <a href="#" onclick="apriModalAuth('register'); return false;" style="font-size: 15px; color: #0056b3; font-weight: bold; text-decoration: underline;">Non sei registrato? Registrati qui</a>
+                <a href="#" onclick="apriModal('authModal', 'register'); return false;" style="font-size: 15px; color: #0056b3; font-weight: bold;">Non sei registrato? Registrati qui</a>
             </div>
         </div>
     </div>
@@ -187,627 +144,529 @@
     <div id="view-app" class="view-container" style="display: none; width: 100%;">
         <div class="header">
             <div class="header-side">
-                <button id="btnOpenLogin" class="btn-login" onclick="apriModalAuth('login')">☁️ Login</button>
-                <button id="btnOpenProfile" class="btn-header-alt" onclick="document.getElementById('profileModal').style.display='flex'">👤 Profilo</button>
+                <button id="btnOpenLogin" class="btn-header-alt" style="display:none; background:#ea4335;" onclick="apriModal('authModal', 'login')">☁️ Login</button>
+                <button id="btnOpenProfile" class="btn-header-alt" onclick="apriModal('profileModal')">👤 Profilo</button>
             </div>
             <div class="header-center">
-                <h2 id="main-title">
-                    <img src="icon-512.png" alt="U" style="height: 32px; margin-right: 1px; margin-bottom: 2px; pointer-events: none;">tility
-                </h2>
-                <div id="user-status" style="font-size: 11px; color: var(--success); font-weight: bold; display: none; margin-top: 4px;"></div>
+                <h2 id="main-title"><img src="icon-512.png" alt="U" style="height: 32px; margin-right: 1px; margin-bottom: 2px;">tility</h2>
             </div>
             <div class="header-side right">
                 <button id="install-btn">Installa</button>
-                <div id="icona-bacheca" style="position: relative; cursor: pointer; margin-left: 15px;" onclick="window.location.href='bacheca_utility.html'">
+                <button class="btn-header-icon" onclick="apriModal('settingsModal')">⚙️</button>
+                <div id="icona-bacheca" style="position: relative; cursor: pointer; margin-left: 10px;" onclick="apriBachecaUtility()">
                     <span style="font-size: 26px;">📢</span>
                     <div id="badge-messaggi" style="display: none; position: absolute; top: -5px; right: -8px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: bold; width: 18px; height: 18px; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">0</div>
                 </div>
             </div>
         </div>
 
-        <div id="banner-nuovo-messaggio" style="display: none; background: #ffc107; color: #856404; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 10px; width: 100%; max-width: 400px; cursor: pointer; border: 1px solid #ffeeba; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.location.href='bacheca_utility.html'">
-            🔔 Nuovo avviso in Bacheca Utility! Clicca per leggere.
+        <div id="banner-nuovo-messaggio" style="display: none; background: #ffc107; color: #856404; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 10px; width: 100%; max-width: 400px; cursor: pointer; border: 1px solid #ffeeba; box-sizing: border-box;" onclick="apriBachecaUtility()">
+            🔔 Nuovo avviso in Bacheca Utility!
         </div>
 
-        <div id="banner-dds-alert" style="display: none; background: #f5365c; color: white; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 20px; width: 100%; max-width: 400px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" onclick="window.location.href='bacheca_utility.html'">
-            ⚠️ Attenzione nuova DDS: <span id="titolo-dds-text"></span>
+        <div id="banner-dds-alert" style="display: none; background: #f5365c; color: white; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 20px; width: 100%; max-width: 400px; cursor: pointer;" onclick="apriBachecaUtility()">
+            ⚠️ Nuova DDS: <span id="titolo-dds-text"></span>
         </div>
 
-        <div class="app-grid">
-            <a href="calendario.html?oggi=true" class="app-btn">
-                <div class="app-icon oggi">🎯</div>
-                <div class="app-label">Oggi</div>
-            </a>
-            <a href="calendario.html" class="app-btn">
-                <div class="app-icon">📅</div>
-                <div class="app-label">Calendario</div>
-            </a>
-            <a href="dati_calendario.html" class="app-btn">
-                <div class="app-icon">📊</div>
-                <div class="app-label">Statistiche</div>
-            </a>
-            <a href="rotazioni.html" class="app-btn">
-                <div class="app-icon">👥</div>
-                <div class="app-label">Rotazioni<br>(test)</div>
-            </a>
-            <a href="rotazionef9.html" id="rotazioni-btn" class="app-btn">
-                <div class="app-icon">🚢</div>
-                <div class="app-label">Rotazione<br>F.Nove</div>
-            </a>
-            <a href="turni.html" class="app-btn">
-                <div class="app-icon">🔄</div>
-                <div class="app-label">Turni</div>
-            </a>
-            <a href="bacheca_turni.html" class="app-btn">
-                <div class="app-icon">📌</div>
-                <div class="app-label">Bacheca<br>Turni</div>
-            </a>
-            <a href="rubrica.html" class="app-btn">
-                <div class="app-icon">📞</div>
-                <div class="app-label">Rubrica</div>
-            </a>
-            <a href="rotazione_ferie.html" class="app-btn">
-                <div class="app-icon">🌴</div>
-                <div class="app-label">Rotazione<br>Ferie</div>
-            </a>
-            <a href="orari.html" class="app-btn">
-                <div class="app-icon">🕒</div>
-                <div class="app-label">Orari<br>Navigaz.</div>
-            </a>
-            <a href="documenti.html" class="app-btn">
-                <div class="app-icon">📄</div>
-                <div class="app-label">Documenti</div>
-            </a>
-            <a href="link.html" class="app-btn">
-                <div class="app-icon">🔗</div>
-                <div class="app-label">Link</div>
-            </a>
-            <a href="contatti.html" class="app-btn">
-                <div class="app-icon">📇</div>
-                <div class="app-label">Contatti</div>
-            </a>
-            <a href="buoni.html" class="app-btn">
-                <div class="app-icon">🍝</div>
-                <div class="app-label">Buoni<br>Pasto</div>
-            </a>
-            <a href="dds.html" class="app-btn">
-                <div class="app-icon">📂</div>
-                <div class="app-label">Archivio<br>DDS</div>
-            </a>
-            <a href="guida.html" class="app-btn">
-                <div class="app-icon gray">📖</div>
-                <div class="app-label">Guida</div>
-            </a>
-            
-            <a href="generatore.html" id="generatore-btn" class="app-btn">
-                <div class="app-icon">🔑</div>
-                <div class="app-label">Generatore</div>
-            </a>
-            <a href="admin.html" id="secret-btn" class="app-btn">
-                <div class="app-icon">🔒</div>
-                <div class="app-label">Admin</div>
-            </a>
-        </div>
+        <div id="app-container" class="app-grid"></div>
+        
+        <button id="btn-salva-layout" class="btn-action" style="display: none; background: #ff9800; color: white; margin-top: 20px;" onclick="LayoutEngine.toggleEditMode()">✅ Fatto (Salva Layout)</button>
+    </div> 
 
-        <button id="btn-admin-gestione" class="btn-action" style="background: #32325d; display: none; margin-top: 20px; width: 100%;" onclick="apriGestioneAccessi()">🛠️ Gestione Accessi App</button>
-    </div> <div id="profileModal">
+    <div id="settingsModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'settingsModal')">
         <div class="modal-content">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('profileModal').style.display='none'">&times;</span>
-            <h3 style="margin-top: 5px; color: #32325d; text-align: center;">Profilo Utente</h3>
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('settingsModal')">&times;</span>
+            <h3 style="margin-top: 5px; color: #32325d; text-align: center;">⚙️ Personalizzazione</h3>
             
-            <div id="adminBadge">🛠️ Account Amministratore</div>
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Sfondo Onda (Dall'alto verso il basso):</label>
+            <div class="color-picker-row"><label>Colore 1 (Alto)</label><input type="color" id="set-col1"></div>
+            <div class="color-picker-row"><label>Colore 2 (Onda)</label><input type="color" id="set-col2"></div>
+            <div class="color-picker-row"><label>Colore 3 (Basso)</label><input type="color" id="set-col3"></div>
             
-            <div id="profileStrikes">
-                ⚠️ Revoche rubrica usate: <b id="strikeCount">0</b> su 3
-            </div>
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Sfondo Globale App:</label>
+            <div class="color-picker-row"><label>Colore Base App</label><input type="color" id="set-appbg"></div>
 
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Email:</label>
-            <input type="text" id="profileEmail" class="input-field" disabled style="background: #f8f9fa;">
-            
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Nome:</label>
-            <input type="text" id="profileNome" class="input-field" placeholder="Inserisci nome">
-            
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Cognome:</label>
-            <input type="text" id="profileCognome" class="input-field" placeholder="Inserisci cognome">
-            
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Numero omonimia (Facoltativo):</label>
-            <input type="text" id="profileProgressivo" class="input-field" placeholder="es. 02, 03 ecc.">
-            
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Soprannome:</label>
-            <input type="text" id="profileSoprannome" class="input-field" placeholder="Soprannome (Facoltativo)">
-            
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Mansione:</label>
-            <select id="profileMansione" class="input-field">
-                <option value="">-- Seleziona Mansione --</option>
-                <option value="Marinaio">Marinaio</option>
-                <option value="Preposto al comando">Preposto al comando</option>
-                <option value="Comandante">Comandante</option>
-                <option value="Timoniere">Timoniere</option>
-                <option value="Marinaio polivalente">Marinaio polivalente</option>
-                <option value="Direttore di macchina">Direttore di macchina</option>
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Visualizzazione:</label>
+            <select id="set-viewmode" class="input-field" style="background: #f8f9fa;">
+                <option value="grid">Griglia Icone (Smartphone)</option>
+                <option value="list">Lista Pulsantoni</option>
             </select>
 
+            <button class="btn-modal" style="background: #ff9800; color: white;" onclick="LayoutEngine.toggleEditMode(); chiudiModal('settingsModal');">✏️ Modifica Layout (Ordina/Cambia Nomi)</button>
+            <button class="btn-modal" style="background: #17a2b8; color: white;" onclick="apriModal('customAppModal'); chiudiModal('settingsModal');">➕ Aggiungi App Personalizzata</button>
+            
+            <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 20px 0;">
+            <button class="btn-modal" style="background: var(--success); color: white;" onclick="LayoutEngine.salvaPreferenzeGlobali()">💾 Salva Impostazioni</button>
+            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger);" onclick="LayoutEngine.ripristinaPredefiniti()">🔄 Ripristina Predefiniti</button>
+        </div>
+    </div>
+
+    <div id="editAppModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'editAppModal')">
+        <div class="modal-content">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('editAppModal')">&times;</span>
+            <h3 style="margin-top: 5px; color: #32325d; text-align: center;">Modifica Icona</h3>
+            
+            <input type="hidden" id="edit-app-id">
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Nome Etichetta:</label>
+            <input type="text" id="edit-app-label" class="input-field" placeholder="Es. Turni">
+            
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Icona (Emoji, Lettera o Numero):</label>
+            <input type="text" id="edit-app-icon" class="input-field" placeholder="Es. 🔄 o A" maxlength="2">
+            
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Colore Sfondo Specifico:</label>
+            <div class="color-picker-row"><label>Sfondo Icona</label><input type="color" id="edit-app-color"></div>
+
+            <label style="font-size: 12px; color: #666; font-weight: bold; margin-top: 10px;">Posizione:</label>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button class="btn-modal" style="background: #e9ecef; color: #333; margin:0;" onclick="LayoutEngine.spostaApp(-1)">◀️ Sposta Indietro</button>
+                <button class="btn-modal" style="background: #e9ecef; color: #333; margin:0;" onclick="LayoutEngine.spostaApp(1)">Sposta Avanti ▶️</button>
+            </div>
+
+            <button class="btn-modal" style="background: var(--success); color: white;" onclick="LayoutEngine.salvaModificaSingolaApp()">Salva Modifiche</button>
+            <button id="btn-elimina-custom" class="btn-modal" style="background: transparent; color: var(--danger); border: 1px dashed var(--danger); display: none;" onclick="LayoutEngine.eliminaAppCorrente()">🗑️ Elimina App Personalizzata</button>
+        </div>
+    </div>
+
+    <div id="customAppModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'customAppModal')">
+        <div class="modal-content">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('customAppModal')">&times;</span>
+            <h3 style="margin-top: 5px; color: #32325d; text-align: center;">➕ Nuova App</h3>
+            
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Nome (Etichetta):</label>
+            <input type="text" id="new-app-label" class="input-field" placeholder="Es. Portale Esterno">
+            
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Link (URL):</label>
+            <input type="url" id="new-app-url" class="input-field" placeholder="https://...">
+
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Icona (Emoji o Lettera):</label>
+            <input type="text" id="new-app-icon" class="input-field" placeholder="Es. 🌍" maxlength="2">
+
+            <button class="btn-modal" style="background: var(--success); color: white;" onclick="LayoutEngine.creaAppPersonalizzata()">Crea App</button>
+        </div>
+    </div>
+
+    <div id="profileModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'profileModal')">
+        <div class="modal-content">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('profileModal')">&times;</span>
+            <h3 style="margin-top: 5px; color: #32325d; text-align: center;">Profilo Utente</h3>
+            <div id="adminBadge" style="display:none; background:#cce5ff; color:#004085; border:1px dashed #0056b3; padding:8px; border-radius:8px; text-align:center; font-size:13px; font-weight:bold; margin-bottom:15px;"></div>
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Email:</label>
+            <input type="text" id="profileEmail" class="input-field" disabled style="background: #f8f9fa;">
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Nome:</label>
+            <input type="text" id="profileNome" class="input-field" placeholder="Inserisci nome">
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Cognome:</label>
+            <input type="text" id="profileCognome" class="input-field" placeholder="Inserisci cognome">
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Numero omonimia (Facoltativo):</label>
+            <input type="text" id="profileProgressivo" class="input-field" placeholder="es. 02, 03 ecc.">
             <label style="font-size: 12px; color: #666; font-weight: bold;">Matricola:</label>
             <input type="text" id="profileMatricola" class="input-field" placeholder="Inserisci matricola">
-
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Telefono:</label>
-            <input type="tel" id="profileTelefono" class="input-field" placeholder="Inserisci numero di telefono">
-
             <button id="btnSalvaProfilo" class="btn-modal" style="background: var(--success); color: white;" onclick="salvaProfilo()">Salva Modifiche</button>
             <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 20px 0;">
             <button class="btn-modal" style="background: #525f7f; color: white;" onclick="logout()">Esci (Logout)</button>
         </div>
     </div>
 
-    <div id="authModal">
+    <div id="authModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'authModal')">
         <div class="modal-content" style="text-align: center;">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('authModal').style.display='none'">&times;</span>
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('authModal')">&times;</span>
             <h2 id="authModalTitle" style="margin-top: 5px; margin-bottom: 20px; color: #32325d; font-size: 26px;">☁️ Accedi</h2>
-            
             <input type="email" id="emailInput" placeholder="La tua email" class="input-field">
             <input type="password" id="passwordInput" placeholder="Password" class="input-field">
-            
             <div id="registerFields" style="display: none; text-align: left;">
                 <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 15px 0;">
-                <label style="font-size: 12px; font-weight: bold; color: #666;">Nome *</label>
-                <input type="text" id="regNome" class="input-field" placeholder="Il tuo nome">
-                <label style="font-size: 12px; font-weight: bold; color: #666;">Cognome *</label>
-                <input type="text" id="regCognome" class="input-field" placeholder="Il tuo cognome">
-                <label style="font-size: 12px; font-weight: bold; color: #666;">Matricola *</label>
-                <input type="text" id="regMatricola" class="input-field" placeholder="La tua matricola">
-                <label style="font-size: 12px; font-weight: bold; color: #666;">Numero omonimia es. 02, 03 ecc (facoltativo)</label>
-                <input type="text" id="regProg" class="input-field" placeholder="es. 02, 03 ecc.">
+                <input type="text" id="regNome" class="input-field" placeholder="Il tuo nome *">
+                <input type="text" id="regCognome" class="input-field" placeholder="Il tuo cognome *">
+                <input type="text" id="regMatricola" class="input-field" placeholder="La tua matricola *">
+                <input type="text" id="regProg" class="input-field" placeholder="Omonimia es. 02 (facoltativo)">
             </div>
-
             <div id="authError" style="color: var(--danger); font-size: 13px; margin-bottom: 15px; font-weight: bold; display: none;"></div>
-
-            <div id="loginExtras" style="text-align: right; margin-bottom: 15px;">
-                <a href="#" onclick="recuperaPassword(); return false;" style="font-size: 12px; color: #0056b3; font-weight: bold;">Password dimenticata?</a>
-            </div>
-
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <button id="btnEseguiAuth" class="btn-modal" style="background: #32325d; color: white; margin:0;" onclick="eseguiAuth()">Accedi</button>
-            </div>
-
-            <div id="authSwitchText" style="margin-top: 15px;">
+            <button id="btnEseguiAuth" class="btn-modal" style="background: #32325d; color: white;" onclick="eseguiAuth()">Accedi</button>
+            <div style="margin-top: 15px;">
                 <a href="#" id="authSwitchLink" onclick="switchAuthMode(); return false;" style="font-size: 13px; color: #0056b3; font-weight: bold; text-decoration: underline;">Non sei registrato? Registrati qui</a>
             </div>
-
             <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 20px 0;">
-            <button class="btn-modal" style="background: #ea4335; color: white; margin:0;" onclick="loginGoogle()">☁️ Accedi con Google</button>
+            <button class="btn-modal" style="background: #ea4335; color: white;" onclick="loginGoogle()">☁️ Accedi con Google</button>
         </div>
     </div>
 
-    <div id="modal-gestione" onclick="if(event.target.id === 'modal-gestione') this.style.display='none'">
-        <div class="modal-content" style="max-width: 400px;">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('modal-gestione').style.display='none'">&times;</span>
-            <h3 style="margin-top: 5px; margin-bottom: 15px; color: #32325d;">Utenti App</h3>
-            
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <div style="background: var(--primary); color: white; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; flex: 1; text-align: center;">
-                    Totali: <span id="badge-totali">0</span>
-                </div>
-                <div style="background: var(--success); color: white; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; flex: 1; text-align: center;">
-                    Oggi: <span id="badge-oggi">0</span>
-                </div>
-            </div>
+    <div id="modal-dati-obbligatori" class="modal-overlay">
+        <div class="modal-content" style="text-align: center;">
+            <h3 style="color: #32325d; margin-top: 5px;">📝 Dati Obbligatori</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Per la sicurezza dei dati presenti in Utility, per accedere è necessario inserire i tuoi dati reali.</p>
+            <input type="text" id="obbl-nome" placeholder="Nome *" class="input-field">
+            <input type="text" id="obbl-cognome" placeholder="Cognome *" class="input-field">
+            <input type="text" id="obbl-matricola" placeholder="Matricola *" class="input-field">
+            <input type="text" id="obbl-prog" placeholder="Numero omonimia (Facoltativo)" class="input-field">
+            <button class="btn-modal" style="background: var(--success); color: white;" onclick="salvaDatiObbligatori()">Salva e Continua</button>
+        </div>
+    </div>
 
+    <div id="modal-gestione" class="modal-overlay" onclick="chiudiSuSfondo(event, 'modal-gestione')">
+        <div class="modal-content" style="max-width: 400px;">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('modal-gestione')">&times;</span>
+            <h3 style="margin-top: 5px; margin-bottom: 15px; color: #32325d;">Utenti App</h3>
             <div id="lista-utenti-accessi" style="margin-top: 15px; max-height: 60vh; overflow-y: auto;"></div>
         </div>
     </div>
 
-    <div id="ddsReminderModal">
-        <div class="modal-content">
-            <h3 style="margin-top: 0; text-align: center;">🔔 Avvisi del Giorno</h3>
-            <div id="ddsReminderList" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;"></div>
-            <button id="chiudi-dds-btn" class="btn-modal" style="background: #0056b3; color: white;">Ho capito, chiudi</button>
-        </div>
-    </div>
-
     <script>
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('install-btn').style.display = 'block'; });
-        document.getElementById('install-btn').addEventListener('click', async () => { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; } });
-
-        const titleTrigger = document.getElementById('main-title');
-        let tapCount = 0; let tapTimer; let holdTimer;
-        document.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('dev_mode_active') === 'true') {
-                document.getElementById('secret-btn').style.display = 'block';
-                document.getElementById('adminBadge').style.display = 'block'; 
-            }
-            if (localStorage.getItem('generatore_sbloccato') === 'true') document.getElementById('generatore-btn').style.display = 'block';
-            const appDataStr = localStorage.getItem('myTurniApp');
-            if (appDataStr && appDataStr.toLowerCase().includes('nove')) document.getElementById('rotazioni-btn').style.display = 'block';
-        });
-
-        function handleStart(e) {
-            clearTimeout(tapTimer); clearTimeout(holdTimer); tapCount++;
-            if (tapCount === 3 || tapCount === 5) {
-                holdTimer = setTimeout(() => {
-                    if (tapCount === 5) { localStorage.setItem('dev_mode_active', 'true'); alert("🛠️ Admin Sbloccato"); location.reload(); }
-                    else { localStorage.setItem('generatore_sbloccato', 'true'); alert("🔑 Generatore Sbloccato"); location.reload(); }
-                }, 3000);
-            } else { tapTimer = setTimeout(() => tapCount = 0, 500); }
-        }
-        titleTrigger.addEventListener('mousedown', handleStart);
-        titleTrigger.addEventListener('touchstart', (e) => { e.preventDefault(); handleStart(e); });
-        titleTrigger.addEventListener('mouseup', () => clearTimeout(holdTimer));
-        titleTrigger.addEventListener('touchend', () => clearTimeout(holdTimer));
-
-        function checkLocalDDSReminders() {
-            const dObj = new Date();
-            const localToday = dObj.getFullYear() + "-" + String(dObj.getMonth() + 1).padStart(2, '0') + "-" + String(dObj.getDate()).padStart(2, '0');
-            if (localStorage.getItem('last_dds_reminder') === localToday) return;
-
-            const reqDB = indexedDB.open("UtilityDB");
-            reqDB.onsuccess = (e) => {
-                const db = e.target.result;
-                if (!db.objectStoreNames.contains("archivio_dds")) return;
-                const tx = db.transaction("archivio_dds", "readonly");
-                const store = tx.objectStore("archivio_dds");
-                const reqAll = store.getAll();
-                reqAll.onsuccess = () => {
-                    const ddsList = reqAll.result || [];
-                    const validToday = ddsList.filter(item => item.dateValidita && item.dateValidita.includes(localToday));
-
-                    if (validToday.length > 0) {
-                        let html = "";
-                        validToday.forEach(item => {
-                            html += `<div style="background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #d63384;">
-                                        <div style="font-weight: bold; color: #32325d;">${item.titolo}</div>
-                                        ${item.note ? `<div style="font-size: 12px; color: #666; margin-top: 4px;">${item.note}</div>` : ''}
-                                     </div>`;
-                        });
-                        document.getElementById('ddsReminderList').innerHTML = html;
-                        document.getElementById('ddsReminderModal').style.display = 'flex';
-                        document.getElementById('chiudi-dds-btn').onclick = () => {
-                            document.getElementById('ddsReminderModal').style.display = 'none';
-                            localStorage.setItem('last_dds_reminder', localToday);
-                        };
-                    }
-                };
-            };
-        }
-        document.addEventListener('DOMContentLoaded', checkLocalDDSReminders);
+        // Funzioni UI Base per Modali
+        window.apriModal = (id, authMode) => { 
+            document.getElementById(id).style.display = 'flex'; 
+            if(id === 'authModal' && authMode) { currentAuthMode = authMode; aggiornaUIAuth(); }
+        };
+        window.chiudiModal = (id) => { document.getElementById(id).style.display = 'none'; };
+        window.chiudiSuSfondo = (e, id) => { if (e.target.id === id) chiudiModal(id); };
     </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
-        const firebaseConfig = {
-          apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4",
-          authDomain: "utility-haze.firebaseapp.com",
-          projectId: "utility-haze",
-          storageBucket: "utility-haze.firebasestorage.app",
-          messagingSenderId: "686237947418",
-          appId: "1:686237947418:web:f03ba19ab8fff43110a3a3"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const provider = new GoogleAuthProvider();
+        const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", storageBucket: "utility-haze.firebasestorage.app", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
+        const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const provider = new GoogleAuthProvider();
         
         const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2"; 
         const COLLABORATORE_UIDS = ["INSERISCI_QUI_UID_1", "INSERISCI_QUI_UID_2"]; 
+        let globalIsAdmin = false; let globalIsCollab = false; let globalIsF9 = false;
 
-        function mostraErroreAuth(msg, isSuccess = false) {
-            const errDiv = document.getElementById('authError');
-            errDiv.innerText = msg;
-            errDiv.style.color = isSuccess ? "var(--success)" : "var(--danger)";
-            errDiv.style.display = 'block';
-        }
+        // --- MOTORE LAYOUT DINAMICO (LA MAGIA INIZIA QUI) ---
+        const DEFAULT_APPS = [
+            { id: "oggi", label: "Oggi", icon: "🎯", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
+            { id: "calendario", label: "Calendario", icon: "📅", href: "calendario.html" },
+            { id: "statistiche", label: "Statistiche", icon: "📊", href: "dati_calendario.html" },
+            { id: "rotazionef9", label: "Rotazione\nF.Nove", icon: "🚢", href: "rotazionef9.html", condition: "f9" },
+            { id: "turni", label: "Turni", icon: "🔄", href: "turni.html" },
+            { id: "bachecaturni", label: "Bacheca\nTurni", icon: "📌", href: "bacheca_turni.html" },
+            { id: "rubrica", label: "Rubrica", icon: "📞", href: "rubrica.html" },
+            { id: "ferie", label: "Rotazione\nFerie", icon: "🌴", href: "rotazione_ferie.html" },
+            { id: "orari", label: "Orari\nNavigaz.", icon: "🕒", href: "orari.html" },
+            { id: "documenti", label: "Documenti", icon: "📄", href: "documenti.html" },
+            { id: "link", label: "Link", icon: "🔗", href: "link.html" },
+            { id: "contatti", label: "Contatti", icon: "📇", href: "contatti.html" },
+            { id: "buoni", label: "Buoni\nPasto", icon: "🍝", href: "buoni.html" },
+            { id: "dds", label: "Archivio\nDDS", icon: "📂", href: "dds.html" },
+            { id: "guida", label: "Guida", icon: "📖", href: "guida.html", defaultColor: "#7f8c8d" },
+            { id: "generatore", label: "Generatore", icon: "🔑", href: "generatore.html", condition: "collab", defaultColor: "#cb4335" },
+            { id: "admin", label: "Admin", icon: "🔒", href: "admin.html", condition: "admin", defaultColor: "#cb4335" },
+            { id: "accessi", label: "Accessi", icon: "🛠️", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#2c3e50" }
+        ];
 
-        let currentAuthMode = 'login'; 
+        window.LayoutEngine = {
+            prefs: { c1: "#a4c5e3", c2: "#ffffff", c3: "#a9dfcd", appBg: "#5dade2", view: "grid", apps: [] },
+            isEditMode: false,
+            
+            init: function(firebasePrefsStr) {
+                const appDataStr = localStorage.getItem('myTurniApp');
+                globalIsF9 = (appDataStr && appDataStr.toLowerCase().includes('nove'));
 
-        window.apriModalAuth = (mode) => {
-            currentAuthMode = mode;
-            window.aggiornaUIAuth();
-            document.getElementById('authError').style.display = 'none';
-            document.getElementById('authModal').style.display = 'flex';
-        };
+                let localStr = localStorage.getItem('preferenze_layout_haze');
+                let targetStr = firebasePrefsStr || localStr;
 
-        window.switchAuthMode = () => {
-            currentAuthMode = currentAuthMode === 'login' ? 'register' : 'login';
-            window.aggiornaUIAuth();
-        };
+                if (targetStr) {
+                    try { 
+                        let parsed = JSON.parse(targetStr);
+                        this.prefs = { ...this.prefs, ...parsed };
+                        // Aggiorna eventuali app mancanti (se ho aggiunto app di default nuove nel codice)
+                        this.mergeWithDefaults();
+                    } catch(e) {}
+                } else {
+                    this.prefs.apps = JSON.parse(JSON.stringify(DEFAULT_APPS));
+                }
+                
+                this.applicaSfondo();
+                this.popolaModaleImpostazioni();
+                this.render();
+            },
 
-        window.aggiornaUIAuth = () => {
-            const title = document.getElementById('authModalTitle');
-            const btnEsegui = document.getElementById('btnEseguiAuth');
-            const registerFields = document.getElementById('registerFields');
-            const loginExtras = document.getElementById('loginExtras');
-            const switchLink = document.getElementById('authSwitchLink');
+            mergeWithDefaults: function() {
+                // Mantiene le app custom, rimuove quelle eliminate, aggiunge quelle nuove native
+                let currentIds = this.prefs.apps.map(a => a.id);
+                DEFAULT_APPS.forEach(defApp => {
+                    if(!currentIds.includes(defApp.id)) this.prefs.apps.push(JSON.parse(JSON.stringify(defApp)));
+                });
+            },
 
-            if (currentAuthMode === 'login') {
-                title.innerText = "☁️ Accedi";
-                btnEsegui.innerText = "Accedi";
-                registerFields.style.display = "none";
-                loginExtras.style.display = "block";
-                switchLink.innerText = "Non sei registrato? Registrati qui";
-            } else {
-                title.innerText = "📝 Registrati";
-                btnEsegui.innerText = "Registrati";
-                registerFields.style.display = "block";
-                loginExtras.style.display = "none";
-                switchLink.innerText = "Sei già registrato? Accedi qui";
+            applicaSfondo: function() {
+                const c1 = encodeURIComponent(this.prefs.c1); const c2 = encodeURIComponent(this.prefs.c2); const c3 = encodeURIComponent(this.prefs.c3);
+                const svg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Crect width='100' height='100' fill='${c1}'/%3E%3Cpath d='M0,60 C25,80 45,80 65,55 C80,35 90,35 100,55 L100,0 L0,0 Z' fill='${c2}'/%3E%3Cpath d='M0,40 C20,60 40,60 60,40 C80,20 90,20 100,45 L100,0 L0,0 Z' fill='${c3}'/%3E%3C/svg%3E`;
+                document.body.style.backgroundImage = `url("${svg}")`;
+                document.getElementById('app-container').className = this.prefs.view === 'list' ? 'app-list' : 'app-grid';
+            },
+
+            popolaModaleImpostazioni: function() {
+                document.getElementById('set-col1').value = this.prefs.c1;
+                document.getElementById('set-col2').value = this.prefs.c2;
+                document.getElementById('set-col3').value = this.prefs.c3;
+                document.getElementById('set-appbg').value = this.prefs.appBg;
+                document.getElementById('set-viewmode').value = this.prefs.view;
+            },
+
+            render: function() {
+                const container = document.getElementById('app-container');
+                container.innerHTML = '';
+                if(this.isEditMode) container.classList.add('wiggle-mode');
+                else container.classList.remove('wiggle-mode');
+
+                this.prefs.apps.forEach(app => {
+                    // Controlli Permessi
+                    if (app.condition === 'f9' && !globalIsF9) return;
+                    if (app.condition === 'admin' && !globalIsAdmin) return;
+                    if (app.condition === 'collab' && !(globalIsAdmin || globalIsCollab)) return;
+
+                    const finalColor = app.color || app.defaultColor || this.prefs.appBg;
+                    const isLink = app.href ? `href="${app.href}"` : `onclick="${app.onclick}"`;
+                    // Se in edit mode, intercetta il click per aprire l'editor anziché navigare
+                    const editHandler = this.isEditMode ? `onclick="event.preventDefault(); window.LayoutEngine.apriEditorApp('${app.id}');"` : isLink;
+                    
+                    const labelHtml = app.label.replace('\n', '<br>');
+                    const badgeHtml = this.isEditMode ? `<div class="edit-badge">✏️</div>` : '';
+
+                    container.innerHTML += `
+                        <a ${editHandler} class="app-btn" id="btn-${app.id}">
+                            ${badgeHtml}
+                            <div class="app-icon" style="background: ${finalColor};">${app.icon}</div>
+                            <div class="app-label">${labelHtml}</div>
+                        </a>
+                    `;
+                });
+            },
+
+            toggleEditMode: function() {
+                this.isEditMode = !this.isEditMode;
+                document.getElementById('btn-salva-layout').style.display = this.isEditMode ? 'block' : 'none';
+                if(!this.isEditMode) this.sincronizzaConFirebase(); // Salva quando esce dalla modalità
+                this.render();
+            },
+
+            apriEditorApp: function(appId) {
+                const app = this.prefs.apps.find(a => a.id === appId);
+                if(!app) return;
+                document.getElementById('edit-app-id').value = app.id;
+                document.getElementById('edit-app-label').value = app.label.replace('\n', ' ');
+                document.getElementById('edit-app-icon').value = app.icon;
+                document.getElementById('edit-app-color').value = app.color || app.defaultColor || this.prefs.appBg;
+                
+                // Mostra tasto elimina solo se è un'app custom (inizia con custom_)
+                document.getElementById('btn-elimina-custom').style.display = app.id.startsWith('custom_') ? 'block' : 'none';
+                window.apriModal('editAppModal');
+            },
+
+            salvaModificaSingolaApp: function() {
+                const id = document.getElementById('edit-app-id').value;
+                const index = this.prefs.apps.findIndex(a => a.id === id);
+                if(index > -1) {
+                    this.prefs.apps[index].label = document.getElementById('edit-app-label').value;
+                    this.prefs.apps[index].icon = document.getElementById('edit-app-icon').value || "🔹";
+                    this.prefs.apps[index].color = document.getElementById('edit-app-color').value;
+                }
+                window.chiudiModal('editAppModal');
+                this.render();
+            },
+
+            spostaApp: function(direzione) {
+                const id = document.getElementById('edit-app-id').value;
+                const index = this.prefs.apps.findIndex(a => a.id === id);
+                if(index < 0) return;
+                const newIndex = index + direzione;
+                if(newIndex >= 0 && newIndex < this.prefs.apps.length) {
+                    const temp = this.prefs.apps[index];
+                    this.prefs.apps[index] = this.prefs.apps[newIndex];
+                    this.prefs.apps[newIndex] = temp;
+                    this.render(); // Aggiorna a vista ma tieni il modale aperto
+                }
+            },
+
+            creaAppPersonalizzata: function() {
+                const label = document.getElementById('new-app-label').value.trim();
+                let url = document.getElementById('new-app-url').value.trim();
+                const icon = document.getElementById('new-app-icon').value.trim() || "🔗";
+                if(!label || !url) { alert("Nome e Link sono obbligatori."); return; }
+                if(!url.startsWith('http')) url = 'https://' + url;
+
+                const newApp = {
+                    id: "custom_" + Date.now(),
+                    label: label, icon: icon, href: url, color: this.prefs.appBg
+                };
+                this.prefs.apps.push(newApp);
+                window.chiudiModal('customAppModal');
+                this.sincronizzaConFirebase();
+                this.render();
+            },
+
+            eliminaAppCorrente: function() {
+                const id = document.getElementById('edit-app-id').value;
+                this.prefs.apps = this.prefs.apps.filter(a => a.id !== id);
+                window.chiudiModal('editAppModal');
+                this.render();
+            },
+
+            salvaPreferenzeGlobali: function() {
+                this.prefs.c1 = document.getElementById('set-col1').value;
+                this.prefs.c2 = document.getElementById('set-col2').value;
+                this.prefs.c3 = document.getElementById('set-col3').value;
+                this.prefs.appBg = document.getElementById('set-appbg').value;
+                this.prefs.view = document.getElementById('set-viewmode').value;
+                
+                this.applicaSfondo();
+                this.render();
+                window.chiudiModal('settingsModal');
+                this.sincronizzaConFirebase();
+            },
+
+            sincronizzaConFirebase: async function() {
+                const str = JSON.stringify(this.prefs);
+                localStorage.setItem('preferenze_layout_haze', str);
+                if (auth.currentUser) {
+                    try { await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_layout: str }, { merge: true }); } 
+                    catch(e) {}
+                }
+            },
+
+            ripristinaPredefiniti: async function() {
+                if(!confirm("Vuoi ripristinare grafica e tasti originali?")) return;
+                localStorage.removeItem('preferenze_layout_haze');
+                if (auth.currentUser) {
+                    try { await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_layout: null }, { merge: true }); } catch(e){}
+                }
+                location.reload();
             }
+        };
+
+        // --- SISTEMA AUTENTICAZIONE E GESTIONE LOGICA BASE ---
+        window.apriBachecaUtility = () => {
+            const timestamp = Date.now();
+            localStorage.setItem('ultimo_accesso_bacheca', timestamp);
+            document.getElementById('badge-messaggi').style.display = 'none';
+            document.getElementById('banner-nuovo-messaggio').style.display = 'none';
+            document.getElementById('banner-dds-alert').style.display = 'none';
+            if (auth.currentUser) setDoc(doc(db, "utenti", auth.currentUser.uid), { ultimo_accesso_bacheca: timestamp }, { merge: true }).catch(()=>{});
+            window.location.href = 'bacheca_utility.html';
+        };
+
+        window.apriGestioneAccessi = async () => {
+            apriModal('modal-gestione');
+            const container = document.getElementById('lista-utenti-accessi');
+            container.innerHTML = `<div style="text-align:center; color:#666; padding:20px;">Caricamento...</div>`;
+            try {
+                const snap = await getDocs(collection(db, "utenti"));
+                let html = ""; const oggiStr = new Date().toISOString().split('T')[0];
+                snap.forEach(d => {
+                    const u = d.data(); const isBanned = u.app_banned === true;
+                    const omo = u.progressivo ? ` ${u.progressivo}` : '';
+                    const fullName = `${u.cognome || ''} ${u.nome || ''}${omo}`.trim() || 'Sconosciuto';
+                    const dotOggi = (u.last_app_access === oggiStr) ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:5px;"></span>` : '';
+                    html += `<div style="display:flex; justify-content:space-between; align-items:center; background:${isBanned ? '#fff5f5' : '#f8f9fa'}; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid ${isBanned ? '#ffc9c9' : '#e9ecef'};">
+                        <div><div style="font-weight:bold; font-size:14px; color:#32325d;">${fullName}${dotOggi}</div><div style="font-size:11px; color:#666;">(Matr. ${u.matricola || '??'})</div></div>
+                        <button style="background:transparent; border:2px solid ${isBanned ? 'var(--success)' : 'var(--danger)'}; color:${isBanned ? 'var(--success)' : 'var(--danger)'}; padding:6px 10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="toggleAppBan('${d.id}', ${!isBanned})">${isBanned ? 'Sblocca' : 'Blocca'}</button>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            } catch(e) { container.innerHTML = "Errore."; }
+        };
+        window.toggleAppBan = async (uid, status) => { if(confirm("Confermi?")) { await setDoc(doc(db, "utenti", uid), { app_banned: status }, { merge: true }); window.apriGestioneAccessi(); } };
+
+        let currentAuthMode = 'login';
+        window.switchAuthMode = () => { currentAuthMode = currentAuthMode === 'login' ? 'register' : 'login'; window.aggiornaUIAuth(); };
+        window.aggiornaUIAuth = () => {
+            document.getElementById('authModalTitle').innerText = currentAuthMode === 'login' ? "☁️ Accedi" : "📝 Registrati";
+            document.getElementById('btnEseguiAuth').innerText = currentAuthMode === 'login' ? "Accedi" : "Registrati";
+            document.getElementById('registerFields').style.display = currentAuthMode === 'login' ? "none" : "block";
+            document.getElementById('authSwitchLink').innerText = currentAuthMode === 'login' ? "Non sei registrato? Registrati qui" : "Sei già registrato? Accedi qui";
         };
 
         window.eseguiAuth = async () => {
-            document.getElementById('authError').style.display = 'none';
-            const email = document.getElementById('emailInput').value.trim();
-            const pwd = document.getElementById('passwordInput').value;
-            const btnEsegui = document.getElementById('btnEseguiAuth');
-
-            if (!email || !pwd) { mostraErroreAuth("Inserisci email e password."); return; }
-
-            btnEsegui.disabled = true; btnEsegui.innerText = "⏳...";
-
+            const email = document.getElementById('emailInput').value.trim(); const pwd = document.getElementById('passwordInput').value;
+            const err = document.getElementById('authError'); err.style.display='none';
+            if (!email || !pwd) { err.innerText = "Inserisci email e password."; err.style.display='block'; return; }
             if (currentAuthMode === 'login') {
-                try {
-                    await signInWithEmailAndPassword(auth, email, pwd);
-                    document.getElementById('authModal').style.display = 'none';
-                } catch (error) { mostraErroreAuth("Email o Password errata."); }
+                try { await signInWithEmailAndPassword(auth, email, pwd); chiudiModal('authModal'); } catch (e) { err.innerText = "Email o Password errata."; err.style.display='block'; }
             } else {
-                const nome = document.getElementById('regNome').value.trim();
-                const cognome = document.getElementById('regCognome').value.trim();
-                const matricola = document.getElementById('regMatricola').value.trim();
-                const prog = document.getElementById('regProg').value.trim();
-
-                if (!nome || !cognome || !matricola) {
-                    mostraErroreAuth("Compila Nome, Cognome e Matricola.");
-                    btnEsegui.disabled = false; btnEsegui.innerText = "Registrati";
-                    return;
-                }
-
+                const nome = document.getElementById('regNome').value.trim(); const cognome = document.getElementById('regCognome').value.trim(); const matricola = document.getElementById('regMatricola').value.trim();
+                if (!nome || !cognome || !matricola) { err.innerText = "Nome, Cognome e Matricola obbligatori."; err.style.display='block'; return; }
                 try {
-                    const userCredential = await createUserWithEmailAndPassword(auth, email, pwd);
-                    const profileData = { nome: nome, cognome: cognome, matricola: matricola, progressivo: prog };
-
-                    await setDoc(doc(db, "utenti", userCredential.user.uid), profileData, { merge: true });
-                    await setDoc(doc(db, "rubrica", userCredential.user.uid), profileData, { merge: true });
+                    const res = await createUserWithEmailAndPassword(auth, email, pwd);
+                    const profileData = { nome, cognome, matricola, progressivo: document.getElementById('regProg').value.trim() };
+                    await setDoc(doc(db, "utenti", res.user.uid), profileData, { merge: true });
+                    await setDoc(doc(db, "rubrica", res.user.uid), profileData, { merge: true });
                     localStorage.setItem('backup_profilo_haze', JSON.stringify(profileData));
-
-                    document.getElementById('authModal').style.display = 'none';
-                } catch (error) { mostraErroreAuth("Errore durante la registrazione. Forse l'email è già in uso o la password è debole."); }
+                    chiudiModal('authModal');
+                } catch (e) { err.innerText = "Errore registrazione."; err.style.display='block'; }
             }
-            btnEsegui.disabled = false; btnEsegui.innerText = currentAuthMode === 'login' ? "Accedi" : "Registrati";
         };
 
-        window.loginGoogle = async () => { try { await signInWithPopup(auth, provider); } catch(error) { mostraErroreAuth("Errore durante l'accesso con Google."); }};
-        window.recuperaPassword = async () => { const email = document.getElementById('emailInput').value; if (!email) { mostraErroreAuth("Inserisci prima la tua email."); return; } try { await sendPasswordResetEmail(auth, email); mostraErroreAuth("Email inviata!", true); } catch (error) { mostraErroreAuth("Errore invio email."); }};
-        window.logout = () => { signOut(auth); document.getElementById('profileModal').style.display='none'; };
+        window.loginGoogle = async () => { try { await signInWithPopup(auth, provider); } catch(e) {} };
+        window.logout = () => signOut(auth);
+
+        window.salvaDatiObbligatori = async () => {
+            if (!auth.currentUser) return;
+            const nome = document.getElementById('obbl-nome').value.trim(); const cognome = document.getElementById('obbl-cognome').value.trim(); const matricola = document.getElementById('obbl-matricola').value.trim();
+            if (!nome || !cognome || !matricola) { alert("Dati obbligatori!"); return; }
+            const p = { nome, cognome, matricola, progressivo: document.getElementById('obbl-prog').value.trim() };
+            await setDoc(doc(db, "utenti", auth.currentUser.uid), p, { merge: true });
+            await setDoc(doc(db, "rubrica", auth.currentUser.uid), p, { merge: true });
+            localStorage.setItem('backup_profilo_haze', JSON.stringify({...(JSON.parse(localStorage.getItem('backup_profilo_haze')||"{}")), ...p}));
+            location.reload(); 
+        };
 
         window.salvaProfilo = async () => {
-            const user = auth.currentUser;
-            if (!user) return;
-            const btn = document.getElementById('btnSalvaProfilo');
-            btn.innerText = "⏳ Salvataggio..."; btn.disabled = true;
-
-            const profileData = { 
-                nome: document.getElementById('profileNome').value.trim(), 
-                cognome: document.getElementById('profileCognome').value.trim(), 
-                progressivo: document.getElementById('profileProgressivo').value.trim(), 
-                soprannome: document.getElementById('profileSoprannome').value.trim(), 
-                mansione: document.getElementById('profileMansione').value, 
-                matricola: document.getElementById('profileMatricola').value.trim(), 
-                telefono: document.getElementById('profileTelefono').value.trim() 
-            };
-
-            localStorage.setItem('backup_profilo_haze', JSON.stringify(profileData));
-
-            try {
-                const docRef = doc(db, "utenti", user.uid);
-                await setDoc(docRef, profileData, { merge: true });
-                const rubricaRef = doc(db, "rubrica", user.uid);
-                const rubricaSnap = await getDoc(rubricaRef);
-                if (rubricaSnap.exists()) await setDoc(rubricaRef, profileData, { merge: true });
-                alert("✅ Profilo salvato!");
-                document.getElementById('profileModal').style.display = 'none';
-            } catch (e) { alert("❌ Errore durante il salvataggio."); } 
-            finally { btn.innerText = "Salva Modifiche"; btn.disabled = false; }
+            if (!auth.currentUser) return;
+            const p = { nome: document.getElementById('profileNome').value, cognome: document.getElementById('profileCognome').value, progressivo: document.getElementById('profileProgressivo').value, matricola: document.getElementById('profileMatricola').value };
+            await setDoc(doc(db, "utenti", auth.currentUser.uid), p, { merge: true });
+            alert("Salvataggio completato!"); chiudiModal('profileModal');
         };
 
         window.controllaNotificheBacheca = async () => {
             try {
                 const ultimoAccesso = parseInt(localStorage.getItem('ultimo_accesso_bacheca')) || 0;
                 const snap = await getDocs(collection(db, "bacheca_utility"));
-                const stateApp = JSON.parse(localStorage.getItem('myTurniApp')) || {};
-                const profileObj = stateApp.profiliSalvati ? stateApp.profiliSalvati[stateApp.profiloAttivoId || 'default'] : stateApp;
-                const rotazioneUtente = profileObj ? profileObj.depositoAttivo : null;
-                const oggiStr = new Date().toISOString().split('T')[0];
-                let nonLetti = 0; let ddsTitolo = "";
+                let nonLetti = 0; let ddsTitolo = ""; const oggiStr = new Date().toISOString().split('T')[0];
                 snap.forEach(d => {
-                    const m = d.data();
-                    if (m.scadenza && m.scadenza < oggiStr) return; 
-                    if (m.target && m.target !== "tutti" && (!rotazioneUtente || !m.target.includes(rotazioneUtente))) return;
-                    if (m.timestamp > ultimoAccesso) nonLetti++;
+                    const m = d.data(); if (m.scadenza && m.scadenza < oggiStr) return; 
+                    if (parseInt(m.timestamp) > ultimoAccesso) nonLetti++;
                     if (m.tipo === "dds") ddsTitolo = m.titolo_dds;
                 });
-                if (nonLetti > 0) {
-                    document.getElementById('badge-messaggi').innerText = nonLetti;
-                    document.getElementById('badge-messaggi').style.display = 'flex';
-                    document.getElementById('banner-nuovo-messaggio').style.display = 'block';
-                }
-                if (ddsTitolo) {
-                    document.getElementById('titolo-dds-text').innerText = ddsTitolo;
-                    document.getElementById('banner-dds-alert').style.display = 'block';
-                }
+                if (nonLetti > 0) { document.getElementById('badge-messaggi').innerText = nonLetti; document.getElementById('badge-messaggi').style.display = 'flex'; document.getElementById('banner-nuovo-messaggio').style.display = 'block'; }
+                if (ddsTitolo) { document.getElementById('titolo-dds-text').innerText = ddsTitolo; document.getElementById('banner-dds-alert').style.display = 'block'; }
             } catch (e) {}
         };
 
-        // --- GESTIONE ACCESSI APP (Pannello Admin) ---
-        window.apriGestioneAccessi = async () => {
-            document.getElementById('modal-gestione').style.display = 'flex';
-            const container = document.getElementById('lista-utenti-accessi');
-            const badgeTotali = document.getElementById('badge-totali');
-            const badgeOggi = document.getElementById('badge-oggi');
-            const oggiStr = new Date().toISOString().split('T')[0];
-
-            container.innerHTML = `<div style="text-align:center; color:#666; padding:20px;">Caricamento in corso...</div>`;
-            badgeTotali.innerText = "0";
-            badgeOggi.innerText = "0";
-
-            try {
-                const snap = await getDocs(collection(db, "utenti"));
-                let html = "";
-                let numeroTotali = 0;
-                let numeroOggi = 0;
-
-                snap.forEach(d => {
-                    const u = d.data();
-                    numeroTotali++;
-                    if (u.last_app_access === oggiStr) {
-                        numeroOggi++;
-                    }
-
-                    const isBanned = u.app_banned === true;
-                    const omo = u.progressivo ? ` ${u.progressivo}` : '';
-                    const fullName = `${u.cognome || ''} ${u.nome || ''}${omo}`.trim() || 'Utente Sconosciuto';
-                    const matr = u.matricola ? `(Matr. ${u.matricola})` : '';
-
-                    const dotOggi = (u.last_app_access === oggiStr) ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:5px;" title="Accesso effettuato oggi"></span>` : '';
-
-                    html += `<div style="display: flex; justify-content: space-between; align-items: center; background: ${isBanned ? '#fff5f5' : '#f8f9fa'}; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid ${isBanned ? '#ffc9c9' : '#e9ecef'};">
-                        <div>
-                            <div style="font-weight:bold; font-size:14px; color: #32325d;">${fullName}${dotOggi}</div>
-                            <div style="font-size: 11px; color: #666;">${matr}</div>
-                        </div>
-                        <button style="background:transparent; border: 2px solid ${isBanned ? 'var(--success)' : 'var(--danger)'}; color: ${isBanned ? 'var(--success)' : 'var(--danger)'}; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer;" 
-                        onclick="toggleAppBan('${d.id}', ${!isBanned})">${isBanned ? 'Sblocca' : 'Blocca'}</button>
-                    </div>`;
-                });
-
-                if (html === "") {
-                    container.innerHTML = `<div style="text-align:center; color:#666; padding:20px;">Nessun utente registrato.</div>`;
-                } else {
-                    container.innerHTML = html;
-                    badgeTotali.innerText = numeroTotali;
-                    badgeOggi.innerText = numeroOggi;
-                }
-            } catch(e) {
-                container.innerHTML = `<div style="text-align:center; color:red; padding:20px;">Errore durante il caricamento.</div>`;
-            }
-        };
-
-        window.toggleAppBan = async (uid, status) => {
-            if (!confirm("Sei sicuro di voler " + (status ? "bloccare" : "sbloccare") + " l'accesso a questo utente?")) return;
-            await setDoc(doc(db, "utenti", uid), { app_banned: status }, { merge: true });
-            apriGestioneAccessi();
-        };
-
         onAuthStateChanged(auth, async (user) => {
-            const btnLogin = document.getElementById('btnOpenLogin');
-            const btnProfile = document.getElementById('btnOpenProfile');
-            const statusText = document.getElementById('user-status');
-            const profileEmail = document.getElementById('profileEmail');
+            const vLoad = document.getElementById('view-loading'); const vGuest = document.getElementById('view-guest'); const vApp = document.getElementById('view-app'); const vBanned = document.getElementById('view-banned');
             
-            const viewLoading = document.getElementById('view-loading');
-            const viewGuest = document.getElementById('view-guest');
-            const viewApp = document.getElementById('view-app');
-            const viewBanned = document.getElementById('view-banned');
-
             if (user) {
                 try {
-                    const docRef = doc(db, "utenti", user.uid);
-                    const docSnap = await getDoc(docRef);
+                    const docSnap = await getDoc(doc(db, "utenti", user.uid));
                     let data = docSnap.exists() ? docSnap.data() : {};
+                    vLoad.style.display = 'none';
 
-                    viewLoading.style.display = 'none';
+                    if (data.app_banned === true) { document.body.style.backgroundImage = 'none'; document.body.style.backgroundColor = "white"; vGuest.style.display = 'none'; vApp.style.display = 'none'; vBanned.style.display = 'flex'; return; }
+                    if (!data.nome || !data.cognome || !data.matricola) document.getElementById('modal-dati-obbligatori').style.display = 'flex';
 
-                    if (data.app_banned === true) {
-                        document.body.style.backgroundImage = 'none'; 
-                        document.body.style.backgroundColor = "white";
-                        viewGuest.style.display = 'none';
-                        viewApp.style.display = 'none';
-                        viewBanned.style.display = 'flex';
-                        return;
-                    }
-
-                    // Ripristiniamo lo sfondo vettoriale per l'app
-                    document.body.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23a4c5e3'/%3E%3Cpath d='M0,60 C25,80 45,80 65,55 C80,35 90,35 100,55 L100,0 L0,0 Z' fill='%23ffffff'/%3E%3Cpath d='M0,40 C20,60 40,60 60,40 C80,20 90,20 100,45 L100,0 L0,0 Z' fill='%23a9dfcd'/%3E%3C/svg%3E")`;
+                    globalIsAdmin = (user.uid === ADMIN_UID);
+                    globalIsCollab = COLLABORATORE_UIDS.includes(user.uid);
                     
-                    viewGuest.style.display = 'none';
-                    viewApp.style.display = 'flex';
-                    viewBanned.style.display = 'none';
+                    if(globalIsAdmin) { document.getElementById('adminBadge').style.display = 'block'; document.getElementById('adminBadge').innerHTML = 'Account Amministratore'; }
 
-                    const isSuperAdmin = (user.uid === ADMIN_UID);
-                    const isCollaboratore = COLLABORATORE_UIDS.includes(user.uid);
-                    if (isSuperAdmin) {
-                        document.getElementById('secret-btn').style.display = 'block';
-                        document.getElementById('generatore-btn').style.display = 'block';
-                        document.getElementById('btn-admin-gestione').style.display = 'block';
-                        document.getElementById('adminBadge').style.display = 'block';
-                        document.getElementById('adminBadge').innerHTML = 'Account Amministratore';
-                        localStorage.setItem('dev_mode_active', 'true');
-                        localStorage.setItem('generatore_sbloccato', 'true');
-                    } else if (isCollaboratore) {
-                        document.getElementById('generatore-btn').style.display = 'block'; 
-                        document.getElementById('adminBadge').style.display = 'block';
-                        document.getElementById('adminBadge').innerHTML = 'Account Collaboratore';
-                        localStorage.setItem('generatore_sbloccato', 'true');
-                    }
+                    vGuest.style.display = 'none'; vApp.style.display = 'flex'; vBanned.style.display = 'none';
+                    document.getElementById('btnOpenLogin').style.display = 'none'; document.getElementById('btnOpenProfile').style.display = 'block';
+                    document.getElementById('profileEmail').value = user.email;
 
-                    document.getElementById('authModal').style.display = 'none';
-                    btnLogin.style.display = 'none';
-                    btnProfile.style.display = 'block';
-                    statusText.style.display = 'block';
-                    statusText.innerHTML = `☁️ Online`;
-                    profileEmail.value = user.email;
+                    // Sync Layout
+                    window.LayoutEngine.init(data.preferenze_layout);
 
+                    const dbB = parseInt(data.ultimo_accesso_bacheca) || 0; const locB = parseInt(localStorage.getItem('ultimo_accesso_bacheca')) || 0;
+                    if (dbB > locB) localStorage.setItem('ultimo_accesso_bacheca', dbB);
                     window.controllaNotificheBacheca();
 
-                    const localDati = JSON.parse(localStorage.getItem('backup_profilo_haze') || "{}");
-                    let dbAggiornato = false;
-
-                    if (!data.nome && localDati.nome) { data.nome = localDati.nome; dbAggiornato = true; }
-                    if (!data.cognome && localDati.cognome) { data.cognome = localDati.cognome; dbAggiornato = true; }
-                    if (!data.matricola && localDati.matricola) { data.matricola = localDati.matricola; dbAggiornato = true; }
-
-                    const oggiStr = new Date().toISOString().split('T')[0];
-                    if (data.last_app_access !== oggiStr) {
-                        data.last_app_access = oggiStr;
-                        dbAggiornato = true;
-                    }
-
-                    if (dbAggiornato) { await setDoc(docRef, data, { merge: true }); }
-                    if (data.nome || data.cognome) { localStorage.setItem('backup_profilo_haze', JSON.stringify(data)); }
-
-                    document.getElementById('profileNome').value = data.nome || '';
-                    document.getElementById('profileCognome').value = data.cognome || '';
-                    document.getElementById('profileProgressivo').value = data.progressivo || '';
-                    document.getElementById('profileSoprannome').value = data.soprannome || '';
-                    document.getElementById('profileMansione').value = data.mansione || '';
-                    document.getElementById('profileMatricola').value = data.matricola || '';
-                    document.getElementById('profileTelefono').value = data.telefono || '';
-                    
-                    const strikes = data.revoche_rubrica || 0;
-                    if (strikes > 0 && !(isSuperAdmin || isCollaboratore)) {
-                        document.getElementById('profileStrikes').style.display = 'block';
-                        document.getElementById('strikeCount').innerText = strikes;
-                    }
-                } catch(e) {
-                    viewLoading.style.display = 'none';
-                }
+                    document.getElementById('profileNome').value = data.nome || ''; document.getElementById('profileCognome').value = data.cognome || '';
+                    document.getElementById('profileMatricola').value = data.matricola || ''; document.getElementById('profileProgressivo').value = data.progressivo || '';
+                } catch(e) { vLoad.style.display = 'none'; }
             } else {
-                viewLoading.style.display = 'none';
-                
-                document.body.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23a4c5e3'/%3E%3Cpath d='M0,60 C25,80 45,80 65,55 C80,35 90,35 100,55 L100,0 L0,0 Z' fill='%23ffffff'/%3E%3Cpath d='M0,40 C20,60 40,60 60,40 C80,20 90,20 100,45 L100,0 L0,0 Z' fill='%23a9dfcd'/%3E%3C/svg%3E")`;
-                
-                viewGuest.style.display = 'flex';
-                viewApp.style.display = 'none';
-                viewBanned.style.display = 'none';
-
-                btnLogin.style.display = 'block';
-                btnProfile.style.display = 'none';
-                statusText.style.display = 'none';
-                document.getElementById('banner-nuovo-messaggio').style.display = 'none';
-                document.getElementById('banner-dds-alert').style.display = 'none';
+                vLoad.style.display = 'none';
+                window.LayoutEngine.init(); // Carica sfondi base ma non mostra app
+                vGuest.style.display = 'flex'; vApp.style.display = 'none'; vBanned.style.display = 'none';
             }
         });
     </script>
