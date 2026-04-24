@@ -16,7 +16,7 @@
             url.searchParams.set('nocache', new Date().getTime());
             window.location.replace(url.toString());
         } else {
-            const APP_VERSION = "1.6"; 
+            const APP_VERSION = "1.7"; 
             if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
                 if ('caches' in window) { caches.keys().then((names) => { names.forEach(name => caches.delete(name)); }); }
                 if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then((registrations) => { registrations.forEach(registration => registration.unregister()); }); }
@@ -192,8 +192,8 @@
 
             <label style="font-size: 12px; color: #666; font-weight: bold;">Visualizzazione:</label>
             <select id="set-viewmode" class="input-field" style="background: #f8f9fa;">
-                <option value="grid">Griglia Icone (Smartphone)</option>
-                <option value="list">Lista Pulsantoni</option>
+                <option value="grid">Griglia app</option>
+                <option value="list">Lista</option>
             </select>
 
             <button class="btn-modal" style="background: #ff9800; color: white;" onclick="LayoutEngine.toggleEditMode(); chiudiModal('settingsModal');">✏️ Modifica Layout (Trascina e Ordina)</button>
@@ -351,9 +351,9 @@
         ];
 
         window.LayoutEngine = {
-            // Colori originali di base ripristinati. 
-            // appBg su un blu scuro #0056b3 così il picker non si apre bianco/desaturato
-            prefs: { c1: "#a4c5e3", c2: "#ffffff", c3: "#a9dfcd", appBg: "#0056b3", view: "grid", apps: [] },
+            // Colori di base ripristinati. appBg a #5dade2 (soft) apre saturo nel picker. 
+            // Invertito il rendering c1/c3 nell'SVG sotto.
+            prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#5dade2", view: "grid", apps: [] },
             isEditMode: false,
             sortableInstance: null,
             
@@ -388,7 +388,8 @@
 
             applicaSfondo: function() {
                 const c1 = encodeURIComponent(this.prefs.c1); const c2 = encodeURIComponent(this.prefs.c2); const c3 = encodeURIComponent(this.prefs.c3);
-                const svg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Crect width='100' height='100' fill='${c1}'/%3E%3Cpath d='M0,60 C25,80 45,80 65,55 C80,35 90,35 100,55 L100,0 L0,0 Z' fill='${c2}'/%3E%3Cpath d='M0,40 C20,60 40,60 60,40 C80,20 90,20 100,45 L100,0 L0,0 Z' fill='${c3}'/%3E%3C/svg%3E`;
+                // Inversione logica c1/c3 per far corrispondere Alto con Alto e Basso con Basso
+                const svg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Crect width='100' height='100' fill='${c3}'/%3E%3Cpath d='M0,60 C25,80 45,80 65,55 C80,35 90,35 100,55 L100,0 L0,0 Z' fill='${c2}'/%3E%3Cpath d='M0,40 C20,60 40,60 60,40 C80,20 90,20 100,45 L100,0 L0,0 Z' fill='${c1}'/%3E%3C/svg%3E`;
                 document.body.style.backgroundImage = `url("${svg}")`;
                 document.getElementById('app-container').className = this.prefs.view === 'list' ? 'app-list' : 'app-grid';
             },
@@ -415,7 +416,6 @@
                     const finalColor = app.color || app.defaultColor || this.prefs.appBg;
                     const isLink = app.href ? `href="${app.href}"` : `onclick="${app.onclick}"`;
                     
-                    // In edit mode disattiviamo il link standard e lanciamo l'apertura modale per la singola app
                     const editHandler = this.isEditMode ? `onclick="event.preventDefault(); window.LayoutEngine.apriEditorApp('${app.id}');"` : isLink;
                     
                     const labelHtml = app.label.replace('\n', '<br>');
@@ -436,13 +436,12 @@
                 const container = document.getElementById('app-container');
                 document.getElementById('btn-salva-layout').style.display = this.isEditMode ? 'block' : 'none';
                 
-                this.render(); // Ri-renderizza per applicare wiggle e onclick
+                this.render(); 
 
                 if(this.isEditMode) {
-                    // Abilita Drag and Drop animato fluido
                     this.sortableInstance = new Sortable(container, {
-                        animation: 200,          // Durata animazione spostamento icone
-                        delay: 150,              // Necessario per distinguere il "tap" per edit dal "drag"
+                        animation: 200,          
+                        delay: 150,              
                         delayOnTouchOnly: true,
                         ghostClass: "sortable-ghost",
                         onEnd: (evt) => {
@@ -450,9 +449,8 @@
                         }
                     });
                 } else {
-                    // Disabilita
                     if(this.sortableInstance) this.sortableInstance.destroy();
-                    this.sincronizzaConFirebase(); // Salva uscita
+                    this.sincronizzaConFirebase(); 
                 }
             },
 
@@ -465,7 +463,6 @@
                     if (app) nuovoOrdine.push(app);
                 });
                 
-                // Mantiene eventuali bottoni nascosti (es. admin) che non erano nel DOM
                 this.prefs.apps.forEach(app => {
                     if (!nuovoOrdine.find(a => a.id === app.id)) {
                         nuovoOrdine.push(app);
@@ -482,8 +479,7 @@
                 document.getElementById('edit-app-label').value = app.label.replace('\n', ' ');
                 document.getElementById('edit-app-icon').value = app.icon;
                 
-                // Forza un colore acceso per evitare che il picker parta dal bianco/nero
-                document.getElementById('edit-app-color').value = app.color || app.defaultColor || this.prefs.appBg || "#0056b3";
+                document.getElementById('edit-app-color').value = app.color || app.defaultColor || this.prefs.appBg || "#5dade2";
                 
                 document.getElementById('btn-elimina-custom').style.display = app.id.startsWith('custom_') ? 'block' : 'none';
                 window.apriModal('editAppModal');
@@ -510,7 +506,7 @@
 
                 const newApp = {
                     id: "custom_" + Date.now(),
-                    label: label, icon: icon, href: url, color: this.prefs.appBg || "#0056b3"
+                    label: label, icon: icon, href: url, color: this.prefs.appBg || "#5dade2"
                 };
                 this.prefs.apps.push(newApp);
                 window.chiudiModal('customAppModal');
@@ -676,7 +672,6 @@
                     document.getElementById('btnOpenLogin').style.display = 'none'; document.getElementById('btnOpenProfile').style.display = 'block';
                     document.getElementById('profileEmail').value = user.email;
 
-                    // Sync Layout
                     window.LayoutEngine.init(data.preferenze_layout);
 
                     const dbB = parseInt(data.ultimo_accesso_bacheca) || 0; const locB = parseInt(localStorage.getItem('ultimo_accesso_bacheca')) || 0;
@@ -688,7 +683,7 @@
                 } catch(e) { vLoad.style.display = 'none'; }
             } else {
                 vLoad.style.display = 'none';
-                window.LayoutEngine.init(); // Carica sfondi base ma non mostra app
+                window.LayoutEngine.init(); 
                 vGuest.style.display = 'flex'; vApp.style.display = 'none'; vBanned.style.display = 'none';
             }
         });
