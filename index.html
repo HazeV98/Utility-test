@@ -16,7 +16,7 @@
             url.searchParams.set('nocache', new Date().getTime());
             window.location.replace(url.toString());
         } else {
-            const APP_VERSION = "1.5"; 
+            const APP_VERSION = "1.6"; 
             if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
                 if ('caches' in window) { caches.keys().then((names) => { names.forEach(name => caches.delete(name)); }); }
                 if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then((registrations) => { registrations.forEach(registration => registration.unregister()); }); }
@@ -38,6 +38,9 @@
     </script>
 
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <meta name="theme-color" content="#0056b3">
@@ -90,11 +93,11 @@
         .app-list .app-icon { width: 45px; height: 45px; margin: 0 15px 0 0; border-radius: 12px; color: white; font-size: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .app-list .app-label { font-size: 15px; color: #333; font-weight: bold; margin: 0; text-shadow: none; flex: 1; }
 
-        /* WIGGLE & EDIT MODE (Trascina e Rilascia) */
+        /* WIGGLE & EDIT MODE */
         @keyframes wiggle { 0% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } 100% { transform: rotate(-2deg); } }
-        /* touch-action: none permette di non far scorrere la pagina quando si trascina un'icona */
-        .wiggle-mode .app-btn { animation: wiggle 0.3s infinite; touch-action: none; cursor: grab; }
+        .wiggle-mode .app-btn { animation: wiggle 0.3s infinite; cursor: grab; }
         .wiggle-mode .app-btn:active { cursor: grabbing; }
+        .sortable-ghost { opacity: 0.3; transform: scale(0.9); }
         
         .edit-badge { position: absolute; top: -8px; right: 0px; background: white; color: #333; border-radius: 50%; width: 26px; height: 26px; display: flex; justify-content: center; align-items: center; box-shadow: 0 3px 6px rgba(0,0,0,0.3); font-size: 14px; z-index: 10; border: 1px solid #ddd; pointer-events: none; }
         .app-list .edit-badge { top: 50%; right: 15px; transform: translateY(-50%); }
@@ -305,7 +308,6 @@
     </div>
 
     <script>
-        // Funzioni UI Base per Modali
         window.apriModal = (id, authMode) => { 
             document.getElementById(id).style.display = 'flex'; 
             if(id === 'authModal' && authMode) { currentAuthMode = authMode; aggiornaUIAuth(); }
@@ -326,7 +328,6 @@
         const COLLABORATORE_UIDS = ["INSERISCI_QUI_UID_1", "INSERISCI_QUI_UID_2"]; 
         let globalIsAdmin = false; let globalIsCollab = false; let globalIsF9 = false;
 
-        // --- MOTORE LAYOUT DINAMICO & DRAG-AND-DROP ---
         const DEFAULT_APPS = [
             { id: "oggi", label: "Oggi", icon: "🎯", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
             { id: "calendario", label: "Calendario", icon: "📅", href: "calendario.html" },
@@ -350,11 +351,11 @@
         ];
 
         window.LayoutEngine = {
-            // Impostiamo colori vivaci di default per evitare bug nel selettore colore Android
-            prefs: { c1: "#5dade2", c2: "#ffffff", c3: "#28a745", appBg: "#0056b3", view: "grid", apps: [] },
+            // Colori originali di base ripristinati. 
+            // appBg su un blu scuro #0056b3 così il picker non si apre bianco/desaturato
+            prefs: { c1: "#a4c5e3", c2: "#ffffff", c3: "#a9dfcd", appBg: "#0056b3", view: "grid", apps: [] },
             isEditMode: false,
-            touchStartId: null,
-            isDragging: false,
+            sortableInstance: null,
             
             init: function(firebasePrefsStr) {
                 const appDataStr = localStorage.getItem('myTurniApp');
@@ -414,17 +415,8 @@
                     const finalColor = app.color || app.defaultColor || this.prefs.appBg;
                     const isLink = app.href ? `href="${app.href}"` : `onclick="${app.onclick}"`;
                     
-                    // Integrazione eventi per Drag and Drop Ibrido (Touch Mobile + Mouse Desktop)
-                    const editHandler = this.isEditMode ? 
-                        `draggable="true" 
-                         ondragstart="LayoutEngine.dragStart(event, '${app.id}')" 
-                         ondragover="LayoutEngine.dragOver(event)" 
-                         ondrop="LayoutEngine.drop(event, '${app.id}')" 
-                         ontouchstart="LayoutEngine.touchStart(event, '${app.id}')" 
-                         ontouchmove="LayoutEngine.touchMove(event)" 
-                         ontouchend="LayoutEngine.touchEnd(event, '${app.id}')" 
-                         onclick="event.preventDefault(); LayoutEngine.apriEditorApp('${app.id}');"` 
-                        : isLink;
+                    // In edit mode disattiviamo il link standard e lanciamo l'apertura modale per la singola app
+                    const editHandler = this.isEditMode ? `onclick="event.preventDefault(); window.LayoutEngine.apriEditorApp('${app.id}');"` : isLink;
                     
                     const labelHtml = app.label.replace('\n', '<br>');
                     const badgeHtml = this.isEditMode ? `<div class="edit-badge">✏️</div>` : '';
@@ -439,60 +431,59 @@
                 });
             },
 
-            // --- FUNZIONI DRAG & DROP DESKTOP (Mouse) ---
-            dragStart: function(e, id) { e.dataTransfer.setData('text/plain', id); e.currentTarget.style.opacity = '0.5'; },
-            dragOver: function(e) { e.preventDefault(); },
-            drop: function(e, targetId) {
-                e.preventDefault();
-                const draggedId = e.dataTransfer.getData('text/plain');
-                if (draggedId && draggedId !== targetId) this.scambiaApp(draggedId, targetId);
-                this.render();
-            },
-
-            // --- FUNZIONI DRAG & DROP MOBILE (Touch) ---
-            touchStart: function(e, id) { this.touchStartId = id; this.isDragging = false; },
-            touchMove: function(e) { if(!this.isEditMode) return; this.isDragging = true; },
-            touchEnd: function(e, id) {
-                if (!this.isEditMode || !this.touchStartId) return;
-                if (this.isDragging) {
-                    const touch = e.changedTouches[0];
-                    const target = document.elementFromPoint(touch.clientX, touch.clientY);
-                    const targetBtn = target ? target.closest('.app-btn') : null;
-                    if (targetBtn) {
-                        const targetId = targetBtn.id.replace('btn-', '');
-                        if (targetId && targetId !== this.touchStartId) this.scambiaApp(this.touchStartId, targetId);
-                    }
-                    this.render();
-                }
-                this.touchStartId = null;
-                setTimeout(() => { this.isDragging = false; }, 50); // Timeout per evitare il click accidentale post-drag
-            },
-
-            scambiaApp: function(id1, id2) {
-                const arr = this.prefs.apps;
-                const index1 = arr.findIndex(a => a.id === id1);
-                const index2 = arr.findIndex(a => a.id === id2);
-                const temp = arr[index1];
-                arr[index1] = arr[index2];
-                arr[index2] = temp;
-            },
-
             toggleEditMode: function() {
                 this.isEditMode = !this.isEditMode;
+                const container = document.getElementById('app-container');
                 document.getElementById('btn-salva-layout').style.display = this.isEditMode ? 'block' : 'none';
-                if(!this.isEditMode) this.sincronizzaConFirebase(); // Salva uscita
-                this.render();
+                
+                this.render(); // Ri-renderizza per applicare wiggle e onclick
+
+                if(this.isEditMode) {
+                    // Abilita Drag and Drop animato fluido
+                    this.sortableInstance = new Sortable(container, {
+                        animation: 200,          // Durata animazione spostamento icone
+                        delay: 150,              // Necessario per distinguere il "tap" per edit dal "drag"
+                        delayOnTouchOnly: true,
+                        ghostClass: "sortable-ghost",
+                        onEnd: (evt) => {
+                            this.aggiornaOrdineDaDOM();
+                        }
+                    });
+                } else {
+                    // Disabilita
+                    if(this.sortableInstance) this.sortableInstance.destroy();
+                    this.sincronizzaConFirebase(); // Salva uscita
+                }
+            },
+
+            aggiornaOrdineDaDOM: function() {
+                const nodi = document.querySelectorAll('#app-container .app-btn');
+                const nuovoOrdine = [];
+                nodi.forEach(nodo => {
+                    const id = nodo.id.replace('btn-', '');
+                    const app = this.prefs.apps.find(a => a.id === id);
+                    if (app) nuovoOrdine.push(app);
+                });
+                
+                // Mantiene eventuali bottoni nascosti (es. admin) che non erano nel DOM
+                this.prefs.apps.forEach(app => {
+                    if (!nuovoOrdine.find(a => a.id === app.id)) {
+                        nuovoOrdine.push(app);
+                    }
+                });
+                
+                this.prefs.apps = nuovoOrdine;
             },
 
             apriEditorApp: function(appId) {
-                if(this.isDragging) return; // Ignora se ha appena finito di trascinare
                 const app = this.prefs.apps.find(a => a.id === appId);
                 if(!app) return;
                 document.getElementById('edit-app-id').value = app.id;
                 document.getElementById('edit-app-label').value = app.label.replace('\n', ' ');
                 document.getElementById('edit-app-icon').value = app.icon;
-                // Garantisce che il picker si apra su un colore saturo
-                document.getElementById('edit-app-color').value = app.color || app.defaultColor || this.prefs.appBg || "#007bff";
+                
+                // Forza un colore acceso per evitare che il picker parta dal bianco/nero
+                document.getElementById('edit-app-color').value = app.color || app.defaultColor || this.prefs.appBg || "#0056b3";
                 
                 document.getElementById('btn-elimina-custom').style.display = app.id.startsWith('custom_') ? 'block' : 'none';
                 window.apriModal('editAppModal');
@@ -519,7 +510,7 @@
 
                 const newApp = {
                     id: "custom_" + Date.now(),
-                    label: label, icon: icon, href: url, color: "#007bff" // Colore pieno di default per l'apertura picker
+                    label: label, icon: icon, href: url, color: this.prefs.appBg || "#0056b3"
                 };
                 this.prefs.apps.push(newApp);
                 window.chiudiModal('customAppModal');
