@@ -16,7 +16,7 @@
             url.searchParams.set('nocache', new Date().getTime());
             window.location.replace(url.toString());
         } else {
-            const APP_VERSION = "1.4"; 
+            const APP_VERSION = "1.5"; 
             if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
                 if ('caches' in window) { caches.keys().then((names) => { names.forEach(name => caches.delete(name)); }); }
                 if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then((registrations) => { registrations.forEach(registration => registration.unregister()); }); }
@@ -70,7 +70,6 @@
 
         #install-btn { display: none; background-color: var(--success); color: white; border: none; padding: 8px 14px; font-size: 13px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); white-space: nowrap; animation: pulse 2s infinite; }
         .btn-header-alt { background-color: var(--primary); color: white; border: none; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .btn-header-icon { background: rgba(255,255,255,0.8); border: none; font-size: 20px; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.15); backdrop-filter: blur(5px); }
         
         @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
 
@@ -91,10 +90,13 @@
         .app-list .app-icon { width: 45px; height: 45px; margin: 0 15px 0 0; border-radius: 12px; color: white; font-size: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .app-list .app-label { font-size: 15px; color: #333; font-weight: bold; margin: 0; text-shadow: none; flex: 1; }
 
-        /* WIGGLE & EDIT MODE */
+        /* WIGGLE & EDIT MODE (Trascina e Rilascia) */
         @keyframes wiggle { 0% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } 100% { transform: rotate(-2deg); } }
-        .wiggle-mode .app-btn { animation: wiggle 0.3s infinite; }
-        .edit-badge { position: absolute; top: -8px; right: 0px; background: white; color: #333; border-radius: 50%; width: 26px; height: 26px; display: flex; justify-content: center; align-items: center; box-shadow: 0 3px 6px rgba(0,0,0,0.3); font-size: 14px; z-index: 10; border: 1px solid #ddd; }
+        /* touch-action: none permette di non far scorrere la pagina quando si trascina un'icona */
+        .wiggle-mode .app-btn { animation: wiggle 0.3s infinite; touch-action: none; cursor: grab; }
+        .wiggle-mode .app-btn:active { cursor: grabbing; }
+        
+        .edit-badge { position: absolute; top: -8px; right: 0px; background: white; color: #333; border-radius: 50%; width: 26px; height: 26px; display: flex; justify-content: center; align-items: center; box-shadow: 0 3px 6px rgba(0,0,0,0.3); font-size: 14px; z-index: 10; border: 1px solid #ddd; pointer-events: none; }
         .app-list .edit-badge { top: 50%; right: 15px; transform: translateY(-50%); }
 
         .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; }
@@ -104,7 +106,7 @@
         .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white;}
         .btn-modal { border: none; border-radius: 8px; padding: 12px; cursor: pointer; font-weight: bold; font-size: 14px; width: 100%; margin-top: 10px; }
         
-        /* IMPOSTAZIONI SPECIFICHE */
+        /* IMPOSTAZIONI SPECIFICHE COLOR PICKER */
         .color-picker-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #e9ecef; }
         .color-picker-row label { font-size: 13px; font-weight: bold; color: #555; }
         input[type="color"] { width: 40px; height: 40px; border: none; border-radius: 8px; cursor: pointer; padding: 0; background: transparent; }
@@ -152,7 +154,6 @@
             </div>
             <div class="header-side right">
                 <button id="install-btn">Installa</button>
-                <button class="btn-header-icon" onclick="apriModal('settingsModal')">⚙️</button>
                 <div id="icona-bacheca" style="position: relative; cursor: pointer; margin-left: 10px;" onclick="apriBachecaUtility()">
                     <span style="font-size: 26px;">📢</span>
                     <div id="badge-messaggi" style="display: none; position: absolute; top: -5px; right: -8px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: bold; width: 18px; height: 18px; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">0</div>
@@ -192,7 +193,7 @@
                 <option value="list">Lista Pulsantoni</option>
             </select>
 
-            <button class="btn-modal" style="background: #ff9800; color: white;" onclick="LayoutEngine.toggleEditMode(); chiudiModal('settingsModal');">✏️ Modifica Layout (Ordina/Cambia Nomi)</button>
+            <button class="btn-modal" style="background: #ff9800; color: white;" onclick="LayoutEngine.toggleEditMode(); chiudiModal('settingsModal');">✏️ Modifica Layout (Trascina e Ordina)</button>
             <button class="btn-modal" style="background: #17a2b8; color: white;" onclick="apriModal('customAppModal'); chiudiModal('settingsModal');">➕ Aggiungi App Personalizzata</button>
             
             <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 20px 0;">
@@ -215,12 +216,6 @@
             
             <label style="font-size: 12px; color: #666; font-weight: bold;">Colore Sfondo Specifico:</label>
             <div class="color-picker-row"><label>Sfondo Icona</label><input type="color" id="edit-app-color"></div>
-
-            <label style="font-size: 12px; color: #666; font-weight: bold; margin-top: 10px;">Posizione:</label>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <button class="btn-modal" style="background: #e9ecef; color: #333; margin:0;" onclick="LayoutEngine.spostaApp(-1)">◀️ Sposta Indietro</button>
-                <button class="btn-modal" style="background: #e9ecef; color: #333; margin:0;" onclick="LayoutEngine.spostaApp(1)">Sposta Avanti ▶️</button>
-            </div>
 
             <button class="btn-modal" style="background: var(--success); color: white;" onclick="LayoutEngine.salvaModificaSingolaApp()">Salva Modifiche</button>
             <button id="btn-elimina-custom" class="btn-modal" style="background: transparent; color: var(--danger); border: 1px dashed var(--danger); display: none;" onclick="LayoutEngine.eliminaAppCorrente()">🗑️ Elimina App Personalizzata</button>
@@ -331,7 +326,7 @@
         const COLLABORATORE_UIDS = ["INSERISCI_QUI_UID_1", "INSERISCI_QUI_UID_2"]; 
         let globalIsAdmin = false; let globalIsCollab = false; let globalIsF9 = false;
 
-        // --- MOTORE LAYOUT DINAMICO (LA MAGIA INIZIA QUI) ---
+        // --- MOTORE LAYOUT DINAMICO & DRAG-AND-DROP ---
         const DEFAULT_APPS = [
             { id: "oggi", label: "Oggi", icon: "🎯", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
             { id: "calendario", label: "Calendario", icon: "📅", href: "calendario.html" },
@@ -347,6 +342,7 @@
             { id: "contatti", label: "Contatti", icon: "📇", href: "contatti.html" },
             { id: "buoni", label: "Buoni\nPasto", icon: "🍝", href: "buoni.html" },
             { id: "dds", label: "Archivio\nDDS", icon: "📂", href: "dds.html" },
+            { id: "impostazioni", label: "Impostazioni", icon: "⚙️", onclick: "window.apriModal('settingsModal')", defaultColor: "#6c757d" },
             { id: "guida", label: "Guida", icon: "📖", href: "guida.html", defaultColor: "#7f8c8d" },
             { id: "generatore", label: "Generatore", icon: "🔑", href: "generatore.html", condition: "collab", defaultColor: "#cb4335" },
             { id: "admin", label: "Admin", icon: "🔒", href: "admin.html", condition: "admin", defaultColor: "#cb4335" },
@@ -354,8 +350,11 @@
         ];
 
         window.LayoutEngine = {
-            prefs: { c1: "#a4c5e3", c2: "#ffffff", c3: "#a9dfcd", appBg: "#5dade2", view: "grid", apps: [] },
+            // Impostiamo colori vivaci di default per evitare bug nel selettore colore Android
+            prefs: { c1: "#5dade2", c2: "#ffffff", c3: "#28a745", appBg: "#0056b3", view: "grid", apps: [] },
             isEditMode: false,
+            touchStartId: null,
+            isDragging: false,
             
             init: function(firebasePrefsStr) {
                 const appDataStr = localStorage.getItem('myTurniApp');
@@ -368,7 +367,6 @@
                     try { 
                         let parsed = JSON.parse(targetStr);
                         this.prefs = { ...this.prefs, ...parsed };
-                        // Aggiorna eventuali app mancanti (se ho aggiunto app di default nuove nel codice)
                         this.mergeWithDefaults();
                     } catch(e) {}
                 } else {
@@ -381,7 +379,6 @@
             },
 
             mergeWithDefaults: function() {
-                // Mantiene le app custom, rimuove quelle eliminate, aggiunge quelle nuove native
                 let currentIds = this.prefs.apps.map(a => a.id);
                 DEFAULT_APPS.forEach(defApp => {
                     if(!currentIds.includes(defApp.id)) this.prefs.apps.push(JSON.parse(JSON.stringify(defApp)));
@@ -410,15 +407,24 @@
                 else container.classList.remove('wiggle-mode');
 
                 this.prefs.apps.forEach(app => {
-                    // Controlli Permessi
                     if (app.condition === 'f9' && !globalIsF9) return;
                     if (app.condition === 'admin' && !globalIsAdmin) return;
                     if (app.condition === 'collab' && !(globalIsAdmin || globalIsCollab)) return;
 
                     const finalColor = app.color || app.defaultColor || this.prefs.appBg;
                     const isLink = app.href ? `href="${app.href}"` : `onclick="${app.onclick}"`;
-                    // Se in edit mode, intercetta il click per aprire l'editor anziché navigare
-                    const editHandler = this.isEditMode ? `onclick="event.preventDefault(); window.LayoutEngine.apriEditorApp('${app.id}');"` : isLink;
+                    
+                    // Integrazione eventi per Drag and Drop Ibrido (Touch Mobile + Mouse Desktop)
+                    const editHandler = this.isEditMode ? 
+                        `draggable="true" 
+                         ondragstart="LayoutEngine.dragStart(event, '${app.id}')" 
+                         ondragover="LayoutEngine.dragOver(event)" 
+                         ondrop="LayoutEngine.drop(event, '${app.id}')" 
+                         ontouchstart="LayoutEngine.touchStart(event, '${app.id}')" 
+                         ontouchmove="LayoutEngine.touchMove(event)" 
+                         ontouchend="LayoutEngine.touchEnd(event, '${app.id}')" 
+                         onclick="event.preventDefault(); LayoutEngine.apriEditorApp('${app.id}');"` 
+                        : isLink;
                     
                     const labelHtml = app.label.replace('\n', '<br>');
                     const badgeHtml = this.isEditMode ? `<div class="edit-badge">✏️</div>` : '';
@@ -433,22 +439,61 @@
                 });
             },
 
+            // --- FUNZIONI DRAG & DROP DESKTOP (Mouse) ---
+            dragStart: function(e, id) { e.dataTransfer.setData('text/plain', id); e.currentTarget.style.opacity = '0.5'; },
+            dragOver: function(e) { e.preventDefault(); },
+            drop: function(e, targetId) {
+                e.preventDefault();
+                const draggedId = e.dataTransfer.getData('text/plain');
+                if (draggedId && draggedId !== targetId) this.scambiaApp(draggedId, targetId);
+                this.render();
+            },
+
+            // --- FUNZIONI DRAG & DROP MOBILE (Touch) ---
+            touchStart: function(e, id) { this.touchStartId = id; this.isDragging = false; },
+            touchMove: function(e) { if(!this.isEditMode) return; this.isDragging = true; },
+            touchEnd: function(e, id) {
+                if (!this.isEditMode || !this.touchStartId) return;
+                if (this.isDragging) {
+                    const touch = e.changedTouches[0];
+                    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const targetBtn = target ? target.closest('.app-btn') : null;
+                    if (targetBtn) {
+                        const targetId = targetBtn.id.replace('btn-', '');
+                        if (targetId && targetId !== this.touchStartId) this.scambiaApp(this.touchStartId, targetId);
+                    }
+                    this.render();
+                }
+                this.touchStartId = null;
+                setTimeout(() => { this.isDragging = false; }, 50); // Timeout per evitare il click accidentale post-drag
+            },
+
+            scambiaApp: function(id1, id2) {
+                const arr = this.prefs.apps;
+                const index1 = arr.findIndex(a => a.id === id1);
+                const index2 = arr.findIndex(a => a.id === id2);
+                const temp = arr[index1];
+                arr[index1] = arr[index2];
+                arr[index2] = temp;
+            },
+
             toggleEditMode: function() {
                 this.isEditMode = !this.isEditMode;
                 document.getElementById('btn-salva-layout').style.display = this.isEditMode ? 'block' : 'none';
-                if(!this.isEditMode) this.sincronizzaConFirebase(); // Salva quando esce dalla modalità
+                if(!this.isEditMode) this.sincronizzaConFirebase(); // Salva uscita
                 this.render();
             },
 
             apriEditorApp: function(appId) {
+                if(this.isDragging) return; // Ignora se ha appena finito di trascinare
                 const app = this.prefs.apps.find(a => a.id === appId);
                 if(!app) return;
                 document.getElementById('edit-app-id').value = app.id;
                 document.getElementById('edit-app-label').value = app.label.replace('\n', ' ');
                 document.getElementById('edit-app-icon').value = app.icon;
-                document.getElementById('edit-app-color').value = app.color || app.defaultColor || this.prefs.appBg;
+                // Garantisce che il picker si apra su un colore saturo
+                document.getElementById('edit-app-color').value = app.color || app.defaultColor || this.prefs.appBg || "#007bff";
                 
-                // Mostra tasto elimina solo se è un'app custom (inizia con custom_)
                 document.getElementById('btn-elimina-custom').style.display = app.id.startsWith('custom_') ? 'block' : 'none';
                 window.apriModal('editAppModal');
             },
@@ -465,19 +510,6 @@
                 this.render();
             },
 
-            spostaApp: function(direzione) {
-                const id = document.getElementById('edit-app-id').value;
-                const index = this.prefs.apps.findIndex(a => a.id === id);
-                if(index < 0) return;
-                const newIndex = index + direzione;
-                if(newIndex >= 0 && newIndex < this.prefs.apps.length) {
-                    const temp = this.prefs.apps[index];
-                    this.prefs.apps[index] = this.prefs.apps[newIndex];
-                    this.prefs.apps[newIndex] = temp;
-                    this.render(); // Aggiorna a vista ma tieni il modale aperto
-                }
-            },
-
             creaAppPersonalizzata: function() {
                 const label = document.getElementById('new-app-label').value.trim();
                 let url = document.getElementById('new-app-url').value.trim();
@@ -487,7 +519,7 @@
 
                 const newApp = {
                     id: "custom_" + Date.now(),
-                    label: label, icon: icon, href: url, color: this.prefs.appBg
+                    label: label, icon: icon, href: url, color: "#007bff" // Colore pieno di default per l'apertura picker
                 };
                 this.prefs.apps.push(newApp);
                 window.chiudiModal('customAppModal');
@@ -525,7 +557,7 @@
             },
 
             ripristinaPredefiniti: async function() {
-                if(!confirm("Vuoi ripristinare grafica e tasti originali?")) return;
+                if(!confirm("Vuoi ripristinare grafica e tasti originali? I tuoi link personalizzati verranno cancellati.")) return;
                 localStorage.removeItem('preferenze_layout_haze');
                 if (auth.currentUser) {
                     try { await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_layout: null }, { merge: true }); } catch(e){}
@@ -534,7 +566,7 @@
             }
         };
 
-        // --- SISTEMA AUTENTICAZIONE E GESTIONE LOGICA BASE ---
+        // --- SISTEMA AUTENTICAZIONE E LOGICA BASE ---
         window.apriBachecaUtility = () => {
             const timestamp = Date.now();
             localStorage.setItem('ultimo_accesso_bacheca', timestamp);
