@@ -117,6 +117,9 @@
         .color-picker-row label { font-size: 13px; font-weight: bold; color: #555; }
         input[type="color"] { width: 40px; height: 40px; border: none; border-radius: 8px; cursor: pointer; padding: 0; background: transparent; }
         input[type="range"] { width: 100%; margin: 10px 0; }
+
+        /* BADGE NOTIFICHE ROTAZIONI */
+        .badge-rotazioni { position: absolute; top: -5px; right: -5px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: bold; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10; pointer-events: none;}
     </style>
 </head>
 <body>
@@ -317,25 +320,40 @@
 
     <div id="modal-gestione" class="modal-overlay" onclick="chiudiSuSfondo(event, 'modal-gestione')">
         <div class="modal-content" style="max-width: 400px;">
-            <h3 style="color: #32325d;">Utenti App</h3>
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('modal-gestione')">&times;</span>
+            <h3 style="color: #32325d; margin-top: 0;">Utenti App</h3>
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <div style="background: var(--primary); color: white; padding: 6px; border-radius: 8px; flex: 1; text-align: center;">Totali: <span id="badge-totali">0</span></div>
                 <div style="background: var(--success); color: white; padding: 6px; border-radius: 8px; flex: 1; text-align: center;">Oggi: <span id="badge-oggi">0</span></div>
             </div>
-            <div id="lista-utenti-accessi" style="max-height: 60vh; overflow-y: auto;"></div>
+            <div id="lista-utenti-accessi" style="max-height: 55vh; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <div id="modal-dettaglio-utente" class="modal-overlay" onclick="chiudiSuSfondo(event, 'modal-dettaglio-utente')">
+        <div class="modal-content" style="max-width: 350px;">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('modal-dettaglio-utente')">&times;</span>
+            <h3 style="margin-top: 0; color: #32325d; text-align: center;">Dettaglio Utente</h3>
+            <div id="dettaglio-utente-body" style="font-size: 14px; line-height: 1.6; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; margin-bottom: 15px;">
+                </div>
+            <button id="btn-rendi-collab" class="btn-modal" style="background: #6f42c1; color: white;" onclick="cambiaRuoloUtente()">Rendi Collaboratore</button>
+            <button class="btn-modal" style="background: transparent; color: #666; border: 1px solid #ccc; margin-top: 8px;" onclick="chiudiModal('modal-dettaglio-utente')">Chiudi</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", storageBucket: "utility-haze.firebasestorage.app", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
         const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const provider = new GoogleAuthProvider();
         const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2"; 
         const COLLABORATORE_UIDS = ["INSERISCI_QUI_UID_1", "INSERISCI_QUI_UID_2"]; 
+        
         let globalIsAdmin = false; let globalIsCollab = false; let globalIsF9 = false;
+        window.currentUserData = {}; 
+        window.utentiMap = {}; // Salva i dati utente per la finestra di dettaglio
 
         // --- DEFINIZIONE APP DI SISTEMA ---
         const DEFAULT_APPS = [
@@ -360,6 +378,33 @@
             { id: "accessi", label: "Accessi", icon: "🛠️", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#2c3e50" }
         ];
 
+        // --- GESTIONE BADGE RICHIESTE IN SOSPESO ---
+        window.controllaRichiesteSospese = async () => {
+            if (!globalIsAdmin && !globalIsCollab) return;
+            try {
+                const q = query(collection(db, "utenti"), where("stato_richiesta", "==", "pending"));
+                const snap = await getDocs(q);
+                let count = 0;
+                snap.forEach(d => {
+                    const u = d.data();
+                    if (globalIsAdmin) { count++; } 
+                    else if (globalIsCollab) {
+                        const permessi = window.currentUserData?.permessi_gestione || [];
+                        if (permessi.includes(u.rotazione_richiesta)) count++;
+                    }
+                });
+                
+                const btnRot = document.getElementById('btn-rotazioni');
+                if (btnRot) {
+                    let b = btnRot.querySelector('.badge-rotazioni');
+                    if (b) b.remove();
+                    if (count > 0) {
+                        btnRot.insertAdjacentHTML('beforeend', `<div class="badge-rotazioni">${count}</div>`);
+                    }
+                }
+            } catch(e) { console.error("Errore badge notifiche:", e); }
+        };
+
         window.LayoutEngine = {
             prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#5dade2", view: "grid", iconStyle: "box", fontSize: 11, apps: [] },
             isEditMode: false,
@@ -383,11 +428,9 @@
             },
 
             mergeWithDefaults: function() {
-                // 1. Rimuovi vecchie app di sistema non più presenti nel codice sorgente
                 const defaultIds = DEFAULT_APPS.map(a => a.id);
                 this.prefs.apps = this.prefs.apps.filter(app => app.id.startsWith('custom_') || defaultIds.includes(app.id));
 
-                // 2. Sincronizza (aggiorna) i collegamenti delle app di sistema
                 this.prefs.apps.forEach(app => {
                     if (!app.id.startsWith('custom_')) {
                         const def = DEFAULT_APPS.find(d => d.id === app.id);
@@ -399,12 +442,10 @@
                     }
                 });
 
-                // 3. Aggiungi le NUOVE app di sistema nella posizione corretta
                 DEFAULT_APPS.forEach((defApp, defaultIndex) => {
                     let currentIds = this.prefs.apps.map(a => a.id);
                     if(!currentIds.includes(defApp.id)) {
-                        let insertIndex = this.prefs.apps.length; // Di default alla fine
-                        // Cerca l'app precedente di DEFAULT_APPS nel layout dell'utente
+                        let insertIndex = this.prefs.apps.length; 
                         if (defaultIndex > 0) {
                             let prevAppId = DEFAULT_APPS[defaultIndex - 1].id;
                             let userIndex = this.prefs.apps.findIndex(a => a.id === prevAppId);
@@ -466,6 +507,9 @@
                             <div class="app-label">${labelHtml}</div>
                         </a>`;
                 });
+                
+                // Aggiorna badge dopo il render
+                setTimeout(window.controllaRichiesteSospese, 200);
             },
 
             handleImageUpload: function(event, modalType) {
@@ -569,12 +613,7 @@
                 if(!url.startsWith('http')) url = 'https://' + url;
                 
                 const imgData = document.getElementById('new-app-img-data').value;
-                const newApp = { 
-                    id: "custom_" + Date.now(), 
-                    label: label, 
-                    href: url, 
-                    color: this.prefs.appBg 
-                };
+                const newApp = { id: "custom_" + Date.now(), label: label, href: url, color: this.prefs.appBg };
                 
                 if (imgData) { newApp.image = imgData; } 
                 else { newApp.icon = document.getElementById('new-app-icon').value || "🔗"; }
@@ -633,6 +672,7 @@
             window.location.href = 'bacheca_utility.html';
         };
 
+        // --- SISTEMA GESTIONE ACCESSI E MODIFICA RUOLI ---
         window.apriGestioneAccessi = async () => {
             window.apriModal('modal-gestione');
             const container = document.getElementById('lista-utenti-accessi');
@@ -642,12 +682,19 @@
                 const snap = await getDocs(collection(db, "utenti"));
                 let htmlOggi = ""; let htmlAltri = ""; let tot = 0; let oggi = 0;
                 const oggiStr = new Date().toISOString().split('T')[0];
+                
                 snap.forEach(d => {
                     const u = d.data(); tot++; const isOggi = (u.last_app_access === oggiStr); if (isOggi) oggi++;
-                    const isBanned = u.app_banned === true; const fullName = `${u.cognome || ''} ${u.nome || ''} ${u.progressivo || ''}`.trim() || 'Sconosciuto';
+                    const isBanned = u.app_banned === true; 
+                    const fullName = `${u.cognome || ''} ${u.nome || ''} ${u.progressivo || ''}`.trim() || 'Sconosciuto';
+                    
+                    window.utentiMap[d.id] = u; // Salvo per la modale dettaglio
+
                     const dot = isOggi ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:5px;"></span>` : '';
+                    const clickableName = `<span style="font-weight:bold; font-size:14px; cursor:pointer; color:var(--primary); text-decoration:underline;" onclick="apriDettaglioUtente('${d.id}')">${fullName}</span>`;
+
                     const riga = `<div style="display:flex; justify-content:space-between; align-items:center; background:${isBanned ? '#fff5f5' : '#f8f9fa'}; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid ${isBanned ? '#ffc9c9' : '#e9ecef'};">
-                        <div><div style="font-weight:bold; font-size:14px;">${fullName}${dot}</div><div style="font-size:11px;">(Matr. ${u.matricola || '??'})</div></div>
+                        <div><div>${clickableName}${dot}</div><div style="font-size:11px; color:#666; margin-top:3px;">(Matr. ${u.matricola || '??'})</div></div>
                         <button style="border:2px solid ${isBanned ? 'var(--success)' : 'var(--danger)'}; color:${isBanned ? 'var(--success)' : 'var(--danger)'}; background:none; padding:6px 10px; border-radius:8px; font-weight:bold;" onclick="toggleAppBan('${d.id}', ${!isBanned})">${isBanned ? 'Sblocca' : 'Blocca'}</button>
                     </div>`;
                     if (isOggi) htmlOggi += riga; else htmlAltri += riga;
@@ -656,7 +703,52 @@
             } catch(e) { container.innerHTML = "Errore."; }
         };
 
-        window.toggleAppBan = async (uid, status) => { if(confirm("Confermi?")) { await setDoc(doc(db, "utenti", uid), { app_banned: status }, { merge: true }); window.apriGestioneAccessi(); } };
+        window.toggleAppBan = async (uid, status) => { if(confirm("Confermi l'azione?")) { await setDoc(doc(db, "utenti", uid), { app_banned: status }, { merge: true }); window.apriGestioneAccessi(); } };
+
+        window.currentUserEditId = null;
+        window.apriDettaglioUtente = (uid) => {
+            const u = window.utentiMap[uid];
+            if(!u) return;
+            window.currentUserEditId = uid;
+            
+            const isCollab = u.ruolo === 'collaborator';
+            const htmlData = `
+                <div style="margin-bottom:8px;"><strong>Nome:</strong> ${u.nome || '-'}</div>
+                <div style="margin-bottom:8px;"><strong>Cognome:</strong> ${u.cognome || '-'}</div>
+                <div style="margin-bottom:8px;"><strong>Matricola:</strong> ${u.matricola || '-'}</div>
+                <div style="margin-bottom:8px;"><strong>Omonimia:</strong> ${u.progressivo || '-'}</div>
+                <div style="margin-bottom:8px;"><strong>Rotazione Richiesta:</strong> ${u.rotazione_richiesta || '-'}</div>
+                <div><strong>Data Riposo Singolo:</strong> ${u.data_riposo_singolo ? u.data_riposo_singolo.split('-').reverse().join('/') : '-'}</div>
+            `;
+            document.getElementById('dettaglio-utente-body').innerHTML = htmlData;
+            
+            const btnCollab = document.getElementById('btn-rendi-collab');
+            if (isCollab) {
+                btnCollab.innerText = "Revoca Collaboratore";
+                btnCollab.style.background = "transparent";
+                btnCollab.style.color = "var(--danger)";
+                btnCollab.style.border = "1px solid var(--danger)";
+                btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'user');
+            } else {
+                btnCollab.innerText = "Rendi Collaboratore";
+                btnCollab.style.background = "#6f42c1";
+                btnCollab.style.color = "white";
+                btnCollab.style.border = "none";
+                btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'collaborator');
+            }
+            
+            window.apriModal('modal-dettaglio-utente');
+        };
+
+        window.cambiaRuoloUtente = async (uid, nuovoRuolo) => {
+            if(!confirm("Sei sicuro di voler modificare i permessi di questo utente?")) return;
+            try {
+                await setDoc(doc(db, "utenti", uid), { ruolo: nuovoRuolo }, { merge: true });
+                window.utentiMap[uid].ruolo = nuovoRuolo; 
+                window.chiudiModal('modal-dettaglio-utente');
+                alert("Ruolo aggiornato correttamente!");
+            } catch(e) { alert("Errore nell'aggiornamento del ruolo."); }
+        };
 
         let currentAuthMode = 'login';
         window.switchAuthMode = () => { currentAuthMode = currentAuthMode === 'login' ? 'register' : 'login'; window.aggiornaUIAuth(); };
@@ -708,18 +800,25 @@
                 try {
                     const docSnap = await getDoc(doc(db, "utenti", user.uid));
                     let data = docSnap.exists() ? docSnap.data() : {};
+                    window.currentUserData = data; 
                     vLoad.style.display = 'none';
                     if (data.app_banned === true) { document.body.style.backgroundImage = 'none'; document.body.style.backgroundColor = "white"; vGuest.style.display = 'none'; vApp.style.display = 'none'; vBanned.style.display = 'flex'; return; }
                     if (!data.nome || !data.cognome || !data.matricola) document.getElementById('modal-dati-obbligatori').style.display = 'flex';
-                    globalIsAdmin = (user.uid === ADMIN_UID); globalIsCollab = COLLABORATORE_UIDS.includes(user.uid);
+                    
+                    globalIsAdmin = (user.uid === ADMIN_UID); 
+                    globalIsCollab = COLLABORATORE_UIDS.includes(user.uid) || data.ruolo === 'collaborator';
+                    
                     if(globalIsAdmin) { document.getElementById('adminBadge').style.display = 'block'; document.getElementById('adminBadge').innerHTML = 'Admin'; }
                     vGuest.style.display = 'none'; vApp.style.display = 'flex'; vBanned.style.display = 'none';
                     document.getElementById('btnOpenLogin').style.display = 'none'; document.getElementById('btnOpenProfile').style.display = 'block';
                     document.getElementById('profileEmail').value = user.email;
+                    
                     window.LayoutEngine.init(data.preferenze_layout);
+                    
                     const locB = parseInt(localStorage.getItem('ultimo_accesso_bacheca')) || 0;
                     const dbB = parseInt(data.ultimo_accesso_bacheca) || 0;
                     if (dbB > locB) localStorage.setItem('ultimo_accesso_bacheca', dbB);
+                    
                     document.getElementById('profileNome').value = data.nome || ''; document.getElementById('profileCognome').value = data.cognome || '';
                     document.getElementById('profileMatricola').value = data.matricola || ''; document.getElementById('profileProgressivo').value = data.progressivo || '';
                 } catch(e) { vLoad.style.display = 'none'; }
