@@ -104,6 +104,9 @@
             font-family: inherit;
         }
 
+        input[type="text"] { font-size: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        input[type="text"]::placeholder { text-transform: none; font-size: 16px; letter-spacing: normal; }
+        
         .btn {
             background-color: var(--primary); color: white; border: none; padding: 16px;
             font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer;
@@ -111,8 +114,11 @@
         }
         .btn:active { transform: translateY(2px); opacity: 0.9; }
         
+        #error-msg { color: var(--danger); font-size: 14px; margin-top: 10px; min-height: 20px; font-weight: bold; }
+
         .support-section { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
         .telegram-icon { display: inline-block; transition: transform 0.2s ease; margin-top: 10px; }
+        .telegram-icon:active { transform: scale(0.9); }
 
         /* --- STILI CARDS MENSILI E BOTTONI --- */
         .status-message { text-align: center; color: #666; font-size: 16px; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -122,11 +128,12 @@
         .btn-grid { display: flex; flex-direction: column; gap: 10px; }
 
         .file-btn { width: 100%; background-color: var(--primary); color: white; border: none; padding: 14px 10px; font-size: 16px; border-radius: 10px; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: opacity 0.2s; box-sizing: border-box;}
+        .file-btn:active { transform: translateY(2px); opacity: 0.9; }
         .btn-search { background-color: var(--success); } 
         .btn-table { background-color: var(--info); color: white; }
         .btn-pdf { background-color: #6c757d; }
 
-        /* --- MODAL --- */
+        /* --- STILI PER LE MODAL (RICERCA E TABELLA) --- */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7); z-index: 3000; align-items: center; justify-content: center;
@@ -140,15 +147,31 @@
         .close-modal { position: absolute; right: 15px; top: 15px; font-size: 24px; cursor: pointer; color: #666; background: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; }
         
         .modulo-ricerca { background: #fafafa; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-top: 15px; }
+        .modulo-ricerca h4 { margin-top: 0; color: var(--primary); margin-bottom: 5px;}
         .risultato-box { background: #e9ecef; border-left: 4px solid var(--primary); padding: 10px; margin-top: 10px; min-height: 30px; font-size: 14px; }
+        .risultato-box ul { padding-left: 20px; margin: 10px 0 0 0; }
+        
+        /* Box dettaglio turno */
         .turn-details-box { margin-top: 6px; font-size: 13px; color: #555; background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #ddd; }
 
-        /* --- TABELLA --- */
-        .table-responsive { width: 100%; max-height: 70vh; overflow: auto; margin-top: 10px; border: 1px solid #ddd; border-radius: 8px; position: relative; }
+        /* --- STILI TABELLA HTML (JSON) --- */
+        .table-responsive { 
+            width: 100%; 
+            max-height: 70vh; 
+            overflow: auto; 
+            -webkit-overflow-scrolling: touch; 
+            margin-top: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            position: relative;
+        }
         .rotazioni-table { border-collapse: separate; border-spacing: 0; width: max-content; background: white; font-size: 14px; text-align: center; }
         .rotazioni-table th, .rotazioni-table td { border-bottom: 1px solid #ddd; border-right: 1px solid #ddd; padding: 10px; white-space: nowrap; }
-        .rotazioni-table th { background-color: var(--primary); color: white; position: sticky; top: 0; z-index: 2; }
-        .rotazioni-table td:first-child, .rotazioni-table th:first-child { position: sticky; left: 0; min-width: 100px; max-width: 140px; background-color: #f9f9f9; font-weight: bold; border-right: 2px solid #aaa; z-index: 3; }
+        
+        .rotazioni-table th { background-color: var(--primary); color: white; position: sticky; top: 0; z-index: 2; border-top: 1px solid var(--primary); }
+        .rotazioni-table td:first-child, .rotazioni-table th:first-child { position: sticky; left: 0; min-width: 100px; max-width: 140px; white-space: normal; line-height: 1.3; }
+        .rotazioni-table td:first-child { background-color: #f9f9f9; font-weight: bold; text-align: left; border-right: 2px solid #aaa; color: var(--primary); font-size: 13px; z-index: 3; }
+        .rotazioni-table th:first-child { z-index: 4; border-right: 2px solid #003d82; }
 
         .cell-al { background-color: #28a745; color: white; font-weight: bold; }
         .cell-ri { background-color: #5cb85c; color: white; }
@@ -205,9 +228,10 @@
         <div id="request-section" style="display: none; text-align: left;">
             <h3 style="color: var(--primary); text-align: center; margin-top: 0; font-size: 20px;">Richiesta Accesso</h3>
             <p style="font-size: 13px; color: #666; text-align: center; margin-bottom: 15px;">Verifica i tuoi dati e scegli la tua rotazione di appartenenza.</p>
-            <input type="text" id="req-nome" placeholder="Nome" disabled style="background:#eee;">
-            <input type="text" id="req-cognome" placeholder="Cognome" disabled style="background:#eee;">
-            <input type="text" id="req-matricola" placeholder="Matricola" disabled style="background:#eee;">
+            
+            <input type="text" id="req-nome" placeholder="Nome">
+            <input type="text" id="req-cognome" placeholder="Cognome">
+            <input type="text" id="req-matricola" placeholder="Matricola">
             <input type="text" id="req-omonimia" placeholder="Numero omonimia es. 02, 03 ecc (facoltativo)">
             
             <select id="req-rotazione" style="margin-top: 10px; width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #ccc; font-size: 14px; background: white;">
@@ -219,9 +243,9 @@
         </div>
 
         <div class="support-section">
-            <p style="font-size: 13px; margin-bottom: 5px;">Per problemi tecnici contatta un amministratore</p>
+            <p style="font-size: 14px; margin-bottom: 5px;">Se non hai un codice di accesso contatta un amministratore per averlo con il tasto qui sotto scrivendo nome, cognome e matricola</p>
             <a href="http://t.me/MattiaB1058" target="_blank" class="telegram-icon">
-                <svg viewBox="0 0 24 24" width="38" height="38" fill="#0088cc">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="#0088cc">
                     <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.45c.538-.196 1.006.128.832.941z"/>
                 </svg>
             </a>
@@ -237,6 +261,7 @@
             <span class="close-modal" onclick="chiudiModal('search-modal')">&times;</span>
             <h3 id="modal-title" style="margin-top:0; color:var(--primary);">Ricerca Turni</h3>
             <div id="modal-status" class="status-message" style="padding: 10px; font-size:14px;">In attesa...</div>
+
             <div id="modal-search-sections" style="display:none;">
                 <div class="modulo-ricerca">
                     <h4>Cerca chi fa un turno</h4>
@@ -245,6 +270,7 @@
                     <button class="btn" style="padding: 12px; margin-top:5px;" onclick="cercaTurno()">Cerca</button>
                     <div id="risultato-turno" class="risultato-box"></div>
                 </div>
+
                 <div class="modulo-ricerca">
                     <h4>Trova cambi turno</h4>
                     <input type="number" id="input-giorno-cambio" min="1" max="31" placeholder="Giorno del mese (1-31)">
@@ -265,17 +291,20 @@
         <div class="modal-content">
             <span class="close-modal" onclick="chiudiModal('future-search-modal')">&times;</span>
             <h3 id="future-modal-title" style="margin-top:0; color:var(--primary);">Ricerca Mesi Successivi</h3>
+
             <div class="modulo-ricerca" style="margin-top: 0;">
-                <label style="font-size: 14px; font-weight: bold;">Data:</label>
+                <label style="font-size: 14px; font-weight: bold; color: #555; display:block; margin-bottom:5px;">Data:</label>
                 <input type="date" id="input-date-futura" style="margin-bottom: 15px;">
-                <label style="font-size: 14px; font-weight: bold;">Trova:</label>
+                
+                <label style="font-size: 14px; font-weight: bold; color: #555; display:block; margin-bottom:5px;">Trova:</label>
                 <select id="select-fase-futura">
                     <option value="Terzo">Di Terzo (1° o 2° Giorno)</option>
                     <option value="Mezzo">Di Mezzo (3° o 4° Giorno)</option>
                     <option value="Primo">Di Primo (5° o 6° Giorno)</option>
                     <option value="Riposo">Di Riposo (Singolo o Doppio)</option>
                 </select>
-                <button class="btn" style="background-color: var(--success);" onclick="eseguiRicercaFutura()">Cerca</button>
+                
+                <button class="btn" style="background-color: var(--success); padding: 12px; margin-top:10px;" onclick="eseguiRicercaFutura()">Cerca</button>
                 <div id="risultato-futuro" class="risultato-box"></div>
             </div>
         </div>
@@ -284,7 +313,7 @@
     <div id="table-modal" class="modal-overlay" onclick="chiudiSeSfondo(event, 'table-modal')">
         <div class="modal-content modal-table-content">
             <span class="close-modal" onclick="chiudiModal('table-modal')">&times;</span>
-            <h3 id="table-modal-title" style="margin-top:0; color:var(--primary);">Tabella Rotazione</h3>
+            <h3 id="table-modal-title" style="margin-top:0; color:var(--primary); padding-right: 30px;">Tabella Rotazione</h3>
             <div id="table-container"></div>
         </div>
     </div>
@@ -329,24 +358,23 @@
         </div>
     </div>
 
-    <div id="imageModal" style="display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); overflow: hidden;" onclick="chiudiSeSfondoModalImg(event)">
-        <div style="position: absolute; top: 20px; right: 20px; font-size: 35px; color: white; cursor: pointer; z-index: 20001;" onclick="chiudiImageModal()">&times;</div>
-        <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px;">
-            <img id="turnoImage" src="" style="max-width: 100%; max-height: 70vh; border-radius: 12px; object-fit: contain;">
-            <div id="imageBanner" style="margin-top: 15px; background: rgba(0,0,0,0.7); color: #fff; padding: 10px 20px; border-radius: 12px; font-size: 13px;">
+    <div id="imageModal" style="display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); overflow: hidden;" onclick="chiudiSeSfondoModalImg(event)">
+        <div style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; font-size: 35px; color: white; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 20001;" onclick="chiudiImageModal()">&times;</div>
+        <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px; padding-bottom: 80px; position: relative;">
+            <img id="turnoImage" src="" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain;">
+            <div id="imageBanner" style="position: relative; z-index: 20001; margin-top: 15px; background: rgba(0,0,0,0.7); color: #fff; padding: 10px 20px; border-radius: 12px; font-size: 13px; text-align: center; max-width: 90%; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
                 ⚠️ Controllare sempre la presenza di eventuali varianti ai turni.
             </div>
         </div>
-        <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: #11cdef; color: white; border: none; padding: 12px 24px; border-radius: 20px; font-weight: bold; cursor: pointer;">📥 Scarica</button>
+        <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #11cdef; color: white; border: none; padding: 12px 24px; border-radius: 20px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 20001;">📥 Scarica</button>
     </div>
 
     <script>
-        // --- FUNZIONI GLOBALI (ORIGINALI) ---
+        // --- FUNZIONI MENU LATERALE ---
         function apriMenuLaterale() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; }
         function chiudiMenuLaterale() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; }
-        function chiudiModal(id) { document.getElementById(id).style.display = 'none'; }
-        function chiudiSeSfondo(e, id) { if (e.target.id === id) chiudiModal(id); }
 
+        // Variabili Globali
         const CARTELLA_BASE = "rotazioni";
         let databaseTurni = []; 
         let activePredictors = []; 
@@ -355,28 +383,39 @@
         let pzInstance = null;
         let currentImagePath = "";
 
-        const paroleDaSaltare = ["GENNAIO", "FEBBRAIO", "MARZO", "APRILE", "MAGGIO", "GIUGNO", "LUGLIO", "AGOSTO", "SETTEMBRE", "OTTOBRE", "NOVEMBRE", "DICEMBRE", "MESE", "AGENTI"];
-
+        // --- LETTURA SILENZIOSA DATI (100% FIREBASE) ---
         async function caricaDatiTurniSilenzioso() {
             try {
                 const resMappa = await fetch('mappa_file.json?t=' + new Date().getTime());
                 if (!resMappa.ok) return;
+                
                 const mappa = await resMappa.json();
                 const rootFiles = mappa.albero || mappa.root || [];
+                
                 let imgDirs = rootFiles.filter(f => f.match(/^turni_\d{4}-\d{2}-\d{2}\/?$/));
                 if (imgDirs.length > 0) {
                     imgDirs.sort((a, b) => b.localeCompare(a));
                     globalImgDir = imgDirs[0].replace("/", "");
+                } else {
+                    console.warn("Nessuna cartella turni_ trovata nella mappa");
                 }
+                
                 let jsonFiles = rootFiles.filter(f => f.match(/^info_turni_\d{4}-\d{2}-\d{2}\.json$/));
                 for (let jf of jsonFiles) {
-                    fetch(jf + `?t=${new Date().getTime()}`).then(r => r.json()).then(jData => {
-                        globalShiftData = { ...globalShiftData, ...jData };
-                    });
+                    fetch(jf + `?t=${new Date().getTime()}`)
+                        .then(r => r.json())
+                        .then(jData => {
+                            globalShiftData = { ...globalShiftData, ...jData };
+                        }).catch(e => console.error("Errore json info turni", jf));
                 }
-            } catch (e) { console.error("Errore dati turni", e); }
+            } catch (e) {
+                console.error("Errore caricamento dati turni", e);
+            }
         }
 
+        // ==========================================
+        // CREAZIONE UI RAGGRUPPATA PER MESI
+        // ==========================================
         function pulisciNome(nome) {
             let pulito = nome.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
             return pulito.charAt(0).toUpperCase() + pulito.slice(1);
@@ -385,15 +424,21 @@
         async function caricaRotazioni() {
             const area = document.getElementById('rotazioni-list');
             area.innerHTML = `<div class="status-message">Scansione rotazioni in corso...</div>`;
+
             try {
                 const timestamp = new Date().getTime();
                 const resMappa = await fetch('mappa_file.json?t=' + timestamp);
+                if (!resMappa.ok) throw new Error("Mappa non trovata");
+                
                 const datiMappa = await resMappa.json();
                 const files = datiMappa.rotazioni || []; 
+
                 let groups = {};
+
                 files.forEach(nomeFile => {
                     let ext = nomeFile.substring(nomeFile.lastIndexOf('.')).toLowerCase();
                     let baseName = nomeFile.substring(0, nomeFile.lastIndexOf('.'));
+                    
                     if(['.pdf', '.xlsx', '.xls', '.json'].includes(ext)) {
                         if(!groups[baseName]) groups[baseName] = { pdf: null, excel: null, json: null, base: baseName };
                         if(ext === '.pdf') groups[baseName].pdf = nomeFile;
@@ -401,165 +446,687 @@
                         if(ext === '.json') groups[baseName].json = nomeFile;
                     }
                 });
+
                 area.innerHTML = "";
+
+                if (Object.keys(groups).length === 0) {
+                    area.innerHTML = `<div class="status-message">Nessun documento trovato.</div>`;
+                    return;
+                }
+
                 for (let base in groups) {
                     let g = groups[base];
                     let monthCard = document.createElement('div');
                     monthCard.className = "month-card";
-                    monthCard.innerHTML = `<h3>${pulisciNome(g.base)}</h3><div class="btn-grid"></div>`;
-                    let btnGrid = monthCard.querySelector('.btn-grid');
+                    monthCard.innerHTML = `<h3>${pulisciNome(g.base)}</h3>`;
+
+                    let btnGrid = document.createElement('div');
+                    btnGrid.className = "btn-grid";
+
                     if (g.json) {
                         try {
                             let dataRes = await fetch(`${CARTELLA_BASE}/${g.json}?t=${timestamp}`);
                             let jsonData = await dataRes.json();
+
                             Object.keys(jsonData).forEach(rotName => {
                                 let rotContainer = document.createElement('div');
-                                rotContainer.style.background = "#fafafa"; rotContainer.style.border = "1px solid #ddd"; rotContainer.style.padding = "12px"; rotContainer.style.borderRadius = "10px"; rotContainer.style.marginBottom = "10px";
-                                rotContainer.innerHTML = `<h4 style="margin:0 0 10px 0; color:var(--primary);">${rotName}</h4>`;
-                                let bT = document.createElement('button'); bT.className = "file-btn btn-table"; bT.innerHTML = `📅 Tabella`; bT.onclick = () => apriTabella(rotName, jsonData);
-                                let bS = document.createElement('button'); bS.className = "file-btn btn-search"; bS.style.marginTop = "8px"; bS.innerHTML = `🔍 Cerca`; bS.onclick = () => apriRicercaJson(rotName, jsonData);
-                                let bF = document.createElement('button'); bF.className = "file-btn btn-search"; bF.style.marginTop = "8px"; bF.innerHTML = `🔮 Futuro`; bF.onclick = () => apriRicercaFutura(g.base, rotName, jsonData);
-                                rotContainer.append(bT, bS, bF); btnGrid.appendChild(rotContainer);
+                                rotContainer.style.background = "#fafafa";
+                                rotContainer.style.border = "1px solid #ddd";
+                                rotContainer.style.padding = "12px";
+                                rotContainer.style.borderRadius = "10px";
+                                rotContainer.style.marginBottom = "10px";
+
+                                let rotTitle = document.createElement('h4');
+                                rotTitle.innerText = rotName;
+                                rotTitle.style.margin = "0 0 10px 0";
+                                rotTitle.style.color = "var(--primary)";
+                                rotTitle.style.fontSize = "16px";
+                                rotContainer.appendChild(rotTitle);
+
+                                let btnTab = document.createElement('button');
+                                btnTab.className = "file-btn btn-table";
+                                btnTab.innerHTML = `📅 Visualizza Tabella`;
+                                btnTab.onclick = () => apriTabella(rotName, jsonData);
+                                rotContainer.appendChild(btnTab);
+
+                                let btnSearch = document.createElement('button');
+                                btnSearch.className = "file-btn btn-search";
+                                btnSearch.style.marginTop = "8px";
+                                btnSearch.innerHTML = `🔍 Cerca Colleghi e Cambi`;
+                                btnSearch.onclick = () => apriRicercaJson(rotName, jsonData);
+                                rotContainer.appendChild(btnSearch);
+
+                                let btnFuturo = document.createElement('button');
+                                btnFuturo.className = "file-btn btn-search";
+                                btnFuturo.style.marginTop = "8px";
+                                btnFuturo.innerHTML = `🔮 Ricerca mesi successivi`;
+                                btnFuturo.onclick = () => apriRicercaFutura(g.base, rotName, jsonData);
+                                rotContainer.appendChild(btnFuturo);
+
+                                btnGrid.appendChild(rotContainer);
                             });
-                        } catch(e) {}
+                        } catch(e) { console.error("Errore lettura JSON", e); }
+                    } else if (g.excel) {
+                        let btnSearch = document.createElement('button');
+                        btnSearch.className = "file-btn btn-search";
+                        btnSearch.innerHTML = `🔍 Cerca (Modalità Lenta)`;
+                        btnSearch.onclick = () => apriFinestraRicerca(g.pdf ? g.pdf : g.excel, files);
+                        btnGrid.appendChild(btnSearch);
                     }
+
                     if (g.pdf) {
-                        let bP = document.createElement('a'); bP.className = "file-btn btn-pdf"; bP.innerHTML = `📄 PDF Originale`; bP.href = `${CARTELLA_BASE}/${g.pdf}?t=${timestamp}`; bP.target = "_blank";
-                        btnGrid.appendChild(bP);
+                        let btnPdf = document.createElement('a');
+                        btnPdf.className = "file-btn btn-pdf";
+                        btnPdf.innerHTML = `📄 Apri PDF Originale`;
+                        btnPdf.href = `${CARTELLA_BASE}/${g.pdf}?t=${timestamp}`; 
+                        btnPdf.target = "_blank";
+                        btnGrid.appendChild(btnPdf);
                     }
+
+                    monthCard.appendChild(btnGrid);
                     area.appendChild(monthCard);
                 }
-            } catch (e) { area.innerHTML = `<div class="status-message">Mappa non disponibile.</div>`; }
+
+            } catch (e) { 
+                area.innerHTML = `<div class="status-message">Errore: Indice Mappa non trovato. Attendi l'aggiornamento del server.</div>`; 
+            }
         }
+
+        // ==========================================
+        // GESTIONE TABELLA VISUALE E RICERCA BASE
+        // ==========================================
+        function chiudiModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
+        function chiudiSeSfondo(event, modalId) { if (event.target.id === modalId) chiudiModal(modalId); }
+
+        function getClassForTurno(turno) {
+            let t = turno.toUpperCase().replace(/\s+/g, '');
+            if (t === 'AL') return 'cell-al';
+            if (t === 'RI') return 'cell-ri';
+            if (t === 'DISP' || t === 'DI') return 'cell-disp';
+            if (t === 'ESPE') return 'cell-espe';
+            if (t === 'FER' || t === 'FEP' || t === 'FES') return 'cell-fer';
+            return '';
+        }
+
+        const paroleDaSaltare = ["GENNAIO", "FEBBRAIO", "MARZO", "APRILE", "MAGGIO", "GIUGNO", "LUGLIO", "AGOSTO", "SETTEMBRE", "OTTOBRE", "NOVEMBRE", "DICEMBRE", "MESE", "AGENTI"];
 
         function apriTabella(rotName, data) {
             const modal = document.getElementById('table-modal');
-            document.getElementById('table-modal-title').innerText = rotName;
-            let html = `<div class="table-responsive"><table class="rotazioni-table"><thead><tr><th>Colleghi</th>`;
+            const title = document.getElementById('table-modal-title');
+            const container = document.getElementById('table-container');
+
+            title.innerText = rotName;
+            
+            let html = `<div class="table-responsive"><table class="rotazioni-table">`;
+            html += `<thead><tr><th>Colleghi</th>`;
             for(let i=1; i<=31; i++) html += `<th>${i}</th>`;
             html += `</tr></thead><tbody>`;
+
             const dipendenti = data[rotName];
             for (let nome in dipendenti) {
-                if (paroleDaSaltare.some(p => nome.toUpperCase().includes(p)) || nome.trim() === "") continue;
-                html += `<tr><td>${nome.replace(" - ", "<br>")}</td>`;
+                let nomeUpper = nome.toUpperCase();
+                if (paroleDaSaltare.some(parola => nomeUpper.includes(parola)) || nome.trim() === "") continue;
+
+                let nomeFormattato = nome.split(" - ").join("<br>");
+                html += `<tr><td>${nomeFormattato}</td>`;
+                
                 for(let i=1; i<=31; i++) {
-                    let t = dipendenti[nome][i.toString()] || "";
-                    let cls = ""; let tu = t.toUpperCase().replace(/\s+/g, '');
-                    if (tu === 'AL') cls = 'cell-al'; else if (tu === 'RI') cls = 'cell-ri'; else if (tu === 'DISP' || tu === 'DI') cls = 'cell-disp'; else if (tu === 'ESPE') cls = 'cell-espe'; else if (['FER','FEP','FES'].includes(tu)) cls = 'cell-fer';
-                    html += `<td class="${cls}">${t}</td>`;
+                    let turno = dipendenti[nome][i.toString()] || "";
+                    let classCss = getClassForTurno(turno);
+                    html += `<td class="${classCss}">${turno}</td>`;
                 }
                 html += `</tr>`;
             }
-            document.getElementById('table-container').innerHTML = html + `</tbody></table></div>`;
+            html += `</tbody></table></div>`;
+            
+            container.innerHTML = html;
             modal.style.display = 'flex';
         }
 
         function apriRicercaJson(rotName, jsonData) {
-            databaseTurni = []; let dip = jsonData[rotName];
-            for (let n in dip) {
-                if (paroleDaSaltare.some(p => n.toUpperCase().includes(p)) || n.trim() === "") continue;
-                let tArr = []; for (let i = 1; i <= 31; i++) {
-                    let v = dip[n][i.toString()] || "";
-                    tArr.push(v.toUpperCase().replace(/\s+/g, '') === "DI" ? "DISP" : v.toUpperCase().replace(/\s+/g, ''));
+            databaseTurni = []; 
+            let dipendenti = jsonData[rotName];
+            for (let nome in dipendenti) {
+                let nomeUpper = nome.toUpperCase();
+                if (paroleDaSaltare.some(parola => nomeUpper.includes(parola)) || nome.trim() === "") continue;
+
+                let turniArr = [];
+                for (let i = 1; i <= 31; i++) {
+                    let val = dipendenti[nome][i.toString()] || "";
+                    if (val.toUpperCase().replace(/\s+/g, '') === "DI") val = "DISP";
+                    turniArr.push(val.toUpperCase().replace(/\s+/g, ''));
                 }
-                databaseTurni.push({ nome: n.replace(" - ", " e "), turni: tArr });
+                databaseTurni.push({
+                    nome: nome.split(" - ").join(" e "), 
+                    turni: turniArr
+                });
             }
+
             document.getElementById('modal-title').innerText = "Ricerca: " + rotName;
             document.getElementById('search-modal').style.display = 'flex';
             document.getElementById('modal-status').style.display = 'none';
             document.getElementById('modal-search-sections').style.display = 'block';
+            document.getElementById('risultato-turno').innerHTML = "";
+            document.getElementById('risultato-cambi').innerHTML = "";
         }
 
+        // ==========================================
+        // MOTORE RICERCA CORRENTE (Del Mese)
+        // ==========================================
         function cercaTurno() {
-            const g = parseInt(document.getElementById('input-giorno-turno').value) - 1;
-            const c = document.getElementById('input-codice-turno').value.trim().toUpperCase();
-            const box = document.getElementById('risultato-turno');
-            if (isNaN(g) || !c) return;
-            let trovati = databaseTurni.filter(d => d.turni[g] === c).map(d => d.nome);
+            const giorno = parseInt(document.getElementById('input-giorno-turno').value);
+            const codice = document.getElementById('input-codice-turno').value.trim().toUpperCase();
+            const boxRisultato = document.getElementById('risultato-turno');
+
+            if (!giorno || !codice) {
+                boxRisultato.innerHTML = "Compila tutti i campi prima di cercare.";
+                return;
+            }
+
+            const indiceGiorno = giorno - 1;
+            let trovati = [];
+
+            databaseTurni.forEach(dipendente => {
+                if (dipendente.turni[indiceGiorno] === codice) trovati.push(dipendente.nome);
+            });
+
             if (trovati.length > 0) {
-                let imgBtn = `<button class="file-btn" style="margin-top:8px; background:var(--info);" onclick="apriImmagineDaRotazioni('${c}')">🖼️ Immagine</button>`;
-                box.innerHTML = `<strong>Trovati (${c}):</strong><ul><li>` + trovati.join("</li><li>") + "</li></ul>" + imgBtn;
-            } else box.innerHTML = "Nessuno trovato.";
+                let detailsHtml = "";
+                if (globalShiftData && globalShiftData[codice]) {
+                    let info = globalShiftData[codice];
+                    detailsHtml = `
+                        <div class="turn-details-box">
+                            Inizio: <strong>${info.luogoInizio} (${info.inizio})</strong><br>
+                            Fine: <strong>${info.luogoFine} (${info.fine})</strong>
+                            <br><button class="file-btn" style="padding: 8px 12px; margin-top: 8px; font-size: 14px; width: 100%; box-sizing:border-box; background-color: var(--info);" onclick="apriImmagineDaRotazioni('${codice}')">🖼️ Mostra Immagine Turno</button>
+                        </div>
+                    `;
+                } else {
+                    detailsHtml = `
+                        <div style="margin-top: 10px;">
+                            <button class="file-btn" style="padding: 8px 12px; font-size: 14px; width: 100%; box-sizing:border-box; background-color: var(--info);" onclick="apriImmagineDaRotazioni('${codice}')">🖼️ Mostra Immagine Turno</button>
+                        </div>
+                    `;
+                }
+                boxRisultato.innerHTML = `<strong>Trovati il giorno ${giorno} a fare ${codice}:</strong><ul style="margin-bottom:10px;"><li>` + trovati.join("</li><li>") + "</li></ul>" + detailsHtml;
+            } else {
+                boxRisultato.innerHTML = "Nessuno trovato con questo turno in questa data.";
+            }
+        }
+
+        function analizzaCicloLavorativo(turniMese, indiceGiorno) {
+            const turnoAttuale = turniMese[indiceGiorno];
+            
+            if (turnoAttuale === "AL" || turnoAttuale === "RI" || turnoAttuale === "") {
+                let tipoRiposo = "Vuoto";
+                if (turnoAttuale === "AL") {
+                    let domani = (indiceGiorno + 1 < turniMese.length) ? turniMese[indiceGiorno + 1] : "";
+                    tipoRiposo = (domani === "RI" || domani === "AL") ? "Doppio (Oggi AL)" : "Singolo (AL)";
+                } else if (turnoAttuale === "RI") {
+                    let ieri = (indiceGiorno - 1 >= 0) ? turniMese[indiceGiorno - 1] : "";
+                    let domani = (indiceGiorno + 1 < turniMese.length) ? turniMese[indiceGiorno + 1] : "";
+                    tipoRiposo = (ieri === "AL" || ieri === "RI" || domani === "AL" || domani === "RI") ? "Doppio (Oggi RI)" : "Singolo (RI)";
+                }
+                return { fase: "Riposo", giornoEsatto: 0, tipoRiposo: tipoRiposo };
+            }
+
+            let giorniLavorati = 1; 
+            let trovatoRiposoPassato = false;
+            for (let i = indiceGiorno - 1; i >= 0; i--) {
+                if (turniMese[i] === "AL" || turniMese[i] === "RI" || turniMese[i] === "") {
+                    trovatoRiposoPassato = true; break;
+                }
+                giorniLavorati++;
+            }
+
+            if (trovatoRiposoPassato) return determinaFaseDaGiorno(giorniLavorati);
+
+            let giorniAlProssimoRiposo = 0;
+            for (let i = indiceGiorno + 1; i < turniMese.length; i++) {
+                if (turniMese[i] === "AL" || turniMese[i] === "RI" || turniMese[i] === "") break;
+                giorniAlProssimoRiposo++;
+            }
+
+            const giornoStimato = 6 - giorniAlProssimoRiposo;
+            return determinaFaseDaGiorno(giornoStimato > 0 ? giornoStimato : giorniLavorati);
+        }
+
+        function determinaFaseDaGiorno(n) {
+            if (n === 1 || n === 2) return { fase: "Terzo", giornoEsatto: n };
+            if (n === 3 || n === 4) return { fase: "Mezzo", giornoEsatto: n };
+            if (n === 5 || n === 6) return { fase: "Primo", giornoEsatto: n };
+            return { fase: "Oltre 6 giorni", giornoEsatto: n };
         }
 
         function cercaCambi() {
-            const g = parseInt(document.getElementById('input-giorno-cambio').value) - 1;
-            const f = document.getElementById('select-fase-cambio').value;
-            const box = document.getElementById('risultato-cambi');
-            if (isNaN(g)) return;
-            let res = [];
-            databaseTurni.forEach(d => {
-                let t = d.turni[g];
-                if (f === "Riposo" && (t === "AL" || t === "RI" || t === "")) res.push(d.nome);
-                else {
-                    let n = 0; for(let i=g; i>=0; i--) { if(d.turni[i]==="AL"||d.turni[i]==="RI"||d.turni[i]==="") break; n++; }
-                    if ((f==="Terzo" && (n===1||n===2)) || (f==="Mezzo" && (n===3||n===4)) || (f==="Primo" && (n===5||n===6))) res.push(`<strong>${d.nome}</strong> (${t})`);
+            const giorno = parseInt(document.getElementById('input-giorno-cambio').value);
+            const faseDesiderata = document.getElementById('select-fase-cambio').value;
+            const boxRisultato = document.getElementById('risultato-cambi');
+
+            if (!giorno) {
+                boxRisultato.innerHTML = "Inserisci il giorno del mese.";
+                return;
+            }
+
+            const indiceGiorno = giorno - 1;
+            let risultatiHtml = [];
+
+            databaseTurni.forEach(dipendente => {
+                const analisi = analizzaCicloLavorativo(dipendente.turni, indiceGiorno);
+                if (analisi.fase === faseDesiderata) {
+                    if (faseDesiderata === "Riposo") {
+                        if (analisi.tipoRiposo !== "Vuoto") {
+                            risultatiHtml.push(`<strong>${dipendente.nome}</strong> - <span style="color:var(--danger);">[Riposo ${analisi.tipoRiposo}]</span>`);
+                        }
+                    } else {
+                        let turnoCod = dipendente.turni[indiceGiorno];
+                        let isRiposoOrDisp = ["AL", "RI", "DISP", "ESPE", "DI", ""].includes(turnoCod);
+                        
+                        if (!isRiposoOrDisp) {
+                            let infoExtra = "";
+                            if (globalShiftData && globalShiftData[turnoCod]) {
+                                let info = globalShiftData[turnoCod];
+                                infoExtra = `<br>Inizio: <strong>${info.luogoInizio} (${info.inizio})</strong><br>Fine: <strong>${info.luogoFine} (${info.fine})</strong>`;
+                            }
+                            
+                            let detailsHtml = `
+                                <div class="turn-details-box">
+                                    <strong style="color:var(--primary); font-size:14px;">Turno: ${turnoCod}</strong>${infoExtra}
+                                    <br><button class="file-btn" style="padding: 8px 12px; margin-top: 8px; font-size: 14px; width: 100%; box-sizing:border-box; background-color: var(--info);" onclick="apriImmagineDaRotazioni('${turnoCod}')">🖼️ Mostra Immagine Turno</button>
+                                </div>
+                            `;
+                            risultatiHtml.push(`<strong>${dipendente.nome}</strong> (Giorno lav. ${analisi.giornoEsatto}) ${detailsHtml}`);
+                        } else {
+                            risultatiHtml.push(`<strong>${dipendente.nome}</strong> (Giorno lav. ${analisi.giornoEsatto}) - [Turno: ${turnoCod}]`);
+                        }
+                    }
                 }
             });
-            box.innerHTML = res.length ? `<ul><li>${res.join("</li><li>")}</li></ul>` : "Nessuno trovato.";
+
+            if (risultatiHtml.length > 0) {
+                boxRisultato.innerHTML = `<div style="margin-bottom:10px;"><strong>Colleghi di ${faseDesiderata} il giorno ${giorno}:</strong></div><ul><li style='margin-bottom:15px;'>` + risultatiHtml.join("</li><li style='margin-bottom:15px;'>") + "</li></ul>";
+            } else {
+                boxRisultato.innerHTML = "Nessun collega trovato in questa fase per il giorno indicato.";
+            }
         }
 
-        function eseguiRicercaFutura() {
-            const dStr = document.getElementById('input-date-futura').value;
-            const f = document.getElementById('select-fase-futura').value;
-            const box = document.getElementById('risultato-futuro');
-            if (!dStr) return;
-            let tN = Math.floor(new Date(dStr).getTime() / 86400000);
-            let trovati = activePredictors.filter(p => {
-                let pos = ((tN - p.refNum + 6) % 15 + 15) % 15;
-                let calcF = ""; let gL = 0;
-                if (pos === 6 || pos === 13 || pos === 14) calcF = "Riposo";
-                else { gL = (pos <= 5) ? pos + 1 : pos - 6; if(gL<=2) calcF="Terzo"; else if(gL<=4) calcF="Mezzo"; else calcF="Primo"; }
-                return calcF === f;
-            }).map(p => p.nome);
-            box.innerHTML = trovati.length ? `<ul><li>${trovati.join("</li><li>")}</li></ul>` : "Nessuno.";
+        // ==========================================
+        // MOTORE RICERCA FUTURA (LOGICA FASI 15 GIORNI)
+        // ==========================================
+        function stringToNum(s) { 
+            if(!s) return 0; 
+            let p = s.split('-'); 
+            return Math.floor(new Date(p[0], p[1]-1, p[2], 12, 0, 0).getTime() / 86400000); 
+        }
+
+        function formattaData(dStr) {
+            let p = dStr.split('-');
+            return `${p[2]}/${p[1]}/${p[0]}`;
+        }
+
+        function buildColleaguePredictor(nome, turniMese, m, y) {
+            let refNum = null;
+            
+            let alIndex = turniMese.findIndex(t => t === "AL");
+            if (alIndex !== -1) {
+                refNum = stringToNum(`${y}-${m}-${alIndex + 1}`) - 7;
+            } else {
+                for (let i = 0; i < turniMese.length; i++) {
+                    if (turniMese[i] === "RI") {
+                        let prevAL = (i - 1 >= 0 && turniMese[i-1] === "AL");
+                        let prevRI = (i - 1 >= 0 && turniMese[i-1] === "RI");
+                        let nextRI = (i + 1 < turniMese.length && turniMese[i+1] === "RI");
+                        
+                        let dNum = stringToNum(`${y}-${m}-${i + 1}`);
+                        if (prevAL || prevRI) {
+                            refNum = dNum - 8; 
+                        } else if (nextRI) {
+                            refNum = dNum - 7; 
+                        } else {
+                            refNum = dNum; 
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (refNum === null) return null; 
+            return { nome, refNum };
         }
 
         function apriRicercaFutura(baseName, rotName, jsonData) {
-            let parts = baseName.split('_'); 
-            let m = {"gennaio":1,"febbraio":2,"marzo":3,"aprile":4,"maggio":5,"giugno":6,"luglio":7,"agosto":8,"settembre":9,"ottobre":10,"novembre":11,"dicembre":12}[parts[1].toLowerCase()];
-            let y = parseInt(parts[2]);
-            activePredictors = [];
-            let dip = jsonData[rotName];
-            for (let n in dip) {
-                if (paroleDaSaltare.some(p => n.toUpperCase().includes(p)) || n.trim() === "") continue;
-                let tM = []; for(let i=1; i<=31; i++) tM.push((dip[n][i.toString()]||"").toUpperCase().replace(/\s+/g,''));
-                let ref = null; let al = tM.indexOf("AL");
-                if (al !== -1) ref = Math.floor(new Date(y, m-1, al+1).getTime()/86400000) - 7;
-                else {
-                    let ri = tM.indexOf("RI");
-                    if (ri !== -1) ref = Math.floor(new Date(y, m-1, ri+1).getTime()/86400000) - ( (ri>0 && tM[ri-1]==="RI") ? 8 : 7 );
-                }
-                if (ref) activePredictors.push({ nome: n.replace(" - ", " e "), refNum: ref });
-            }
             document.getElementById('future-modal-title').innerText = "Mesi Successivi: " + rotName;
+            
+            let parts = baseName.split('_'); 
+            let meseStr = parts[1];
+            let annoStr = parts[2];
+            const mesiMap = { "gennaio": 1, "febbraio": 2, "marzo": 3, "aprile": 4, "maggio": 5, "giugno": 6, "luglio": 7, "agosto": 8, "settembre": 9, "ottobre": 10, "novembre": 11, "dicembre": 12 };
+            let m = mesiMap[meseStr.toLowerCase()];
+            let y = parseInt(annoStr);
+
+            activePredictors = [];
+            
+            let dipendenti = jsonData[rotName];
+            for (let nome in dipendenti) {
+                if (paroleDaSaltare.some(p => nome.toUpperCase().includes(p)) || nome.trim() === "") continue;
+
+                let turniMese = [];
+                for (let i = 1; i <= 31; i++) {
+                    let t = dipendenti[nome][i.toString()] || "";
+                    turniMese.push(t.toUpperCase().replace(/\s+/g, ''));
+                }
+
+                let p = buildColleaguePredictor(nome.split(" - ").join(" e "), turniMese, m, y);
+                if (p) activePredictors.push(p);
+            }
+
             document.getElementById('future-search-modal').style.display = 'flex';
+            document.getElementById('risultato-futuro').innerHTML = "";
         }
 
-        function initPanzoom() {
-            const img = document.getElementById('turnoImage');
-            if (typeof Panzoom !== 'undefined' && !pzInstance) {
-                pzInstance = Panzoom(img, { maxScale: 5, minScale: 1 });
-                document.getElementById('imageFlexContainer').addEventListener('wheel', pzInstance.zoomWithWheel);
+        function eseguiRicercaFutura() {
+            const dateStr = document.getElementById('input-date-futura').value;
+            const faseDesiderata = document.getElementById('select-fase-futura').value;
+            const boxRisultato = document.getElementById('risultato-futuro');
+
+            if (!dateStr) {
+                boxRisultato.innerHTML = "Seleziona la data futura prima di cercare.";
+                return;
+            }
+
+            let targetNum = stringToNum(dateStr);
+            let trovati = [];
+
+            activePredictors.forEach(p => {
+                let pos = ((targetNum - p.refNum + 6) % 15 + 15) % 15;
+                
+                let faseCalcolata = "";
+                let infoExtra = "";
+                let giornoLav = 0;
+
+                if (pos === 6) { faseCalcolata = "Riposo"; infoExtra = "Singolo (RI)"; }
+                else if (pos === 13) { faseCalcolata = "Riposo"; infoExtra = "Doppio (1° g. AL)"; }
+                else if (pos === 14) { faseCalcolata = "Riposo"; infoExtra = "Doppio (2° g. RI)"; }
+                else {
+                    if (pos >= 0 && pos <= 5) giornoLav = pos + 1; 
+                    else if (pos >= 7 && pos <= 12) giornoLav = pos - 6; 
+                    
+                    if (giornoLav === 1 || giornoLav === 2) faseCalcolata = "Terzo";
+                    else if (giornoLav === 3 || giornoLav === 4) faseCalcolata = "Mezzo";
+                    else if (giornoLav === 5 || giornoLav === 6) faseCalcolata = "Primo";
+                }
+
+                if (faseCalcolata === faseDesiderata) {
+                    if (faseCalcolata === "Riposo") {
+                        trovati.push(`<strong>${p.nome}</strong> - <span style="color:var(--danger);">[Riposo ${infoExtra}]</span>`);
+                    } else {
+                        trovati.push(`<strong>${p.nome}</strong> (Giorno lav. ${giornoLav})`);
+                    }
+                }
+            });
+
+            if (trovati.length > 0) {
+                let msg = `Colleghi in fase di <strong>${faseDesiderata}</strong> il ${formattaData(dateStr)}:`;
+                boxRisultato.innerHTML = `<div style="margin-bottom:10px;">${msg}</div><ul style="padding-left:20px; margin:0;"><li>` + trovati.join("</li><li style='margin-top:8px;'>") + "</li></ul>";
+            } else {
+                boxRisultato.innerHTML = "Nessun collega trovato in questa fase per la data indicata.";
             }
         }
 
-        function apriImmagineDaRotazioni(t) {
-            if (!globalImgDir) return alert("Archivio immagini non pronto.");
-            let img = document.getElementById('turnoImage');
-            currentImagePath = `${globalImgDir}/${t}.jpg`;
-            img.onload = () => { if(pzInstance) pzInstance.reset(); document.getElementById('imageModal').style.display = 'block'; };
-            img.onerror = () => {
-                currentImagePath = `${globalImgDir}/${t}.png`;
-                img.onerror = () => alert("Immagine non trovata.");
-                img.src = currentImagePath;
-            };
-            img.src = currentImagePath;
+        // ==========================================
+        // GESTIONE PANZOOM E MODALE IMMAGINI (100% FIREBASE)
+        // ==========================================
+        function initPanzoom() {
+            const imgElem = document.getElementById('turnoImage');
+            if (typeof Panzoom !== 'undefined' && !pzInstance) {
+                pzInstance = Panzoom(imgElem, { maxScale: 5, minScale: 1 });
+                document.getElementById('imageFlexContainer').addEventListener('wheel', pzInstance.zoomWithWheel);
+                
+                function eseguiZoomToggle(e) {
+                    if (!pzInstance) return;
+                    let currentScale = pzInstance.getScale();
+                    if (currentScale < 1.1) pzInstance.zoom(1.75, { animate: true });
+                    else pzInstance.reset({ animate: true });
+                }
+
+                let lastTap = 0;
+                let isPinching = false;
+                imgElem.addEventListener('touchstart', function(e) { if (e.touches.length > 1) { isPinching = true; } });
+                imgElem.addEventListener('touchend', function(e) {
+                    if (isPinching) {
+                        if (e.touches.length === 0) { setTimeout(() => isPinching = false, 300); }
+                        return;
+                    }
+                    let currentTime = new Date().getTime();
+                    let tapLength = currentTime - lastTap;
+                    if (tapLength < 300 && tapLength > 0) {
+                        eseguiZoomToggle(e);
+                        if (e.cancelable) e.preventDefault();
+                    }
+                    lastTap = currentTime;
+                });
+                imgElem.addEventListener('dblclick', function(e) { eseguiZoomToggle(e); });
+            }
         }
 
-        function chiudiImageModal() { document.getElementById('imageModal').style.display = 'none'; document.getElementById('turnoImage').removeAttribute('src'); if (pzInstance) pzInstance.reset(); }
-        function scaricaImmagineTurno() { if (!currentImagePath) return; const a = document.createElement('a'); a.href = currentImagePath; a.download = currentImagePath.split('/').pop(); a.click(); }
-        function chiudiSeSfondoModalImg(e) { if (e.target.id === 'imageModal' || e.target.id === 'imageFlexContainer') chiudiImageModal(); }
+        function apriImmagineDaRotazioni(turnoPilota) {
+            if (!globalImgDir) {
+                alert("Cartella immagini non trovata. Attendi l'aggiornamento o verifica la connessione.");
+                return;
+            }
+
+            let imgElement = document.getElementById('turnoImage');
+            currentImagePath = `${globalImgDir}/${turnoPilota}.jpg`;
+            
+            imgElement.onload = function() {
+                if (pzInstance) { pzInstance.reset(); }
+                document.getElementById('imageModal').style.display = 'block';
+                imgElement.onload = null;
+                imgElement.onerror = null;
+            };
+
+            imgElement.onerror = function() {
+                currentImagePath = `${globalImgDir}/${turnoPilota}.png`;
+                imgElement.onload = function() {
+                    if (pzInstance) { pzInstance.reset(); }
+                    document.getElementById('imageModal').style.display = 'block';
+                    imgElement.onload = null;
+                    imgElement.onerror = null;
+                };
+                imgElement.onerror = function() {
+                    alert("L'immagine per il turno " + turnoPilota + " non è presente nell'archivio.");
+                    chiudiImageModal();
+                    imgElement.onload = null;
+                    imgElement.onerror = null;
+                };
+                imgElement.src = currentImagePath;
+            };
+
+            imgElement.src = currentImagePath;
+        }
+
+        function chiudiSeSfondoModalImg(event) { 
+            if (event.target.id === 'imageModal' || event.target.id === 'imageFlexContainer') chiudiImageModal(); 
+        }
+        
+        function chiudiImageModal() {
+            document.getElementById('imageModal').style.display = 'none';
+            document.getElementById('turnoImage').removeAttribute('src');
+            if (pzInstance) { pzInstance.reset(); }
+        }
+
+        function scaricaImmagineTurno() {
+            if (!currentImagePath) return;
+            const a = document.createElement('a');
+            a.href = currentImagePath;
+            a.download = currentImagePath.split('/').pop();
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // --- RICERCA CON EXCEL (Ora usa percorsi Firebase) ---
+        async function apriFinestraRicerca(pdfName, tuttiIFileNomi) {
+            const modal = document.getElementById('search-modal');
+            const statusEl = document.getElementById('modal-status');
+            const sezioniRicerca = document.getElementById('modal-search-sections');
+            const title = document.getElementById('modal-title');
+            
+            title.innerText = "Ricerca Globale";
+            modal.style.display = 'flex';
+            sezioniRicerca.style.display = 'none';
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = "Caricamento in corso... (L'apertura dell'Excel richiede qualche istante)";
+            
+            document.getElementById('risultato-turno').innerHTML = "";
+            document.getElementById('risultato-cambi').innerHTML = "";
+            databaseTurni = [];
+
+            const timestamp = new Date().getTime();
+            const baseName = pdfName.substring(0, pdfName.lastIndexOf('.'));
+            
+            let targetUrl = `${CARTELLA_BASE}/${encodeURIComponent(baseName)}.xlsx?t=${timestamp}`;
+            let res;
+
+            try {
+                res = await fetch(targetUrl);
+                
+                if (!res.ok && tuttiIFileNomi) {
+                    const baseNameLower = baseName.toLowerCase().trim();
+                    const excelFileName = tuttiIFileNomi.find(nome => {
+                        const itemNameLower = nome.toLowerCase();
+                        return itemNameLower === baseNameLower + ".xlsx" || itemNameLower === baseNameLower + ".xls";
+                    });
+
+                    if (excelFileName) res = await fetch(`${CARTELLA_BASE}/${excelFileName}?t=${timestamp}`);
+                }
+
+                if (!res || !res.ok) throw new Error("File Excel non trovato.");
+
+                const arrayBuffer = await res.arrayBuffer();
+                const data = new Uint8Array(arrayBuffer);
+                const workbook = XLSX.read(data, {type: 'array'});
+                
+                let foundAnyTurns = false;
+
+                for (let sheetName of workbook.SheetNames) {
+                    const worksheet = workbook.Sheets[sheetName];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    let headerRowIndex = -1;
+                    let dayColIndices = new Array(31).fill(-1);
+
+                    for (let r = 0; r < rows.length; r++) {
+                        let row = rows[r];
+                        if (!row) continue;
+                        for (let c = 0; c < row.length - 2; c++) {
+                            let cell1 = String(row[c]).trim(); let cell2 = String(row[c+1]).trim(); let cell3 = String(row[c+2]).trim();
+                            if (cell1 === "1" && cell2 === "2" && cell3 === "3") {
+                                headerRowIndex = r;
+                                for (let d = 1; d <= 31; d++) {
+                                    for (let look = c; look < row.length; look++) {
+                                        if (String(row[look]).trim() === String(d)) { dayColIndices[d - 1] = look; break; }
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                        if (headerRowIndex !== -1) break;
+                    }
+
+                    if (headerRowIndex !== -1) {
+                        let currentPos = 0;
+                        for (let r = headerRowIndex + 1; r < rows.length; r++) {
+                            let row = rows[r];
+                            if (!row || row.length === 0) continue;
+
+                            let bloccoGiorni = new Array(31).fill("");
+                            let conteggioValidi = 0;
+
+                            for (let d = 0; d < 31; d++) {
+                                let colIdx = dayColIndices[d];
+                                if (colIdx !== -1 && colIdx < row.length) {
+                                    let cella = row[colIdx];
+                                    if (cella) {
+                                        let val = String(cella).replace(/[\s]+/g, '').toUpperCase();
+                                        if (isTurno(val)) {
+                                            if (val === "DI") val = "DISP";
+                                            bloccoGiorni[d] = val;
+                                            conteggioValidi++;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (conteggioValidi >= 15) {
+                                currentPos++;
+                                let firstDayCol = dayColIndices[0];
+                                
+                                let nameParts1 = [];
+                                for (let c = 0; c < firstDayCol; c++) {
+                                    if (row[c]) {
+                                        let txt = String(row[c]).replace(/[0-9]/g, '').trim();
+                                        if (txt.length >= 2 && !paroleDaSaltare.includes(txt.toUpperCase())) {
+                                            nameParts1.push(txt);
+                                        }
+                                    }
+                                }
+                                let nome1 = nameParts1.join(" ");
+
+                                let nome2 = "";
+                                if (r + 1 < rows.length) {
+                                    let nextRow = rows[r + 1];
+                                    if (nextRow && nextRow.length > 0) {
+                                        let validiNext = 0;
+                                        for (let d = 0; d < 31; d++) {
+                                            let colIdx = dayColIndices[d];
+                                            if (colIdx !== -1 && colIdx < nextRow.length) {
+                                                let cella = nextRow[colIdx];
+                                                if (cella && typeof isTurno === 'function' && isTurno(String(cella).replace(/[\s]+/g, '').toUpperCase())) validiNext++;
+                                            }
+                                        }
+                                        if (validiNext < 5) {
+                                            let nameParts2 = [];
+                                            for (let c = 0; c < firstDayCol; c++) {
+                                                if (nextRow[c]) {
+                                                    let txt = String(nextRow[c]).replace(/[0-9]/g, '').trim();
+                                                    if (txt.length >= 2 && !paroleDaSaltare.includes(txt.toUpperCase())) {
+                                                        nameParts2.push(txt);
+                                                    }
+                                                }
+                                            }
+                                            nome2 = nameParts2.join(" ");
+                                        }
+                                    }
+                                }
+                                
+                                let nomeFinale = nome1;
+                                if (nome2) nomeFinale += " e " + nome2;
+                                if (!nomeFinale) nomeFinale = `Collega (Posizione ${currentPos})`;
+
+                                databaseTurni.push({ pos: currentPos, nome: nomeFinale, turni: bloccoGiorni });
+                            }
+                        }
+                        if (databaseTurni.length > 0) { foundAnyTurns = true; break; }
+                    }
+                }
+
+                if (foundAnyTurns) {
+                    statusEl.style.display = 'none';
+                    sezioniRicerca.style.display = 'block';
+                } else {
+                    statusEl.innerHTML = "<span style='color:var(--danger);'>Errore: Struttura del calendario non trovata in nessuna scheda.</span>";
+                }
+
+            } catch (error) {
+                statusEl.innerHTML = `<span style='color:var(--danger);'>Errore:</span> ${error.message}`;
+            }
+        }
+
+        function isTurno(val) {
+            let arr = ["AL", "RI", "DISP", "DI", "FER", "MAL", "PRT", "ESPE"];
+            return arr.includes(val) || val.match(/^[0-9]+[A-Z]+[0-9]*$/) || val.match(/^[A-Z]+[0-9]+$/);
+        }
     </script>
 
     <script type="module">
@@ -618,6 +1185,7 @@
                         warnLog.style.display = 'none'; reqSect.style.display = 'none'; pendSect.style.display = 'block';
                     } else {
                         warnLog.style.display = 'none'; pendSect.style.display = 'none'; reqSect.style.display = 'block';
+                        // Precompilazione modificabile dei campi
                         document.getElementById('req-nome').value = currentUserDoc.nome || '';
                         document.getElementById('req-cognome').value = currentUserDoc.cognome || '';
                         document.getElementById('req-matricola').value = currentUserDoc.matricola || '';
@@ -629,53 +1197,77 @@
 
         window.inviaRichiestaAccesso = async () => {
             const rot = document.getElementById('req-rotazione').value;
+            const n = document.getElementById('req-nome').value.trim();
+            const c = document.getElementById('req-cognome').value.trim();
+            const m = document.getElementById('req-matricola').value.trim();
             const omo = document.getElementById('req-omonimia').value.trim();
-            if (!rot) return alert("Seleziona la rotazione!");
-            await updateDoc(doc(db, "utenti", currentUserId), { stato_richiesta: 'pending', rotazione_richiesta: rot, progressivo: omo || '' });
-            location.reload();
+            const err = document.getElementById('req-error-msg');
+            
+            if (!n || !c || !m) { err.innerText = "Nome, Cognome e Matricola sono obbligatori."; return; }
+            if (!rot) { err.innerText = "Seleziona la tua rotazione di appartenenza."; return; }
+            if (!currentUserId) return;
+            
+            err.innerText = "Invio in corso..."; err.style.color = "#666";
+            try {
+                // Aggiorniamo il profilo con eventuali modifiche ed inviamo la richiesta
+                await updateDoc(doc(db, "utenti", currentUserId), { 
+                    nome: n, cognome: c, matricola: m, progressivo: omo,
+                    stato_richiesta: 'pending', rotazione_richiesta: rot 
+                });
+                location.reload();
+            } catch(e) { err.innerText = "Errore durante l'invio. Riprova."; err.style.color = "var(--danger)"; }
         };
 
         window.apriGestioneAccessiModal = async () => {
             document.getElementById('modal-gestione-accessi').style.display = 'flex';
             if (isAdmin) document.getElementById('btn-collab-admin').style.display = 'inline-block';
             const cont = document.getElementById('lista-utenti-abilitati');
-            cont.innerHTML = "Caricamento...";
+            cont.innerHTML = "<div style='text-align:center; padding:15px; font-size:14px;'>Caricamento...</div>";
             const snap = await getDocs(collection(db, "utenti")); let html = "";
             snap.forEach(d => {
                 const u = d.data();
                 if (u.abilitato_rotazioni === true) {
                     if (isCollab && !isAdmin && !(currentUserDoc.permessi_gestione || []).includes(u.rotazione_richiesta)) return;
-                    html += `<div style="background:#f8f9fa; padding:10px; margin-bottom:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
-                        <div><strong>${u.cognome||''} ${u.nome||''}</strong><br><small>${ROTAZIONI_MAP[u.rotazione_richiesta]||''}</small></div>
-                        <button class="btn" style="width:auto; padding:5px 10px; background:var(--danger); margin:0;" onclick="revocaAccesso('${d.id}')">Blocca</button>
+                    const rotNome = ROTAZIONI_MAP[u.rotazione_richiesta] || u.rotazione_richiesta || 'Assegnazione Manuale';
+                    html += `<div style="background:#f8f9fa; border:1px solid #ddd; padding:10px; margin-bottom:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <strong style="font-size:14px;">${u.cognome||''} ${u.nome||''} ${u.progressivo||''}</strong><br>
+                            <span style="font-size:12px; color:#666;">Matr: ${u.matricola||''} | ${rotNome}</span>
+                        </div>
+                        <button class="btn" style="width:auto; padding:6px 12px; background:var(--danger); margin:0;" onclick="revocaAccesso('${d.id}')">Blocca</button>
                     </div>`;
                 }
             });
-            cont.innerHTML = html || "Nessun utente.";
+            cont.innerHTML = html || "<div style='text-align:center; font-size:14px; color:#666;'>Nessun utente trovato nella tua area.</div>";
         };
 
         window.revocaAccesso = async (uid) => {
-            if(confirm("Revocare l'accesso?")) { await updateDoc(doc(db, "utenti", uid), { abilitato_rotazioni: false, stato_richiesta: 'rejected' }); window.apriGestioneAccessiModal(); }
+            if(confirm("Vuoi revocare l'accesso a questo utente? Dovrà rifare la richiesta.")) { 
+                await updateDoc(doc(db, "utenti", uid), { abilitato_rotazioni: false, stato_richiesta: 'rejected' }); 
+                window.apriGestioneAccessiModal(); 
+            }
         };
 
         window.apriGestioneRichieste = async () => {
             chiudiModal('modal-gestione-accessi'); document.getElementById('modal-gestione-richieste').style.display = 'flex';
-            const cont = document.getElementById('lista-richieste'); cont.innerHTML = "Ricerca...";
+            const cont = document.getElementById('lista-richieste'); cont.innerHTML = "<div style='text-align:center; padding:15px; font-size:14px;'>Ricerca richieste...</div>";
             const snap = await getDocs(collection(db, "utenti")); let html = "";
             snap.forEach(d => {
                 const u = d.data();
                 if (u.stato_richiesta === 'pending') {
                     if (isCollab && !isAdmin && !(currentUserDoc.permessi_gestione || []).includes(u.rotazione_richiesta)) return;
-                    html += `<div style="background:#fff3cd; padding:10px; margin-bottom:8px; border-radius:8px;">
-                        <strong>${u.cognome||''} ${u.nome||''}</strong><br><small>Richiede: ${ROTAZIONI_MAP[u.rotazione_richiesta]||''}</small>
-                        <div style="display:flex; gap:5px; margin-top:8px;">
-                            <button class="btn" style="background:var(--success); padding:5px; margin:0; font-size:12px;" onclick="gestisciRichiesta('${d.id}', true)">✅ Consenti</button>
-                            <button class="btn" style="background:var(--danger); padding:5px; margin:0; font-size:12px;" onclick="gestisciRichiesta('${d.id}', false)">❌ Rifiuta</button>
+                    const rotNome = ROTAZIONI_MAP[u.rotazione_richiesta] || u.rotazione_richiesta || '?';
+                    html += `<div style="background:#fff3cd; border:1px solid #ffeeba; padding:10px; margin-bottom:8px; border-radius:8px;">
+                        <strong style="font-size:14px; color:#856404;">${u.cognome||''} ${u.nome||''} ${u.progressivo||''}</strong><br>
+                        <span style="font-size:12px; color:#666;">Matr: ${u.matricola||''} | Richiede: <strong>${rotNome}</strong></span>
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <button class="btn" style="background:var(--success); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${d.id}', true)">✅ Consenti</button>
+                            <button class="btn" style="background:var(--danger); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${d.id}', false)">❌ Rifiuta</button>
                         </div>
                     </div>`;
                 }
             });
-            cont.innerHTML = html || "Nessuna richiesta.";
+            cont.innerHTML = html || "<div style='text-align:center; font-size:14px; color:#666;'>Nessuna richiesta in sospeso per la tua area.</div>";
         };
 
         window.gestisciRichiesta = async (uid, ok) => {
@@ -684,28 +1276,35 @@
         };
 
         window.apriGestioneCollaboratori = async () => {
+            if(!isAdmin) return;
             chiudiModal('modal-gestione-accessi'); document.getElementById('modal-gestione-collaboratori').style.display = 'flex';
-            const cont = document.getElementById('lista-collaboratori'); cont.innerHTML = "Caricamento...";
+            const cont = document.getElementById('lista-collaboratori'); cont.innerHTML = "<div style='text-align:center; padding:15px; font-size:14px;'>Caricamento...</div>";
             const snap = await getDocs(collection(db, "utenti")); let html = "";
             snap.forEach(d => {
                 const u = d.data();
                 if (u.ruolo === 'collaborator') {
-                    html += `<div style="background:#e2e3e5; padding:10px; margin-bottom:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
-                        <div><strong>${u.cognome||''} ${u.nome||''}</strong></div>
-                        <button class="btn" style="width:auto; padding:5px 10px; background:#6f42c1; margin:0;" onclick='apriPermessiCollab("${d.id}", "${u.nome}", ${JSON.stringify(u.permessi_gestione||[])})'>⚙️ Permessi</button>
+                    html += `<div style="background:#e2e3e5; border:1px solid #d6d8db; padding:10px; margin-bottom:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <strong style="font-size:14px; color:#383d41;">${u.cognome||''} ${u.nome||''}</strong><br>
+                            <span style="font-size:12px; color:#666;">Permessi: ${(u.permessi_gestione||[]).length} aree</span>
+                        </div>
+                        <button class="btn" style="width:auto; padding:6px 12px; background:#6f42c1; margin:0;" onclick='apriPermessiCollab("${d.id}", "${u.nome}", ${JSON.stringify(u.permessi_gestione||[])})'>⚙️ Modifica</button>
                     </div>`;
                 }
             });
-            cont.innerHTML = html || "Nessun collaboratore.";
+            cont.innerHTML = html || "<div style='text-align:center; font-size:14px; color:#666;'>Nessun collaboratore trovato. Assegna il ruolo dalla Home Page.</div>";
         };
 
         window.apriPermessiCollab = (uid, nome, perms) => {
             chiudiModal('modal-gestione-collaboratori'); document.getElementById('modal-permessi-collaboratore').style.display = 'flex';
-            document.getElementById('nome-collab-titolo').innerText = nome;
+            document.getElementById('nome-collab-titolo').innerText = nome || '';
             document.getElementById('uid-collab-edit').value = uid;
             const cont = document.getElementById('lista-checkbox-rotazioni'); let html = "";
             for(let k in ROTAZIONI_MAP) {
-                html += `<label style="display:block; margin-bottom:8px;"><input type="checkbox" class="collab-perm-check" value="${k}" ${perms.includes(k)?"checked":""}> ${ROTAZIONI_MAP[k]}</label>`;
+                html += `<label style="display:block; margin-bottom:10px; font-size:14px; cursor:pointer;">
+                    <input type="checkbox" class="collab-perm-check" value="${k}" ${perms.includes(k)?"checked":""} style="transform: scale(1.2); margin-right: 8px;"> 
+                    ${ROTAZIONI_MAP[k]}
+                </label>`;
             }
             cont.innerHTML = html;
         };
@@ -713,8 +1312,11 @@
         window.salvaPermessiCollab = async () => {
             const uid = document.getElementById('uid-collab-edit').value;
             const nP = Array.from(document.querySelectorAll('.collab-perm-check:checked')).map(c => c.value);
-            await updateDoc(doc(db, "utenti", uid), { permessi_gestione: nP });
-            alert("Permessi salvati!"); chiudiModal('modal-permessi-collaboratore'); window.apriGestioneCollaboratori();
+            try {
+                await updateDoc(doc(db, "utenti", uid), { permessi_gestione: nP });
+                alert("Permessi aggiornati con successo.");
+                chiudiModal('modal-permessi-collaboratore'); window.apriGestioneCollaboratori();
+            } catch(e) { alert("Errore nel salvataggio dei permessi."); }
         };
     </script>
 </body>
