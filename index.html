@@ -373,7 +373,7 @@
             { id: "oggi", label: "Oggi", icon: "🎯", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
             { id: "calendario", label: "Calendario", icon: "📅", href: "calendario.html" },
             { id: "statistiche", label: "Statistiche", icon: "📊", href: "dati_calendario.html" },
-            { id: "rotazioni", label: "Rotazione\nF.Nove", icon: "👥", href: "rotazioni.html", condition: "f9" },
+            { id: "rotazioni", label: "Rotazioni", icon: "👥", href: "rotazioni.html", condition: "f9" },
             { id: "turni", label: "Turni", icon: "🔄", href: "turni.html" },
             { id: "bachecaturni", label: "Bacheca\nTurni", icon: "📌", href: "bacheca_turni.html" },
             { id: "rubrica", label: "Rubrica", icon: "📞", href: "rubrica.html" },
@@ -386,7 +386,6 @@
             { id: "dds", label: "Archivio\nDDS", icon: "📂", href: "dds.html" },
             { id: "impostazioni", label: "Impostazioni", icon: "⚙️", onclick: "window.apriModal('settingsModal')", defaultColor: "#6c757d" },
             { id: "guida", label: "Guida", icon: "📖", href: "guida.html", defaultColor: "#7f8c8d" },
-            { id: "generatore", label: "Generatore", icon: "🔑", href: "generatore.html", condition: "collab", defaultColor: "#cb4335" },
             { id: "admin", label: "Admin", icon: "🔒", href: "admin.html", condition: "admin", defaultColor: "#cb4335" },
             { id: "accessi", label: "Accessi", icon: "🛠️", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#2c3e50" }
         ];
@@ -725,15 +724,12 @@
             window.currentUserEditId = uid;
             
             const isCollab = u.ruolo === 'collaborator';
-            const rotNome = window.ROTAZIONI_MAP[u.rotazione_richiesta] || u.rotazione_richiesta || 'Nessuna/Codice Segreto';
             
             const htmlData = `
                 <div style="margin-bottom:8px;"><strong>Nome:</strong> ${u.nome || '-'}</div>
                 <div style="margin-bottom:8px;"><strong>Cognome:</strong> ${u.cognome || '-'}</div>
                 <div style="margin-bottom:8px;"><strong>Matricola:</strong> ${u.matricola || '-'}</div>
                 <div style="margin-bottom:8px;"><strong>Omonimia:</strong> ${u.progressivo || '-'}</div>
-                <div style="margin-bottom:8px;"><strong>Rotazione Richiesta:</strong> ${rotNome}</div>
-                <div><strong>Data Riposo Singolo:</strong> ${u.data_riposo_singolo ? u.data_riposo_singolo.split('-').reverse().join('/') : '-'}</div>
             `;
             document.getElementById('dettaglio-utente-body').innerHTML = htmlData;
             
