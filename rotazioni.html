@@ -233,7 +233,7 @@
             
             <div id="intro-request">
                 <p style="font-size: 14px; color: #555; text-align: center; margin-bottom: 20px; line-height: 1.5;">
-                    In questa pagina troverai le rotazioni dei turni.<br>Per accedere si deve dare il consenso a condividere i propri dati nelle rotazioni.<br>Puoi richiedere l'accesso qui sotto.
+                    In questa pagina troverai le rotazioni dei turni. Per accedere si deve dare il consenso a condividere i propri dati nelle rotazioni. Puoi richiedere l'accesso qui sotto.
                 </p>
                 <button class="btn" style="background-color: var(--primary);" onclick="mostraFormRichiesta()">Richiedi Accesso</button>
             </div>
@@ -533,10 +533,11 @@
                             let dataRes = await fetch(`${CARTELLA_BASE}/${g.json}?t=${timestamp}`);
                             let jsonData = await dataRes.json();
 
-                            // Generazione dinamica dei "Disponibili" leggendo dal Database Firestore in tempo reale
+                            // Generazione dinamic dei "Disponibili" leggendo dal Database Firestore
                             if (window.getUtentiAbilitatiFirebase) {
                                 let allU = await window.getUtentiAbilitatiFirebase();
-                                let disp51 = {}; let disp6261 = {};
+                                let disp51_arr = []; 
+                                let disp6261_arr = [];
                                 let parts = g.base.split('_');
                                 
                                 if (parts.length >= 3) {
@@ -545,6 +546,8 @@
                                     let y = parseInt(parts[2]);
 
                                     if (m && y) {
+                                        let cNum_1st = stringToNum(`${y}-${m}-1`);
+
                                         allU.forEach(u => {
                                             if (u.data_riposo_singolo) {
                                                 let nomeCompl = (u.cognome + " " + u.nome + " " + (u.progressivo || "")).trim().toUpperCase();
@@ -567,24 +570,35 @@
                                                         else { turni[i.toString()] = "DISP"; }
                                                     }
                                                 }
-                                                if (u.rotazione_richiesta === "disp_5_1") disp51[nomeCompl] = turni;
-                                                if (u.rotazione_richiesta === "disp_6_2_6_1") disp6261[nomeCompl] = turni;
+
+                                                if (u.rotazione_richiesta === "disp_5_1") {
+                                                    let offset = (cNum_1st - dRiposoNum) % 6;
+                                                    if (offset < 0) offset += 6;
+                                                    let sortKey = (6 - offset) % 6; 
+                                                    disp51_arr.push({ nome: nomeCompl, turni: turni, sortKey: sortKey });
+                                                } else if (u.rotazione_richiesta === "disp_6_2_6_1") {
+                                                    let offset = (cNum_1st - dRiposoNum) % 15;
+                                                    if (offset < 0) offset += 15;
+                                                    // Ordiniamo calcolando la distanza dal primo giorno di riposo doppio (che si trova a offset 7)
+                                                    let sortKey = (15 + 7 - offset) % 15; 
+                                                    disp6261_arr.push({ nome: nomeCompl, turni: turni, sortKey: sortKey });
+                                                }
                                             }
                                         });
 
-                                        function ordinaCascata(dict) {
-                                            let arr = Object.keys(dict).map(k => {
-                                                let firstRi = 32;
-                                                for(let i=1; i<=31; i++) { if(dict[k][i.toString()]==="RI") { firstRi = i; break; } }
-                                                return { nome: k, turni: dict[k], firstRi };
-                                            });
-                                            arr.sort((a,b) => a.firstRi - b.firstRi);
-                                            let res = {}; arr.forEach(x => res[x.nome] = x.turni);
-                                            return res;
-                                        }
+                                        // Ordinamento matematico tramite le sortKey per generare la cascata perfetta
+                                        disp51_arr.sort((a, b) => a.sortKey - b.sortKey);
+                                        disp6261_arr.sort((a, b) => a.sortKey - b.sortKey);
 
-                                        if (Object.keys(disp51).length > 0) jsonData["Disponibili 5-1"] = ordinaCascata(disp51);
-                                        if (Object.keys(disp6261).length > 0) jsonData["Disponibili 6-2-6-1"] = ordinaCascata(disp6261);
+                                        // Ricostruzione del dizionario finale per il rendering HTML
+                                        let finalDisp51 = {};
+                                        disp51_arr.forEach(x => finalDisp51[x.nome] = x.turni);
+                                        
+                                        let finalDisp6261 = {};
+                                        disp6261_arr.forEach(x => finalDisp6261[x.nome] = x.turni);
+
+                                        if (Object.keys(finalDisp51).length > 0) jsonData["Disponibili 5-1"] = finalDisp51;
+                                        if (Object.keys(finalDisp6261).length > 0) jsonData["Disponibili 6-2-6-1"] = finalDisp6261;
                                     }
                                 }
                             }
