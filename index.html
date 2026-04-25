@@ -16,7 +16,7 @@
             url.searchParams.set('nocache', new Date().getTime());
             window.location.replace(url.toString());
         } else {
-            const APP_VERSION = "1.7"; 
+            const APP_VERSION = "2.4"; 
             if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
                 if ('caches' in window) { caches.keys().then((names) => { names.forEach(name => caches.delete(name)); }); }
                 if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then((registrations) => { registrations.forEach(registration => registration.unregister()); }); }
@@ -38,7 +38,6 @@
     </script>
 
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     
     <link rel="manifest" href="manifest.json">
@@ -48,7 +47,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <style>
-        :root { --primary: #0056b3; --success: #28a745; --danger: #dc3545; --text-color: #333; }
+        :root { 
+            --primary: #0056b3; 
+            --success: #28a745; 
+            --danger: #dc3545; 
+            --text-color: #333;
+            --label-size: 11px;
+        }
         
         body { 
             font-family: Arial, sans-serif; 
@@ -76,45 +81,42 @@
         
         @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
 
-        /* --- STILI LAYOUT DINAMICO --- */
         #app-container { width: 100%; max-width: 400px; }
         
         /* GRIGLIA */
         .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px 5px; padding: 10px 5px; box-sizing: border-box; }
         .app-grid .app-btn { display: block; text-decoration: none; cursor: pointer; position: relative; }
         .app-grid .app-btn:active { transform: scale(0.9); transition: transform 0.1s; }
-        .app-grid .app-icon { width: 60px; height: 60px; margin: 0 auto 8px auto; border-radius: 16px; color: white; font-size: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: background 0.3s; }
-        .app-grid .app-label { font-size: 11px; color: #1a1a1a; font-weight: bold; text-align: center; line-height: 1.2; text-shadow: 0px 1px 2px rgba(255,255,255,0.8); word-wrap: break-word; }
+        .app-grid .app-icon { width: 60px; height: 60px; margin: 0 auto 8px auto; border-radius: 16px; color: white; font-size: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: background 0.3s; overflow: hidden; }
+        .app-grid .app-label { font-size: var(--label-size); color: #1a1a1a; font-weight: bold; text-align: center; line-height: 1.2; text-shadow: 0px 1px 2px rgba(255,255,255,0.8); word-wrap: break-word; }
 
         /* LISTA */
         .app-list { display: flex; flex-direction: column; gap: 12px; padding: 10px; box-sizing: border-box; }
         .app-list .app-btn { display: flex; align-items: center; background: rgba(255,255,255,0.85); padding: 12px 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.08); text-decoration: none; position: relative; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.4); }
-        .app-list .app-btn:active { transform: scale(0.98); background: rgba(255,255,255,1); }
-        .app-list .app-icon { width: 45px; height: 45px; margin: 0 15px 0 0; border-radius: 12px; color: white; font-size: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .app-list .app-label { font-size: 15px; color: #333; font-weight: bold; margin: 0; text-shadow: none; flex: 1; }
+        .app-list .app-icon { width: 45px; height: 45px; margin: 0 15px 0 0; border-radius: 12px; color: white; font-size: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow: hidden; }
+        .app-list .app-label { font-size: calc(var(--label-size) + 3px); color: #333; font-weight: bold; margin: 0; text-shadow: none; flex: 1; }
+
+        /* MODALITÀ ICONE TRASPARENTI */
+        .transparent-icons .app-icon { background-color: transparent !important; box-shadow: none !important; color: #333 !important; }
+        .transparent-icons.app-grid .app-icon { font-size: 48px !important; }
+        .transparent-icons.app-list .app-icon { font-size: 32px !important; }
 
         /* WIGGLE & EDIT MODE */
         @keyframes wiggle { 0% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } 100% { transform: rotate(-2deg); } }
         .wiggle-mode .app-btn { animation: wiggle 0.3s infinite; cursor: grab; }
-        .wiggle-mode .app-btn:active { cursor: grabbing; }
         .sortable-ghost { opacity: 0.3; transform: scale(0.9); }
-        
         .edit-badge { position: absolute; top: -8px; right: 0px; background: white; color: #333; border-radius: 50%; width: 26px; height: 26px; display: flex; justify-content: center; align-items: center; box-shadow: 0 3px 6px rgba(0,0,0,0.3); font-size: 14px; z-index: 10; border: 1px solid #ddd; pointer-events: none; }
-        .app-list .edit-badge { top: 50%; right: 15px; transform: translateY(-50%); }
 
         .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; }
-        
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; color: var(--text-color); max-height: 90vh; overflow-y: auto; }
-        .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white;}
+        .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; background-color: white;}
         .btn-modal { border: none; border-radius: 8px; padding: 12px; cursor: pointer; font-weight: bold; font-size: 14px; width: 100%; margin-top: 10px; }
         
-        /* IMPOSTAZIONI SPECIFICHE COLOR PICKER */
         .color-picker-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #e9ecef; }
         .color-picker-row label { font-size: 13px; font-weight: bold; color: #555; }
         input[type="color"] { width: 40px; height: 40px; border: none; border-radius: 8px; cursor: pointer; padding: 0; background: transparent; }
-        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-        input[type="color"]::-webkit-color-swatch { border: 2px solid #ccc; border-radius: 8px; }
+        input[type="range"] { width: 100%; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -173,28 +175,37 @@
         </div>
 
         <div id="app-container" class="app-grid"></div>
-        
         <button id="btn-salva-layout" class="btn-action" style="display: none; background: #ff9800; color: white; margin-top: 20px;" onclick="LayoutEngine.toggleEditMode()">✅ Fatto (Salva Layout)</button>
     </div> 
 
     <div id="settingsModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'settingsModal')">
         <div class="modal-content">
             <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('settingsModal')">&times;</span>
-            <h3 style="margin-top: 5px; color: #32325d; text-align: center;">⚙️ Personalizzazione</h3>
+            <h3 style="margin-top: 5px; color: #32325d; text-align: center;">⚙️ Impostazioni</h3>
             
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Sfondo Onda (Dall'alto verso il basso):</label>
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Colori Sfondo Onda:</label>
             <div class="color-picker-row"><label>Colore 1 (Alto)</label><input type="color" id="set-col1"></div>
-            <div class="color-picker-row"><label>Colore 2 (Onda)</label><input type="color" id="set-col2"></div>
+            <div class="color-picker-row"><label>Colore 2 (Centrale)</label><input type="color" id="set-col2"></div>
             <div class="color-picker-row"><label>Colore 3 (Basso)</label><input type="color" id="set-col3"></div>
             
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Sfondo Globale App:</label>
-            <div class="color-picker-row"><label>Colore Base App</label><input type="color" id="set-appbg"></div>
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Colore Base App:</label>
+            <div class="color-picker-row"><label>Sfondo Icone</label><input type="color" id="set-appbg"></div>
 
             <label style="font-size: 12px; color: #666; font-weight: bold;">Visualizzazione:</label>
-            <select id="set-viewmode" class="input-field" style="background: #f8f9fa;">
+            <select id="set-viewmode" class="input-field">
                 <option value="grid">Griglia app</option>
                 <option value="list">Lista</option>
             </select>
+
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Stile Icone:</label>
+            <select id="set-iconstyle" class="input-field">
+                <option value="box">Con Sfondo</option>
+                <option value="transparent">Solo Icona (Trasparente)</option>
+            </select>
+
+            <label style="font-size: 12px; color: #666; font-weight: bold;">Dimensione Testo App:</label>
+            <input type="range" id="set-labelsize" min="10" max="18" step="1">
+            <div style="text-align:center; font-size:10px; color:#999; margin-bottom:15px;">Regola la grandezza dei titoli sotto le icone</div>
 
             <button class="btn-modal" style="background: #ff9800; color: white;" onclick="LayoutEngine.toggleEditMode(); chiudiModal('settingsModal');">✏️ Modifica Layout (Trascina e Ordina)</button>
             <button class="btn-modal" style="background: #17a2b8; color: white;" onclick="apriModal('customAppModal'); chiudiModal('settingsModal');">➕ Aggiungi App Personalizzata</button>
@@ -207,114 +218,113 @@
 
     <div id="editAppModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'editAppModal')">
         <div class="modal-content">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('editAppModal')">&times;</span>
-            <h3 style="margin-top: 5px; color: #32325d; text-align: center;">Modifica Icona</h3>
-            
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer;" onclick="chiudiModal('editAppModal')">&times;</span>
+            <h3 style="text-align: center; color: #32325d;">Modifica App</h3>
             <input type="hidden" id="edit-app-id">
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Nome Etichetta:</label>
-            <input type="text" id="edit-app-label" class="input-field" placeholder="Es. Turni">
             
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Icona (Emoji, Lettera o Numero):</label>
-            <input type="text" id="edit-app-icon" class="input-field" placeholder="Es. 🔄 o A" maxlength="2">
+            <label style="font-size: 11px; font-weight: bold; color: #666;">Titolo:</label>
+            <input type="text" id="edit-app-label" class="input-field">
             
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Colore Sfondo Specifico:</label>
-            <div class="color-picker-row"><label>Sfondo Icona</label><input type="color" id="edit-app-color"></div>
+            <label style="font-size: 11px; font-weight: bold; color: #666;">Icona (Emoji o Immagine):</label>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <input type="text" id="edit-app-icon" class="input-field" style="margin-bottom:0;" placeholder="Emoji" maxlength="2">
+                <button class="btn-modal" style="margin:0; background:#e9ecef; color:#333; width:auto; padding:0 15px; font-size:20px;" onclick="document.getElementById('edit-upload').click()">🖼️</button>
+                <input type="file" id="edit-upload" accept="image/*" style="display:none;" onchange="LayoutEngine.handleImageUpload(event, 'edit')">
+            </div>
+            
+            <div id="edit-app-img-preview" style="display:none; text-align:center; margin-bottom:10px; background:#f8f9fa; padding:10px; border-radius:8px;">
+                <img id="edit-app-img-preview-src" src="" style="width:50px; height:50px; border-radius:10px; object-fit:cover; vertical-align:middle; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+                <button class="btn-modal" style="background:var(--danger); color:white; width:auto; padding:5px 10px; margin-left:10px;" onclick="LayoutEngine.rimuoviImmagine('edit')">Rimuovi Foto</button>
+            </div>
+            <input type="hidden" id="edit-app-img-data">
 
-            <button class="btn-modal" style="background: var(--success); color: white;" onclick="LayoutEngine.salvaModificaSingolaApp()">Salva Modifiche</button>
-            <button id="btn-elimina-custom" class="btn-modal" style="background: transparent; color: var(--danger); border: 1px dashed var(--danger); display: none;" onclick="LayoutEngine.eliminaAppCorrente()">🗑️ Elimina App Personalizzata</button>
+            <div class="color-picker-row"><label>Colore Specifco</label><input type="color" id="edit-app-color"></div>
+            
+            <button class="btn-modal" style="background: var(--success); color: white;" onclick="LayoutEngine.salvaModificaSingolaApp()">Conferma</button>
+            <button id="btn-elimina-custom" class="btn-modal" style="background: transparent; color: var(--danger); border: 1px dashed var(--danger); display: none;" onclick="LayoutEngine.eliminaAppCorrente()">🗑️ Elimina</button>
         </div>
     </div>
 
     <div id="customAppModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'customAppModal')">
         <div class="modal-content">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('customAppModal')">&times;</span>
-            <h3 style="margin-top: 5px; color: #32325d; text-align: center;">➕ Nuova App</h3>
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer;" onclick="chiudiModal('customAppModal')">&times;</span>
+            <h3 style="text-align: center; color: #32325d;">➕ Nuova App</h3>
             
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Nome (Etichetta):</label>
-            <input type="text" id="new-app-label" class="input-field" placeholder="Es. Portale Esterno">
+            <input type="text" id="new-app-label" class="input-field" placeholder="Nome App">
+            <input type="url" id="new-app-url" class="input-field" placeholder="Link: https://...">
             
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Link (URL):</label>
-            <input type="url" id="new-app-url" class="input-field" placeholder="https://...">
+            <label style="font-size: 11px; font-weight: bold; color: #666;">Icona (Emoji o Immagine):</label>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <input type="text" id="new-app-icon" class="input-field" style="margin-bottom:0;" placeholder="Emoji (es. 🚀)" maxlength="2">
+                <button class="btn-modal" style="margin:0; background:#e9ecef; color:#333; width:auto; padding:0 15px; font-size:20px;" onclick="document.getElementById('new-upload').click()">🖼️</button>
+                <input type="file" id="new-upload" accept="image/*" style="display:none;" onchange="LayoutEngine.handleImageUpload(event, 'new')">
+            </div>
 
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Icona (Emoji o Lettera):</label>
-            <input type="text" id="new-app-icon" class="input-field" placeholder="Es. 🌍" maxlength="2">
+            <div id="new-app-img-preview" style="display:none; text-align:center; margin-bottom:10px; background:#f8f9fa; padding:10px; border-radius:8px;">
+                <img id="new-app-img-preview-src" src="" style="width:50px; height:50px; border-radius:10px; object-fit:cover; vertical-align:middle; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+                <button class="btn-modal" style="background:var(--danger); color:white; width:auto; padding:5px 10px; margin-left:10px;" onclick="LayoutEngine.rimuoviImmagine('new')">Rimuovi Foto</button>
+            </div>
+            <input type="hidden" id="new-app-img-data">
 
-            <button class="btn-modal" style="background: var(--success); color: white;" onclick="LayoutEngine.creaAppPersonalizzata()">Crea App</button>
+            <button class="btn-modal" style="background: var(--success); color: white;" onclick="LayoutEngine.creaAppPersonalizzata()">Crea</button>
         </div>
     </div>
 
     <div id="profileModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'profileModal')">
         <div class="modal-content">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('profileModal')">&times;</span>
-            <h3 style="margin-top: 5px; color: #32325d; text-align: center;">Profilo Utente</h3>
-            <div id="adminBadge" style="display:none; background:#cce5ff; color:#004085; border:1px dashed #0056b3; padding:8px; border-radius:8px; text-align:center; font-size:13px; font-weight:bold; margin-bottom:15px;"></div>
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Email:</label>
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer;" onclick="chiudiModal('profileModal')">&times;</span>
+            <h3 style="text-align: center; color: #32325d;">Profilo</h3>
+            <div id="adminBadge" style="display:none;"></div>
             <input type="text" id="profileEmail" class="input-field" disabled style="background: #f8f9fa;">
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Nome:</label>
-            <input type="text" id="profileNome" class="input-field" placeholder="Inserisci nome">
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Cognome:</label>
-            <input type="text" id="profileCognome" class="input-field" placeholder="Inserisci cognome">
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Numero omonimia (Facoltativo):</label>
-            <input type="text" id="profileProgressivo" class="input-field" placeholder="es. 02, 03 ecc.">
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Matricola:</label>
-            <input type="text" id="profileMatricola" class="input-field" placeholder="Inserisci matricola">
-            <button id="btnSalvaProfilo" class="btn-modal" style="background: var(--success); color: white;" onclick="salvaProfilo()">Salva Modifiche</button>
-            <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 20px 0;">
-            <button class="btn-modal" style="background: #525f7f; color: white;" onclick="logout()">Esci (Logout)</button>
+            <input type="text" id="profileNome" class="input-field" placeholder="Nome">
+            <input type="text" id="profileCognome" class="input-field" placeholder="Cognome">
+            <input type="text" id="profileProgressivo" class="input-field" placeholder="Omonimia (es. 02)">
+            <input type="text" id="profileMatricola" class="input-field" placeholder="Matricola">
+            <button class="btn-modal" style="background: var(--success); color: white;" onclick="salvaProfilo()">Salva</button>
+            <button class="btn-modal" style="background: #525f7f; color: white;" onclick="logout()">Logout</button>
         </div>
     </div>
 
     <div id="authModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'authModal')">
         <div class="modal-content" style="text-align: center;">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('authModal')">&times;</span>
-            <h2 id="authModalTitle" style="margin-top: 5px; margin-bottom: 20px; color: #32325d; font-size: 26px;">☁️ Accedi</h2>
-            <input type="email" id="emailInput" placeholder="La tua email" class="input-field">
+            <h2 id="authModalTitle">☁️ Accedi</h2>
+            <input type="email" id="emailInput" placeholder="Email" class="input-field">
             <input type="password" id="passwordInput" placeholder="Password" class="input-field">
             <div id="registerFields" style="display: none; text-align: left;">
-                <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 15px 0;">
-                <input type="text" id="regNome" class="input-field" placeholder="Il tuo nome *">
-                <input type="text" id="regCognome" class="input-field" placeholder="Il tuo cognome *">
-                <input type="text" id="regMatricola" class="input-field" placeholder="La tua matricola *">
-                <input type="text" id="regProg" class="input-field" placeholder="Omonimia es. 02 (facoltativo)">
+                <input type="text" id="regNome" class="input-field" placeholder="Nome *">
+                <input type="text" id="regCognome" class="input-field" placeholder="Cognome *">
+                <input type="text" id="regMatricola" class="input-field" placeholder="Matricola *">
+                <input type="text" id="regProg" class="input-field" placeholder="Omonimia">
             </div>
-            <div id="authError" style="color: var(--danger); font-size: 13px; margin-bottom: 15px; font-weight: bold; display: none;"></div>
+            <div id="authError" style="color: var(--danger); display: none; margin-bottom: 10px;"></div>
             <button id="btnEseguiAuth" class="btn-modal" style="background: #32325d; color: white;" onclick="eseguiAuth()">Accedi</button>
-            <div style="margin-top: 15px;">
-                <a href="#" id="authSwitchLink" onclick="switchAuthMode(); return false;" style="font-size: 13px; color: #0056b3; font-weight: bold; text-decoration: underline;">Non sei registrato? Registrati qui</a>
-            </div>
-            <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 20px 0;">
-            <button class="btn-modal" style="background: #ea4335; color: white;" onclick="loginGoogle()">☁️ Accedi con Google</button>
+            <div style="margin-top: 15px;"><a href="#" id="authSwitchLink" onclick="switchAuthMode(); return false;">Registrati qui</a></div>
+            <hr><button class="btn-modal" style="background: #ea4335; color: white;" onclick="loginGoogle()">☁️ Accedi con Google</button>
         </div>
     </div>
 
     <div id="modal-dati-obbligatori" class="modal-overlay">
         <div class="modal-content" style="text-align: center;">
-            <h3 style="color: #32325d; margin-top: 5px;">📝 Dati Obbligatori</h3>
-            <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Per la sicurezza dei dati presenti in Utility, per accedere è necessario inserire i tuoi dati reali.</p>
+            <h3>📝 Dati Obbligatori</h3>
+            <p style="font-size: 13px; color: #666;">Per la sicurezza dei dati inserisci i tuoi dati reali.</p>
             <input type="text" id="obbl-nome" placeholder="Nome *" class="input-field">
             <input type="text" id="obbl-cognome" placeholder="Cognome *" class="input-field">
             <input type="text" id="obbl-matricola" placeholder="Matricola *" class="input-field">
-            <input type="text" id="obbl-prog" placeholder="Numero omonimia (Facoltativo)" class="input-field">
+            <input type="text" id="obbl-prog" placeholder="Omonimia (es. 02)" class="input-field">
             <button class="btn-modal" style="background: var(--success); color: white;" onclick="salvaDatiObbligatori()">Salva e Continua</button>
         </div>
     </div>
 
     <div id="modal-gestione" class="modal-overlay" onclick="chiudiSuSfondo(event, 'modal-gestione')">
         <div class="modal-content" style="max-width: 400px;">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('modal-gestione')">&times;</span>
-            <h3 style="margin-top: 5px; margin-bottom: 15px; color: #32325d;">Utenti App</h3>
-            <div id="lista-utenti-accessi" style="margin-top: 15px; max-height: 60vh; overflow-y: auto;"></div>
+            <h3 style="color: #32325d;">Utenti App</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <div style="background: var(--primary); color: white; padding: 6px; border-radius: 8px; flex: 1; text-align: center;">Totali: <span id="badge-totali">0</span></div>
+                <div style="background: var(--success); color: white; padding: 6px; border-radius: 8px; flex: 1; text-align: center;">Oggi: <span id="badge-oggi">0</span></div>
+            </div>
+            <div id="lista-utenti-accessi" style="max-height: 60vh; overflow-y: auto;"></div>
         </div>
     </div>
-
-    <script>
-        window.apriModal = (id, authMode) => { 
-            document.getElementById(id).style.display = 'flex'; 
-            if(id === 'authModal' && authMode) { currentAuthMode = authMode; aggiornaUIAuth(); }
-        };
-        window.chiudiModal = (id) => { document.getElementById(id).style.display = 'none'; };
-        window.chiudiSuSfondo = (e, id) => { if (e.target.id === id) chiudiModal(id); };
-    </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
@@ -323,16 +333,16 @@
 
         const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", storageBucket: "utility-haze.firebasestorage.app", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
         const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const provider = new GoogleAuthProvider();
-        
         const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2"; 
         const COLLABORATORE_UIDS = ["INSERISCI_QUI_UID_1", "INSERISCI_QUI_UID_2"]; 
         let globalIsAdmin = false; let globalIsCollab = false; let globalIsF9 = false;
 
+        // --- DEFINIZIONE APP DI SISTEMA ---
         const DEFAULT_APPS = [
             { id: "oggi", label: "Oggi", icon: "🎯", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
             { id: "calendario", label: "Calendario", icon: "📅", href: "calendario.html" },
             { id: "statistiche", label: "Statistiche", icon: "📊", href: "dati_calendario.html" },
-            { id: "rotazionef9", label: "Rotazione\nF.Nove", icon: "🚢", href: "rotazionef9.html", condition: "f9" },
+            { id: "rotazioni", label: "Rotazione\nF.Nove", icon: "👥", href: "rotazioni.html", condition: "f9" },
             { id: "turni", label: "Turni", icon: "🔄", href: "turni.html" },
             { id: "bachecaturni", label: "Bacheca\nTurni", icon: "📌", href: "bacheca_turni.html" },
             { id: "rubrica", label: "Rubrica", icon: "📞", href: "rubrica.html" },
@@ -351,47 +361,70 @@
         ];
 
         window.LayoutEngine = {
-            // Colori di base ripristinati. appBg a #5dade2 (soft) apre saturo nel picker. 
-            // Invertito il rendering c1/c3 nell'SVG sotto.
-            prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#5dade2", view: "grid", apps: [] },
+            prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#5dade2", view: "grid", iconStyle: "box", fontSize: 11, apps: [] },
             isEditMode: false,
             sortableInstance: null,
             
             init: function(firebasePrefsStr) {
                 const appDataStr = localStorage.getItem('myTurniApp');
                 globalIsF9 = (appDataStr && appDataStr.toLowerCase().includes('nove'));
-
                 let localStr = localStorage.getItem('preferenze_layout_haze');
                 let targetStr = firebasePrefsStr || localStr;
-
                 if (targetStr) {
                     try { 
                         let parsed = JSON.parse(targetStr);
                         this.prefs = { ...this.prefs, ...parsed };
                         this.mergeWithDefaults();
                     } catch(e) {}
-                } else {
-                    this.prefs.apps = JSON.parse(JSON.stringify(DEFAULT_APPS));
-                }
-                
-                this.applicaSfondo();
+                } else { this.prefs.apps = JSON.parse(JSON.stringify(DEFAULT_APPS)); }
+                this.applicaGrafica();
                 this.popolaModaleImpostazioni();
                 this.render();
             },
 
             mergeWithDefaults: function() {
-                let currentIds = this.prefs.apps.map(a => a.id);
-                DEFAULT_APPS.forEach(defApp => {
-                    if(!currentIds.includes(defApp.id)) this.prefs.apps.push(JSON.parse(JSON.stringify(defApp)));
+                // 1. Rimuovi vecchie app di sistema non più presenti nel codice sorgente
+                const defaultIds = DEFAULT_APPS.map(a => a.id);
+                this.prefs.apps = this.prefs.apps.filter(app => app.id.startsWith('custom_') || defaultIds.includes(app.id));
+
+                // 2. Sincronizza (aggiorna) i collegamenti delle app di sistema
+                this.prefs.apps.forEach(app => {
+                    if (!app.id.startsWith('custom_')) {
+                        const def = DEFAULT_APPS.find(d => d.id === app.id);
+                        if (def) {
+                            if (def.href) app.href = def.href; else delete app.href;
+                            if (def.onclick) app.onclick = def.onclick; else delete app.onclick;
+                            if (def.condition) app.condition = def.condition; else delete app.condition;
+                        }
+                    }
+                });
+
+                // 3. Aggiungi le NUOVE app di sistema nella posizione corretta
+                DEFAULT_APPS.forEach((defApp, defaultIndex) => {
+                    let currentIds = this.prefs.apps.map(a => a.id);
+                    if(!currentIds.includes(defApp.id)) {
+                        let insertIndex = this.prefs.apps.length; // Di default alla fine
+                        // Cerca l'app precedente di DEFAULT_APPS nel layout dell'utente
+                        if (defaultIndex > 0) {
+                            let prevAppId = DEFAULT_APPS[defaultIndex - 1].id;
+                            let userIndex = this.prefs.apps.findIndex(a => a.id === prevAppId);
+                            if (userIndex !== -1) insertIndex = userIndex + 1;
+                        } else if (defaultIndex === 0) {
+                            insertIndex = 0;
+                        }
+                        this.prefs.apps.splice(insertIndex, 0, JSON.parse(JSON.stringify(defApp)));
+                    }
                 });
             },
 
-            applicaSfondo: function() {
+            applicaGrafica: function() {
                 const c1 = encodeURIComponent(this.prefs.c1); const c2 = encodeURIComponent(this.prefs.c2); const c3 = encodeURIComponent(this.prefs.c3);
-                // Inversione logica c1/c3 per far corrispondere Alto con Alto e Basso con Basso
-                const svg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Crect width='100' height='100' fill='${c3}'/%3E%3Cpath d='M0,60 C25,80 45,80 65,55 C80,35 90,35 100,55 L100,0 L0,0 Z' fill='${c2}'/%3E%3Cpath d='M0,40 C20,60 40,60 60,40 C80,20 90,20 100,45 L100,0 L0,0 Z' fill='${c1}'/%3E%3C/svg%3E`;
+                const svg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Crect width='100' height='100' fill='${c3}'/%3E%3Cpath d='M0,60 C35,90 65,30 100,60 L100,0 L0,0 Z' fill='${c2}'/%3E%3Cpath d='M0,45 C35,65 65,25 100,45 L100,0 L0,0 Z' fill='${c1}'/%3E%3C/svg%3E`;
                 document.body.style.backgroundImage = `url("${svg}")`;
-                document.getElementById('app-container').className = this.prefs.view === 'list' ? 'app-list' : 'app-grid';
+                document.documentElement.style.setProperty('--label-size', this.prefs.fontSize + 'px');
+                let baseClass = this.prefs.view === 'list' ? 'app-list' : 'app-grid';
+                if (this.prefs.iconStyle === 'transparent') baseClass += ' transparent-icons';
+                document.getElementById('app-container').className = baseClass;
             },
 
             popolaModaleImpostazioni: function() {
@@ -400,58 +433,85 @@
                 document.getElementById('set-col3').value = this.prefs.c3;
                 document.getElementById('set-appbg').value = this.prefs.appBg;
                 document.getElementById('set-viewmode').value = this.prefs.view;
+                document.getElementById('set-iconstyle').value = this.prefs.iconStyle || 'box';
+                document.getElementById('set-labelsize').value = this.prefs.fontSize || 11;
             },
 
             render: function() {
                 const container = document.getElementById('app-container');
                 container.innerHTML = '';
-                if(this.isEditMode) container.classList.add('wiggle-mode');
-                else container.classList.remove('wiggle-mode');
-
+                if(this.isEditMode) container.classList.add('wiggle-mode'); else container.classList.remove('wiggle-mode');
                 this.prefs.apps.forEach(app => {
                     if (app.condition === 'f9' && !globalIsF9) return;
                     if (app.condition === 'admin' && !globalIsAdmin) return;
                     if (app.condition === 'collab' && !(globalIsAdmin || globalIsCollab)) return;
-
+                    
                     const finalColor = app.color || app.defaultColor || this.prefs.appBg;
                     const isLink = app.href ? `href="${app.href}"` : `onclick="${app.onclick}"`;
-                    
                     const editHandler = this.isEditMode ? `onclick="event.preventDefault(); window.LayoutEngine.apriEditorApp('${app.id}');"` : isLink;
-                    
                     const labelHtml = app.label.replace('\n', '<br>');
                     const badgeHtml = this.isEditMode ? `<div class="edit-badge">✏️</div>` : '';
+                    
+                    let iconStyle = `background-color: ${finalColor};`;
+                    let iconContent = app.icon || "";
+                    if (app.image) {
+                        iconStyle += ` background-image: url('${app.image}'); background-size: cover; background-position: center;`;
+                        iconContent = "";
+                    }
 
                     container.innerHTML += `
                         <a ${editHandler} class="app-btn" id="btn-${app.id}">
                             ${badgeHtml}
-                            <div class="app-icon" style="background: ${finalColor};">${app.icon}</div>
+                            <div class="app-icon" style="${iconStyle}">${iconContent}</div>
                             <div class="app-label">${labelHtml}</div>
-                        </a>
-                    `;
+                        </a>`;
                 });
+            },
+
+            handleImageUpload: function(event, modalType) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX = 120;
+                        let w = img.width; let h = img.height;
+                        if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } } 
+                        else { if (h > MAX) { w *= MAX / h; h = MAX; } }
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        const dataUrl = canvas.toDataURL('image/webp', 0.8);
+                        
+                        document.getElementById(modalType + '-app-img-data').value = dataUrl;
+                        document.getElementById(modalType + '-app-img-preview-src').src = dataUrl;
+                        document.getElementById(modalType + '-app-img-preview').style.display = 'block';
+                        document.getElementById(modalType + '-app-icon').value = ""; 
+                    }
+                    img.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            },
+
+            rimuoviImmagine: function(modalType) {
+                document.getElementById(modalType + '-app-img-data').value = "";
+                document.getElementById(modalType + '-app-img-preview').style.display = 'none';
+                document.getElementById(modalType + '-app-img-preview-src').src = "";
             },
 
             toggleEditMode: function() {
                 this.isEditMode = !this.isEditMode;
                 const container = document.getElementById('app-container');
                 document.getElementById('btn-salva-layout').style.display = this.isEditMode ? 'block' : 'none';
-                
                 this.render(); 
-
                 if(this.isEditMode) {
                     this.sortableInstance = new Sortable(container, {
-                        animation: 200,          
-                        delay: 150,              
-                        delayOnTouchOnly: true,
-                        ghostClass: "sortable-ghost",
-                        onEnd: (evt) => {
-                            this.aggiornaOrdineDaDOM();
-                        }
+                        animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: "sortable-ghost",
+                        onEnd: () => { this.aggiornaOrdineDaDOM(); }
                     });
-                } else {
-                    if(this.sortableInstance) this.sortableInstance.destroy();
-                    this.sincronizzaConFirebase(); 
-                }
+                } else { if(this.sortableInstance) this.sortableInstance.destroy(); this.sincronizzaConFirebase(); }
             },
 
             aggiornaOrdineDaDOM: function() {
@@ -462,25 +522,23 @@
                     const app = this.prefs.apps.find(a => a.id === id);
                     if (app) nuovoOrdine.push(app);
                 });
-                
-                this.prefs.apps.forEach(app => {
-                    if (!nuovoOrdine.find(a => a.id === app.id)) {
-                        nuovoOrdine.push(app);
-                    }
-                });
-                
+                this.prefs.apps.forEach(app => { if (!nuovoOrdine.find(a => a.id === app.id)) nuovoOrdine.push(app); });
                 this.prefs.apps = nuovoOrdine;
             },
 
             apriEditorApp: function(appId) {
-                const app = this.prefs.apps.find(a => a.id === appId);
-                if(!app) return;
+                const app = this.prefs.apps.find(a => a.id === appId); if(!app) return;
                 document.getElementById('edit-app-id').value = app.id;
                 document.getElementById('edit-app-label').value = app.label.replace('\n', ' ');
-                document.getElementById('edit-app-icon').value = app.icon;
-                
+                document.getElementById('edit-app-icon').value = app.icon || "";
                 document.getElementById('edit-app-color').value = app.color || app.defaultColor || this.prefs.appBg || "#5dade2";
                 
+                if (app.image) {
+                    document.getElementById('edit-app-img-data').value = app.image;
+                    document.getElementById('edit-app-img-preview-src').src = app.image;
+                    document.getElementById('edit-app-img-preview').style.display = 'block';
+                } else { this.rimuoviImmagine('edit'); }
+
                 document.getElementById('btn-elimina-custom').style.display = app.id.startsWith('custom_') ? 'block' : 'none';
                 window.apriModal('editAppModal');
             },
@@ -490,35 +548,50 @@
                 const index = this.prefs.apps.findIndex(a => a.id === id);
                 if(index > -1) {
                     this.prefs.apps[index].label = document.getElementById('edit-app-label').value;
-                    this.prefs.apps[index].icon = document.getElementById('edit-app-icon').value || "🔹";
                     this.prefs.apps[index].color = document.getElementById('edit-app-color').value;
+                    
+                    const imgData = document.getElementById('edit-app-img-data').value;
+                    if (imgData) {
+                        this.prefs.apps[index].image = imgData;
+                        this.prefs.apps[index].icon = "";
+                    } else {
+                        delete this.prefs.apps[index].image;
+                        this.prefs.apps[index].icon = document.getElementById('edit-app-icon').value || "🔹";
+                    }
                 }
-                window.chiudiModal('editAppModal');
-                this.render();
+                window.chiudiModal('editAppModal'); this.render();
             },
 
             creaAppPersonalizzata: function() {
                 const label = document.getElementById('new-app-label').value.trim();
                 let url = document.getElementById('new-app-url').value.trim();
-                const icon = document.getElementById('new-app-icon').value.trim() || "🔗";
-                if(!label || !url) { alert("Nome e Link sono obbligatori."); return; }
+                if(!label || !url) { alert("Dati mancanti"); return; }
                 if(!url.startsWith('http')) url = 'https://' + url;
-
-                const newApp = {
-                    id: "custom_" + Date.now(),
-                    label: label, icon: icon, href: url, color: this.prefs.appBg || "#5dade2"
+                
+                const imgData = document.getElementById('new-app-img-data').value;
+                const newApp = { 
+                    id: "custom_" + Date.now(), 
+                    label: label, 
+                    href: url, 
+                    color: this.prefs.appBg 
                 };
-                this.prefs.apps.push(newApp);
-                window.chiudiModal('customAppModal');
-                this.sincronizzaConFirebase();
-                this.render();
+                
+                if (imgData) { newApp.image = imgData; } 
+                else { newApp.icon = document.getElementById('new-app-icon').value || "🔗"; }
+
+                this.prefs.apps.push(newApp); 
+                window.chiudiModal('customAppModal'); 
+                
+                document.getElementById('new-app-label').value = ""; document.getElementById('new-app-url').value = "";
+                document.getElementById('new-app-icon').value = ""; this.rimuoviImmagine('new');
+
+                this.sincronizzaConFirebase(); this.render();
             },
 
             eliminaAppCorrente: function() {
                 const id = document.getElementById('edit-app-id').value;
                 this.prefs.apps = this.prefs.apps.filter(a => a.id !== id);
-                window.chiudiModal('editAppModal');
-                this.render();
+                window.chiudiModal('editAppModal'); this.render();
             },
 
             salvaPreferenzeGlobali: function() {
@@ -527,63 +600,62 @@
                 this.prefs.c3 = document.getElementById('set-col3').value;
                 this.prefs.appBg = document.getElementById('set-appbg').value;
                 this.prefs.view = document.getElementById('set-viewmode').value;
-                
-                this.applicaSfondo();
-                this.render();
-                window.chiudiModal('settingsModal');
-                this.sincronizzaConFirebase();
+                this.prefs.iconStyle = document.getElementById('set-iconstyle').value;
+                this.prefs.fontSize = parseInt(document.getElementById('set-labelsize').value);
+                this.applicaGrafica(); this.render(); window.chiudiModal('settingsModal'); this.sincronizzaConFirebase();
             },
 
             sincronizzaConFirebase: async function() {
-                const str = JSON.stringify(this.prefs);
-                localStorage.setItem('preferenze_layout_haze', str);
-                if (auth.currentUser) {
-                    try { await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_layout: str }, { merge: true }); } 
-                    catch(e) {}
-                }
+                const str = JSON.stringify(this.prefs); localStorage.setItem('preferenze_layout_haze', str);
+                if (auth.currentUser) await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_layout: str }, { merge: true });
             },
 
             ripristinaPredefiniti: async function() {
-                if(!confirm("Vuoi ripristinare grafica e tasti originali? I tuoi link personalizzati verranno cancellati.")) return;
+                if(!confirm("Ripristinare tutto?")) return;
                 localStorage.removeItem('preferenze_layout_haze');
-                if (auth.currentUser) {
-                    try { await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_layout: null }, { merge: true }); } catch(e){}
-                }
+                if (auth.currentUser) await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_layout: null }, { merge: true });
                 location.reload();
             }
         };
 
-        // --- SISTEMA AUTENTICAZIONE E LOGICA BASE ---
+        window.apriModal = (id, authMode) => { 
+            document.getElementById(id).style.display = 'flex'; 
+            if(id === 'authModal' && authMode) { currentAuthMode = authMode; window.aggiornaUIAuth(); }
+        };
+        window.chiudiModal = (id) => { document.getElementById(id).style.display = 'none'; };
+        window.chiudiSuSfondo = (e, id) => { if (e.target.id === id) window.chiudiModal(id); };
+
         window.apriBachecaUtility = () => {
-            const timestamp = Date.now();
-            localStorage.setItem('ultimo_accesso_bacheca', timestamp);
+            const timestamp = Date.now(); localStorage.setItem('ultimo_accesso_bacheca', timestamp);
             document.getElementById('badge-messaggi').style.display = 'none';
             document.getElementById('banner-nuovo-messaggio').style.display = 'none';
-            document.getElementById('banner-dds-alert').style.display = 'none';
-            if (auth.currentUser) setDoc(doc(db, "utenti", auth.currentUser.uid), { ultimo_accesso_bacheca: timestamp }, { merge: true }).catch(()=>{});
+            if (auth.currentUser) setDoc(doc(db, "utenti", auth.currentUser.uid), { ultimo_accesso_bacheca: timestamp }, { merge: true });
             window.location.href = 'bacheca_utility.html';
         };
 
         window.apriGestioneAccessi = async () => {
-            apriModal('modal-gestione');
+            window.apriModal('modal-gestione');
             const container = document.getElementById('lista-utenti-accessi');
-            container.innerHTML = `<div style="text-align:center; color:#666; padding:20px;">Caricamento...</div>`;
+            const bTot = document.getElementById('badge-totali'); const bOggi = document.getElementById('badge-oggi');
+            container.innerHTML = `<div style="text-align:center; padding:20px;">Attendere...</div>`;
             try {
                 const snap = await getDocs(collection(db, "utenti"));
-                let html = ""; const oggiStr = new Date().toISOString().split('T')[0];
+                let htmlOggi = ""; let htmlAltri = ""; let tot = 0; let oggi = 0;
+                const oggiStr = new Date().toISOString().split('T')[0];
                 snap.forEach(d => {
-                    const u = d.data(); const isBanned = u.app_banned === true;
-                    const omo = u.progressivo ? ` ${u.progressivo}` : '';
-                    const fullName = `${u.cognome || ''} ${u.nome || ''}${omo}`.trim() || 'Sconosciuto';
-                    const dotOggi = (u.last_app_access === oggiStr) ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:5px;"></span>` : '';
-                    html += `<div style="display:flex; justify-content:space-between; align-items:center; background:${isBanned ? '#fff5f5' : '#f8f9fa'}; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid ${isBanned ? '#ffc9c9' : '#e9ecef'};">
-                        <div><div style="font-weight:bold; font-size:14px; color:#32325d;">${fullName}${dotOggi}</div><div style="font-size:11px; color:#666;">(Matr. ${u.matricola || '??'})</div></div>
-                        <button style="background:transparent; border:2px solid ${isBanned ? 'var(--success)' : 'var(--danger)'}; color:${isBanned ? 'var(--success)' : 'var(--danger)'}; padding:6px 10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="toggleAppBan('${d.id}', ${!isBanned})">${isBanned ? 'Sblocca' : 'Blocca'}</button>
+                    const u = d.data(); tot++; const isOggi = (u.last_app_access === oggiStr); if (isOggi) oggi++;
+                    const isBanned = u.app_banned === true; const fullName = `${u.cognome || ''} ${u.nome || ''} ${u.progressivo || ''}`.trim() || 'Sconosciuto';
+                    const dot = isOggi ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:5px;"></span>` : '';
+                    const riga = `<div style="display:flex; justify-content:space-between; align-items:center; background:${isBanned ? '#fff5f5' : '#f8f9fa'}; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid ${isBanned ? '#ffc9c9' : '#e9ecef'};">
+                        <div><div style="font-weight:bold; font-size:14px;">${fullName}${dot}</div><div style="font-size:11px;">(Matr. ${u.matricola || '??'})</div></div>
+                        <button style="border:2px solid ${isBanned ? 'var(--success)' : 'var(--danger)'}; color:${isBanned ? 'var(--success)' : 'var(--danger)'}; background:none; padding:6px 10px; border-radius:8px; font-weight:bold;" onclick="toggleAppBan('${d.id}', ${!isBanned})">${isBanned ? 'Sblocca' : 'Blocca'}</button>
                     </div>`;
+                    if (isOggi) htmlOggi += riga; else htmlAltri += riga;
                 });
-                container.innerHTML = html;
+                container.innerHTML = htmlOggi + htmlAltri; bTot.innerText = tot; bOggi.innerText = oggi;
             } catch(e) { container.innerHTML = "Errore."; }
         };
+
         window.toggleAppBan = async (uid, status) => { if(confirm("Confermi?")) { await setDoc(doc(db, "utenti", uid), { app_banned: status }, { merge: true }); window.apriGestioneAccessi(); } };
 
         let currentAuthMode = 'login';
@@ -592,26 +664,24 @@
             document.getElementById('authModalTitle').innerText = currentAuthMode === 'login' ? "☁️ Accedi" : "📝 Registrati";
             document.getElementById('btnEseguiAuth').innerText = currentAuthMode === 'login' ? "Accedi" : "Registrati";
             document.getElementById('registerFields').style.display = currentAuthMode === 'login' ? "none" : "block";
-            document.getElementById('authSwitchLink').innerText = currentAuthMode === 'login' ? "Non sei registrato? Registrati qui" : "Sei già registrato? Accedi qui";
+            document.getElementById('authSwitchLink').innerText = currentAuthMode === 'login' ? "Registrati qui" : "Accedi qui";
         };
 
         window.eseguiAuth = async () => {
             const email = document.getElementById('emailInput').value.trim(); const pwd = document.getElementById('passwordInput').value;
             const err = document.getElementById('authError'); err.style.display='none';
-            if (!email || !pwd) { err.innerText = "Inserisci email e password."; err.style.display='block'; return; }
+            if (!email || !pwd) { err.innerText = "Dati mancanti."; err.style.display='block'; return; }
             if (currentAuthMode === 'login') {
-                try { await signInWithEmailAndPassword(auth, email, pwd); chiudiModal('authModal'); } catch (e) { err.innerText = "Email o Password errata."; err.style.display='block'; }
+                try { await signInWithEmailAndPassword(auth, email, pwd); window.chiudiModal('authModal'); } catch (e) { err.innerText = "Email o Pass errata."; err.style.display='block'; }
             } else {
                 const nome = document.getElementById('regNome').value.trim(); const cognome = document.getElementById('regCognome').value.trim(); const matricola = document.getElementById('regMatricola').value.trim();
-                if (!nome || !cognome || !matricola) { err.innerText = "Nome, Cognome e Matricola obbligatori."; err.style.display='block'; return; }
+                if (!nome || !cognome || !matricola) { err.innerText = "Campi obbligatori."; err.style.display='block'; return; }
                 try {
                     const res = await createUserWithEmailAndPassword(auth, email, pwd);
-                    const profileData = { nome, cognome, matricola, progressivo: document.getElementById('regProg').value.trim() };
-                    await setDoc(doc(db, "utenti", res.user.uid), profileData, { merge: true });
-                    await setDoc(doc(db, "rubrica", res.user.uid), profileData, { merge: true });
-                    localStorage.setItem('backup_profilo_haze', JSON.stringify(profileData));
-                    chiudiModal('authModal');
-                } catch (e) { err.innerText = "Errore registrazione."; err.style.display='block'; }
+                    const p = { nome, cognome, matricola, progressivo: document.getElementById('regProg').value.trim() };
+                    await setDoc(doc(db, "utenti", res.user.uid), p, { merge: true });
+                    window.chiudiModal('authModal');
+                } catch (e) { err.innerText = "Errore."; err.style.display='block'; }
             }
         };
 
@@ -619,73 +689,41 @@
         window.logout = () => signOut(auth);
 
         window.salvaDatiObbligatori = async () => {
-            if (!auth.currentUser) return;
-            const nome = document.getElementById('obbl-nome').value.trim(); const cognome = document.getElementById('obbl-cognome').value.trim(); const matricola = document.getElementById('obbl-matricola').value.trim();
-            if (!nome || !cognome || !matricola) { alert("Dati obbligatori!"); return; }
-            const p = { nome, cognome, matricola, progressivo: document.getElementById('obbl-prog').value.trim() };
+            const n = document.getElementById('obbl-nome').value.trim(); const c = document.getElementById('obbl-cognome').value.trim(); const m = document.getElementById('obbl-matricola').value.trim();
+            if (!n || !c || !m) { alert("Mancano dati!"); return; }
+            const p = { nome: n, cognome: c, matricola: m, progressivo: document.getElementById('obbl-prog').value.trim() };
             await setDoc(doc(db, "utenti", auth.currentUser.uid), p, { merge: true });
-            await setDoc(doc(db, "rubrica", auth.currentUser.uid), p, { merge: true });
-            localStorage.setItem('backup_profilo_haze', JSON.stringify({...(JSON.parse(localStorage.getItem('backup_profilo_haze')||"{}")), ...p}));
             location.reload(); 
         };
 
         window.salvaProfilo = async () => {
-            if (!auth.currentUser) return;
             const p = { nome: document.getElementById('profileNome').value, cognome: document.getElementById('profileCognome').value, progressivo: document.getElementById('profileProgressivo').value, matricola: document.getElementById('profileMatricola').value };
             await setDoc(doc(db, "utenti", auth.currentUser.uid), p, { merge: true });
-            alert("Salvataggio completato!"); chiudiModal('profileModal');
-        };
-
-        window.controllaNotificheBacheca = async () => {
-            try {
-                const ultimoAccesso = parseInt(localStorage.getItem('ultimo_accesso_bacheca')) || 0;
-                const snap = await getDocs(collection(db, "bacheca_utility"));
-                let nonLetti = 0; let ddsTitolo = ""; const oggiStr = new Date().toISOString().split('T')[0];
-                snap.forEach(d => {
-                    const m = d.data(); if (m.scadenza && m.scadenza < oggiStr) return; 
-                    if (parseInt(m.timestamp) > ultimoAccesso) nonLetti++;
-                    if (m.tipo === "dds") ddsTitolo = m.titolo_dds;
-                });
-                if (nonLetti > 0) { document.getElementById('badge-messaggi').innerText = nonLetti; document.getElementById('badge-messaggi').style.display = 'flex'; document.getElementById('banner-nuovo-messaggio').style.display = 'block'; }
-                if (ddsTitolo) { document.getElementById('titolo-dds-text').innerText = ddsTitolo; document.getElementById('banner-dds-alert').style.display = 'block'; }
-            } catch (e) {}
+            alert("Salvato!"); window.chiudiModal('profileModal');
         };
 
         onAuthStateChanged(auth, async (user) => {
             const vLoad = document.getElementById('view-loading'); const vGuest = document.getElementById('view-guest'); const vApp = document.getElementById('view-app'); const vBanned = document.getElementById('view-banned');
-            
             if (user) {
                 try {
                     const docSnap = await getDoc(doc(db, "utenti", user.uid));
                     let data = docSnap.exists() ? docSnap.data() : {};
                     vLoad.style.display = 'none';
-
                     if (data.app_banned === true) { document.body.style.backgroundImage = 'none'; document.body.style.backgroundColor = "white"; vGuest.style.display = 'none'; vApp.style.display = 'none'; vBanned.style.display = 'flex'; return; }
                     if (!data.nome || !data.cognome || !data.matricola) document.getElementById('modal-dati-obbligatori').style.display = 'flex';
-
-                    globalIsAdmin = (user.uid === ADMIN_UID);
-                    globalIsCollab = COLLABORATORE_UIDS.includes(user.uid);
-                    
-                    if(globalIsAdmin) { document.getElementById('adminBadge').style.display = 'block'; document.getElementById('adminBadge').innerHTML = 'Account Amministratore'; }
-
+                    globalIsAdmin = (user.uid === ADMIN_UID); globalIsCollab = COLLABORATORE_UIDS.includes(user.uid);
+                    if(globalIsAdmin) { document.getElementById('adminBadge').style.display = 'block'; document.getElementById('adminBadge').innerHTML = 'Admin'; }
                     vGuest.style.display = 'none'; vApp.style.display = 'flex'; vBanned.style.display = 'none';
                     document.getElementById('btnOpenLogin').style.display = 'none'; document.getElementById('btnOpenProfile').style.display = 'block';
                     document.getElementById('profileEmail').value = user.email;
-
                     window.LayoutEngine.init(data.preferenze_layout);
-
-                    const dbB = parseInt(data.ultimo_accesso_bacheca) || 0; const locB = parseInt(localStorage.getItem('ultimo_accesso_bacheca')) || 0;
+                    const locB = parseInt(localStorage.getItem('ultimo_accesso_bacheca')) || 0;
+                    const dbB = parseInt(data.ultimo_accesso_bacheca) || 0;
                     if (dbB > locB) localStorage.setItem('ultimo_accesso_bacheca', dbB);
-                    window.controllaNotificheBacheca();
-
                     document.getElementById('profileNome').value = data.nome || ''; document.getElementById('profileCognome').value = data.cognome || '';
                     document.getElementById('profileMatricola').value = data.matricola || ''; document.getElementById('profileProgressivo').value = data.progressivo || '';
                 } catch(e) { vLoad.style.display = 'none'; }
-            } else {
-                vLoad.style.display = 'none';
-                window.LayoutEngine.init(); 
-                vGuest.style.display = 'flex'; vApp.style.display = 'none'; vBanned.style.display = 'none';
-            }
+            } else { vLoad.style.display = 'none'; window.LayoutEngine.init(); vGuest.style.display = 'flex'; vApp.style.display = 'none'; vBanned.style.display = 'none'; }
         });
     </script>
 </body>
