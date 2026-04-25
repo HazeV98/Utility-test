@@ -679,7 +679,7 @@
                 giorniLavorati++;
             }
 
-            if (trovatoRiposoPassato) return determinaFaseDaGiorno(giorniLavorati);
+            if (trovenutoRiposoPassato) return determinaFaseDaGiorno(giorniLavorati);
 
             let giorniAlProssimoRiposo = 0;
             for (let i = indiceGiorno + 1; i < turniMese.length; i++) {
@@ -1172,9 +1172,10 @@
                     
                     const oldCode = localStorage.getItem('auth_rotazioni');
                     if (oldCode && !currentUserDoc.abilitato_rotazioni && currentUserDoc.stato_richiesta !== 'pending') {
-                        let rPref = localStorage.getItem('myTurniApp') || Object.keys(ROTAZIONI_MAP)[0];
-                        await updateDoc(docRef, { abilitato_rotazioni: true, stato_richiesta: 'approved', rotazione_richiesta: rPref });
+                        // Per i vecchi utenti registriamo la stringa standard 'legacy_code'
+                        await updateDoc(docRef, { abilitato_rotazioni: true, stato_richiesta: 'approved', rotazione_richiesta: 'legacy_code' });
                         currentUserDoc.abilitato_rotazioni = true;
+                        localStorage.removeItem('auth_rotazioni'); // Puliamo il vecchio codice
                     }
 
                     if (currentUserDoc.abilitato_rotazioni === true) {
@@ -1185,7 +1186,7 @@
                         warnLog.style.display = 'none'; reqSect.style.display = 'none'; pendSect.style.display = 'block';
                     } else {
                         warnLog.style.display = 'none'; pendSect.style.display = 'none'; reqSect.style.display = 'block';
-                        // Precompilazione modificabile dei campi
+                        // Precompilazione campi modificabili per la richiesta
                         document.getElementById('req-nome').value = currentUserDoc.nome || '';
                         document.getElementById('req-cognome').value = currentUserDoc.cognome || '';
                         document.getElementById('req-matricola').value = currentUserDoc.matricola || '';
@@ -1209,7 +1210,6 @@
             
             err.innerText = "Invio in corso..."; err.style.color = "#666";
             try {
-                // Aggiorniamo il profilo con eventuali modifiche ed inviamo la richiesta
                 await updateDoc(doc(db, "utenti", currentUserId), { 
                     nome: n, cognome: c, matricola: m, progressivo: omo,
                     stato_richiesta: 'pending', rotazione_richiesta: rot 
@@ -1227,8 +1227,14 @@
             snap.forEach(d => {
                 const u = d.data();
                 if (u.abilitato_rotazioni === true) {
-                    if (isCollab && !isAdmin && !(currentUserDoc.permessi_gestione || []).includes(u.rotazione_richiesta)) return;
-                    const rotNome = ROTAZIONI_MAP[u.rotazione_richiesta] || u.rotazione_richiesta || 'Assegnazione Manuale';
+                    // Controlla se la rotazione_richiesta è il vecchio JSON enorme
+                    let isLegacy = (u.rotazione_richiesta === 'legacy_code' || (u.rotazione_richiesta && u.rotazione_richiesta.length > 50));
+                    
+                    if (isCollab && !isAdmin && !isLegacy && !(currentUserDoc.permessi_gestione || []).includes(u.rotazione_richiesta)) return;
+                    
+                    let rotNome = ROTAZIONI_MAP[u.rotazione_richiesta];
+                    if (!rotNome) { rotNome = isLegacy ? 'Accesso con Codice' : (u.rotazione_richiesta || 'Assegnazione Manuale'); }
+
                     html += `<div style="background:#f8f9fa; border:1px solid #ddd; padding:10px; margin-bottom:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
                         <div>
                             <strong style="font-size:14px;">${u.cognome||''} ${u.nome||''} ${u.progressivo||''}</strong><br>
