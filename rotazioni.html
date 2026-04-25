@@ -233,7 +233,7 @@
             
             <div id="intro-request">
                 <p style="font-size: 14px; color: #555; text-align: center; margin-bottom: 20px; line-height: 1.5;">
-                    In questa pagina troverai le rotazioni dei turni.<br>Per accedere si deve dare il consenso a condividere i propri dati nelle rotazioni.<br>Puoi richiedere l'accesso qui sotto.
+                    In questa pagina troverai le rotazioni dei turni. Per accedere si deve dare il consenso a condividere i propri dati nelle rotazioni. Puoi richiedere l'accesso qui sotto.
                 </p>
                 <button class="btn" style="background-color: var(--primary);" onclick="mostraFormRichiesta()">Richiedi Accesso</button>
             </div>
@@ -412,6 +412,9 @@
     </div>
 
     <script>
+        // Array globale per tracciare i nomi presenti nei tabulati JSON
+        window.globalNomiRotazioni = [];
+
         // --- FUNZIONI MENU LATERALE ---
         function apriMenuLaterale() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; }
         function chiudiMenuLaterale() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; }
@@ -585,6 +588,15 @@
                                     }
                                 }
                             }
+
+                            // Memorizziamo globalmente i nomi presenti in tutte le rotazioni (per pallino verde admin)
+                            Object.values(jsonData).forEach(rot => {
+                                Object.keys(rot).forEach(nome => {
+                                    if (!window.globalNomiRotazioni.includes(nome.toUpperCase())) {
+                                        window.globalNomiRotazioni.push(nome.toUpperCase());
+                                    }
+                                });
+                            });
 
                             Object.keys(jsonData).forEach(rotName => {
                                 let rotContainer = document.createElement('div');
@@ -1471,14 +1483,19 @@
                     let rotNome = ROTAZIONI_MAP[u.rotazione_richiesta];
                     if (!rotNome) { rotNome = isLegacy ? 'Accesso con Codice' : (u.rotazione_richiesta || 'Assegnazione Manuale'); }
                     
-                    // Mostro solo 'Admin' per il superadmin e prevengo il blocco
+                    // Controllo presenza nei tabulati
+                    const checkC = (u.cognome || '').trim().toUpperCase();
+                    const checkN = (u.nome || '').trim().toUpperCase();
+                    const presente = checkC && checkN && (window.globalNomiRotazioni || []).some(n => n.includes(checkC) && n.includes(checkN));
+                    const pallino = presente ? '<span title="Presente nei tabulati" style="font-size:11px; margin-left:4px;">🟢</span>' : '';
+
                     let btnBloccaHTML = (d.id === ADMIN_UID) ? 
                         `<span style="font-size:13px; color:var(--primary); font-weight:bold; margin-right:5px;">Admin</span>` : 
                         `<button class="btn" style="width:auto; padding:6px 12px; background:var(--danger); margin:0;" onclick="revocaAccesso('${d.id}')">Blocca</button>`;
 
                     html += `<div style="background:#f8f9fa; border:1px solid #ddd; padding:10px; margin-bottom:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
                         <div>
-                            <strong style="font-size:14px;">${u.cognome||''} ${u.nome||''} ${u.progressivo||''}</strong><br>
+                            <strong style="font-size:14px;">${u.cognome||''} ${u.nome||''} ${u.progressivo||''} ${pallino}</strong><br>
                             <span style="font-size:12px; color:#666;">Matr: ${u.matricola||''} | ${rotNome}</span>
                         </div>
                         ${btnBloccaHTML}
@@ -1533,8 +1550,14 @@
                     <div style="padding:10px; border-top:1px solid #eee;">`;
                 
                 reqs.forEach(u => {
+                    // Controllo presenza nei tabulati per inserire il pallino
+                    const checkC = (u.cognome || '').trim().toUpperCase();
+                    const checkN = (u.nome || '').trim().toUpperCase();
+                    const presente = checkC && checkN && (window.globalNomiRotazioni || []).some(n => n.includes(checkC) && n.includes(checkN));
+                    const pallino = presente ? '<span title="Presente nei tabulati" style="font-size:11px; margin-left:4px;">🟢</span>' : '';
+
                     html += `<div style="background:#fff3cd; border:1px solid #ffeeba; padding:10px; margin-bottom:8px; border-radius:8px;">
-                        <strong style="font-size:14px; color:#856404;">${u.cognome||''} ${u.nome||''} ${u.progressivo||''}</strong><br>
+                        <strong style="font-size:14px; color:#856404;">${u.cognome||''} ${u.nome||''} ${u.progressivo||''} ${pallino}</strong><br>
                         <span style="font-size:12px; color:#666;">Matr: ${u.matricola||''}</span>
                         <div style="display:flex; gap:10px; margin-top:10px;">
                             <button class="btn" style="background:var(--success); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${u.id}', true)">✅ Consenti</button>
