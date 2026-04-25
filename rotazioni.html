@@ -250,6 +250,11 @@
                     <option value="" disabled selected>Seleziona Rotazione di Appartenenza</option>
                 </select>
                 
+                <div id="div-data-riposo-req" style="display:none; margin-top: 10px;">
+                    <label style="font-size: 14px; font-weight: bold; color: #555; text-align: left; display: block; margin-bottom: 5px;">Data di un tuo Riposo Singolo:</label>
+                    <input type="date" id="req-data-riposo" style="margin: 0; padding: 12px;">
+                </div>
+                
                 <label style="display: flex; align-items: center; margin-top: 15px; font-size: 14px; color: #333; cursor: pointer; text-align: left; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
                     <input type="checkbox" id="req-consenso" style="width: auto; transform: scale(1.3); margin-right: 12px; margin-left: 5px;">
                     <span style="flex:1;">Accetto di condividere i miei dati nelle rotazioni.</span>
@@ -342,6 +347,11 @@
                 <option value="" disabled selected>Seleziona Rotazione di Appartenenza</option>
             </select>
             
+            <div id="div-data-riposo-edit" style="display:none; margin-top: 10px;">
+                <label style="font-size: 14px; font-weight: bold; color: #555; text-align: left; display: block; margin-bottom: 5px;">Data di un tuo Riposo Singolo:</label>
+                <input type="date" id="edit-data-riposo" style="margin: 0; padding: 12px;">
+            </div>
+            
             <button class="btn" style="margin-top: 15px; background-color: var(--success);" onclick="salvaMieiDati()">Salva Modifiche</button>
             <div id="edit-error-msg" style="color: var(--danger); font-size: 14px; text-align: center; margin-top: 10px; font-weight: bold;"></div>
         </div>
@@ -411,6 +421,14 @@
             document.getElementById('form-request').style.display = 'block';
         };
 
+        // Mostrare/Nascondere Data Riposo Singolo
+        document.getElementById('req-rotazione').addEventListener('change', function() {
+            document.getElementById('div-data-riposo-req').style.display = (this.value.startsWith('disp_')) ? 'block' : 'none';
+        });
+        document.getElementById('edit-rotazione').addEventListener('change', function() {
+            document.getElementById('div-data-riposo-edit').style.display = (this.value.startsWith('disp_')) ? 'block' : 'none';
+        });
+
         // Variabili Globali
         const CARTELLA_BASE = "rotazioni";
         let databaseTurni = []; 
@@ -448,6 +466,13 @@
             } catch (e) {
                 console.error("Errore caricamento dati turni", e);
             }
+        }
+
+        // Helper per i riposi dinamici
+        function stringToNum(s) { 
+            if(!s) return 0; 
+            let p = s.split('-'); 
+            return Math.floor(new Date(p[0], p[1]-1, p[2], 12, 0, 0).getTime() / 86400000); 
         }
 
         // ==========================================
@@ -504,6 +529,62 @@
                         try {
                             let dataRes = await fetch(`${CARTELLA_BASE}/${g.json}?t=${timestamp}`);
                             let jsonData = await dataRes.json();
+
+                            // Generazione dinamica dei "Disponibili" leggendo dal Database Firestore in tempo reale
+                            if (window.getUtentiAbilitatiFirebase) {
+                                let allU = await window.getUtentiAbilitatiFirebase();
+                                let disp51 = {}; let disp6261 = {};
+                                let parts = g.base.split('_');
+                                
+                                if (parts.length >= 3) {
+                                    const mesiMap = { "gennaio": 1, "febbraio": 2, "marzo": 3, "aprile": 4, "maggio": 5, "giugno": 6, "luglio": 7, "agosto": 8, "settembre": 9, "ottobre": 10, "novembre": 11, "dicembre": 12 };
+                                    let m = mesiMap[parts[1].toLowerCase()];
+                                    let y = parseInt(parts[2]);
+
+                                    if (m && y) {
+                                        allU.forEach(u => {
+                                            if (u.data_riposo_singolo) {
+                                                let nomeCompl = (u.cognome + " " + u.nome + " " + (u.progressivo || "")).trim().toUpperCase();
+                                                let turni = {};
+                                                let dRiposoNum = stringToNum(u.data_riposo_singolo);
+                                                
+                                                for(let i=1; i<=31; i++) {
+                                                    let dCheck = new Date(y, m-1, i);
+                                                    if (dCheck.getMonth() !== m-1) break; 
+                                                    let cNum = stringToNum(`${y}-${m}-${i}`);
+                                                    
+                                                    if (u.rotazione_richiesta === "disp_5_1") {
+                                                        let diff = (cNum - dRiposoNum) % 6;
+                                                        if (diff < 0) diff += 6;
+                                                        turni[i.toString()] = (diff === 0) ? "RI" : "DISP";
+                                                    } else if (u.rotazione_richiesta === "disp_6_2_6_1") {
+                                                        let diff = (cNum - dRiposoNum) % 15;
+                                                        if (diff < 0) diff += 15;
+                                                        if (diff === 0 || diff === 7 || diff === 8) { turni[i.toString()] = "RI"; } 
+                                                        else { turni[i.toString()] = "DISP"; }
+                                                    }
+                                                }
+                                                if (u.rotazione_richiesta === "disp_5_1") disp51[nomeCompl] = turni;
+                                                if (u.rotazione_richiesta === "disp_6_2_6_1") disp6261[nomeCompl] = turni;
+                                            }
+                                        });
+
+                                        function ordinaCascata(dict) {
+                                            let arr = Object.keys(dict).map(k => {
+                                                let firstRi = 32;
+                                                for(let i=1; i<=31; i++) { if(dict[k][i.toString()]==="RI") { firstRi = i; break; } }
+                                                return { nome: k, turni: dict[k], firstRi };
+                                            });
+                                            arr.sort((a,b) => a.firstRi - b.firstRi);
+                                            let res = {}; arr.forEach(x => res[x.nome] = x.turni);
+                                            return res;
+                                        }
+
+                                        if (Object.keys(disp51).length > 0) jsonData["Disponibili 5-1"] = ordinaCascata(disp51);
+                                        if (Object.keys(disp6261).length > 0) jsonData["Disponibili 6-2-6-1"] = ordinaCascata(disp6261);
+                                    }
+                                }
+                            }
 
                             Object.keys(jsonData).forEach(rotName => {
                                 let rotContainer = document.createElement('div');
@@ -790,12 +871,6 @@
         // ==========================================
         // MOTORE RICERCA FUTURA (LOGICA FASI 15 GIORNI)
         // ==========================================
-        function stringToNum(s) { 
-            if(!s) return 0; 
-            let p = s.split('-'); 
-            return Math.floor(new Date(p[0], p[1]-1, p[2], 12, 0, 0).getTime() / 86400000); 
-        }
-
         function formattaData(dStr) {
             let p = dStr.split('-');
             return `${p[2]}/${p[1]}/${p[0]}`;
@@ -1178,6 +1253,8 @@
         const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2";
 
         const ROTAZIONI_MAP = {
+            "disp_5_1": "Disponibile 5-1",
+            "disp_6_2_6_1": "Disponibile 6-2-6-1",
             "rot_fnove": "Rotazione F.Nove", "spez_fnove": "Spezzati F.Nove", "tc_spez_fnove": "T.C. Spezzati F.Nove",
             "rot_proma": "Rotazione P.Roma", "spez_proma": "Spezzati P.Roma", "ris_proma": "Riserva P.Roma",
             "rot_szaccaria": "Rotazione S.Zaccaria", "spez_szaccaria": "Spezzati S.Zaccaria", "tc_spez_szaccaria": "T.C. Spezzati S.Zaccaria",
@@ -1199,6 +1276,15 @@
                 }
             }
         }
+
+        // Esponiamo la funzione globalmente per farla usare al renderer JSON della tabella
+        window.getUtentiAbilitatiFirebase = async () => {
+            const q = query(collection(db, "utenti"), where("abilitato_rotazioni", "==", true));
+            const snap = await getDocs(q);
+            let arr = [];
+            snap.forEach(d => arr.push(d.data()));
+            return arr;
+        };
         
         window.aggiornaBadgeRichieste = async () => {
             if (!isAdmin && !isCollab) return;
@@ -1277,6 +1363,9 @@
                 document.getElementById('edit-rotazione').value = '';
             }
             
+            document.getElementById('edit-data-riposo').value = currentUserDoc.data_riposo_singolo || '';
+            document.getElementById('div-data-riposo-edit').style.display = (rReq && rReq.startsWith('disp_')) ? 'block' : 'none';
+            
             document.getElementById('edit-error-msg').innerText = '';
             document.getElementById('modal-miei-dati').style.display = 'flex';
         };
@@ -1287,22 +1376,25 @@
             const c = document.getElementById('edit-cognome').value.trim();
             const m = document.getElementById('edit-matricola').value.trim();
             const omo = document.getElementById('edit-omonimia').value.trim();
+            const dRip = document.getElementById('edit-data-riposo').value;
             const err = document.getElementById('edit-error-msg');
             
             if (!n || !c || !m) { err.innerText = "Nome, Cognome e Matricola sono obbligatori."; return; }
             if (!rot) { err.innerText = "Seleziona la tua rotazione di appartenenza."; return; }
+            if (rot.startsWith('disp_') && !dRip) { err.innerText = "Inserisci la data del riposo singolo."; return; }
             
             err.innerText = "Salvataggio in corso..."; err.style.color = "#666";
             try {
                 await updateDoc(doc(db, "utenti", currentUserId), { 
                     nome: n, cognome: c, matricola: m, progressivo: omo,
-                    rotazione_richiesta: rot 
+                    rotazione_richiesta: rot, data_riposo_singolo: dRip || null
                 });
                 
                 currentUserDoc.nome = n; currentUserDoc.cognome = c; currentUserDoc.matricola = m; 
                 currentUserDoc.progressivo = omo; currentUserDoc.rotazione_richiesta = rot;
+                currentUserDoc.data_riposo_singolo = dRip || null;
                 
-                alert("Dati aggiornati con successo!");
+                alert("Dati aggiornati con successo! Ricordati di ricaricare la pagina per visualizzare le tabelle generate.");
                 chiudiModal('modal-miei-dati');
             } catch(e) { err.innerText = "Errore durante il salvataggio. Riprova."; err.style.color = "var(--danger)"; }
         };
@@ -1314,10 +1406,12 @@
             const m = document.getElementById('req-matricola').value.trim();
             const omo = document.getElementById('req-omonimia').value.trim();
             const cons = document.getElementById('req-consenso').checked;
+            const dRip = document.getElementById('req-data-riposo').value;
             const err = document.getElementById('req-error-msg');
             
             if (!n || !c || !m) { err.innerText = "Nome, Cognome e Matricola sono obbligatori."; return; }
             if (!rot) { err.innerText = "Seleziona la tua rotazione di appartenenza."; return; }
+            if (rot.startsWith('disp_') && !dRip) { err.innerText = "Inserisci la data di un tuo riposo singolo."; return; }
             if (!cons) { err.innerText = "Devi accettare di condividere i dati per continuare."; return; }
             if (!currentUserId) return;
             
@@ -1325,7 +1419,7 @@
             try {
                 await updateDoc(doc(db, "utenti", currentUserId), { 
                     nome: n, cognome: c, matricola: m, progressivo: omo,
-                    stato_richiesta: 'pending', rotazione_richiesta: rot 
+                    stato_richiesta: 'pending', rotazione_richiesta: rot, data_riposo_singolo: dRip || null
                 });
                 location.reload();
             } catch(e) { err.innerText = "Errore durante l'invio. Riprova."; err.style.color = "var(--danger)"; }
@@ -1345,13 +1439,18 @@
                     
                     let rotNome = ROTAZIONI_MAP[u.rotazione_richiesta];
                     if (!rotNome) { rotNome = isLegacy ? 'Accesso con Codice' : (u.rotazione_richiesta || 'Assegnazione Manuale'); }
+                    
+                    // Prevenire il blocco del Super Admin
+                    let btnBloccaHTML = (d.id === ADMIN_UID) ? 
+                        `<span style="font-size:11px; color:var(--primary); font-weight:bold;">Admin Centrale</span>` : 
+                        `<button class="btn" style="width:auto; padding:6px 12px; background:var(--danger); margin:0;" onclick="revocaAccesso('${d.id}')">Blocca</button>`;
 
                     html += `<div style="background:#f8f9fa; border:1px solid #ddd; padding:10px; margin-bottom:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
                         <div>
                             <strong style="font-size:14px;">${u.cognome||''} ${u.nome||''} ${u.progressivo||''}</strong><br>
                             <span style="font-size:12px; color:#666;">Matr: ${u.matricola||''} | ${rotNome}</span>
                         </div>
-                        <button class="btn" style="width:auto; padding:6px 12px; background:var(--danger); margin:0;" onclick="revocaAccesso('${d.id}')">Blocca</button>
+                        ${btnBloccaHTML}
                     </div>`;
                 }
             });
