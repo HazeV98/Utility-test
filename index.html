@@ -355,6 +355,19 @@
         window.currentUserData = {}; 
         window.utentiMap = {}; // Salva i dati utente per la finestra di dettaglio
 
+        // --- MAPPA ROTAZIONI GLOBALE ---
+        window.ROTAZIONI_MAP = {
+            "disp_5_1": "Disponibile 5-1",
+            "disp_6_2_6_1": "Disponibile 6-2-6-1",
+            "rot_fnove": "Rotazione F.Nove", "spez_fnove": "Spezzati F.Nove", "tc_spez_fnove": "T.C. Spezzati F.Nove",
+            "rot_proma": "Rotazione P.Roma", "spez_proma": "Spezzati P.Roma", "ris_proma": "Riserva P.Roma",
+            "rot_szaccaria": "Rotazione S.Zaccaria", "spez_szaccaria": "Spezzati S.Zaccaria", "tc_spez_szaccaria": "T.C. Spezzati S.Zaccaria",
+            "rot_lido": "Rotazione Lido", "spez_lido": "Spezzati Lido", "tc_spez_lido": "T.C. Spezzati Lido",
+            "rot_linea12": "Rotazione Linea 12", "rot_linea13": "Rotazione Linea 13", "rot_linea14": "Rotazione Linea 14 M/N",
+            "rot_linea14_mb": "Rotazione Linea 14 M/B", "rot_17sn": "Rotazione Linea 17 S. Nicolò", "tc_rot_17sn": "T.C. Rotazione 17 S. Nicolò",
+            "rot_17tr": "Rotazione Linea 17 Tron.", "tc_rot_17tr": "T.C. Rotazione Linea 17 Tronc."
+        };
+
         // --- DEFINIZIONE APP DI SISTEMA ---
         const DEFAULT_APPS = [
             { id: "oggi", label: "Oggi", icon: "🎯", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
@@ -712,12 +725,14 @@
             window.currentUserEditId = uid;
             
             const isCollab = u.ruolo === 'collaborator';
+            const rotNome = window.ROTAZIONI_MAP[u.rotazione_richiesta] || u.rotazione_richiesta || 'Nessuna/Codice Segreto';
+            
             const htmlData = `
                 <div style="margin-bottom:8px;"><strong>Nome:</strong> ${u.nome || '-'}</div>
                 <div style="margin-bottom:8px;"><strong>Cognome:</strong> ${u.cognome || '-'}</div>
                 <div style="margin-bottom:8px;"><strong>Matricola:</strong> ${u.matricola || '-'}</div>
                 <div style="margin-bottom:8px;"><strong>Omonimia:</strong> ${u.progressivo || '-'}</div>
-                <div style="margin-bottom:8px;"><strong>Rotazione Richiesta:</strong> ${u.rotazione_richiesta || '-'}</div>
+                <div style="margin-bottom:8px;"><strong>Rotazione Richiesta:</strong> ${rotNome}</div>
                 <div><strong>Data Riposo Singolo:</strong> ${u.data_riposo_singolo ? u.data_riposo_singolo.split('-').reverse().join('/') : '-'}</div>
             `;
             document.getElementById('dettaglio-utente-body').innerHTML = htmlData;
@@ -813,6 +828,12 @@
                     document.getElementById('btnOpenLogin').style.display = 'none'; document.getElementById('btnOpenProfile').style.display = 'block';
                     document.getElementById('profileEmail').value = user.email;
                     
+                    // --- SALVATAGGIO ACCESSO OGGI ---
+                    const oggiLogStr = new Date().toISOString().split('T')[0];
+                    if (data.last_app_access !== oggiLogStr) {
+                        setDoc(doc(db, "utenti", user.uid), { last_app_access: oggiLogStr }, { merge: true });
+                    }
+
                     window.LayoutEngine.init(data.preferenze_layout);
                     
                     const locB = parseInt(localStorage.getItem('ultimo_accesso_bacheca')) || 0;
