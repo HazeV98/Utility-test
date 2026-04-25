@@ -181,8 +181,9 @@
     <div class="header">
         <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
         <h2>Rotazioni</h2>
-        <div style="width: 50px; text-align: right;">
-            <button id="btn-gestione-accessi" style="display:none; background:none; border:none; font-size:24px; cursor:pointer; padding:0;" onclick="apriGestioneAccessiModal()">⚙️</button>
+        <div style="display: flex; gap: 15px; align-items: center; justify-content: flex-end; width: 80px;">
+            <button id="btn-miei-dati" style="display:none; background:none; border:none; font-size:24px; cursor:pointer; padding:0;" onclick="apriMieiDatiModal()" title="I Miei Dati">👤</button>
+            <button id="btn-gestione-accessi" style="display:none; background:none; border:none; font-size:24px; cursor:pointer; padding:0;" onclick="apriGestioneAccessiModal()" title="Gestione">⚙️</button>
         </div>
     </div>
 
@@ -302,6 +303,26 @@
             <span class="close-modal" onclick="chiudiModal('table-modal')">&times;</span>
             <h3 id="table-modal-title" style="margin-top:0; color:var(--primary); padding-right: 30px;">Tabella Rotazione</h3>
             <div id="table-container"></div>
+        </div>
+    </div>
+
+    <div id="modal-miei-dati" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-miei-dati')">
+        <div class="modal-content" style="max-width: 400px; text-align: left;">
+            <span class="close-modal" onclick="chiudiModal('modal-miei-dati')">&times;</span>
+            <h3 style="margin-top:0; color:var(--primary); text-align: center;">I Miei Dati</h3>
+            <p style="font-size: 13px; color: #666; text-align: center; margin-bottom: 15px;">Aggiorna i tuoi dati o la tua rotazione di appartenenza.</p>
+            
+            <input type="text" id="edit-nome" placeholder="Nome">
+            <input type="text" id="edit-cognome" placeholder="Cognome">
+            <input type="text" id="edit-matricola" placeholder="Matricola">
+            <input type="text" id="edit-omonimia" placeholder="Numero omonimia es. 02, 03 ecc (facoltativo)">
+            
+            <select id="edit-rotazione" style="margin-top: 10px; width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #ccc; font-size: 14px; background: white;">
+                <option value="" disabled selected>Seleziona Rotazione di Appartenenza</option>
+            </select>
+            
+            <button class="btn" style="margin-top: 15px; background-color: var(--success);" onclick="salvaMieiDati()">Salva Modifiche</button>
+            <div id="edit-error-msg" style="color: var(--danger); font-size: 14px; text-align: center; margin-top: 10px; font-weight: bold;"></div>
         </div>
     </div>
 
@@ -1140,9 +1161,13 @@
         let currentUserDoc = null; let isCollab = false; let isAdmin = false; let currentUserId = null;
 
         const selRot = document.getElementById('req-rotazione');
+        const selRotEdit = document.getElementById('edit-rotazione');
         if(selRot) {
             for(let key in ROTAZIONI_MAP) {
                 let opt = document.createElement('option'); opt.value = key; opt.innerText = ROTAZIONI_MAP[key]; selRot.appendChild(opt);
+                if(selRotEdit) {
+                    let opt2 = document.createElement('option'); opt2.value = key; opt2.innerText = ROTAZIONI_MAP[key]; selRotEdit.appendChild(opt2);
+                }
             }
         }
 
@@ -1159,21 +1184,20 @@
                     
                     const oldCode = localStorage.getItem('auth_rotazioni');
                     if (oldCode && !currentUserDoc.abilitato_rotazioni && currentUserDoc.stato_richiesta !== 'pending') {
-                        // Per i vecchi utenti registriamo la stringa standard 'legacy_code'
                         await updateDoc(docRef, { abilitato_rotazioni: true, stato_richiesta: 'approved', rotazione_richiesta: 'legacy_code' });
                         currentUserDoc.abilitato_rotazioni = true;
-                        localStorage.removeItem('auth_rotazioni'); // Puliamo il vecchio codice
+                        localStorage.removeItem('auth_rotazioni');
                     }
 
                     if (currentUserDoc.abilitato_rotazioni === true) {
                         authSect.style.display = 'none'; contSect.style.display = 'flex';
+                        document.getElementById('btn-miei-dati').style.display = 'inline-block';
                         if (isAdmin || isCollab) document.getElementById('btn-gestione-accessi').style.display = 'inline-block';
                         window.initPanzoom(); window.caricaDatiTurniSilenzioso(); window.caricaRotazioni();
                     } else if (currentUserDoc.stato_richiesta === 'pending') {
                         warnLog.style.display = 'none'; reqSect.style.display = 'none'; pendSect.style.display = 'block';
                     } else {
                         warnLog.style.display = 'none'; pendSect.style.display = 'none'; reqSect.style.display = 'block';
-                        // Precompilazione campi modificabili per la richiesta
                         document.getElementById('req-nome').value = currentUserDoc.nome || '';
                         document.getElementById('req-cognome').value = currentUserDoc.cognome || '';
                         document.getElementById('req-matricola').value = currentUserDoc.matricola || '';
@@ -1182,6 +1206,50 @@
                 } else reqSect.style.display = 'block';
             } else { warnLog.style.display = 'block'; }
         });
+
+        window.apriMieiDatiModal = () => {
+            if (!currentUserDoc) return;
+            document.getElementById('edit-nome').value = currentUserDoc.nome || '';
+            document.getElementById('edit-cognome').value = currentUserDoc.cognome || '';
+            document.getElementById('edit-matricola').value = currentUserDoc.matricola || '';
+            document.getElementById('edit-omonimia').value = currentUserDoc.progressivo || '';
+            
+            let rReq = currentUserDoc.rotazione_richiesta;
+            if (ROTAZIONI_MAP[rReq]) {
+                document.getElementById('edit-rotazione').value = rReq;
+            } else {
+                document.getElementById('edit-rotazione').value = '';
+            }
+            
+            document.getElementById('edit-error-msg').innerText = '';
+            document.getElementById('modal-miei-dati').style.display = 'flex';
+        };
+
+        window.salvaMieiDati = async () => {
+            const rot = document.getElementById('edit-rotazione').value;
+            const n = document.getElementById('edit-nome').value.trim();
+            const c = document.getElementById('edit-cognome').value.trim();
+            const m = document.getElementById('edit-matricola').value.trim();
+            const omo = document.getElementById('edit-omonimia').value.trim();
+            const err = document.getElementById('edit-error-msg');
+            
+            if (!n || !c || !m) { err.innerText = "Nome, Cognome e Matricola sono obbligatori."; return; }
+            if (!rot) { err.innerText = "Seleziona la tua rotazione di appartenenza."; return; }
+            
+            err.innerText = "Salvataggio in corso..."; err.style.color = "#666";
+            try {
+                await updateDoc(doc(db, "utenti", currentUserId), { 
+                    nome: n, cognome: c, matricola: m, progressivo: omo,
+                    rotazione_richiesta: rot 
+                });
+                
+                currentUserDoc.nome = n; currentUserDoc.cognome = c; currentUserDoc.matricola = m; 
+                currentUserDoc.progressivo = omo; currentUserDoc.rotazione_richiesta = rot;
+                
+                alert("Dati aggiornati con successo!");
+                chiudiModal('modal-miei-dati');
+            } catch(e) { err.innerText = "Errore durante il salvataggio. Riprova."; err.style.color = "var(--danger)"; }
+        };
 
         window.inviaRichiestaAccesso = async () => {
             const rot = document.getElementById('req-rotazione').value;
@@ -1214,9 +1282,7 @@
             snap.forEach(d => {
                 const u = d.data();
                 if (u.abilitato_rotazioni === true) {
-                    // Controlla se la rotazione_richiesta è il vecchio JSON enorme
                     let isLegacy = (u.rotazione_richiesta === 'legacy_code' || (u.rotazione_richiesta && u.rotazione_richiesta.length > 50));
-                    
                     if (isCollab && !isAdmin && !isLegacy && !(currentUserDoc.permessi_gestione || []).includes(u.rotazione_richiesta)) return;
                     
                     let rotNome = ROTAZIONI_MAP[u.rotazione_richiesta];
