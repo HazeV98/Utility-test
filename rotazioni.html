@@ -116,10 +116,6 @@
         
         #error-msg { color: var(--danger); font-size: 14px; margin-top: 10px; min-height: 20px; font-weight: bold; }
 
-        .support-section { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
-        .telegram-icon { display: inline-block; transition: transform 0.2s ease; margin-top: 10px; }
-        .telegram-icon:active { transform: scale(0.9); }
-
         /* --- STILI CARDS MENSILI E BOTTONI --- */
         .status-message { text-align: center; color: #666; font-size: 16px; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         
@@ -240,15 +236,6 @@
             
             <button class="btn" style="margin-top: 15px; background-color: var(--success);" onclick="inviaRichiestaAccesso()">Invia Richiesta</button>
             <div id="req-error-msg" style="color: var(--danger); font-size: 14px; text-align: center; margin-top: 10px; font-weight: bold;"></div>
-        </div>
-
-        <div class="support-section">
-            <p style="font-size: 14px; margin-bottom: 5px;">Se non hai un codice di accesso contatta un amministratore per averlo con il tasto qui sotto scrivendo nome, cognome e matricola</p>
-            <a href="http://t.me/MattiaB1058" target="_blank" class="telegram-icon">
-                <svg viewBox="0 0 24 24" width="48" height="48" fill="#0088cc">
-                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.45c.538-.196 1.006.128.832.941z"/>
-                </svg>
-            </a>
         </div>
     </div>
 
@@ -679,7 +666,7 @@
                 giorniLavorati++;
             }
 
-            if (trovenutoRiposoPassato) return determinaFaseDaGiorno(giorniLavorati);
+            if (trovatoRiposoPassato) return determinaFaseDaGiorno(giorniLavorati);
 
             let giorniAlProssimoRiposo = 0;
             for (let i = indiceGiorno + 1; i < turniMese.length; i++) {
@@ -1265,7 +1252,7 @@
                     const rotNome = ROTAZIONI_MAP[u.rotazione_richiesta] || u.rotazione_richiesta || '?';
                     html += `<div style="background:#fff3cd; border:1px solid #ffeeba; padding:10px; margin-bottom:8px; border-radius:8px;">
                         <strong style="font-size:14px; color:#856404;">${u.cognome||''} ${u.nome||''} ${u.progressivo||''}</strong><br>
-                        <span style="font-size:12px; color:#666;">Matr: ${u.matricola||''} | Richiede: <strong>${rotNome}</strong></span>
+                        <span style="font-size:12px; color:#666;">Matr: ${u.matricola||''} | Rotazione: <strong>${rotNome}</strong></span>
                         <div style="display:flex; gap:10px; margin-top:10px;">
                             <button class="btn" style="background:var(--success); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${d.id}', true)">✅ Consenti</button>
                             <button class="btn" style="background:var(--danger); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${d.id}', false)">❌ Rifiuta</button>
