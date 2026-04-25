@@ -104,8 +104,9 @@
             font-family: inherit;
         }
 
-        input[type="text"] { font-size: 20px; text-transform: uppercase; letter-spacing: 2px; }
-        input[type="text"]::placeholder { text-transform: none; font-size: 16px; letter-spacing: normal; }
+        /* Applico maiuscolo e font maggiorato SOLO al codice turno, non ai dati personali */
+        #input-codice-turno { font-size: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        #input-codice-turno::placeholder { text-transform: none; font-size: 16px; letter-spacing: normal; }
         
         .btn {
             background-color: var(--primary); color: white; border: none; padding: 16px;
@@ -174,6 +175,8 @@
         .cell-disp { background-color: #ffc107; color: black; font-weight: bold;}
         .cell-espe { background-color: #6f42c1; color: white; }
         .cell-fer { background-color: #20c997; color: white; font-size: 12px; font-weight: bold; }
+        
+        details > summary::-webkit-details-marker { display: none; }
     </style>
 </head>
 <body>
@@ -339,7 +342,7 @@
     </div>
 
     <div id="modal-gestione-richieste" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-gestione-richieste')">
-        <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-content" style="max-width: 400px; padding: 15px;">
             <span class="close-modal" onclick="chiudiModal('modal-gestione-richieste')">&times;</span>
             <h3 style="margin-top:0; color:var(--info);">Richieste in Attesa</h3>
             <button class="btn" style="background: #6c757d; padding: 8px; font-size: 13px; margin-bottom: 15px;" onclick="chiudiModal('modal-gestione-richieste'); apriGestioneAccessiModal();">⬅️ Indietro</button>
@@ -1308,25 +1311,55 @@
         };
 
         window.apriGestioneRichieste = async () => {
-            chiudiModal('modal-gestione-accessi'); document.getElementById('modal-gestione-richieste').style.display = 'flex';
-            const cont = document.getElementById('lista-richieste'); cont.innerHTML = "<div style='text-align:center; padding:15px; font-size:14px;'>Ricerca richieste...</div>";
-            const snap = await getDocs(collection(db, "utenti")); let html = "";
+            chiudiModal('modal-gestione-accessi'); 
+            document.getElementById('modal-gestione-richieste').style.display = 'flex';
+            const cont = document.getElementById('lista-richieste'); 
+            cont.innerHTML = "<div style='text-align:center; padding:15px; font-size:14px;'>Ricerca richieste...</div>";
+            
+            const snap = await getDocs(collection(db, "utenti")); 
+            let groupedRequests = {};
+            let count = 0;
+            
             snap.forEach(d => {
                 const u = d.data();
                 if (u.stato_richiesta === 'pending') {
                     if (isCollab && !isAdmin && !(currentUserDoc.permessi_gestione || []).includes(u.rotazione_richiesta)) return;
-                    const rotNome = ROTAZIONI_MAP[u.rotazione_richiesta] || u.rotazione_richiesta || '?';
-                    html += `<div style="background:#fff3cd; border:1px solid #ffeeba; padding:10px; margin-bottom:8px; border-radius:8px;">
-                        <strong style="font-size:14px; color:#856404;">${u.cognome||''} ${u.nome||''} ${u.progressivo||''}</strong><br>
-                        <span style="font-size:12px; color:#666;">Matr: ${u.matricola||''} | Rotazione: <strong>${rotNome}</strong></span>
-                        <div style="display:flex; gap:10px; margin-top:10px;">
-                            <button class="btn" style="background:var(--success); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${d.id}', true)">✅ Consenti</button>
-                            <button class="btn" style="background:var(--danger); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${d.id}', false)">❌ Rifiuta</button>
-                        </div>
-                    </div>`;
+                    let rotKey = u.rotazione_richiesta || 'Sconosciuta';
+                    if (!groupedRequests[rotKey]) groupedRequests[rotKey] = [];
+                    groupedRequests[rotKey].push({ id: d.id, ...u });
+                    count++;
                 }
             });
-            cont.innerHTML = html || "<div style='text-align:center; font-size:14px; color:#666;'>Nessuna richiesta in sospeso per la tua area.</div>";
+
+            if (count === 0) {
+                cont.innerHTML = "<div style='text-align:center; font-size:14px; color:#666;'>Nessuna richiesta in sospeso per la tua area.</div>";
+                return;
+            }
+
+            let html = "";
+            for (let k in groupedRequests) {
+                let rotNome = ROTAZIONI_MAP[k] || k;
+                let reqs = groupedRequests[k];
+                html += `<details style="margin-bottom:10px; border:1px solid #ddd; border-radius:8px; background:#fff;" open>
+                    <summary style="padding:12px; font-weight:bold; cursor:pointer; background:#e9ecef; border-radius:8px; color:var(--primary); outline:none; display:flex; justify-content:space-between; align-items:center;">
+                        <span>📁 ${rotNome}</span>
+                        <span style="background:var(--danger); color:#fff; border-radius:10px; padding:2px 8px; font-size:12px;">${reqs.length}</span>
+                    </summary>
+                    <div style="padding:10px; border-top:1px solid #eee;">`;
+                
+                reqs.forEach(u => {
+                    html += `<div style="background:#fff3cd; border:1px solid #ffeeba; padding:10px; margin-bottom:8px; border-radius:8px;">
+                        <strong style="font-size:14px; color:#856404;">${u.cognome||''} ${u.nome||''} ${u.progressivo||''}</strong><br>
+                        <span style="font-size:12px; color:#666;">Matr: ${u.matricola||''}</span>
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <button class="btn" style="background:var(--success); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${u.id}', true)">✅ Consenti</button>
+                            <button class="btn" style="background:var(--danger); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${u.id}', false)">❌ Rifiuta</button>
+                        </div>
+                    </div>`;
+                });
+                html += `</div></details>`;
+            }
+            cont.innerHTML = html;
         };
 
         window.gestisciRichiesta = async (uid, ok) => {
