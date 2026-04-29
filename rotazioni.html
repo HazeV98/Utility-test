@@ -10,6 +10,7 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <style>
         /* --- STILI BASE E AUTENTICAZIONE --- */
@@ -104,7 +105,6 @@
             font-family: inherit;
         }
 
-        /* Applico maiuscolo e font maggiorato SOLO al codice turno, non ai dati personali */
         #input-codice-turno { font-size: 20px; text-transform: uppercase; letter-spacing: 2px; }
         #input-codice-turno::placeholder { text-transform: none; font-size: 16px; letter-spacing: normal; }
         
@@ -249,6 +249,18 @@
                 <select id="req-rotazione" style="margin-top: 10px; width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #ccc; font-size: 14px; background: white;">
                     <option value="" disabled selected>Seleziona Rotazione di Appartenenza</option>
                 </select>
+
+                <div id="div-mansione-req" style="display:none; margin-top: 10px;">
+                    <select id="req-mansione" style="width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #ccc; font-size: 14px; background: white;">
+                        <option value="" disabled selected>Seleziona Mansione</option>
+                        <option value="Preposto al comando">Preposto al comando</option>
+                        <option value="Marinaio">Marinaio</option>
+                        <option value="Comandante">Comandante</option>
+                        <option value="Timoniere">Timoniere</option>
+                        <option value="Marinaio polivalente">Marinaio polivalente</option>
+                        <option value="Direttore di macchina">Direttore di macchina</option>
+                    </select>
+                </div>
                 
                 <div id="div-data-riposo-req" style="display:none; margin-top: 10px;">
                     <label style="font-size: 14px; font-weight: bold; color: #555; text-align: left; display: block; margin-bottom: 5px;">Data di un tuo Riposo Singolo:</label>
@@ -346,6 +358,18 @@
             <select id="edit-rotazione" style="margin-top: 10px; width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #ccc; font-size: 14px; background: white;">
                 <option value="" disabled selected>Seleziona Rotazione di Appartenenza</option>
             </select>
+
+            <div id="div-mansione-edit" style="display:none; margin-top: 10px;">
+                <select id="edit-mansione" style="width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #ccc; font-size: 14px; background: white;">
+                    <option value="" disabled selected>Seleziona Mansione</option>
+                    <option value="Preposto al comando">Preposto al comando</option>
+                    <option value="Marinaio">Marinaio</option>
+                    <option value="Comandante">Comandante</option>
+                    <option value="Timoniere">Timoniere</option>
+                    <option value="Marinaio polivalente">Marinaio polivalente</option>
+                    <option value="Direttore di macchina">Direttore di macchina</option>
+                </select>
+            </div>
             
             <div id="div-data-riposo-edit" style="display:none; margin-top: 10px;">
                 <label style="font-size: 14px; font-weight: bold; color: #555; text-align: left; display: block; margin-bottom: 5px;">Data di un tuo Riposo Singolo:</label>
@@ -368,7 +392,10 @@
                 </button>
                 <button id="btn-collab-admin" class="btn" style="display:none; background: #6f42c1; padding: 10px; font-size: 13px; margin: 0; flex: 1;" onclick="apriGestioneCollaboratori()">👥 Collab.</button>
             </div>
-            <div id="lista-utenti-abilitati" style="max-height: 60vh; overflow-y: auto;"></div>
+            
+            <input type="text" id="search-utenti-abilitati" placeholder="Cerca collega..." style="text-align: left; margin-top: 0; margin-bottom: 10px; padding: 12px; font-size: 14px; width: 100%; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;" onkeyup="filtraUtentiAbilitati()">
+            
+            <div id="lista-utenti-abilitati" style="max-height: 55vh; overflow-y: auto;"></div>
         </div>
     </div>
 
@@ -378,6 +405,16 @@
             <h3 style="margin-top:0; color:var(--info);">Richieste in Attesa</h3>
             <button class="btn" style="background: #6c757d; padding: 8px; font-size: 13px; margin-bottom: 15px;" onclick="chiudiModal('modal-gestione-richieste'); apriGestioneAccessiModal();">⬅️ Indietro</button>
             <div id="lista-richieste" style="max-height: 55vh; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <div id="modal-dettaglio-utente" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-dettaglio-utente')">
+        <div class="modal-content" style="max-width: 350px;">
+            <span class="close-modal" onclick="chiudiModal('modal-dettaglio-utente')">&times;</span>
+            <h3 style="margin-top:0; color:var(--primary); text-align: center;">Dettaglio Utente</h3>
+            <div id="dettaglio-utente-body" style="font-size: 14px; line-height: 1.6; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; margin-bottom: 15px;">
+                </div>
+            <button id="btn-scarica-pdf" class="btn" style="background: var(--info); color: white; padding: 12px; margin: 0;" onclick="scaricaPDFConsenso()">📄 Scarica PDF Consenso</button>
         </div>
     </div>
 
@@ -412,10 +449,10 @@
     </div>
 
     <script>
-        // Array globale per tracciare i nomi presenti nei tabulati JSON
         window.globalNomiRotazioni = [];
+        window.utentiMap = {}; 
+        window.currentUtentePdf = null; 
 
-        // --- FUNZIONI MENU LATERALE ---
         function apriMenuLaterale() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; }
         function chiudiMenuLaterale() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; }
         
@@ -424,15 +461,17 @@
             document.getElementById('form-request').style.display = 'block';
         };
 
-        // Mostrare/Nascondere Data Riposo Singolo
         document.getElementById('req-rotazione').addEventListener('change', function() {
-            document.getElementById('div-data-riposo-req').style.display = (this.value.startsWith('disp_')) ? 'block' : 'none';
+            let isDisp = this.value.startsWith('disp_');
+            document.getElementById('div-data-riposo-req').style.display = isDisp ? 'block' : 'none';
+            document.getElementById('div-mansione-req').style.display = isDisp ? 'block' : 'none';
         });
         document.getElementById('edit-rotazione').addEventListener('change', function() {
-            document.getElementById('div-data-riposo-edit').style.display = (this.value.startsWith('disp_')) ? 'block' : 'none';
+            let isDisp = this.value.startsWith('disp_');
+            document.getElementById('div-data-riposo-edit').style.display = isDisp ? 'block' : 'none';
+            document.getElementById('div-mansione-edit').style.display = isDisp ? 'block' : 'none';
         });
 
-        // Variabili Globali
         const CARTELLA_BASE = "rotazioni";
         let databaseTurni = []; 
         let activePredictors = []; 
@@ -441,7 +480,6 @@
         let pzInstance = null;
         let currentImagePath = "";
 
-        // --- LETTURA SILENZIOSA DATI (100% FIREBASE) ---
         async function caricaDatiTurniSilenzioso() {
             try {
                 const resMappa = await fetch('mappa_file.json?t=' + new Date().getTime());
@@ -471,16 +509,12 @@
             }
         }
 
-        // Helper per i riposi dinamici
         function stringToNum(s) { 
             if(!s) return 0; 
             let p = s.split('-'); 
             return Math.floor(new Date(p[0], p[1]-1, p[2], 12, 0, 0).getTime() / 86400000); 
         }
 
-        // ==========================================
-        // CREAZIONE UI RAGGRUPPATA PER MESI
-        // ==========================================
         function pulisciNome(nome) {
             let pulito = nome.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
             return pulito.charAt(0).toUpperCase() + pulito.slice(1);
@@ -533,11 +567,9 @@
                             let dataRes = await fetch(`${CARTELLA_BASE}/${g.json}?t=${timestamp}`);
                             let jsonData = await dataRes.json();
 
-                            // Generazione dinamic dei "Disponibili" leggendo dal Database Firestore
                             if (window.getUtentiAbilitatiFirebase) {
                                 let allU = await window.getUtentiAbilitatiFirebase();
-                                let disp51_arr = []; 
-                                let disp6261_arr = [];
+                                let dispGroups = { "disp_5_1": {}, "disp_6_2_6_1": {} };
                                 let parts = g.base.split('_');
                                 
                                 if (parts.length >= 3) {
@@ -549,10 +581,11 @@
                                         let cNum_1st = stringToNum(`${y}-${m}-1`);
 
                                         allU.forEach(u => {
-                                            if (u.data_riposo_singolo) {
+                                            if (u.data_riposo_singolo && (u.rotazione_richiesta === "disp_5_1" || u.rotazione_richiesta === "disp_6_2_6_1")) {
                                                 let nomeCompl = (u.cognome + " " + u.nome + " " + (u.progressivo || "")).trim().toUpperCase();
                                                 let turni = {};
                                                 let dRiposoNum = stringToNum(u.data_riposo_singolo);
+                                                let manKey = u.mansione || "Mansione non specificata"; 
                                                 
                                                 for(let i=1; i<=31; i++) {
                                                     let dCheck = new Date(y, m-1, i);
@@ -571,39 +604,38 @@
                                                     }
                                                 }
 
-                                                if (u.rotazione_richiesta === "disp_5_1") {
+                                                let rotKey = u.rotazione_richiesta;
+                                                let sortKey = 0;
+
+                                                if (rotKey === "disp_5_1") {
                                                     let offset = (cNum_1st - dRiposoNum) % 6;
                                                     if (offset < 0) offset += 6;
-                                                    let sortKey = (6 - offset) % 6; 
-                                                    disp51_arr.push({ nome: nomeCompl, turni: turni, sortKey: sortKey });
-                                                } else if (u.rotazione_richiesta === "disp_6_2_6_1") {
+                                                    sortKey = (6 - offset) % 6; 
+                                                } else if (rotKey === "disp_6_2_6_1") {
                                                     let offset = (cNum_1st - dRiposoNum) % 15;
                                                     if (offset < 0) offset += 15;
-                                                    // Ordiniamo calcolando la distanza dal primo giorno di riposo doppio (che si trova a offset 7)
-                                                    let sortKey = (15 + 7 - offset) % 15; 
-                                                    disp6261_arr.push({ nome: nomeCompl, turni: turni, sortKey: sortKey });
+                                                    sortKey = (15 + 7 - offset) % 15; 
                                                 }
+
+                                                if (!dispGroups[rotKey][manKey]) dispGroups[rotKey][manKey] = [];
+                                                dispGroups[rotKey][manKey].push({ nome: nomeCompl, turni: turni, sortKey: sortKey });
                                             }
                                         });
 
-                                        // Ordinamento matematico tramite le sortKey per generare la cascata perfetta
-                                        disp51_arr.sort((a, b) => a.sortKey - b.sortKey);
-                                        disp6261_arr.sort((a, b) => a.sortKey - b.sortKey);
-
-                                        // Ricostruzione del dizionario finale per il rendering HTML
-                                        let finalDisp51 = {};
-                                        disp51_arr.forEach(x => finalDisp51[x.nome] = x.turni);
-                                        
-                                        let finalDisp6261 = {};
-                                        disp6261_arr.forEach(x => finalDisp6261[x.nome] = x.turni);
-
-                                        if (Object.keys(finalDisp51).length > 0) jsonData["Disponibili 5-1"] = finalDisp51;
-                                        if (Object.keys(finalDisp6261).length > 0) jsonData["Disponibili 6-2-6-1"] = finalDisp6261;
+                                        const mapNomiRotDisp = { "disp_5_1": "Disponibili 5-1", "disp_6_2_6_1": "Disponibili 6-2-6-1" };
+                                        for (let rotKey in dispGroups) {
+                                            for (let manKey in dispGroups[rotKey]) {
+                                                dispGroups[rotKey][manKey].sort((a, b) => a.sortKey - b.sortKey);
+                                                let finalObj = {};
+                                                dispGroups[rotKey][manKey].forEach(x => finalObj[x.nome] = x.turni);
+                                                let tabName = `${mapNomiRotDisp[rotKey]} - ${manKey}`;
+                                                jsonData[tabName] = finalObj;
+                                            }
+                                        }
                                     }
                                 }
                             }
 
-                            // Memorizziamo globalmente i nomi presenti in tutte le rotazioni (per pallino verde admin)
                             Object.values(jsonData).forEach(rot => {
                                 Object.keys(rot).forEach(nome => {
                                     if (!window.globalNomiRotazioni.includes(nome.toUpperCase())) {
@@ -676,9 +708,6 @@
             }
         }
 
-        // ==========================================
-        // GESTIONE TABELLA VISUALE E RICERCA BASE
-        // ==========================================
         function chiudiModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
         function chiudiSeSfondo(event, modalId) { if (event.target.id === modalId) chiudiModal(modalId); }
 
@@ -743,7 +772,7 @@
                 databaseTurni.push({
                     nome: nome.split(" - ").join(" e "), 
                     turni: turniArr,
-                    rotazione: rotName // Salviamo il nome della rotazione per il calcolo specifico 5-1
+                    rotazione: rotName 
                 });
             }
 
@@ -755,9 +784,6 @@
             document.getElementById('risultato-cambi').innerHTML = "";
         }
 
-        // ==========================================
-        // MOTORE RICERCA CORRENTE (Del Mese)
-        // ==========================================
         function cercaTurno() {
             const giorno = parseInt(document.getElementById('input-giorno-turno').value);
             const codice = document.getElementById('input-codice-turno').value.trim().toUpperCase();
@@ -840,14 +866,12 @@
         }
 
         function determinaFaseDaGiorno(n, rotazione) {
-            // Regola specifica per la rotazione "Disponibili 5-1"
             if (rotazione && rotazione.includes("5-1")) {
                 if (n === 1 || n === 2) return { fase: "Terzo", giornoEsatto: n };
                 if (n === 3) return { fase: "Mezzo", giornoEsatto: n };
                 if (n === 4 || n === 5) return { fase: "Primo", giornoEsatto: n };
                 return { fase: "Oltre 5 giorni", giornoEsatto: n };
             }
-            // Regola standard
             if (n === 1 || n === 2) return { fase: "Terzo", giornoEsatto: n };
             if (n === 3 || n === 4) return { fase: "Mezzo", giornoEsatto: n };
             if (n === 5 || n === 6) return { fase: "Primo", giornoEsatto: n };
@@ -906,9 +930,6 @@
             }
         }
 
-        // ==========================================
-        // MOTORE RICERCA FUTURA (LOGICA FASI 15 GIORNI O 5-1)
-        // ==========================================
         function formattaData(dStr) {
             let p = dStr.split('-');
             return `${p[2]}/${p[1]}/${p[0]}`;
@@ -922,7 +943,7 @@
                 let riIndex = turniMese.findIndex(t => t === "RI" || t === "AL");
                 if (riIndex !== -1) {
                     let dNum = stringToNum(`${y}-${m}-${riIndex + 1}`);
-                    refNum = dNum - 5; // Inizio ciclo di 6 giorni (0..4 lavoro, 5 riposo)
+                    refNum = dNum - 5; 
                 }
             } else {
                 let alIndex = turniMese.findIndex(t => t === "AL");
@@ -944,7 +965,6 @@
                     }
                 }
             }
-
             if (refNum === null) return null; 
             return { nome, refNum, rotazione };
         }
@@ -997,7 +1017,6 @@
                 let infoExtra = "";
                 let giornoLav = 0;
 
-                // Calcolo per cicli 5-1
                 if (p.rotazione && p.rotazione.includes("5-1")) {
                     let pos = ((targetNum - p.refNum) % 6 + 6) % 6;
                     if (pos === 5) { 
@@ -1009,7 +1028,6 @@
                         else if (giornoLav === 4 || giornoLav === 5) faseCalcolata = "Primo";
                     }
                 } 
-                // Calcolo Standard per tutte le altre (15 o 6 giorni standard)
                 else {
                     let pos = ((targetNum - p.refNum + 6) % 15 + 15) % 15;
                     if (pos === 6) { faseCalcolata = "Riposo"; infoExtra = "Singolo (RI)"; }
@@ -1042,9 +1060,6 @@
             }
         }
 
-        // ==========================================
-        // GESTIONE PANZOOM E MODALE IMMAGINI (100% FIREBASE)
-        // ==========================================
         function initPanzoom() {
             const imgElem = document.getElementById('turnoImage');
             if (typeof Panzoom !== 'undefined' && !pzInstance) {
@@ -1114,10 +1129,6 @@
             imgElement.src = currentImagePath;
         }
 
-        function chiudiSeSfondoModalImg(event) { 
-            if (event.target.id === 'imageModal' || event.target.id === 'imageFlexContainer') chiudiImageModal(); 
-        }
-        
         function chiudiImageModal() {
             document.getElementById('imageModal').style.display = 'none';
             document.getElementById('turnoImage').removeAttribute('src');
@@ -1134,7 +1145,6 @@
             document.body.removeChild(a);
         }
 
-        // --- RICERCA CON EXCEL (Ora usa percorsi Firebase) ---
         async function apriFinestraRicerca(pdfName, tuttiIFileNomi) {
             const modal = document.getElementById('search-modal');
             const statusEl = document.getElementById('modal-status');
@@ -1296,6 +1306,20 @@
             let arr = ["AL", "RI", "DISP", "DI", "FER", "MAL", "PRT", "ESPE"];
             return arr.includes(val) || val.match(/^[0-9]+[A-Z]+[0-9]*$/) || val.match(/^[A-Z]+[0-9]+$/);
         }
+
+        window.filtraUtentiAbilitati = () => {
+            let input = document.getElementById('search-utenti-abilitati');
+            let filter = input.value.toUpperCase();
+            let rows = document.getElementsByClassName('utente-row');
+            for (let i = 0; i < rows.length; i++) {
+                let txtValue = rows[i].getAttribute('data-search');
+                if (txtValue.indexOf(filter) > -1) {
+                    rows[i].style.display = "flex";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        };
     </script>
 
     <script type="module">
@@ -1334,7 +1358,50 @@
             }
         }
 
-        // Esponiamo la funzione globalmente per farla usare al renderer JSON della tabella
+        window.apriDettaglioUtente = (uid) => {
+            const u = window.utentiMap[uid];
+            if (!u) return;
+            window.currentUtentePdf = u;
+            const omo = u.progressivo ? ` ${u.progressivo}` : '';
+            const htmlData = `
+                <div style="margin-bottom:8px;"><strong>Nome:</strong> ${u.nome || '-'}</div>
+                <div style="margin-bottom:8px;"><strong>Cognome:</strong> ${u.cognome || '-'}${omo}</div>
+                <div style="margin-bottom:8px;"><strong>Matricola:</strong> ${u.matricola || '-'}</div>
+                <div style="margin-bottom:8px;"><strong>Rotazione:</strong> ${ROTAZIONI_MAP[u.rotazione_richiesta] || u.rotazione_richiesta || '-'}</div>
+            `;
+            document.getElementById('dettaglio-utente-body').innerHTML = htmlData;
+            document.getElementById('modal-dettaglio-utente').style.display = 'flex';
+        };
+
+        window.scaricaPDFConsenso = () => {
+            const u = window.currentUtentePdf;
+            if(!u) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const omo = u.progressivo ? ` ${u.progressivo}` : '';
+            const email = u.email || 'Email non registrata nel database';
+            
+            doc.setFontSize(16);
+            doc.text("Modulo di Consenso Rotazioni", 10, 20);
+            
+            doc.setFontSize(12);
+            doc.text(`Nome: ${u.nome || '-'}`, 10, 40);
+            doc.text(`Cognome: ${u.cognome || '-'}${omo}`, 10, 50);
+            doc.text(`Matricola: ${u.matricola || '-'}`, 10, 60);
+            doc.text(`Email: ${email}`, 10, 70);
+            doc.text(`Codice ID utility: ${u.uid}`, 10, 80);
+            
+            doc.setFontSize(11);
+            const text = "Richiedendo l'accesso alla pagina rotazioni do il mio consenso ad inserire i miei dati nei documenti di programmazione turni mensile \"rotazioni\".";
+            const splitText = doc.splitTextToSize(text, 180);
+            doc.text(splitText, 10, 100);
+            
+            const safeNome = (u.nome || 'nome').replace(/[^a-zA-Z0-9]/g, '');
+            const safeCognome = (u.cognome || 'cognome').replace(/[^a-zA-Z0-9]/g, '');
+            doc.save(`${safeCognome}_${safeNome}_consenso_rotazioni.pdf`);
+        };
+
         window.getUtentiAbilitatiFirebase = async () => {
             const q = query(collection(db, "utenti"), where("abilitato_rotazioni", "==", true));
             const snap = await getDocs(q);
@@ -1378,13 +1445,6 @@
                 if (docSnap.exists()) {
                     currentUserDoc = docSnap.data(); isCollab = (currentUserDoc.ruolo === 'collaborator');
                     
-                    const oldCode = localStorage.getItem('auth_rotazioni');
-                    if (oldCode && !currentUserDoc.abilitato_rotazioni && currentUserDoc.stato_richiesta !== 'pending') {
-                        await updateDoc(docRef, { abilitato_rotazioni: true, stato_richiesta: 'approved', rotazione_richiesta: 'legacy_code' });
-                        currentUserDoc.abilitato_rotazioni = true;
-                        localStorage.removeItem('auth_rotazioni');
-                    }
-
                     if (currentUserDoc.abilitato_rotazioni === true) {
                         authSect.style.display = 'none'; contSect.style.display = 'flex';
                         document.getElementById('btn-miei-dati').style.display = 'inline-block';
@@ -1420,8 +1480,12 @@
                 document.getElementById('edit-rotazione').value = '';
             }
             
+            let isDisp = rReq && rReq.startsWith('disp_');
             document.getElementById('edit-data-riposo').value = currentUserDoc.data_riposo_singolo || '';
-            document.getElementById('div-data-riposo-edit').style.display = (rReq && rReq.startsWith('disp_')) ? 'block' : 'none';
+            document.getElementById('edit-mansione').value = currentUserDoc.mansione || '';
+            
+            document.getElementById('div-data-riposo-edit').style.display = isDisp ? 'block' : 'none';
+            document.getElementById('div-mansione-edit').style.display = isDisp ? 'block' : 'none';
             
             document.getElementById('edit-error-msg').innerText = '';
             document.getElementById('modal-miei-dati').style.display = 'flex';
@@ -1434,22 +1498,29 @@
             const m = document.getElementById('edit-matricola').value.trim();
             const omo = document.getElementById('edit-omonimia').value.trim();
             const dRip = document.getElementById('edit-data-riposo').value;
+            const man = document.getElementById('edit-mansione').value;
             const err = document.getElementById('edit-error-msg');
             
             if (!n || !c || !m) { err.innerText = "Nome, Cognome e Matricola sono obbligatori."; return; }
             if (!rot) { err.innerText = "Seleziona la tua rotazione di appartenenza."; return; }
-            if (rot.startsWith('disp_') && !dRip) { err.innerText = "Inserisci la data del riposo singolo."; return; }
+            if (rot.startsWith('disp_')) {
+                if (!dRip) { err.innerText = "Inserisci la data del riposo singolo."; return; }
+                if (!man) { err.innerText = "Seleziona la tua mansione."; return; }
+            }
             
             err.innerText = "Salvataggio in corso..."; err.style.color = "#666";
             try {
-                await updateDoc(doc(db, "utenti", currentUserId), { 
+                let p = { 
                     nome: n, cognome: c, matricola: m, progressivo: omo,
-                    rotazione_richiesta: rot, data_riposo_singolo: dRip || null
-                });
+                    rotazione_richiesta: rot, data_riposo_singolo: dRip || null,
+                    mansione: rot.startsWith('disp_') ? man : null
+                };
+                await updateDoc(doc(db, "utenti", currentUserId), p);
                 
                 currentUserDoc.nome = n; currentUserDoc.cognome = c; currentUserDoc.matricola = m; 
                 currentUserDoc.progressivo = omo; currentUserDoc.rotazione_richiesta = rot;
-                currentUserDoc.data_riposo_singolo = dRip || null;
+                currentUserDoc.data_riposo_singolo = p.data_riposo_singolo;
+                currentUserDoc.mansione = p.mansione;
                 
                 alert("Dati aggiornati con successo! Ricordati di ricaricare la pagina per visualizzare le tabelle generate.");
                 chiudiModal('modal-miei-dati');
@@ -1464,20 +1535,26 @@
             const omo = document.getElementById('req-omonimia').value.trim();
             const cons = document.getElementById('req-consenso').checked;
             const dRip = document.getElementById('req-data-riposo').value;
+            const man = document.getElementById('req-mansione').value;
             const err = document.getElementById('req-error-msg');
             
             if (!n || !c || !m) { err.innerText = "Nome, Cognome e Matricola sono obbligatori."; return; }
             if (!rot) { err.innerText = "Seleziona la tua rotazione di appartenenza."; return; }
-            if (rot.startsWith('disp_') && !dRip) { err.innerText = "Inserisci la data di un tuo riposo singolo."; return; }
+            if (rot.startsWith('disp_')) {
+                if (!dRip) { err.innerText = "Inserisci la data di un tuo riposo singolo."; return; }
+                if (!man) { err.innerText = "Seleziona la tua mansione."; return; }
+            }
             if (!cons) { err.innerText = "Devi accettare di condividere i dati per continuare."; return; }
             if (!currentUserId) return;
             
             err.innerText = "Invio in corso..."; err.style.color = "#666";
             try {
-                await updateDoc(doc(db, "utenti", currentUserId), { 
+                let p = { 
                     nome: n, cognome: c, matricola: m, progressivo: omo,
-                    stato_richiesta: 'pending', rotazione_richiesta: rot, data_riposo_singolo: dRip || null
-                });
+                    stato_richiesta: 'pending', rotazione_richiesta: rot, 
+                    data_riposo_singolo: dRip || null, mansione: rot.startsWith('disp_') ? man : null
+                };
+                await updateDoc(doc(db, "utenti", currentUserId), p);
                 location.reload();
             } catch(e) { err.innerText = "Errore durante l'invio. Riprova."; err.style.color = "var(--danger)"; }
         };
@@ -1487,36 +1564,62 @@
             if (isAdmin) document.getElementById('btn-collab-admin').style.display = 'inline-block';
             const cont = document.getElementById('lista-utenti-abilitati');
             cont.innerHTML = "<div style='text-align:center; padding:15px; font-size:14px;'>Caricamento...</div>";
-            const snap = await getDocs(collection(db, "utenti")); let html = "";
+            const snap = await getDocs(collection(db, "utenti")); 
+            
+            window.utentiMap = {}; 
+            let utentiArr = [];
+            
             snap.forEach(d => {
                 const u = d.data();
                 if (u.abilitato_rotazioni === true) {
                     let isLegacy = (u.rotazione_richiesta === 'legacy_code' || (u.rotazione_richiesta && u.rotazione_richiesta.length > 50));
                     if (isCollab && !isAdmin && !isLegacy && !(currentUserDoc.permessi_gestione || []).includes(u.rotazione_richiesta)) return;
                     
-                    let rotNome = ROTAZIONI_MAP[u.rotazione_richiesta];
-                    if (!rotNome) { rotNome = isLegacy ? 'Accesso con Codice' : (u.rotazione_richiesta || 'Assegnazione Manuale'); }
-                    
-                    // Controllo presenza nei tabulati
-                    const checkC = (u.cognome || '').trim().toUpperCase();
-                    const checkN = (u.nome || '').trim().toUpperCase();
-                    const presente = checkC && checkN && (window.globalNomiRotazioni || []).some(n => n.includes(checkC) && n.includes(checkN));
-                    const pallino = presente ? '<span title="Presente nei tabulati" style="font-size:11px; margin-left:4px;">🟢</span>' : '';
-
-                    let btnBloccaHTML = (d.id === ADMIN_UID) ? 
-                        `<span style="font-size:13px; color:var(--primary); font-weight:bold; margin-right:5px;">Admin</span>` : 
-                        `<button class="btn" style="width:auto; padding:6px 12px; background:var(--danger); margin:0;" onclick="revocaAccesso('${d.id}')">Blocca</button>`;
-
-                    html += `<div style="background:#f8f9fa; border:1px solid #ddd; padding:10px; margin-bottom:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <strong style="font-size:14px;">${u.cognome||''} ${u.nome||''} ${u.progressivo||''} ${pallino}</strong><br>
-                            <span style="font-size:12px; color:#666;">Matr: ${u.matricola||''} | ${rotNome}</span>
-                        </div>
-                        ${btnBloccaHTML}
-                    </div>`;
+                    u.uid = d.id; 
+                    window.utentiMap[d.id] = u;
+                    utentiArr.push(u);
                 }
             });
+
+            utentiArr.sort((a, b) => {
+                let cognomeA = (a.cognome || '').trim().toUpperCase();
+                let cognomeB = (b.cognome || '').trim().toUpperCase();
+                if (cognomeA < cognomeB) return -1;
+                if (cognomeA > cognomeB) return 1;
+                let nomeA = (a.nome || '').trim().toUpperCase();
+                let nomeB = (b.nome || '').trim().toUpperCase();
+                if (nomeA < nomeB) return -1;
+                if (nomeA > nomeB) return 1;
+                return 0;
+            });
+
+            let html = "";
+            utentiArr.forEach(u => {
+                let isLegacy = (u.rotazione_richiesta === 'legacy_code' || (u.rotazione_richiesta && u.rotazione_richiesta.length > 50));
+                let rotNome = ROTAZIONI_MAP[u.rotazione_richiesta];
+                if (!rotNome) { rotNome = isLegacy ? 'Accesso con Codice' : (u.rotazione_richiesta || 'Assegnazione Manuale'); }
+                
+                const checkC = (u.cognome || '').trim().toUpperCase();
+                const checkN = (u.nome || '').trim().toUpperCase();
+                const presente = checkC && checkN && (window.globalNomiRotazioni || []).some(n => n.includes(checkC) && n.includes(checkN));
+                const pallino = presente ? '<span title="Presente nei tabulati" style="font-size:11px; margin-left:4px;">🟢</span>' : '';
+
+                let btnBloccaHTML = (u.uid === ADMIN_UID) ? 
+                    `<span style="font-size:13px; color:var(--primary); font-weight:bold; margin-right:5px;">Admin</span>` : 
+                    `<button class="btn" style="width:auto; padding:6px 12px; background:var(--danger); margin:0;" onclick="revocaAccesso('${u.uid}')">Blocca</button>`;
+
+                html += `<div class="utente-row" data-search="${checkC} ${checkN} ${u.matricola||''}" style="background:#f8f9fa; border:1px solid #ddd; padding:10px; margin-bottom:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="font-size:14px; cursor:pointer; color:var(--primary); text-decoration:underline;" onclick="apriDettaglioUtente('${u.uid}')">${u.cognome||''} ${u.nome||''} ${u.progressivo||''}</strong> ${pallino}<br>
+                        <span style="font-size:12px; color:#666;">Matr: ${u.matricola||''} | ${rotNome}</span>
+                    </div>
+                    ${btnBloccaHTML}
+                </div>`;
+            });
             cont.innerHTML = html || "<div style='text-align:center; font-size:14px; color:#666;'>Nessun utente trovato nella tua area.</div>";
+            
+            let searchInput = document.getElementById('search-utenti-abilitati');
+            if (searchInput) searchInput.value = '';
         };
 
         window.revocaAccesso = async (uid) => {
@@ -1536,13 +1639,18 @@
             let groupedRequests = {};
             let count = 0;
             
+            window.utentiMap = {}; 
+            
             snap.forEach(d => {
                 const u = d.data();
+                u.uid = d.id;
+                window.utentiMap[d.id] = u;
+                
                 if (u.stato_richiesta === 'pending') {
                     if (isCollab && !isAdmin && !(currentUserDoc.permessi_gestione || []).includes(u.rotazione_richiesta)) return;
                     let rotKey = u.rotazione_richiesta || 'Sconosciuta';
                     if (!groupedRequests[rotKey]) groupedRequests[rotKey] = [];
-                    groupedRequests[rotKey].push({ id: d.id, ...u });
+                    groupedRequests[rotKey].push(u);
                     count++;
                 }
             });
@@ -1564,18 +1672,17 @@
                     <div style="padding:10px; border-top:1px solid #eee;">`;
                 
                 reqs.forEach(u => {
-                    // Controllo presenza nei tabulati per inserire il pallino
                     const checkC = (u.cognome || '').trim().toUpperCase();
                     const checkN = (u.nome || '').trim().toUpperCase();
                     const presente = checkC && checkN && (window.globalNomiRotazioni || []).some(n => n.includes(checkC) && n.includes(checkN));
                     const pallino = presente ? '<span title="Presente nei tabulati" style="font-size:11px; margin-left:4px;">🟢</span>' : '';
 
                     html += `<div style="background:#fff3cd; border:1px solid #ffeeba; padding:10px; margin-bottom:8px; border-radius:8px;">
-                        <strong style="font-size:14px; color:#856404;">${u.cognome||''} ${u.nome||''} ${u.progressivo||''} ${pallino}</strong><br>
+                        <strong style="font-size:14px; color:#856404; cursor:pointer; text-decoration:underline;" onclick="apriDettaglioUtente('${u.uid}')">${u.cognome||''} ${u.nome||''} ${u.progressivo||''}</strong> ${pallino}<br>
                         <span style="font-size:12px; color:#666;">Matr: ${u.matricola||''}</span>
                         <div style="display:flex; gap:10px; margin-top:10px;">
-                            <button class="btn" style="background:var(--success); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${u.id}', true)">✅ Consenti</button>
-                            <button class="btn" style="background:var(--danger); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${u.id}', false)">❌ Rifiuta</button>
+                            <button class="btn" style="background:var(--success); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${u.uid}', true)">✅ Consenti</button>
+                            <button class="btn" style="background:var(--danger); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${u.uid}', false)">❌ Rifiuta</button>
                         </div>
                     </div>`;
                 });

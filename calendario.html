@@ -2039,7 +2039,7 @@
                 
                 const validDDS = ddsList.filter(item => item.dateValidita && item.dateValidita.includes(date));
                 validDDS.forEach(item => { 
-                    htmlInfo += `<br><span style="color: #d63384; font-weight: bold;">DDS: "${item.titolo}"</span>`; 
+                    htmlInfo += `<br><span style="color: #d63384; font-weight: bold;">ℹ️: "${item.titolo}"</span>`; 
                 });
             } catch (e) { 
                 console.error("Errore lettura DDS per modal", e); 

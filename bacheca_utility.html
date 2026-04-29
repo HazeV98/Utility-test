@@ -21,7 +21,7 @@
             url.searchParams.set('nocache', new Date().getTime());
             window.location.replace(url.toString());
         } else {
-            const APP_VERSION = "1.2"; 
+            const APP_VERSION = "1.3"; 
             if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
                 if ('caches' in window) {
                     caches.keys().then((names) => {
@@ -107,6 +107,8 @@
         <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
         <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
         <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
+        <a href="guida.html" class="sidebar-link">📖 Guida</a>
     </div>
 
     <div class="header">
@@ -149,7 +151,7 @@
             <label style="font-size: 12px; font-weight: bold; color: #666;">Matricola *</label>
             <input type="text" id="req-matricola" class="input-field" placeholder="La tua matricola">
 
-            <label style="font-size: 12px; font-weight: bold; color: #666;">Nuemro Omonimia (Facoltativo)</label>
+            <label style="font-size: 12px; font-weight: bold; color: #666;">Numero Omonimia (Facoltativo)</label>
             <input type="text" id="req-prog" class="input-field" placeholder="Es. 02, 03...">
 
             <button id="btn-save-profile" class="btn-action" onclick="salvaProfiloObbligatorio()">Salva e Accedi</button>
@@ -323,7 +325,6 @@
         const db = getFirestore(app);
 
         const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2"; 
-        const COLLABORATORE_UIDS = ["INSERISCI_QUI_UID_1", "INSERISCI_QUI_UID_2"]; 
         let isPrivilegedUser = false;
         let ddsDatesArray = [];
         let currentUserFullName = "Utente Sconosciuto"; 
@@ -379,16 +380,18 @@
             nascondiTutto();
             
             if (user) {
-                isPrivilegedUser = (user.uid === ADMIN_UID) || COLLABORATORE_UIDS.includes(user.uid);
-                if (isPrivilegedUser) document.getElementById('btn-admin-add').style.display = 'block';
-                if (user.uid === ADMIN_UID) document.getElementById('btn-admin-gestione').style.display = 'block';
-
                 document.getElementById('view-loading').style.display = 'flex';
 
                 try {
                     const docRef = doc(db, "utenti", user.uid);
                     const docSnap = await getDoc(docRef);
                     let data = docSnap.exists() ? docSnap.data() : {};
+
+                    // Aggiornamento visibilità funzioni riservate in base al nuovo DB
+                    isPrivilegedUser = (user.uid === ADMIN_UID) || (data.ruolo === 'collaborator');
+                    
+                    if (isPrivilegedUser) document.getElementById('btn-admin-add').style.display = 'block';
+                    if (user.uid === ADMIN_UID) document.getElementById('btn-admin-gestione').style.display = 'block';
 
                     if (data.bacheca_banned === true) {
                         nascondiTutto();
@@ -476,7 +479,6 @@
             } catch (e) { alert("Errore salvataggio."); btn.innerText = "Salva"; btn.disabled = false; }
         };
 
-        // --- FUNZIONE AGGIORNATA CON IL CONTATORE ---
         window.apriGestioneAccessi = async () => {
             document.getElementById('modal-gestione').style.display = 'flex';
             const container = document.getElementById('lista-utenti-accessi');

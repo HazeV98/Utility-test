@@ -238,5 +238,17 @@
     "nome": "Novello Manuel",
     "data_creazione": "2026-04-21",
     "attivo": true
+  },
+  {
+    "codice": "5W6S82",
+    "nome": "Memo Andrea",
+    "data_creazione": "2026-04-24",
+    "attivo": true
+  },
+  {
+    "codice": "J74LWX",
+    "nome": "Ballarin Cristian",
+    "data_creazione": "2026-04-24",
+    "attivo": true
   }
 ]

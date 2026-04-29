@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utility - Promemoria</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/it.js"></script>
+
+    <style>
+        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --danger: #dc3545; --success: #28a745; --warning: #ffc107; }
+        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
+        h2 { margin: 0; color: #856404; font-size: 24px; text-align: center; }
+        
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
+        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; }
+        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+        
+        .content-area { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+        
+        .promemoria-card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 10px; border-left: 5px solid var(--warning); position: relative; }
+        .dds-title { font-weight: bold; font-size: 16px; color: #856404; padding-right: 30px; }
+        .dds-date { font-size: 13px; color: #666; line-height: 1.4; }
+        .dds-note { font-size: 13px; color: #444; background: #fff8e1; padding: 10px; border-radius: 8px; border-left: 3px solid #ffc107; margin-top: 5px; font-style: italic; white-space: pre-wrap; line-height: 1.4; }
+        .dds-reminder-badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; background-color: #fff3cd; color: #856404; align-self: flex-start; }
+        
+        .btn-delete { background-color: white; color: var(--danger); border: 1px solid var(--danger); padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px;}
+        .btn-add-main { background-color: var(--warning); color: #333; border: none; padding: 14px; font-size: 15px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 3000; padding: 15px; box-sizing: border-box; }
+        .modal-content { background-color: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+        
+        .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        .input-group label { font-size: 14px; font-weight: bold; color: #555; }
+        .input-field, .input-group input[type="text"], .input-group textarea { padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 15px; width: 100%; box-sizing: border-box; font-family: inherit; }
+        
+        .checkbox-group { display: flex; flex-direction: column; gap: 10px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; }
+        .checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: normal; color: #333; cursor: pointer; }
+        .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; margin: 0; }
+
+        .btn-esegui { background-color: var(--warning); color: #333; border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; margin-bottom: 10px; }
+        .btn-chiudi { background-color: #6c757d; color: white; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; text-align: center; }
+        .empty-state { text-align: center; padding: 30px 10px; color: #888; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
+        <h2>Promemoria</h2>
+        <div style="width: 50px;"></div>
+    </div>
+
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3 style="margin:0; color:white;">Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+        </div>
+        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
+        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
+        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
+        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link">🕒 Orari</a>
+        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
+        <a href="link.html" class="sidebar-link">🔗 Link</a>
+        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
+        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
+        <a href="promemoria.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">🔔 Promemoria</a>
+        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+    </div>
+
+    <div class="content-area">
+        <button class="btn-add-main" style="margin-bottom: 5px;" onclick="apriModalePromemoria()">➕ Nuovo Promemoria</button>
+        <div id="dds-list"></div>
+    </div>
+
+    <div id="modal-promemoria" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top: 0; margin-bottom: 20px; color: #856404; text-align: center;">Nuovo Promemoria</h3>
+            
+            <div class="input-group">
+                <label>Titolo (nel calendario)</label>
+                <input type="text" id="prom-titolo" placeholder="Es. Visita medica">
+            </div>
+
+            <div class="input-group">
+                <label>Giorni di validità</label>
+                <input type="text" id="prom-date-picker" placeholder="Seleziona le date..." readonly>
+            </div>
+
+            <div class="input-group">
+                <label>Note / Descrizione</label>
+                <textarea id="prom-note" rows="3" placeholder="Aggiungi dettagli o note..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <label>Avvisi sul Calendario (all'avvio):</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-label"><input type="checkbox" value="day_before" class="rem-prom-checkbox"> Il giorno prima</label>
+                    <label class="checkbox-label"><input type="checkbox" value="first_day" class="rem-prom-checkbox"> Il primo giorno</label>
+                    <label class="checkbox-label"><input type="checkbox" value="all_days" class="rem-prom-checkbox" checked> Tutti i giorni</label>
+                </div>
+            </div>
+
+            <div class="input-group" style="background: #fff8e1; padding: 15px; border-radius: 8px; border: 1px dashed #ffc107;">
+                <label class="checkbox-label" style="font-weight: bold; color: #856404;">
+                    <input type="checkbox" id="banner-attiva"> ⚠️ Mostra banner in Home Page
+                </label>
+                <div style="font-size: 11px; color: #888; margin-top: 5px;">Se attivo, vedrai un avviso nella Home Page per tutta la durata dei giorni validi.</div>
+            </div>
+
+            <button id="btn-salva-prom" class="btn-esegui" onclick="salvaPromemoria()">💾 Salva Promemoria</button>
+            <button class="btn-chiudi" onclick="chiudiModalePromemoria()">Annulla</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, collection } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
+        const app = initializeApp(firebaseConfig); 
+        const auth = getAuth(app); 
+        const db = getFirestore(app);
+
+        window.apriMenuLaterale = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; };
+        window.chiudiMenuLaterale = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; };
+
+        let fpPromemoriaInstance;
+        const dbName = "UtilityDB";
+        const storeName = "archivio_dds";
+        let localDb;
+
+        const request = indexedDB.open(dbName, 3);
+        request.onupgradeneeded = function(event) { 
+            localDb = event.target.result; 
+            if (!localDb.objectStoreNames.contains(storeName)) { localDb.createObjectStore(storeName, { keyPath: "id", autoIncrement: true }); } 
+        };
+        request.onsuccess = function(event) { localDb = event.target.result; caricaListaDDS(); };
+
+        window.apriModalePromemoria = () => {
+            document.getElementById('prom-titolo').value = '';
+            document.getElementById('prom-note').value = '';
+            document.getElementById('banner-attiva').checked = false;
+            
+            if (!fpPromemoriaInstance) { 
+                fpPromemoriaInstance = flatpickr("#prom-date-picker", { 
+                    mode: "multiple", 
+                    dateFormat: "Y-m-d", 
+                    locale: "it", 
+                    altInput: true, 
+                    altFormat: "d/m/Y", 
+                    conjunction: ", ",
+                    onReady: function(selectedDates, dateStr, instance) {
+                        const btnContainer = document.createElement("div");
+                        btnContainer.style.padding = "10px";
+                        btnContainer.style.borderTop = "1px solid #eee";
+                        btnContainer.style.backgroundColor = "#fff";
+                        
+                        const btn = document.createElement("button");
+                        btn.innerHTML = "Fatto ✔️";
+                        btn.style.backgroundColor = "var(--warning)";
+                        btn.style.color = "#333";
+                        btn.style.border = "none";
+                        btn.style.padding = "10px";
+                        btn.style.borderRadius = "8px";
+                        btn.style.fontWeight = "bold";
+                        btn.style.cursor = "pointer";
+                        btn.style.width = "100%";
+                        btn.style.fontSize = "16px";
+                        
+                        btn.onclick = function() {
+                            instance.close();
+                        };
+                        
+                        btnContainer.appendChild(btn);
+                        instance.calendarContainer.appendChild(btnContainer);
+                    }
+                }); 
+            }
+            fpPromemoriaInstance.clear();
+            document.querySelectorAll('.rem-prom-checkbox').forEach(cb => cb.checked = (cb.value === 'all_days'));
+            document.getElementById('modal-promemoria').style.display = 'flex';
+        };
+
+        window.chiudiModalePromemoria = () => document.getElementById('modal-promemoria').style.display = 'none';
+
+        window.salvaPromemoria = () => {
+            if (!localDb) return;
+            const btn = document.getElementById('btn-salva-prom');
+            const titolo = document.getElementById('prom-titolo').value.trim();
+            const note = document.getElementById('prom-note').value.trim();
+            const selectedDates = fpPromemoriaInstance.selectedDates.map(d => {
+                const offset = d.getTimezoneOffset() * 60000; return new Date(d.getTime() - offset).toISOString().split('T')[0];
+            }).sort();
+            const selectedReminders = Array.from(document.querySelectorAll('.rem-prom-checkbox:checked')).map(cb => cb.value);
+
+            if (!titolo || selectedDates.length === 0) return alert("Compila Titolo e seleziona almeno una data.");
+
+            btn.innerText = "⏳ Salvataggio..."; btn.disabled = true;
+
+            const uniqueId = "prom_" + Date.now();
+            const nuovoPromemoria = { 
+                id_sync: uniqueId, 
+                titolo: titolo, 
+                dateValidita: selectedDates, 
+                reminder: selectedReminders, 
+                note: note, 
+                isPromemoria: true 
+            };
+
+            const tx = localDb.transaction(storeName, "readwrite");
+            const reqAdd = tx.objectStore(storeName).add(nuovoPromemoria);
+
+            reqAdd.onsuccess = async function(event) {
+                if (auth.currentUser) {
+                    try {
+                        const syncRef = doc(db, "utenti", auth.currentUser.uid, "promemoria_sync", uniqueId);
+                        await setDoc(syncRef, {
+                            titolo: titolo,
+                            date: selectedDates,
+                            completato: false,
+                            timestamp: Date.now()
+                        });
+
+                        if (document.getElementById('banner-attiva').checked) {
+                            const noteRef = doc(collection(db, "utenti", auth.currentUser.uid, "notifiche_programmate"));
+                            await setDoc(noteRef, {
+                                titolo: "🔔 " + titolo,
+                                date: selectedDates,
+                                tipo: "PROMEMORIA_BANNER",
+                                note: note,
+                                timestamp_creazione: Date.now()
+                            });
+                        }
+                    } catch(err) { console.error("Sync error:", err); }
+                }
+
+                alert("✅ Promemoria salvato!");
+                window.chiudiModalePromemoria();
+                caricaListaDDS();
+                btn.innerText = "💾 Salva Promemoria"; btn.disabled = false;
+            };
+            
+            tx.onerror = () => { alert("Errore database locale."); btn.innerText = "💾 Salva"; btn.disabled = false; };
+        };
+
+        function caricaListaDDS() {
+            if (!localDb) return;
+            const listContainer = document.getElementById('dds-list');
+            listContainer.innerHTML = '';
+
+            const tx = localDb.transaction(storeName, "readonly");
+            tx.objectStore(storeName).getAll().onsuccess = function(e) {
+                let ddsArray = e.target.result.filter(dds => dds.isPromemoria);
+                const oggiStr = new Date().toISOString().split('T')[0];
+
+                ddsArray = ddsArray.filter(dds => {
+                    if (dds.dateValidita && dds.dateValidita.length > 0) {
+                        if (dds.dateValidita[dds.dateValidita.length - 1] < oggiStr) {
+                            eliminaDDS_Silenzioso(dds.id, dds.id_sync);
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+
+                if (ddsArray.length === 0) { listContainer.innerHTML = '<div class="empty-state">Nessun Promemoria attivo.</div>'; return; }
+
+                ddsArray.sort((a, b) => new Date(b.dateValidita[0]) - new Date(a.dateValidita[0]));
+
+                ddsArray.forEach(dds => {
+                    let validitaTesto = dds.dateValidita.length <= 3 ? dds.dateValidita.map(d => d.split('-').reverse().join('/')).join(', ') : `<b>${dds.dateValidita.length} giorni totali</b>`;
+                    const card = document.createElement('div'); card.className = 'promemoria-card';
+                    card.innerHTML = `
+                        <div class="dds-title">🔔 ${dds.titolo}</div>
+                        <div class="dds-date">Validità: ${validitaTesto}</div>
+                        ${dds.note ? `<div class="dds-note">📝 ${dds.note}</div>` : ''}
+                        <button class="btn-delete" onclick="eliminaDDS(${dds.id}, '${dds.id_sync}')">🗑️ Elimina</button>
+                    `;
+                    listContainer.appendChild(card);
+                });
+            };
+        }
+
+        window.eliminaDDS = async (id, idSync) => {
+            if (confirm("Vuoi davvero eliminare questo promemoria?")) {
+                const tx = localDb.transaction(storeName, "readwrite");
+                tx.objectStore(storeName).delete(id).onsuccess = async () => {
+                    if (auth.currentUser && idSync) {
+                        try {
+                            await updateDoc(doc(db, "utenti", auth.currentUser.uid, "promemoria_sync", idSync), { completato: true });
+                        } catch(e) { console.error("Firebase update error", e); }
+                    }
+                    caricaListaDDS();
+                };
+            }
+        };
+
+        function eliminaDDS_Silenzioso(id, idSync) {
+            const tx = localDb.transaction(storeName, "readwrite");
+            tx.objectStore(storeName).delete(id);
+            if (auth.currentUser && idSync) {
+                updateDoc(doc(db, "utenti", auth.currentUser.uid, "promemoria_sync", idSync), { completato: true }).catch(()=>{});
+            }
+        }
+    </script>
+</body>
+</html>

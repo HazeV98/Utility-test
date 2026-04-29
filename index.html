@@ -16,7 +16,7 @@
             url.searchParams.set('nocache', new Date().getTime());
             window.location.replace(url.toString());
         } else {
-            const APP_VERSION = "2.4"; 
+            const APP_VERSION = "2.5"; 
             if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
                 if ('caches' in window) { caches.keys().then((names) => { names.forEach(name => caches.delete(name)); }); }
                 if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then((registrations) => { registrations.forEach(registration => registration.unregister()); }); }
@@ -27,12 +27,11 @@
     </script>
 
     <script>
+        // Gestione importazione dati turni
         const urlParams = new URLSearchParams(window.location.search);
         const datiImportati = urlParams.get('dati');
-        const codiceImportato = urlParams.get('codice');
-        if (datiImportati || codiceImportato) {
-            if (datiImportati) localStorage.setItem('myTurniApp', datiImportati);
-            if (codiceImportato) localStorage.setItem('auth_rotazioni', codiceImportato);
+        if (datiImportati) {
+            localStorage.setItem('myTurniApp', datiImportati);
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     </script>
@@ -177,6 +176,10 @@
             ⚠️ Nuova DDS: <span id="titolo-dds-text"></span>
         </div>
 
+        <div id="banner-promemoria-alert" style="display: none; background: #17a2b8; color: white; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 20px; width: 100%; max-width: 400px; cursor: pointer; box-sizing: border-box; box-shadow: 0 2px 5px rgba(0,0,0,0.1);" onclick="window.location.href='promemoria.html'">
+            ⏰ Hai dei promemoria in sospeso!
+        </div>
+
         <div id="app-container" class="app-grid"></div>
         <button id="btn-salva-layout" class="btn-action" style="display: none; background: #ff9800; color: white; margin-top: 20px;" onclick="LayoutEngine.toggleEditMode()">✅ Fatto (Salva Layout)</button>
     </div> 
@@ -274,17 +277,52 @@
     </div>
 
     <div id="profileModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'profileModal')">
-        <div class="modal-content">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer;" onclick="chiudiModal('profileModal')">&times;</span>
-            <h3 style="text-align: center; color: #32325d;">Profilo</h3>
-            <div id="adminBadge" style="display:none;"></div>
+        <div class="modal-content" style="text-align: left;">
+            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('profileModal')">&times;</span>
+            <h3 style="text-align: center; color: #32325d; margin-top: 0; border-bottom: 2px solid #e9ecef; padding-bottom: 10px;">👤 Il tuo Profilo</h3>
+            
+            <div id="adminBadge" style="display:none; text-align:center; background:#ea4335; color:white; padding:5px; border-radius:5px; margin-bottom:10px; font-weight:bold; font-size: 14px;">Admin</div>
+            
+            <label style="font-size: 11px; font-weight: bold; color: #666;">Email Autenticazione:</label>
             <input type="text" id="profileEmail" class="input-field" disabled style="background: #f8f9fa;">
-            <input type="text" id="profileNome" class="input-field" placeholder="Nome">
-            <input type="text" id="profileCognome" class="input-field" placeholder="Cognome">
-            <input type="text" id="profileProgressivo" class="input-field" placeholder="Omonimia (es. 02)">
-            <input type="text" id="profileMatricola" class="input-field" placeholder="Matricola">
-            <button class="btn-modal" style="background: var(--success); color: white;" onclick="salvaProfilo()">Salva</button>
-            <button class="btn-modal" style="background: #525f7f; color: white;" onclick="logout()">Logout</button>
+            
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: bold; color: #666;">Nome:</label>
+                    <input type="text" id="profileNome" class="input-field" placeholder="Es. Mario">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: bold; color: #666;">Cognome:</label>
+                    <input type="text" id="profileCognome" class="input-field" placeholder="Es. Rossi">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: bold; color: #666;">Matricola:</label>
+                    <input type="text" id="profileMatricola" class="input-field" placeholder="Es. 123456">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: bold; color: #666;">Numero Omonimia:</label>
+                    <input type="text" id="profileProgressivo" class="input-field" placeholder="(facoltativo) Es. 02">
+                </div>
+            </div>
+
+            <label style="font-size: 11px; font-weight: bold; color: #666;">Mansione:</label>
+            <select id="profileMansione" class="input-field" style="background-color: white;">
+                <option value="" disabled selected>Seleziona Mansione (Facoltativo)</option>
+                <option value="Preposto al comando">Preposto al comando</option>
+                <option value="Marinaio">Marinaio</option>
+                <option value="Comandante">Comandante</option>
+                <option value="Timoniere">Timoniere</option>
+                <option value="Marinaio polivalente">Marinaio polivalente</option>
+                <option value="Direttore di macchina">Direttore di macchina</option>
+            </select>
+
+            <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 15px 0;">
+            
+            <button class="btn-modal" style="background: var(--success); color: white; margin-top: 5px;" onclick="salvaProfilo()">💾 Salva Modifiche</button>
+            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 10px;" onclick="logout()">Esci dall'Account</button>
         </div>
     </div>
 
@@ -297,7 +335,7 @@
                 <input type="text" id="regNome" class="input-field" placeholder="Nome *">
                 <input type="text" id="regCognome" class="input-field" placeholder="Cognome *">
                 <input type="text" id="regMatricola" class="input-field" placeholder="Matricola *">
-                <input type="text" id="regProg" class="input-field" placeholder="Omonimia">
+                <input type="text" id="regProg" class="input-field" placeholder="Numero Omonimia (facoltativo) es. 02">
             </div>
             <div id="authError" style="color: var(--danger); display: none; margin-bottom: 10px;"></div>
             <button id="btnEseguiAuth" class="btn-modal" style="background: #32325d; color: white;" onclick="eseguiAuth()">Accedi</button>
@@ -313,7 +351,7 @@
             <input type="text" id="obbl-nome" placeholder="Nome *" class="input-field">
             <input type="text" id="obbl-cognome" placeholder="Cognome *" class="input-field">
             <input type="text" id="obbl-matricola" placeholder="Matricola *" class="input-field">
-            <input type="text" id="obbl-prog" placeholder="Omonimia (es. 02)" class="input-field">
+            <input type="text" id="obbl-prog" placeholder="Numero Omonimia (facoltativo) es. 02" class="input-field">
             <button class="btn-modal" style="background: var(--success); color: white;" onclick="salvaDatiObbligatori()">Salva e Continua</button>
         </div>
     </div>
@@ -326,6 +364,15 @@
                 <div style="background: var(--primary); color: white; padding: 6px; border-radius: 8px; flex: 1; text-align: center;">Totali: <span id="badge-totali">0</span></div>
                 <div style="background: var(--success); color: white; padding: 6px; border-radius: 8px; flex: 1; text-align: center;">Oggi: <span id="badge-oggi">0</span></div>
             </div>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <input type="text" id="search-utenti-app" placeholder="Cerca collega..." style="flex: 1; margin: 0; padding: 12px; font-size: 14px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;" onkeyup="filtraUtentiApp()">
+                <select id="sort-utenti-app" style="padding: 12px; font-size: 13px; margin: 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; background: white; cursor:pointer;" onchange="renderGestioneAccessi()">
+                    <option value="recente">Recenti prima</option>
+                    <option value="alfabetico">Alfabetico</option>
+                </select>
+            </div>
+            
             <div id="lista-utenti-accessi" style="max-height: 55vh; overflow-y: auto;"></div>
         </div>
     </div>
@@ -335,7 +382,7 @@
             <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('modal-dettaglio-utente')">&times;</span>
             <h3 style="margin-top: 0; color: #32325d; text-align: center;">Dettaglio Utente</h3>
             <div id="dettaglio-utente-body" style="font-size: 14px; line-height: 1.6; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; margin-bottom: 15px;">
-                </div>
+            </div>
             <button id="btn-rendi-collab" class="btn-modal" style="background: #6f42c1; color: white;" onclick="cambiaRuoloUtente()">Rendi Collaboratore</button>
             <button class="btn-modal" style="background: transparent; color: #666; border: 1px solid #ccc; margin-top: 8px;" onclick="chiudiModal('modal-dettaglio-utente')">Chiudi</button>
         </div>
@@ -351,14 +398,13 @@
         const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2"; 
         const COLLABORATORE_UIDS = ["INSERISCI_QUI_UID_1", "INSERISCI_QUI_UID_2"]; 
         
-        let globalIsAdmin = false; let globalIsCollab = false; let globalIsF9 = false;
+        let globalIsAdmin = false; let globalIsCollab = false;
         window.currentUserData = {}; 
-        window.utentiMap = {}; // Salva i dati utente per la finestra di dettaglio
+        window.utentiMap = {};
+        window.utentiArrayCache = [];
 
-        // --- MAPPA ROTAZIONI GLOBALE ---
         window.ROTAZIONI_MAP = {
-            "disp_5_1": "Disponibile 5-1",
-            "disp_6_2_6_1": "Disponibile 6-2-6-1",
+            "disp_5_1": "Disponibile 5-1", "disp_6_2_6_1": "Disponibile 6-2-6-1",
             "rot_fnove": "Rotazione F.Nove", "spez_fnove": "Spezzati F.Nove", "tc_spez_fnove": "T.C. Spezzati F.Nove",
             "rot_proma": "Rotazione P.Roma", "spez_proma": "Spezzati P.Roma", "ris_proma": "Riserva P.Roma",
             "rot_szaccaria": "Rotazione S.Zaccaria", "spez_szaccaria": "Spezzati S.Zaccaria", "tc_spez_szaccaria": "T.C. Spezzati S.Zaccaria",
@@ -368,12 +414,11 @@
             "rot_17tr": "Rotazione Linea 17 Tron.", "tc_rot_17tr": "T.C. Rotazione Linea 17 Tronc."
         };
 
-        // --- DEFINIZIONE APP DI SISTEMA ---
         const DEFAULT_APPS = [
             { id: "oggi", label: "Oggi", icon: "🎯", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
             { id: "calendario", label: "Calendario", icon: "📅", href: "calendario.html" },
             { id: "statistiche", label: "Statistiche", icon: "📊", href: "dati_calendario.html" },
-            { id: "rotazioni", label: "Rotazioni", icon: "👥", href: "rotazioni.html", condition: "f9" },
+            { id: "rotazioni", label: "Rotazioni", icon: "👥", href: "rotazioni.html" },
             { id: "turni", label: "Turni", icon: "🔄", href: "turni.html" },
             { id: "bachecaturni", label: "Bacheca\nTurni", icon: "📌", href: "bacheca_turni.html" },
             { id: "rubrica", label: "Rubrica", icon: "📞", href: "rubrica.html" },
@@ -383,6 +428,7 @@
             { id: "link", label: "Link", icon: "🔗", href: "link.html" },
             { id: "contatti", label: "Contatti", icon: "📇", href: "contatti.html" },
             { id: "buoni", label: "Buoni\nPasto", icon: "🍝", href: "buoni.html" },
+            { id: "promemoria", label: "Promemoria", icon: "⏰", href: "promemoria.html" },
             { id: "dds", label: "Archivio\nDDS", icon: "📂", href: "dds.html" },
             { id: "impostazioni", label: "Impostazioni", icon: "⚙️", onclick: "window.apriModal('settingsModal')", defaultColor: "#6c757d" },
             { id: "guida", label: "Guida", icon: "📖", href: "guida.html", defaultColor: "#7f8c8d" },
@@ -390,7 +436,6 @@
             { id: "accessi", label: "Accessi", icon: "🛠️", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#2c3e50" }
         ];
 
-        // --- GESTIONE BADGE RICHIESTE IN SOSPESO ---
         window.controllaRichiesteSospese = async () => {
             if (!globalIsAdmin && !globalIsCollab) return;
             try {
@@ -399,32 +444,56 @@
                 let count = 0;
                 snap.forEach(d => {
                     const u = d.data();
-                    if (globalIsAdmin) { count++; } 
+                    if (globalIsAdmin) count++;
                     else if (globalIsCollab) {
-                        const permessi = window.currentUserData?.permessi_gestione || [];
-                        if (permessi.includes(u.rotazione_richiesta)) count++;
+                        if ((window.currentUserData?.permessi_gestione || []).includes(u.rotazione_richiesta)) count++;
                     }
                 });
-                
                 const btnRot = document.getElementById('btn-rotazioni');
                 if (btnRot) {
                     let b = btnRot.querySelector('.badge-rotazioni');
                     if (b) b.remove();
-                    if (count > 0) {
-                        btnRot.insertAdjacentHTML('beforeend', `<div class="badge-rotazioni">${count}</div>`);
+                    if (count > 0) btnRot.insertAdjacentHTML('beforeend', `<div class="badge-rotazioni">${count}</div>`);
+                }
+            } catch(e) {}
+        };
+
+        window.controllaPromemoria = async () => {
+            if (!auth.currentUser) return;
+            try {
+                const oggiStr = new Date().toISOString().split('T')[0];
+                const q = query(collection(db, "utenti", auth.currentUser.uid, "promemoria_sync"), where("completato", "==", false));
+                const snap = await getDocs(q);
+                let activeCount = 0;
+
+                snap.forEach(d => {
+                    const p = d.data();
+                    if (p.date && p.date.includes(oggiStr)) {
+                        activeCount++;
+                    }
+                });
+
+                if (activeCount > 0) {
+                    const banner = document.getElementById('banner-promemoria-alert');
+                    if (banner) {
+                        banner.innerHTML = `⏰ Hai ${activeCount} promemoria per oggi!`;
+                        banner.style.display = 'block';
+                    }
+                    const btn = document.getElementById('btn-promemoria');
+                    if (btn) {
+                        let b = btn.querySelector('.badge-rotazioni');
+                        if (b) b.remove();
+                        btn.insertAdjacentHTML('beforeend', `<div class="badge-rotazioni" style="background:#17a2b8;">${activeCount}</div>`);
                     }
                 }
-            } catch(e) { console.error("Errore badge notifiche:", e); }
+            } catch(e) { console.error("Errore check promemoria:", e); }
         };
 
         window.LayoutEngine = {
             prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#5dade2", view: "grid", iconStyle: "box", fontSize: 11, apps: [] },
             isEditMode: false,
             sortableInstance: null,
-            
             init: function(firebasePrefsStr) {
-                const appDataStr = localStorage.getItem('myTurniApp');
-                globalIsF9 = (appDataStr && appDataStr.toLowerCase().includes('nove'));
                 let localStr = localStorage.getItem('preferenze_layout_haze');
                 let targetStr = firebasePrefsStr || localStr;
                 if (targetStr) {
@@ -438,11 +507,9 @@
                 this.popolaModaleImpostazioni();
                 this.render();
             },
-
             mergeWithDefaults: function() {
                 const defaultIds = DEFAULT_APPS.map(a => a.id);
                 this.prefs.apps = this.prefs.apps.filter(app => app.id.startsWith('custom_') || defaultIds.includes(app.id));
-
                 this.prefs.apps.forEach(app => {
                     if (!app.id.startsWith('custom_')) {
                         const def = DEFAULT_APPS.find(d => d.id === app.id);
@@ -453,7 +520,6 @@
                         }
                     }
                 });
-
                 DEFAULT_APPS.forEach((defApp, defaultIndex) => {
                     let currentIds = this.prefs.apps.map(a => a.id);
                     if(!currentIds.includes(defApp.id)) {
@@ -462,14 +528,11 @@
                             let prevAppId = DEFAULT_APPS[defaultIndex - 1].id;
                             let userIndex = this.prefs.apps.findIndex(a => a.id === prevAppId);
                             if (userIndex !== -1) insertIndex = userIndex + 1;
-                        } else if (defaultIndex === 0) {
-                            insertIndex = 0;
-                        }
+                        } else if (defaultIndex === 0) { insertIndex = 0; }
                         this.prefs.apps.splice(insertIndex, 0, JSON.parse(JSON.stringify(defApp)));
                     }
                 });
             },
-
             applicaGrafica: function() {
                 const c1 = encodeURIComponent(this.prefs.c1); const c2 = encodeURIComponent(this.prefs.c2); const c3 = encodeURIComponent(this.prefs.c3);
                 const svg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Crect width='100' height='100' fill='${c3}'/%3E%3Cpath d='M0,60 C35,90 65,30 100,60 L100,0 L0,0 Z' fill='${c2}'/%3E%3Cpath d='M0,45 C35,65 65,25 100,45 L100,0 L0,0 Z' fill='${c1}'/%3E%3C/svg%3E`;
@@ -479,7 +542,6 @@
                 if (this.prefs.iconStyle === 'transparent') baseClass += ' transparent-icons';
                 document.getElementById('app-container').className = baseClass;
             },
-
             popolaModaleImpostazioni: function() {
                 document.getElementById('set-col1').value = this.prefs.c1;
                 document.getElementById('set-col2').value = this.prefs.c2;
@@ -489,277 +551,225 @@
                 document.getElementById('set-iconstyle').value = this.prefs.iconStyle || 'box';
                 document.getElementById('set-labelsize').value = this.prefs.fontSize || 11;
             },
-
             render: function() {
                 const container = document.getElementById('app-container');
                 container.innerHTML = '';
                 if(this.isEditMode) container.classList.add('wiggle-mode'); else container.classList.remove('wiggle-mode');
                 this.prefs.apps.forEach(app => {
-                    if (app.condition === 'f9' && !globalIsF9) return;
                     if (app.condition === 'admin' && !globalIsAdmin) return;
                     if (app.condition === 'collab' && !(globalIsAdmin || globalIsCollab)) return;
-                    
                     const finalColor = app.color || app.defaultColor || this.prefs.appBg;
                     const isLink = app.href ? `href="${app.href}"` : `onclick="${app.onclick}"`;
                     const editHandler = this.isEditMode ? `onclick="event.preventDefault(); window.LayoutEngine.apriEditorApp('${app.id}');"` : isLink;
-                    const labelHtml = app.label.replace('\n', '<br>');
                     const badgeHtml = this.isEditMode ? `<div class="edit-badge">✏️</div>` : '';
-                    
                     let iconStyle = `background-color: ${finalColor};`;
                     let iconContent = app.icon || "";
-                    if (app.image) {
-                        iconStyle += ` background-image: url('${app.image}'); background-size: cover; background-position: center;`;
-                        iconContent = "";
-                    }
-
-                    container.innerHTML += `
-                        <a ${editHandler} class="app-btn" id="btn-${app.id}">
-                            ${badgeHtml}
-                            <div class="app-icon" style="${iconStyle}">${iconContent}</div>
-                            <div class="app-label">${labelHtml}</div>
-                        </a>`;
+                    if (app.image) { iconStyle += ` background-image: url('${app.image}'); background-size: cover; background-position: center;`; iconContent = ""; }
+                    container.innerHTML += `<a ${editHandler} class="app-btn" id="btn-${app.id}">${badgeHtml}<div class="app-icon" style="${iconStyle}">${iconContent}</div><div class="app-label">${app.label.replace('\n', '<br>')}</div></a>`;
                 });
-                
-                // Aggiorna badge dopo il render
-                setTimeout(window.controllaRichiesteSospese, 200);
+                setTimeout(() => {
+                    window.controllaRichiesteSospese();
+                    if(window.controllaPromemoria) window.controllaPromemoria();
+                }, 200);
             },
-
             handleImageUpload: function(event, modalType) {
-                const file = event.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        const MAX = 120;
-                        let w = img.width; let h = img.height;
-                        if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } } 
-                        else { if (h > MAX) { w *= MAX / h; h = MAX; } }
-                        canvas.width = w; canvas.height = h;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, w, h);
+                const file = event.target.files[0]; if (!file) return;
+                const reader = new FileReader(); reader.onload = function(e) {
+                    const img = new Image(); img.onload = function() {
+                        const canvas = document.createElement('canvas'); const MAX = 120; let w = img.width; let h = img.height;
+                        if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } } else { if (h > MAX) { w *= MAX / h; h = MAX; } }
+                        canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
                         const dataUrl = canvas.toDataURL('image/webp', 0.8);
-                        
                         document.getElementById(modalType + '-app-img-data').value = dataUrl;
                         document.getElementById(modalType + '-app-img-preview-src').src = dataUrl;
                         document.getElementById(modalType + '-app-img-preview').style.display = 'block';
                         document.getElementById(modalType + '-app-icon').value = ""; 
-                    }
-                    img.src = e.target.result;
-                }
-                reader.readAsDataURL(file);
+                    }; img.src = e.target.result;
+                }; reader.readAsDataURL(file);
             },
-
-            rimuoviImmagine: function(modalType) {
-                document.getElementById(modalType + '-app-img-data').value = "";
-                document.getElementById(modalType + '-app-img-preview').style.display = 'none';
-                document.getElementById(modalType + '-app-img-preview-src').src = "";
-            },
-
+            rimuoviImmagine: function(modalType) { document.getElementById(modalType + '-app-img-data').value = ""; document.getElementById(modalType + '-app-img-preview').style.display = 'none'; },
             toggleEditMode: function() {
                 this.isEditMode = !this.isEditMode;
-                const container = document.getElementById('app-container');
                 document.getElementById('btn-salva-layout').style.display = this.isEditMode ? 'block' : 'none';
                 this.render(); 
                 if(this.isEditMode) {
-                    this.sortableInstance = new Sortable(container, {
-                        animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: "sortable-ghost",
-                        onEnd: () => { this.aggiornaOrdineDaDOM(); }
-                    });
+                    this.sortableInstance = new Sortable(document.getElementById('app-container'), { animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: "sortable-ghost", onEnd: () => { this.aggiornaOrdineDaDOM(); } });
                 } else { if(this.sortableInstance) this.sortableInstance.destroy(); this.sincronizzaConFirebase(); }
             },
-
             aggiornaOrdineDaDOM: function() {
-                const nodi = document.querySelectorAll('#app-container .app-btn');
-                const nuovoOrdine = [];
-                nodi.forEach(nodo => {
-                    const id = nodo.id.replace('btn-', '');
-                    const app = this.prefs.apps.find(a => a.id === id);
-                    if (app) nuovoOrdine.push(app);
+                const nuovoOrdine = []; document.querySelectorAll('#app-container .app-btn').forEach(nodo => {
+                    const id = nodo.id.replace('btn-', ''); const app = this.prefs.apps.find(a => a.id === id); if (app) nuovoOrdine.push(app);
                 });
                 this.prefs.apps.forEach(app => { if (!nuovoOrdine.find(a => a.id === app.id)) nuovoOrdine.push(app); });
                 this.prefs.apps = nuovoOrdine;
             },
-
             apriEditorApp: function(appId) {
                 const app = this.prefs.apps.find(a => a.id === appId); if(!app) return;
                 document.getElementById('edit-app-id').value = app.id;
                 document.getElementById('edit-app-label').value = app.label.replace('\n', ' ');
                 document.getElementById('edit-app-icon').value = app.icon || "";
                 document.getElementById('edit-app-color').value = app.color || app.defaultColor || this.prefs.appBg || "#5dade2";
-                
-                if (app.image) {
-                    document.getElementById('edit-app-img-data').value = app.image;
-                    document.getElementById('edit-app-img-preview-src').src = app.image;
-                    document.getElementById('edit-app-img-preview').style.display = 'block';
-                } else { this.rimuoviImmagine('edit'); }
-
+                if (app.image) { document.getElementById('edit-app-img-data').value = app.image; document.getElementById('edit-app-img-preview-src').src = app.image; document.getElementById('edit-app-img-preview').style.display = 'block'; } else { this.rimuoviImmagine('edit'); }
                 document.getElementById('btn-elimina-custom').style.display = app.id.startsWith('custom_') ? 'block' : 'none';
                 window.apriModal('editAppModal');
             },
-
             salvaModificaSingolaApp: function() {
-                const id = document.getElementById('edit-app-id').value;
-                const index = this.prefs.apps.findIndex(a => a.id === id);
+                const id = document.getElementById('edit-app-id').value; const index = this.prefs.apps.findIndex(a => a.id === id);
                 if(index > -1) {
                     this.prefs.apps[index].label = document.getElementById('edit-app-label').value;
                     this.prefs.apps[index].color = document.getElementById('edit-app-color').value;
-                    
                     const imgData = document.getElementById('edit-app-img-data').value;
-                    if (imgData) {
-                        this.prefs.apps[index].image = imgData;
-                        this.prefs.apps[index].icon = "";
-                    } else {
-                        delete this.prefs.apps[index].image;
-                        this.prefs.apps[index].icon = document.getElementById('edit-app-icon').value || "🔹";
-                    }
-                }
-                window.chiudiModal('editAppModal'); this.render();
+                    if (imgData) { this.prefs.apps[index].image = imgData; this.prefs.apps[index].icon = ""; } else { delete this.prefs.apps[index].image; this.prefs.apps[index].icon = document.getElementById('edit-app-icon').value || "🔹"; }
+                } window.chiudiModal('editAppModal'); this.render(); this.sincronizzaConFirebase();
             },
-
             creaAppPersonalizzata: function() {
-                const label = document.getElementById('new-app-label').value.trim();
-                let url = document.getElementById('new-app-url').value.trim();
+                const label = document.getElementById('new-app-label').value.trim(); let url = document.getElementById('new-app-url').value.trim();
                 if(!label || !url) { alert("Dati mancanti"); return; }
                 if(!url.startsWith('http')) url = 'https://' + url;
-                
                 const imgData = document.getElementById('new-app-img-data').value;
                 const newApp = { id: "custom_" + Date.now(), label: label, href: url, color: this.prefs.appBg };
-                
-                if (imgData) { newApp.image = imgData; } 
-                else { newApp.icon = document.getElementById('new-app-icon').value || "🔗"; }
-
-                this.prefs.apps.push(newApp); 
-                window.chiudiModal('customAppModal'); 
-                
+                if (imgData) newApp.image = imgData; else newApp.icon = document.getElementById('new-app-icon').value || "🔗";
+                this.prefs.apps.push(newApp); window.chiudiModal('customAppModal'); 
                 document.getElementById('new-app-label').value = ""; document.getElementById('new-app-url').value = "";
                 document.getElementById('new-app-icon').value = ""; this.rimuoviImmagine('new');
-
                 this.sincronizzaConFirebase(); this.render();
             },
-
-            eliminaAppCorrente: function() {
-                const id = document.getElementById('edit-app-id').value;
-                this.prefs.apps = this.prefs.apps.filter(a => a.id !== id);
-                window.chiudiModal('editAppModal'); this.render();
-            },
-
+            eliminaAppCorrente: function() { const id = document.getElementById('edit-app-id').value; this.prefs.apps = this.prefs.apps.filter(a => a.id !== id); window.chiudiModal('editAppModal'); this.render(); this.sincronizzaConFirebase(); },
             salvaPreferenzeGlobali: function() {
-                this.prefs.c1 = document.getElementById('set-col1').value;
-                this.prefs.c2 = document.getElementById('set-col2').value;
-                this.prefs.c3 = document.getElementById('set-col3').value;
-                this.prefs.appBg = document.getElementById('set-appbg').value;
-                this.prefs.view = document.getElementById('set-viewmode').value;
-                this.prefs.iconStyle = document.getElementById('set-iconstyle').value;
-                this.prefs.fontSize = parseInt(document.getElementById('set-labelsize').value);
+                this.prefs.c1 = document.getElementById('set-col1').value; this.prefs.c2 = document.getElementById('set-col2').value; this.prefs.c3 = document.getElementById('set-col3').value;
+                this.prefs.appBg = document.getElementById('set-appbg').value; this.prefs.view = document.getElementById('set-viewmode').value;
+                this.prefs.iconStyle = document.getElementById('set-iconstyle').value; this.prefs.fontSize = parseInt(document.getElementById('set-labelsize').value);
                 this.applicaGrafica(); this.render(); window.chiudiModal('settingsModal'); this.sincronizzaConFirebase();
             },
-
             sincronizzaConFirebase: async function() {
                 const str = JSON.stringify(this.prefs); localStorage.setItem('preferenze_layout_haze', str);
                 if (auth.currentUser) await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_layout: str }, { merge: true });
             },
-
-            ripristinaPredefiniti: async function() {
-                if(!confirm("Ripristinare tutto?")) return;
-                localStorage.removeItem('preferenze_layout_haze');
-                if (auth.currentUser) await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_layout: null }, { merge: true });
-                location.reload();
-            }
+            ripristinaPredefiniti: async function() { if(!confirm("Ripristinare tutto?")) return; localStorage.removeItem('preferenze_layout_haze'); if (auth.currentUser) await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_layout: null }, { merge: true }); location.reload(); }
         };
 
-        window.apriModal = (id, authMode) => { 
-            document.getElementById(id).style.display = 'flex'; 
-            if(id === 'authModal' && authMode) { currentAuthMode = authMode; window.aggiornaUIAuth(); }
-        };
+        window.apriModal = (id, authMode) => { document.getElementById(id).style.display = 'flex'; if(id === 'authModal' && authMode) { currentAuthMode = authMode; window.aggiornaUIAuth(); } };
         window.chiudiModal = (id) => { document.getElementById(id).style.display = 'none'; };
         window.chiudiSuSfondo = (e, id) => { if (e.target.id === id) window.chiudiModal(id); };
 
         window.apriBachecaUtility = () => {
             const timestamp = Date.now(); localStorage.setItem('ultimo_accesso_bacheca', timestamp);
-            document.getElementById('badge-messaggi').style.display = 'none';
-            document.getElementById('banner-nuovo-messaggio').style.display = 'none';
+            document.getElementById('badge-messaggi').style.display = 'none'; document.getElementById('banner-nuovo-messaggio').style.display = 'none';
             if (auth.currentUser) setDoc(doc(db, "utenti", auth.currentUser.uid), { ultimo_accesso_bacheca: timestamp }, { merge: true });
             window.location.href = 'bacheca_utility.html';
         };
 
-        // --- SISTEMA GESTIONE ACCESSI E MODIFICA RUOLI ---
         window.apriGestioneAccessi = async () => {
             window.apriModal('modal-gestione');
             const container = document.getElementById('lista-utenti-accessi');
-            const bTot = document.getElementById('badge-totali'); const bOggi = document.getElementById('badge-oggi');
+            const bTot = document.getElementById('badge-totali'); 
+            const bOggi = document.getElementById('badge-oggi');
             container.innerHTML = `<div style="text-align:center; padding:20px;">Attendere...</div>`;
+            
             try {
-                const snap = await getDocs(collection(db, "utenti"));
-                let htmlOggi = ""; let htmlAltri = ""; let tot = 0; let oggi = 0;
-                const oggiStr = new Date().toISOString().split('T')[0];
+                const snap = await getDocs(collection(db, "utenti")); 
+                let tot = 0; let oggi = 0; const oggiStr = new Date().toISOString().split('T')[0];
                 
+                window.utentiArrayCache = [];
+                window.utentiMap = {};
+
                 snap.forEach(d => {
                     const u = d.data(); tot++; const isOggi = (u.last_app_access === oggiStr); if (isOggi) oggi++;
-                    const isBanned = u.app_banned === true; 
-                    const fullName = `${u.cognome || ''} ${u.nome || ''} ${u.progressivo || ''}`.trim() || 'Sconosciuto';
-                    
-                    window.utentiMap[d.id] = u; // Salvo per la modale dettaglio
-
-                    const dot = isOggi ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:5px;"></span>` : '';
-                    const clickableName = `<span style="font-weight:bold; font-size:14px; cursor:pointer; color:var(--primary); text-decoration:underline;" onclick="apriDettaglioUtente('${d.id}')">${fullName}</span>`;
-
-                    const riga = `<div style="display:flex; justify-content:space-between; align-items:center; background:${isBanned ? '#fff5f5' : '#f8f9fa'}; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid ${isBanned ? '#ffc9c9' : '#e9ecef'};">
-                        <div><div>${clickableName}${dot}</div><div style="font-size:11px; color:#666; margin-top:3px;">(Matr. ${u.matricola || '??'})</div></div>
-                        <button style="border:2px solid ${isBanned ? 'var(--success)' : 'var(--danger)'}; color:${isBanned ? 'var(--success)' : 'var(--danger)'}; background:none; padding:6px 10px; border-radius:8px; font-weight:bold;" onclick="toggleAppBan('${d.id}', ${!isBanned})">${isBanned ? 'Sblocca' : 'Blocca'}</button>
-                    </div>`;
-                    if (isOggi) htmlOggi += riga; else htmlAltri += riga;
+                    u.uid = d.id;
+                    window.utentiMap[d.id] = u;
+                    window.utentiArrayCache.push(u);
                 });
-                container.innerHTML = htmlOggi + htmlAltri; bTot.innerText = tot; bOggi.innerText = oggi;
+                
+                bTot.innerText = tot; bOggi.innerText = oggi;
+                window.renderGestioneAccessi();
+
             } catch(e) { container.innerHTML = "Errore."; }
         };
 
-        window.toggleAppBan = async (uid, status) => { if(confirm("Confermi l'azione?")) { await setDoc(doc(db, "utenti", uid), { app_banned: status }, { merge: true }); window.apriGestioneAccessi(); } };
+        window.renderGestioneAccessi = () => {
+            const container = document.getElementById('lista-utenti-accessi');
+            const sortMode = document.getElementById('sort-utenti-app') ? document.getElementById('sort-utenti-app').value : 'recente';
+            const oggiStr = new Date().toISOString().split('T')[0];
+            
+            let dataCopy = [...window.utentiArrayCache];
 
-        window.currentUserEditId = null;
-        window.apriDettaglioUtente = (uid) => {
-            const u = window.utentiMap[uid];
-            if(!u) return;
-            window.currentUserEditId = uid;
-            
-            const isCollab = u.ruolo === 'collaborator';
-            
-            const htmlData = `
-                <div style="margin-bottom:8px;"><strong>Nome:</strong> ${u.nome || '-'}</div>
-                <div style="margin-bottom:8px;"><strong>Cognome:</strong> ${u.cognome || '-'}</div>
-                <div style="margin-bottom:8px;"><strong>Matricola:</strong> ${u.matricola || '-'}</div>
-                <div style="margin-bottom:8px;"><strong>Omonimia:</strong> ${u.progressivo || '-'}</div>
-            `;
-            document.getElementById('dettaglio-utente-body').innerHTML = htmlData;
-            
-            const btnCollab = document.getElementById('btn-rendi-collab');
-            if (isCollab) {
-                btnCollab.innerText = "Revoca Collaboratore";
-                btnCollab.style.background = "transparent";
-                btnCollab.style.color = "var(--danger)";
-                btnCollab.style.border = "1px solid var(--danger)";
-                btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'user');
+            const sortAlpha = (a, b) => {
+                let cognomeA = (a.cognome || '').trim().toUpperCase();
+                let cognomeB = (b.cognome || '').trim().toUpperCase();
+                if (cognomeA < cognomeB) return -1;
+                if (cognomeA > cognomeB) return 1;
+                let nomeA = (a.nome || '').trim().toUpperCase();
+                let nomeB = (b.nome || '').trim().toUpperCase();
+                if (nomeA < nomeB) return -1;
+                if (nomeA > nomeB) return 1;
+                return 0;
+            };
+
+            if (sortMode === 'alfabetico') {
+                dataCopy.sort(sortAlpha);
             } else {
-                btnCollab.innerText = "Rendi Collaboratore";
-                btnCollab.style.background = "#6f42c1";
-                btnCollab.style.color = "white";
-                btnCollab.style.border = "none";
-                btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'collaborator');
+                dataCopy.sort((a, b) => {
+                    let dateA = a.last_access_full || a.last_app_access || '1970-01-01';
+                    let dateB = b.last_access_full || b.last_app_access || '1970-01-01';
+                    if (dateA > dateB) return -1;
+                    if (dateA < dateB) return 1;
+                    return sortAlpha(a, b);
+                });
             }
-            
+
+            const buildRiga = (u) => {
+                const isOggi = (u.last_app_access === oggiStr);
+                const isBanned = u.app_banned === true; 
+                const fullName = `${u.cognome || ''} ${u.nome || ''} ${u.progressivo || ''}`.trim() || 'Sconosciuto';
+                const dot = isOggi ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:5px;"></span>` : '';
+                const clickableName = `<span style="font-weight:bold; font-size:14px; cursor:pointer; color:var(--primary); text-decoration:underline;" onclick="apriDettaglioUtente('${u.uid}')">${fullName}</span>`;
+                const searchData = `${u.cognome || ''} ${u.nome || ''} ${u.matricola || ''}`.toUpperCase();
+                
+                let accessDisplay = 'Mai';
+                if (u.last_access_full) {
+                    let d = new Date(u.last_access_full);
+                    accessDisplay = d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
+                } else if (u.last_app_access) {
+                    let p = u.last_app_access.split('-');
+                    if(p.length === 3) accessDisplay = `${p[2]}/${p[1]}/${p[0]}`;
+                    else accessDisplay = u.last_app_access;
+                }
+                
+                return `<div class="utente-row-app" data-search="${searchData}" style="display:flex; justify-content:space-between; align-items:center; background:${isBanned ? '#fff5f5' : '#f8f9fa'}; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid ${isBanned ? '#ffc9c9' : '#e9ecef'};"><div><div>${clickableName}${dot}</div><div style="font-size:11px; color:#666; margin-top:3px;">(Matr. ${u.matricola || '??'}) • Accesso: ${accessDisplay}</div></div><button style="border:2px solid ${isBanned ? 'var(--success)' : 'var(--danger)'}; color:${isBanned ? 'var(--success)' : 'var(--danger)'}; background:none; padding:6px 10px; border-radius:8px; font-weight:bold;" onclick="toggleAppBan('${u.uid}', ${!isBanned})">${isBanned ? 'Sblocca' : 'Blocca'}</button></div>`;
+            };
+
+            let html = dataCopy.map(u => buildRiga(u)).join('');
+            container.innerHTML = html;
+            window.filtraUtentiApp();
+        };
+
+        window.filtraUtentiApp = () => {
+            let input = document.getElementById('search-utenti-app');
+            let filter = input.value.toUpperCase();
+            let rows = document.getElementsByClassName('utente-row-app');
+            for (let i = 0; i < rows.length; i++) {
+                let txtValue = rows[i].getAttribute('data-search');
+                if (txtValue.indexOf(filter) > -1) {
+                    rows[i].style.display = "flex";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        };
+
+        window.toggleAppBan = async (uid, status) => { if(confirm("Confermi l'azione?")) { await setDoc(doc(db, "utenti", uid), { app_banned: status }, { merge: true }); window.apriGestioneAccessi(); } };
+        
+        window.apriDettaglioUtente = (uid) => {
+            const u = window.utentiMap[uid]; if(!u) return;
+            const isCollab = u.ruolo === 'collaborator';
+            document.getElementById('dettaglio-utente-body').innerHTML = `<div style="margin-bottom:8px;"><strong>Nome:</strong> ${u.nome || '-'}</div><div style="margin-bottom:8px;"><strong>Cognome:</strong> ${u.cognome || '-'}</div><div style="margin-bottom:8px;"><strong>Matricola:</strong> ${u.matricola || '-'}</div><div style="margin-bottom:8px;"><strong>Omonimia:</strong> ${u.progressivo || '-'}</div><div style="margin-bottom:8px;"><strong>Email:</strong> ${u.email || 'Non registrata'}</div><div style="margin-bottom:8px; font-size:12px; word-break: break-all;"><strong>ID Account:</strong> ${u.uid || '-'}</div>`;
+            const btnCollab = document.getElementById('btn-rendi-collab');
+            if (isCollab) { btnCollab.innerText = "Revoca Collaboratore"; btnCollab.style.background = "transparent"; btnCollab.style.color = "var(--danger)"; btnCollab.style.border = "1px solid var(--danger)"; btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'user'); }
+            else { btnCollab.innerText = "Rendi Collaboratore"; btnCollab.style.background = "#6f42c1"; btnCollab.style.color = "white"; btnCollab.style.border = "none"; btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'collaborator'); }
             window.apriModal('modal-dettaglio-utente');
         };
 
-        window.cambiaRuoloUtente = async (uid, nuovoRuolo) => {
-            if(!confirm("Sei sicuro di voler modificare i permessi di questo utente?")) return;
-            try {
-                await setDoc(doc(db, "utenti", uid), { ruolo: nuovoRuolo }, { merge: true });
-                window.utentiMap[uid].ruolo = nuovoRuolo; 
-                window.chiudiModal('modal-dettaglio-utente');
-                alert("Ruolo aggiornato correttamente!");
-            } catch(e) { alert("Errore nell'aggiornamento del ruolo."); }
-        };
+        window.cambiaRuoloUtente = async (uid, nuovoRuolo) => { if(!confirm("Sei sicuro?")) return; try { await setDoc(doc(db, "utenti", uid), { ruolo: nuovoRuolo }, { merge: true }); window.utentiMap[uid].ruolo = nuovoRuolo; window.chiudiModal('modal-dettaglio-utente'); alert("Ruolo aggiornato!"); } catch(e) { alert("Errore."); } };
 
         let currentAuthMode = 'login';
         window.switchAuthMode = () => { currentAuthMode = currentAuthMode === 'login' ? 'register' : 'login'; window.aggiornaUIAuth(); };
@@ -774,16 +784,17 @@
             const email = document.getElementById('emailInput').value.trim(); const pwd = document.getElementById('passwordInput').value;
             const err = document.getElementById('authError'); err.style.display='none';
             if (!email || !pwd) { err.innerText = "Dati mancanti."; err.style.display='block'; return; }
-            if (currentAuthMode === 'login') {
-                try { await signInWithEmailAndPassword(auth, email, pwd); window.chiudiModal('authModal'); } catch (e) { err.innerText = "Email o Pass errata."; err.style.display='block'; }
-            } else {
+            if (currentAuthMode === 'login') { 
+                try { await signInWithEmailAndPassword(auth, email, pwd); window.chiudiModal('authModal'); } 
+                catch (e) { err.innerText = "Email o Pass errata."; err.style.display='block'; } 
+            }
+            else {
                 const nome = document.getElementById('regNome').value.trim(); const cognome = document.getElementById('regCognome').value.trim(); const matricola = document.getElementById('regMatricola').value.trim();
                 if (!nome || !cognome || !matricola) { err.innerText = "Campi obbligatori."; err.style.display='block'; return; }
-                try {
-                    const res = await createUserWithEmailAndPassword(auth, email, pwd);
-                    const p = { nome, cognome, matricola, progressivo: document.getElementById('regProg').value.trim() };
-                    await setDoc(doc(db, "utenti", res.user.uid), p, { merge: true });
-                    window.chiudiModal('authModal');
+                try { 
+                    const res = await createUserWithEmailAndPassword(auth, email, pwd); 
+                    await setDoc(doc(db, "utenti", res.user.uid), { nome, cognome, matricola, progressivo: document.getElementById('regProg').value.trim(), email: email }, { merge: true }); 
+                    window.chiudiModal('authModal'); 
                 } catch (e) { err.innerText = "Errore."; err.style.display='block'; }
             }
         };
@@ -794,50 +805,40 @@
         window.salvaDatiObbligatori = async () => {
             const n = document.getElementById('obbl-nome').value.trim(); const c = document.getElementById('obbl-cognome').value.trim(); const m = document.getElementById('obbl-matricola').value.trim();
             if (!n || !c || !m) { alert("Mancano dati!"); return; }
-            const p = { nome: n, cognome: c, matricola: m, progressivo: document.getElementById('obbl-prog').value.trim() };
-            await setDoc(doc(db, "utenti", auth.currentUser.uid), p, { merge: true });
-            location.reload(); 
+            await setDoc(doc(db, "utenti", auth.currentUser.uid), { nome: n, cognome: c, matricola: m, progressivo: document.getElementById('obbl-prog').value.trim() }, { merge: true }); location.reload(); 
         };
 
         window.salvaProfilo = async () => {
-            const p = { nome: document.getElementById('profileNome').value, cognome: document.getElementById('profileCognome').value, progressivo: document.getElementById('profileProgressivo').value, matricola: document.getElementById('profileMatricola').value };
-            await setDoc(doc(db, "utenti", auth.currentUser.uid), p, { merge: true });
-            alert("Salvato!"); window.chiudiModal('profileModal');
+            const p = { nome: document.getElementById('profileNome').value, cognome: document.getElementById('profileCognome').value, progressivo: document.getElementById('profileProgressivo').value, matricola: document.getElementById('profileMatricola').value, mansione: document.getElementById('profileMansione').value };
+            await setDoc(doc(db, "utenti", auth.currentUser.uid), p, { merge: true }); alert("Salvato!"); window.chiudiModal('profileModal');
         };
 
         onAuthStateChanged(auth, async (user) => {
             const vLoad = document.getElementById('view-loading'); const vGuest = document.getElementById('view-guest'); const vApp = document.getElementById('view-app'); const vBanned = document.getElementById('view-banned');
             if (user) {
                 try {
-                    const docSnap = await getDoc(doc(db, "utenti", user.uid));
-                    let data = docSnap.exists() ? docSnap.data() : {};
-                    window.currentUserData = data; 
-                    vLoad.style.display = 'none';
+                    const docSnap = await getDoc(doc(db, "utenti", user.uid)); let data = docSnap.exists() ? docSnap.data() : {};
+                    window.currentUserData = data; vLoad.style.display = 'none';
                     if (data.app_banned === true) { document.body.style.backgroundImage = 'none'; document.body.style.backgroundColor = "white"; vGuest.style.display = 'none'; vApp.style.display = 'none'; vBanned.style.display = 'flex'; return; }
                     if (!data.nome || !data.cognome || !data.matricola) document.getElementById('modal-dati-obbligatori').style.display = 'flex';
-                    
-                    globalIsAdmin = (user.uid === ADMIN_UID); 
-                    globalIsCollab = COLLABORATORE_UIDS.includes(user.uid) || data.ruolo === 'collaborator';
-                    
-                    if(globalIsAdmin) { document.getElementById('adminBadge').style.display = 'block'; document.getElementById('adminBadge').innerHTML = 'Admin'; }
+                    globalIsAdmin = (user.uid === ADMIN_UID); globalIsCollab = data.ruolo === 'collaborator';
+                    if(globalIsAdmin) document.getElementById('adminBadge').style.display = 'block';
                     vGuest.style.display = 'none'; vApp.style.display = 'flex'; vBanned.style.display = 'none';
                     document.getElementById('btnOpenLogin').style.display = 'none'; document.getElementById('btnOpenProfile').style.display = 'block';
+                    
                     document.getElementById('profileEmail').value = user.email;
                     
-                    // --- SALVATAGGIO ACCESSO OGGI ---
-                    const oggiLogStr = new Date().toISOString().split('T')[0];
-                    if (data.last_app_access !== oggiLogStr) {
-                        setDoc(doc(db, "utenti", user.uid), { last_app_access: oggiLogStr }, { merge: true });
+                    const oggiLog = new Date();
+                    const oggiLogStr = oggiLog.toISOString().split('T')[0];
+                    if (data.last_app_access !== oggiLogStr || !data.email) { 
+                        setDoc(doc(db, "utenti", user.uid), { last_app_access: oggiLogStr, last_access_full: oggiLog.toISOString(), email: user.email }, { merge: true }); 
                     }
-
+                    
                     window.LayoutEngine.init(data.preferenze_layout);
-                    
-                    const locB = parseInt(localStorage.getItem('ultimo_accesso_bacheca')) || 0;
-                    const dbB = parseInt(data.ultimo_accesso_bacheca) || 0;
-                    if (dbB > locB) localStorage.setItem('ultimo_accesso_bacheca', dbB);
-                    
                     document.getElementById('profileNome').value = data.nome || ''; document.getElementById('profileCognome').value = data.cognome || '';
                     document.getElementById('profileMatricola').value = data.matricola || ''; document.getElementById('profileProgressivo').value = data.progressivo || '';
+                    document.getElementById('profileMansione').value = data.mansione || '';
+                    
                 } catch(e) { vLoad.style.display = 'none'; }
             } else { vLoad.style.display = 'none'; window.LayoutEngine.init(); vGuest.style.display = 'flex'; vApp.style.display = 'none'; vBanned.style.display = 'none'; }
         });
