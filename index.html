@@ -215,10 +215,12 @@
                     <strong style="display: block; margin-bottom: 8px; font-size: 13px; color: #32325d;">Annunci Bacheca Turni:</strong>
                     
                     <div id="mansioni-turni-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
-                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Macchinista" onchange="window.salvaPreferenzeNotifiche()"> Macchinista</label>
-                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Capotreno" onchange="window.salvaPreferenzeNotifiche()"> Capotreno</label>
-                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Manovratore" onchange="window.salvaPreferenzeNotifiche()"> Manovratore</label>
-                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Preparatore" onchange="window.salvaPreferenzeNotifiche()"> Preparatore</label>
+                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Preposto al comando" onchange="window.salvaPreferenzeNotifiche()"> Preposto al comando</label>
+                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Marinaio" onchange="window.salvaPreferenzeNotifiche()"> Marinaio</label>
+                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Comandante" onchange="window.salvaPreferenzeNotifiche()"> Comandante</label>
+                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Timoniere" onchange="window.salvaPreferenzeNotifiche()"> Timoniere</label>
+                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Marinaio polivalente" onchange="window.salvaPreferenzeNotifiche()"> Marinaio polivalente</label>
+                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Direttore di macchina" onchange="window.salvaPreferenzeNotifiche()"> Dirett. di macchina</label>
                     </div>
                 </div>
             </div>
@@ -578,6 +580,12 @@
                 });
 
                 let permStatus = await PushNotifications.checkPermissions();
+                
+                // SE L'APP NON HA ANCORA CHIESTO IL PERMESSO, LO CHIEDE IN AUTOMATICO
+                if (permStatus.receive === 'prompt') {
+                    permStatus = await PushNotifications.requestPermissions();
+                }
+
                 if (permStatus.receive === 'granted') {
                     PushNotifications.register();
                     aggiornaGraficaPermessi(true);
