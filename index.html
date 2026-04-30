@@ -188,6 +188,40 @@
         <div class="modal-content">
             <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('settingsModal')">&times;</span>
             <h3 style="margin-top: 5px; color: #32325d; text-align: center;">⚙️ Impostazioni</h3>
+
+            <div id="native-notifications-center" style="display: none; margin-top: 15px; margin-bottom: 15px; padding: 15px; background: #eef2f5; border-radius: 8px; border: 1px solid #d1d9e0;">
+                <h4 style="margin: 0 0 5px 0; color: #32325d; text-align: center;">🔔 Preferenze Notifiche App</h4>
+                <p id="notif-status-text" style="font-size: 12px; color: #666; text-align: center; margin-bottom: 10px;">Controllo stato in corso...</p>
+                <button id="btn-attiva-notifiche" class="btn-modal" style="background: var(--primary); color: white; margin-top: 0; display: none; width: 100%;" onclick="window.gestisciNotificheNative()">Abilita Notifiche sul Telefono</button>
+
+                <div id="notif-preferences-section" style="display: none; margin-top: 15px; text-align: left; font-size: 14px;">
+                    <hr style="border: 0; border-top: 1px solid #d1d9e0; margin: 10px 0;">
+                    
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer;">
+                        <input type="checkbox" id="pref-notif-promemoria" onchange="window.salvaPreferenzeNotifiche()"> Promemoria
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer;">
+                        <input type="checkbox" id="pref-notif-dds" onchange="window.salvaPreferenzeNotifiche()"> DDS
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer;">
+                        <input type="checkbox" id="pref-notif-utility" onchange="window.salvaPreferenzeNotifiche()"> Annunci Bacheca Utility
+                    </label>
+
+                    <label id="label-notif-rotazioni" style="display: none; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer; color: var(--primary); font-weight: bold;">
+                        <input type="checkbox" id="pref-notif-rotazioni" onchange="window.salvaPreferenzeNotifiche()"> Nuove Richieste Rotazioni
+                    </label>
+
+                    <hr style="border: 0; border-top: 1px solid #d1d9e0; margin: 10px 0;">
+                    <strong style="display: block; margin-bottom: 8px; font-size: 13px; color: #32325d;">Annunci Bacheca Turni:</strong>
+                    
+                    <div id="mansioni-turni-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
+                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Macchinista" onchange="window.salvaPreferenzeNotifiche()"> Macchinista</label>
+                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Capotreno" onchange="window.salvaPreferenzeNotifiche()"> Capotreno</label>
+                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Manovratore" onchange="window.salvaPreferenzeNotifiche()"> Manovratore</label>
+                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Preparatore" onchange="window.salvaPreferenzeNotifiche()"> Preparatore</label>
+                    </div>
+                </div>
+            </div>
             
             <label style="font-size: 12px; color: #666; font-weight: bold;">Colori Sfondo Onda:</label>
             <div class="color-picker-row"><label>Colore 1 (Alto)</label><input type="color" id="set-col1"></div>
@@ -488,6 +522,106 @@
                 }
             } catch(e) { console.error("Errore check promemoria:", e); }
         };
+
+        // --- GESTIONE NOTIFICHE NATIVE (CAPACITOR) ---
+        window.inizializzaNotificheSeNativa = async (userData) => {
+            if (window.Capacitor && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins.PushNotifications) {
+                const PushNotifications = window.Capacitor.Plugins.PushNotifications;
+                
+                document.getElementById('native-notifications-center').style.display = 'block';
+                
+                const statusText = document.getElementById('notif-status-text');
+                const btn = document.getElementById('btn-attiva-notifiche');
+                const prefSection = document.getElementById('notif-preferences-section');
+
+                // Mostra opzione rotazioni solo per admin/collaboratori
+                if (userData && (userData.ruolo === 'admin' || userData.ruolo === 'collaborator' || globalIsAdmin || globalIsCollab)) {
+                    document.getElementById('label-notif-rotazioni').style.display = 'flex';
+                }
+
+                // Pre-carica le preferenze
+                if (userData && userData.preferenze_notifiche) {
+                    document.getElementById('pref-notif-promemoria').checked = !!userData.preferenze_notifiche.promemoria;
+                    document.getElementById('pref-notif-dds').checked = !!userData.preferenze_notifiche.dds;
+                    document.getElementById('pref-notif-utility').checked = !!userData.preferenze_notifiche.bacheca_utility;
+                    document.getElementById('pref-notif-rotazioni').checked = !!userData.preferenze_notifiche.richieste_rotazioni;
+
+                    if (Array.isArray(userData.preferenze_notifiche.mansioni_turni)) {
+                        document.querySelectorAll('.pref-mansione').forEach(cb => {
+                            cb.checked = userData.preferenze_notifiche.mansioni_turni.includes(cb.value);
+                        });
+                    }
+                }
+
+                const aggiornaGraficaPermessi = (isGranted) => {
+                    if (isGranted) {
+                        statusText.innerText = "✅ Notifiche app attive";
+                        statusText.style.color = "var(--success)";
+                        btn.style.display = 'none';
+                        prefSection.style.display = 'block';
+                    } else {
+                        statusText.innerText = "⚠️ Notifiche bloccate da Android";
+                        statusText.style.color = "#856404";
+                        btn.style.display = 'block';
+                        prefSection.style.display = 'none';
+                    }
+                };
+
+                PushNotifications.addListener('registration', async (token) => {
+                    if (auth.currentUser) {
+                        await setDoc(doc(db, "utenti", auth.currentUser.uid), {
+                            fcm_token: token.value,
+                            device_type: 'android_app'
+                        }, { merge: true });
+                        aggiornaGraficaPermessi(true);
+                    }
+                });
+
+                let permStatus = await PushNotifications.checkPermissions();
+                if (permStatus.receive === 'granted') {
+                    PushNotifications.register();
+                    aggiornaGraficaPermessi(true);
+                } else {
+                    aggiornaGraficaPermessi(false);
+                }
+            }
+        };
+
+        window.gestisciNotificheNative = async () => {
+            const PushNotifications = window.Capacitor.Plugins.PushNotifications;
+            document.getElementById('notif-status-text').innerText = "Richiesta permesso in corso...";
+            
+            let permStatus = await PushNotifications.requestPermissions();
+            if (permStatus.receive === 'granted') {
+                await PushNotifications.register();
+            } else {
+                document.getElementById('notif-status-text').innerText = "❌ Devi attivarle dalle Impostazioni del telefono.";
+                document.getElementById('notif-status-text').style.color = "var(--danger)";
+            }
+        };
+
+        window.salvaPreferenzeNotifiche = async () => {
+            if (!auth.currentUser) return;
+
+            const mansioniSelezionate = Array.from(document.querySelectorAll('.pref-mansione:checked')).map(cb => cb.value);
+
+            const preferenze_notifiche = {
+                promemoria: document.getElementById('pref-notif-promemoria').checked,
+                dds: document.getElementById('pref-notif-dds').checked,
+                bacheca_utility: document.getElementById('pref-notif-utility').checked,
+                richieste_rotazioni: document.getElementById('pref-notif-rotazioni').checked,
+                mansioni_turni: mansioniSelezionate
+            };
+
+            try {
+                await setDoc(doc(db, "utenti", auth.currentUser.uid), {
+                    preferenze_notifiche: preferenze_notifiche
+                }, { merge: true });
+            } catch (error) {
+                console.error("Errore salvataggio preferenze notifiche:", error);
+            }
+        };
+        // ----------------------------------------------
 
         window.LayoutEngine = {
             prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#5dade2", view: "grid", iconStyle: "box", fontSize: 11, apps: [] },
@@ -835,6 +969,10 @@
                     }
                     
                     window.LayoutEngine.init(data.preferenze_layout);
+                    
+                    // Inizializza le notifiche se siamo su App!
+                    if(window.inizializzaNotificheSeNativa) window.inizializzaNotificheSeNativa(data);
+
                     document.getElementById('profileNome').value = data.nome || ''; document.getElementById('profileCognome').value = data.cognome || '';
                     document.getElementById('profileMatricola').value = data.matricola || ''; document.getElementById('profileProgressivo').value = data.progressivo || '';
                     document.getElementById('profileMansione').value = data.mansione || '';
