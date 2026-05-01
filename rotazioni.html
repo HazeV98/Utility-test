@@ -113,7 +113,8 @@
             font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer;
             width: 100%; transition: opacity 0.2s; margin-bottom: 10px;
         }
-        .btn:active { transform: translateY(2px); opacity: 0.9; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn:active:not(:disabled) { transform: translateY(2px); opacity: 0.9; }
         
         #error-msg { color: var(--danger); font-size: 14px; margin-top: 10px; min-height: 20px; font-weight: bold; }
 
@@ -272,7 +273,7 @@
                     <span style="flex:1;">Accetto di condividere i miei dati nelle rotazioni.</span>
                 </label>
 
-                <button class="btn" style="margin-top: 15px; background-color: var(--success);" onclick="inviaRichiestaAccesso()">Invia Richiesta</button>
+                <button class="btn" id="btn-invia-req" style="margin-top: 15px; background-color: var(--success);" onclick="inviaRichiestaAccesso()">Invia Richiesta</button>
                 <div id="req-error-msg" style="color: var(--danger); font-size: 14px; text-align: center; margin-top: 10px; font-weight: bold;"></div>
             </div>
         </div>
@@ -376,7 +377,7 @@
                 <input type="date" id="edit-data-riposo" style="margin: 0; padding: 12px;">
             </div>
             
-            <button class="btn" style="margin-top: 15px; background-color: var(--success);" onclick="salvaMieiDati()">Salva Modifiche</button>
+            <button class="btn" id="btn-salva-dati" style="margin-top: 15px; background-color: var(--success);" onclick="salvaMieiDati()">Salva Modifiche</button>
             <div id="edit-error-msg" style="color: var(--danger); font-size: 14px; text-align: center; margin-top: 10px; font-weight: bold;"></div>
         </div>
     </div>
@@ -1488,6 +1489,8 @@
             document.getElementById('div-mansione-edit').style.display = isDisp ? 'block' : 'none';
             
             document.getElementById('edit-error-msg').innerText = '';
+            document.getElementById('btn-salva-dati').innerText = "Salva Modifiche";
+            document.getElementById('btn-salva-dati').disabled = false;
             document.getElementById('modal-miei-dati').style.display = 'flex';
         };
 
@@ -1500,6 +1503,7 @@
             const dRip = document.getElementById('edit-data-riposo').value;
             const man = document.getElementById('edit-mansione').value;
             const err = document.getElementById('edit-error-msg');
+            const btn = document.getElementById('btn-salva-dati');
             
             if (!n || !c || !m) { err.innerText = "Nome, Cognome e Matricola sono obbligatori."; return; }
             if (!rot) { err.innerText = "Seleziona la tua rotazione di appartenenza."; return; }
@@ -1508,7 +1512,10 @@
                 if (!man) { err.innerText = "Seleziona la tua mansione."; return; }
             }
             
-            err.innerText = "Salvataggio in corso..."; err.style.color = "#666";
+            err.innerText = "";
+            btn.innerText = "⏳ Salvataggio..."; 
+            btn.disabled = true;
+            
             try {
                 let p = { 
                     nome: n, cognome: c, matricola: m, progressivo: omo,
@@ -1524,7 +1531,12 @@
                 
                 alert("Dati aggiornati con successo! Ricordati di ricaricare la pagina per visualizzare le tabelle generate.");
                 chiudiModal('modal-miei-dati');
-            } catch(e) { err.innerText = "Errore durante il salvataggio. Riprova."; err.style.color = "var(--danger)"; }
+            } catch(e) { 
+                err.innerText = "Errore durante il salvataggio. Riprova."; 
+                err.style.color = "var(--danger)"; 
+                btn.innerText = "Salva Modifiche";
+                btn.disabled = false;
+            }
         };
 
         window.inviaRichiestaAccesso = async () => {
@@ -1537,6 +1549,7 @@
             const dRip = document.getElementById('req-data-riposo').value;
             const man = document.getElementById('req-mansione').value;
             const err = document.getElementById('req-error-msg');
+            const btn = document.getElementById('btn-invia-req');
             
             if (!n || !c || !m) { err.innerText = "Nome, Cognome e Matricola sono obbligatori."; return; }
             if (!rot) { err.innerText = "Seleziona la tua rotazione di appartenenza."; return; }
@@ -1547,7 +1560,10 @@
             if (!cons) { err.innerText = "Devi accettare di condividere i dati per continuare."; return; }
             if (!currentUserId) return;
             
-            err.innerText = "Invio in corso..."; err.style.color = "#666";
+            err.innerText = ""; 
+            btn.innerText = "⏳ Invio in corso..."; 
+            btn.disabled = true;
+            
             try {
                 let p = { 
                     nome: n, cognome: c, matricola: m, progressivo: omo,
@@ -1556,7 +1572,12 @@
                 };
                 await updateDoc(doc(db, "utenti", currentUserId), p);
                 location.reload();
-            } catch(e) { err.innerText = "Errore durante l'invio. Riprova."; err.style.color = "var(--danger)"; }
+            } catch(e) { 
+                err.innerText = "Errore durante l'invio. Riprova."; 
+                err.style.color = "var(--danger)"; 
+                btn.innerText = "Invia Richiesta";
+                btn.disabled = false;
+            }
         };
 
         window.apriGestioneAccessiModal = async () => {
@@ -1681,8 +1702,8 @@
                         <strong style="font-size:14px; color:#856404; cursor:pointer; text-decoration:underline;" onclick="apriDettaglioUtente('${u.uid}')">${u.cognome||''} ${u.nome||''} ${u.progressivo||''}</strong> ${pallino}<br>
                         <span style="font-size:12px; color:#666;">Matr: ${u.matricola||''}</span>
                         <div style="display:flex; gap:10px; margin-top:10px;">
-                            <button class="btn" style="background:var(--success); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${u.uid}', true)">✅ Consenti</button>
-                            <button class="btn" style="background:var(--danger); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${u.uid}', false)">❌ Rifiuta</button>
+                            <button class="btn" style="background:var(--success); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${u.uid}', true, this)">✅ Consenti</button>
+                            <button class="btn" style="background:var(--danger); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${u.uid}', false, this)">❌ Rifiuta</button>
                         </div>
                     </div>`;
                 });
@@ -1691,10 +1712,24 @@
             cont.innerHTML = html;
         };
 
-        window.gestisciRichiesta = async (uid, ok) => {
-            await updateDoc(doc(db, "utenti", uid), { abilitato_rotazioni: ok, stato_richiesta: ok ? 'approved' : 'rejected' });
-            window.aggiornaBadgeRichieste();
-            window.apriGestioneRichieste();
+        window.gestisciRichiesta = async (uid, ok, btnElem) => {
+            try {
+                if (btnElem) {
+                    btnElem.innerText = "⏳...";
+                    btnElem.disabled = true;
+                }
+                
+                await updateDoc(doc(db, "utenti", uid), { 
+                    abilitato_rotazioni: ok, 
+                    stato_richiesta: ok ? 'approved' : 'rejected' 
+                });
+                
+                window.aggiornaBadgeRichieste();
+                window.apriGestioneRichieste();
+            } catch(e) {
+                alert("Errore di connessione: il salvataggio è fallito. Controlla la rete e riprova.");
+                window.apriGestioneRichieste();
+            }
         };
 
         window.apriGestioneCollaboratori = async () => {
