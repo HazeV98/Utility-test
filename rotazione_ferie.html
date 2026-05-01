@@ -140,6 +140,11 @@
                     <optgroup label="Invernali" id="optgroup-invernali-ricerca"></optgroup>
                 </select>
             </div>
+            
+            <div class="section-title" style="text-align: center; margin-bottom: 15px; font-size: 14px; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                Risultati Ferie Anno: <span id="span-anno-ricerca" style="font-size: 16px;"></span>
+            </div>
+
             <div id="suggeriti-ricerca-container" style="display: none; margin-bottom: 15px;"><div id="suggeriti-ricerca"></div></div>
             <div id="risultati-ricerca"></div>
         </div>
@@ -205,20 +210,30 @@
     <div id="adModal" class="modal-overlay">
         <div class="modal-content">
             <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('adModal').style.display='none'">&times;</span>
-            <h3>Nuovo Annuncio</h3>
+            <h3 id="titoloModalAnnuncio">Nuovo Annuncio</h3>
+            
+            <input type="hidden" id="editAdId">
+
             <select id="adTipoFerie" class="input-field" onchange="aggiornaFormAnnuncio()">
                 <option value="estive">Estive</option>
                 <option value="invernali">Invernali</option>
             </select>
+            
+            <label style="font-size: 11px; font-weight: bold;">Anno di Riferimento *:</label>
+            <input type="number" id="adAnnoRiferimento" class="input-field" placeholder="Es. 2026">
+
             <label style="font-size: 11px; font-weight: bold;">Cedo il periodo:</label>
             <select id="adPeriodoOfferto" class="input-field"></select>
+            
             <label style="font-size: 11px; font-weight: bold;">Cerco:</label>
             <select id="adCercoTipo" class="input-field" onchange="aggiornaFormAnnuncio()">
                 <option value="mesi">Mesi Generici</option>
                 <option value="periodo">Periodo Specifico</option>
             </select>
+            
             <div id="cerco-mesi-container"><div id="checkboxes-mesi" class="checkbox-grid"></div></div>
             <div id="cerco-periodo-container" style="display:none;"><select id="adPeriodoCercato" class="input-field"></select></div>
+            
             <button id="btnSalvaAnnuncio" class="btn-action" onclick="pubblicaAnnuncio()">Pubblica</button>
         </div>
     </div>
@@ -226,7 +241,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, where, addDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, query, where, addDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", storageBucket: "utility-haze.firebasestorage.app", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
         const app = initializeApp(firebaseConfig);
@@ -238,6 +253,7 @@
         let myFerieData = null;
         let myAnnunciAttivi = [];
         let jsonFerie = { estive: [], invernali: [] };
+        let bachecaAdsCache = {}; // Cache per le modifiche
         const isAdmin = localStorage.getItem('dev_mode_active') === 'true';
 
         const mesiEstivi = ["Giugno", "Luglio", "Agosto", "Settembre"];
@@ -284,20 +300,20 @@
                 if (ferieSnap.exists()) {
                     myFerieData = ferieSnap.data();
 
-                    // AUTO-SYNC PROGRESSIVO E SOPRANNOME DA UTENTI A FERIE
+                    // AUTO-SYNC PROGRESSIVO DA UTENTI A FERIE
                     let updateNeeded = false;
                     let updates = {};
                     if (userDataPrivate.progressivo !== undefined && myFerieData.progressivo !== userDataPrivate.progressivo) {
                         updates.progressivo = userDataPrivate.progressivo;
                         updateNeeded = true;
                     }
-                    // Aggiunta eventuale di altri campi
                     
                     if (updateNeeded) {
                         await setDoc(ferieRef, updates, { merge: true });
                         myFerieData.progressivo = userDataPrivate.progressivo;
                     }
 
+                    document.getElementById('searchAnno').value = new Date().getFullYear();
                     document.getElementById('searchMansione').value = myFerieData.mansione;
                     document.getElementById('filtroMansioneBacheca').value = myFerieData.mansione;
                     document.getElementById('top-actions-bar').style.display = 'flex';
@@ -313,6 +329,9 @@
                         const a = d.data(); let scaduto = false;
                         const dataPub = new Date(a.timestamp);
                         const mesePub = dataPub.getMonth();
+                        
+                        // Per il cleanup consideriamo l'anno di riferimento (se presente) o l'anno di pubblicazione come base
+                        let baseAnnoT = a.anno_riferimento ? parseInt(a.anno_riferimento) : dataPub.getFullYear();
 
                         if (a.cerco_tipo === 'mesi' && a.cerco_valori?.length > 0) {
                             let maxIdx = -1;
@@ -324,12 +343,12 @@
                                 }
                             });
                             if (maxIdx !== -1) {
-                                let aTarget = dataPub.getFullYear(); let mTarget = maxIdx;
+                                let aTarget = baseAnnoT; let mTarget = maxIdx;
                                 if (mTarget >= 12) { aTarget++; mTarget -= 12; }
                                 if (oggi > new Date(aTarget, mTarget + 1, 1)) scaduto = true;
                             }
                         } else {
-                            let aTarget = dataPub.getFullYear();
+                            let aTarget = baseAnnoT;
                             if (a.tipo_ferie === 'estive') { if (mesePub > 8) aTarget++; if (oggi > new Date(aTarget, 9, 1)) scaduto = true; }
                             else { if (mesePub > 4) aTarget++; if (oggi > new Date(aTarget, 5, 1)) scaduto = true; }
                         }
@@ -407,7 +426,12 @@
         window.eseguiRicerca = async () => {
             const resC = document.getElementById('risultati-ricerca');
             const sugC = document.getElementById('suggeriti-ricerca');
-            const ar = parseInt(document.getElementById('searchAnno').value) || new Date().getFullYear();
+            const annoInput = document.getElementById('searchAnno').value;
+            const ar = parseInt(annoInput) || new Date().getFullYear();
+            
+            // Aggiorna Banner Anno
+            document.getElementById('span-anno-ricerca').innerText = ar;
+
             const mf = document.getElementById('searchMansione').value;
             const pf = document.getElementById('searchPeriodo').value;
             
@@ -447,56 +471,115 @@
             document.getElementById('panel-bacheca').style.display = t==='bacheca'?'block':'none';
         };
 
-        window.apriModaleAnnuncio = () => { document.getElementById('adTipoFerie').value = 'estive'; aggiornaFormAnnuncio(); document.getElementById('adModal').style.display = 'flex'; };
+        window.apriModaleAnnuncio = () => { 
+            document.getElementById('editAdId').value = "";
+            document.getElementById('titoloModalAnnuncio').innerText = "Nuovo Annuncio";
+            document.getElementById('adTipoFerie').value = 'estive'; 
+            document.getElementById('adAnnoRiferimento').value = new Date().getFullYear();
+            document.getElementById('btnSalvaAnnuncio').innerText = "Pubblica";
+            aggiornaFormAnnuncio(); 
+            document.getElementById('adModal').style.display = 'flex'; 
+        };
 
         window.aggiornaFormAnnuncio = () => {
             const t = document.getElementById('adTipoFerie').value; const ct = document.getElementById('adCercoTipo').value;
             const pop = (el, arr) => { el.innerHTML = '<option value="">--</option>'; arr.forEach(i => { const o = document.createElement('option'); o.value = i.n; o.innerText = i.n; el.appendChild(o); }); };
             pop(document.getElementById('adPeriodoOfferto'), jsonFerie[t]);
-            if(myFerieData) {
+            
+            // Seleziona il periodo attuale come default solo se è un nuovo annuncio (editAdId vuoto)
+            const idModifica = document.getElementById('editAdId').value;
+            if(myFerieData && !idModifica) {
                 const def = t === 'estive' ? (myFerieData.est_attuale || myFerieData.periodo_estivo) : (myFerieData.inv_attuale || myFerieData.periodo_invernale);
                 document.getElementById('adPeriodoOfferto').value = def;
             }
+            
             document.getElementById('cerco-mesi-container').style.display = ct==='mesi'?'block':'none';
             document.getElementById('cerco-periodo-container').style.display = ct==='periodo'?'block':'none';
+            
             if(ct==='mesi') {
                 const cm = document.getElementById('checkboxes-mesi'); cm.innerHTML = "";
                 (t==='estive'?mesiEstivi:mesiInvernali).forEach(m => cm.innerHTML += `<label class="checkbox-label"><input type="checkbox" value="${m}"> ${m}</label>`);
             } else pop(document.getElementById('adPeriodoCercato'), jsonFerie[t]);
         };
 
+        window.modificaAnnuncioFerie = (id) => {
+            const a = bachecaAdsCache[id];
+            if(!a) return;
+            
+            document.getElementById('editAdId').value = id;
+            document.getElementById('titoloModalAnnuncio').innerText = "Modifica Annuncio";
+            document.getElementById('adTipoFerie').value = a.tipo_ferie;
+            document.getElementById('adAnnoRiferimento').value = a.anno_riferimento || new Date().getFullYear();
+            
+            aggiornaFormAnnuncio();
+            
+            // Ritardo di sicurezza per lasciare aggiornare il DOM da aggiornaFormAnnuncio()
+            setTimeout(() => {
+                document.getElementById('adPeriodoOfferto').value = a.periodo_offerto;
+                document.getElementById('adCercoTipo').value = a.cerco_tipo;
+                aggiornaFormAnnuncio();
+                
+                setTimeout(() => {
+                    if(a.cerco_tipo === 'mesi') {
+                        document.querySelectorAll('#checkboxes-mesi input').forEach(cb => {
+                            cb.checked = a.cerco_valori.includes(cb.value);
+                        });
+                    } else {
+                        document.getElementById('adPeriodoCercato').value = a.cerco_valori[0] || '';
+                    }
+                    document.getElementById('btnSalvaAnnuncio').innerText = "Salva Modifiche";
+                    document.getElementById('adModal').style.display = 'flex';
+                }, 50);
+            }, 50);
+        };
+
         window.pubblicaAnnuncio = async () => {
             const btn = document.getElementById('btnSalvaAnnuncio');
+            const idModifica = document.getElementById('editAdId').value;
             const t = document.getElementById('adTipoFerie').value; 
             const ct = document.getElementById('adCercoTipo').value;
+            const annoRif = document.getElementById('adAnnoRiferimento').value;
             const cv = ct === 'mesi' ? Array.from(document.querySelectorAll('#checkboxes-mesi input:checked')).map(b => b.value) : [document.getElementById('adPeriodoCercato').value];
             
+            if(!annoRif) return alert("Inserisci l'anno di riferimento.");
             if(!document.getElementById('adPeriodoOfferto').value || cv.length === 0 || (ct === 'periodo' && !cv[0])) {
-                return alert("Completa tutti i campi prima di pubblicare!");
+                return alert("Completa tutti i campi prima di procedere!");
             }
             
-            btn.innerText = "⏳ Pubblicazione...";
+            btn.innerText = "⏳ Salvataggio...";
             
             try {
-                await addDoc(collection(db, "bacheca_ferie"), { 
-                    uid: currentUser.uid, 
-                    nome: myFerieData.nome || "", 
-                    cognome: myFerieData.cognome || "", 
-                    progressivo: myFerieData.progressivo || userDataPrivate.progressivo || "",
-                    telefono: myFerieData.telefono || "", 
-                    mansione: myFerieData.mansione || "", 
-                    matricola: myFerieData.matricola || userDataPrivate.matricola || "N/D", 
-                    timestamp: Date.now(), 
-                    tipo_ferie: t, 
-                    periodo_offerto: document.getElementById('adPeriodoOfferto').value, 
-                    cerco_tipo: ct, 
-                    cerco_valori: cv 
-                });
+                if (idModifica) {
+                    await updateDoc(doc(db, "bacheca_ferie", idModifica), {
+                        tipo_ferie: t, 
+                        periodo_offerto: document.getElementById('adPeriodoOfferto').value, 
+                        cerco_tipo: ct, 
+                        cerco_valori: cv,
+                        anno_riferimento: parseInt(annoRif),
+                        timestamp_modifica: Date.now()
+                    });
+                } else {
+                    await addDoc(collection(db, "bacheca_ferie"), { 
+                        uid: currentUser.uid, 
+                        nome: myFerieData.nome || "", 
+                        cognome: myFerieData.cognome || "", 
+                        progressivo: myFerieData.progressivo || userDataPrivate.progressivo || "",
+                        telefono: myFerieData.telefono || "", 
+                        mansione: myFerieData.mansione || "", 
+                        matricola: myFerieData.matricola || userDataPrivate.matricola || "N/D", 
+                        timestamp: Date.now(), 
+                        tipo_ferie: t, 
+                        periodo_offerto: document.getElementById('adPeriodoOfferto').value, 
+                        cerco_tipo: ct, 
+                        cerco_valori: cv,
+                        anno_riferimento: parseInt(annoRif)
+                    });
+                }
                 location.reload();
             } catch (error) {
                 console.error("Errore Firebase:", error);
-                alert("Errore durante la pubblicazione: " + error.message);
-                btn.innerText = "Pubblica";
+                alert("Errore durante l'operazione: " + error.message);
+                btn.innerText = idModifica ? "Salva Modifiche" : "Pubblica";
             }
         };
 
@@ -505,10 +588,14 @@
             const fMan = document.getElementById('filtroMansioneBacheca').value;
             let q = fMan === "Tutte" ? collection(db, "bacheca_ferie") : query(collection(db, "bacheca_ferie"), where("mansione", "==", fMan));
             const ads = await getDocs(q);
+            
+            bachecaAdsCache = {}; // Resetta la cache
             sugC.innerHTML = ""; resC.innerHTML = ""; let sCount = 0;
             
             ads.forEach(d => {
                 const a = d.data(); 
+                bachecaAdsCache[d.id] = a; // Salva in cache per eventuali modifiche
+                
                 const isMe = a.uid === currentUser.uid;
                 const canDelete = isMe || isAdmin; // CONTROLLO AMMINISTRATORE
                 const progLabel = a.progressivo ? ` (${a.progressivo})` : "";
@@ -519,16 +606,22 @@
                 if (!isMe && a.telefono) {
                     actionsHTML += `<a href="https://wa.me/39${a.telefono.replace(/\s+/g,'')}" target="_blank" class="action-icon">${svgWa}</a>`;
                 }
-                if (canDelete) {
-                    actionsHTML += `<button onclick="cancellaAnnuncioFerie('${d.id}')" class="action-icon" style="background:var(--danger); color:white; border:none; padding:8px; width:auto; height:auto; font-size:16px; margin-top: 5px;">🗑️</button>`;
+                if (isMe) {
+                    actionsHTML += `<button onclick="modificaAnnuncioFerie('${d.id}')" class="action-icon" style="background:var(--primary); color:white; border:none; padding:8px; width:auto; height:auto; font-size:16px; margin-top: 5px; cursor: pointer;">✏️</button>`;
                 }
+                if (canDelete) {
+                    actionsHTML += `<button onclick="cancellaAnnuncioFerie('${d.id}')" class="action-icon" style="background:var(--danger); color:white; border:none; padding:8px; width:auto; height:auto; font-size:16px; margin-top: 5px; cursor: pointer;">🗑️</button>`;
+                }
+
+                // Generazione Badge Anno Sicuro
+                const annoBadge = a.anno_riferimento ? `Anno: ${a.anno_riferimento}` : `<span style="color:var(--danger);">[Anno Mancante]</span>`;
 
                 const h = `<div class="${match?'card-suggested':'card'}" style="border-left:4px solid ${a.tipo_ferie==='estive'?'#ffc107':'#17a2b8'}">
                     <div style="display:flex; justify-content: space-between;">
                         <div>
                             <div style="font-weight:bold">${a.cognome} ${a.nome}${progLabel}</div>
-                            <div style="font-size:11px; color:#666">${a.mansione} | Mat: ${a.matricola || 'N/D'} | Tel: ${a.telefono}</div>
-                            <span class="${a.tipo_ferie==='estive'?'badge-estivo':'badge-invernale'}">CEDE: ${a.periodo_offerto}</span><br>
+                            <div style="font-size:11px; color:#666; margin-bottom: 5px;">${a.mansione} | Mat: ${a.matricola || 'N/D'} | Tel: ${a.telefono}</div>
+                            <span class="${a.tipo_ferie==='estive'?'badge-estivo':'badge-invernale'}">CEDE: ${a.periodo_offerto} <span style="margin-left: 5px; padding-left: 5px; border-left: 1px solid #ccc;">${annoBadge}</span></span><br>
                             <span class="badge-invernale" style="background:#eee; color:#333">CERCA: ${a.cerco_valori.join(', ')}</span>
                         </div>
                         <div class="contact-actions" style="flex-direction:column; justify-content:center; padding-left: 10px;">
