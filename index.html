@@ -40,21 +40,25 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     
     <script>
-        const APK_VERSION = "1.0.1";
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/HazeV98/Utility/main/version.json";
 
         async function controllaAggiornamentiAPK() {
-            // Controllo di sicurezza: esegue solo se siamo dentro l'APK (Android WebView)
-            const ua = navigator.userAgent || navigator.vendor || window.opera;
-            const isAndroidWebView = /Android/.test(ua) && /; wv/.test(ua);
-            
-            if (!isAndroidWebView) return; // Blocca l'esecuzione se aperto in Chrome/Safari/PWA
+            // Se non siamo dentro l'APK nativo (Capacitor), fermiamo tutto
+            if (!window.Capacitor || !window.Capacitor.isNativePlatform() || !window.Capacitor.Plugins.App) {
+                return;
+            }
 
             try {
+                // Legge la VERA versione dell'APK installato su Android
+                const appInfo = await window.Capacitor.Plugins.App.getInfo();
+                const versioneInstallata = appInfo.version; 
+
+                // Scarica la versione da GitHub
                 const response = await fetch(UPDATE_CHECK_URL + "?t=" + new Date().getTime());
                 const data = await response.json();
 
-                if (data.latest_version && data.latest_version !== APK_VERSION) {
+                // Se la versione su GitHub è diversa da quella installata nel telefono, mostra il popup
+                if (data.latest_version && data.latest_version !== versioneInstallata) {
                     mostraPopupAggiornamento(data);
                 }
             } catch (error) {
