@@ -39,6 +39,48 @@
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     
+    <script>
+        const APK_VERSION = "1.0.0";
+        const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/HazeV98/Utility/main/version.json";
+
+        async function controllaAggiornamentiAPK() {
+            // Controllo di sicurezza: esegue solo se siamo dentro l'APK (Android WebView)
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            const isAndroidWebView = /Android/.test(ua) && /; wv/.test(ua);
+            
+            if (!isAndroidWebView) return; // Blocca l'esecuzione se aperto in Chrome/Safari/PWA
+
+            try {
+                const response = await fetch(UPDATE_CHECK_URL + "?t=" + new Date().getTime());
+                const data = await response.json();
+
+                if (data.latest_version && data.latest_version !== APK_VERSION) {
+                    mostraPopupAggiornamento(data);
+                }
+            } catch (error) {
+                console.error("Errore nel controllo aggiornamenti APK:", error);
+            }
+        }
+
+        function mostraPopupAggiornamento(data) {
+            const modale = document.createElement('div');
+            modale.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99999; display:flex; justify-content:center; align-items:center; padding:20px; box-sizing:border-box; backdrop-filter:blur(3px);";
+            
+            modale.innerHTML = `
+                <div style="background:white; padding:25px; border-radius:15px; text-align:center; max-width:350px; width:100%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-family: Arial, sans-serif;">
+                    <h2 style="color:#0056b3; margin-top:0;">🚀 Nuovo Aggiornamento!</h2>
+                    <p style="font-size:14px; color:#555;">È disponibile la versione <b>${data.latest_version}</b>.</p>
+                    <p style="font-size:13px; color:#666; background:#f4f7f6; padding:12px; border-radius:8px; text-align: left; line-height: 1.5;">${data.note_aggiornamento}</p>
+                    <a href="${data.download_url}" style="display:block; background:#28a745; color:white; padding:15px; border-radius:10px; text-decoration:none; font-weight:bold; margin-top:20px; font-size: 16px;">Scarica e Aggiorna</a>
+                    <button onclick="this.parentElement.parentElement.remove()" style="margin-top:15px; background:none; border:none; color:#666; text-decoration:underline; font-size:14px; cursor:pointer;">Più tardi</button>
+                </div>
+            `;
+            document.body.appendChild(modale);
+        }
+
+        window.addEventListener('DOMContentLoaded', controllaAggiornamentiAPK);
+    </script>
+    
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <meta name="theme-color" content="#0056b3">
