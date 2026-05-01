@@ -48,7 +48,7 @@
         
         .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
         .input-group label { font-size: 14px; font-weight: bold; color: #555; }
-        .input-field, .input-group input[type="text"], .input-group input[type="file"] { padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 15px; width: 100%; box-sizing: border-box; font-family: inherit; }
+        .input-field, .input-group input[type="text"], .input-group input[type="file"], .input-group input[type="time"] { padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 15px; width: 100%; box-sizing: border-box; font-family: inherit; }
         
         .checkbox-group { display: flex; flex-direction: column; gap: 10px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; }
         .checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: normal; color: #333; cursor: pointer; }
@@ -129,6 +129,12 @@
                 </div>
             </div>
 
+            <div class="input-group" id="dds-time-picker-group" style="display: none; background: #eef2f5; padding: 15px; border-radius: 8px; border: 1px solid #d1d9e0;">
+                <label style="color: var(--primary);">🔔 Orario Notifica Push App</label>
+                <input type="time" id="dds-orario" style="background: white; border: 2px solid #d1d9e0; border-radius: 8px; padding: 10px; font-size: 15px; width: 100%; box-sizing: border-box; font-family: inherit;">
+                <div style="font-size: 11px; color: #666; margin-top: 5px;">Seleziona un orario per ricevere una notifica push nei giorni di validità.</div>
+            </div>
+
             <div class="input-group" style="background: #eef2ff; padding: 15px; border-radius: 8px; border: 1px dashed var(--primary);">
                 <label class="checkbox-label" style="font-weight: bold; color: var(--primary);">
                     <input type="checkbox" id="banner-attiva"> ⚠️ Mostra banner in Home Page
@@ -170,6 +176,14 @@
             document.getElementById('dds-titolo').value = '';
             document.getElementById('dds-file').value = '';
             document.getElementById('banner-attiva').checked = false;
+            document.getElementById('dds-orario').value = '';
+
+            // Logica per rilevare App Nativa
+            if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+                document.getElementById('dds-time-picker-group').style.display = 'flex';
+            } else {
+                document.getElementById('dds-time-picker-group').style.display = 'none';
+            }
             
             if (!fpInstance) {
                 fpInstance = flatpickr("#dds-date-picker", { 
@@ -241,17 +255,24 @@
 
                 reqAdd.onsuccess = async function() {
                     const bannerAttiva = document.getElementById('banner-attiva').checked;
+                    const orarioPush = document.getElementById('dds-orario').value;
 
-                    if (bannerAttiva && auth.currentUser) {
+                    if (auth.currentUser && (bannerAttiva || (orarioPush && window.Capacitor && window.Capacitor.isNativePlatform()))) {
                         try {
                             const noteRef = doc(collection(db, "utenti", auth.currentUser.uid, "notifiche_programmate"));
-                            await setDoc(noteRef, {
+                            let payloadProgrammata = {
                                 titolo: "DDS: " + titolo,
                                 date: selectedDates,
-                                tipo: "DDS_BANNER",
+                                tipo: bannerAttiva ? "DDS_BANNER" : "DDS_PUSH",
                                 timestamp_creazione: Date.now()
-                            });
-                        } catch(err) { console.error("Errore salvataggio banner:", err); }
+                            };
+
+                            if (orarioPush) {
+                                payloadProgrammata.orario = orarioPush;
+                            }
+
+                            await setDoc(noteRef, payloadProgrammata);
+                        } catch(err) { console.error("Errore salvataggio programmazione:", err); }
                     }
 
                     alert("✅ DDS salvata con successo!");
