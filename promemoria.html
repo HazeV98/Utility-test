@@ -40,7 +40,7 @@
         
         .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
         .input-group label { font-size: 14px; font-weight: bold; color: #555; }
-        .input-field, .input-group input[type="text"], .input-group textarea { padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 15px; width: 100%; box-sizing: border-box; font-family: inherit; }
+        .input-field, .input-group input[type="text"], .input-group textarea, .input-group input[type="time"] { padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 15px; width: 100%; box-sizing: border-box; font-family: inherit; }
         
         .checkbox-group { display: flex; flex-direction: column; gap: 10px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; }
         .checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: normal; color: #333; cursor: pointer; }
@@ -114,6 +114,12 @@
                 </div>
             </div>
 
+            <div class="input-group" id="time-picker-group" style="display: none; background: #eef2f5; padding: 15px; border-radius: 8px; border: 1px solid #d1d9e0;">
+                <label style="color: var(--primary);">🔔 Orario Notifica Push App</label>
+                <input type="time" id="prom-orario" style="background: white; border: 2px solid #d1d9e0; border-radius: 8px; padding: 10px; font-size: 15px; width: 100%; box-sizing: border-box; font-family: inherit;">
+                <div style="font-size: 11px; color: #666; margin-top: 5px;">Seleziona un orario per ricevere una notifica push nei giorni di validità.</div>
+            </div>
+
             <div class="input-group" style="background: #fff8e1; padding: 15px; border-radius: 8px; border: 1px dashed #ffc107;">
                 <label class="checkbox-label" style="font-weight: bold; color: #856404;">
                     <input type="checkbox" id="banner-attiva"> ⚠️ Mostra banner in Home Page
@@ -155,7 +161,15 @@
             document.getElementById('prom-titolo').value = '';
             document.getElementById('prom-note').value = '';
             document.getElementById('banner-attiva').checked = false;
+            document.getElementById('prom-orario').value = ''; 
             
+            // Logica per rilevare App Nativa
+            if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+                document.getElementById('time-picker-group').style.display = 'flex';
+            } else {
+                document.getElementById('time-picker-group').style.display = 'none';
+            }
+
             if (!fpPromemoriaInstance) { 
                 fpPromemoriaInstance = flatpickr("#prom-date-picker", { 
                     mode: "multiple", 
@@ -236,16 +250,27 @@
                             timestamp: Date.now()
                         });
 
-                        if (document.getElementById('banner-attiva').checked) {
+                        const bannerAttivo = document.getElementById('banner-attiva').checked;
+                        const orarioPush = document.getElementById('prom-orario').value;
+
+                        // Se è richiesto il banner oppure un orario di notifica (da App) generiamo la scheda "notifiche_programmate"
+                        if (bannerAttivo || (orarioPush && window.Capacitor && window.Capacitor.isNativePlatform())) {
                             const noteRef = doc(collection(db, "utenti", auth.currentUser.uid, "notifiche_programmate"));
-                            await setDoc(noteRef, {
+                            let payloadProgrammata = {
                                 titolo: "🔔 " + titolo,
                                 date: selectedDates,
-                                tipo: "PROMEMORIA_BANNER",
+                                tipo: bannerAttivo ? "PROMEMORIA_BANNER" : "PROMEMORIA_PUSH",
                                 note: note,
                                 timestamp_creazione: Date.now()
-                            });
+                            };
+
+                            if (orarioPush) {
+                                payloadProgrammata.orario = orarioPush;
+                            }
+
+                            await setDoc(noteRef, payloadProgrammata);
                         }
+
                     } catch(err) { console.error("Sync error:", err); }
                 }
 
