@@ -1824,7 +1824,7 @@
                     }
                 } catch(e) { console.error("Errore caricamento " + file, e); }
             }
-            salvaLocal();
+            // RIMOSSO: salvaLocal(); // <-- Eliminato per evitare la generazione di falsi timestamp al primo avvio
         } catch (e) { console.error("Errore caricamento dinamico", e); }
     }
 
@@ -3094,6 +3094,23 @@
                         // CONTROLLO TIMESTAMP
                         let cloudTime = datiCloud.lastUpdate || 0;
                         let localTime = datiLocali.lastUpdate || 0;
+
+                        // --- SISTEMA SALVAVITA ANTI-RACE CONDITION ---
+                        if (!window.primaSincronizzazioneFatta) {
+                            window.primaSincronizzazioneFatta = true; // Segna che abbiamo fatto il primo check
+                            
+                            // Definiamo se il telefono è completamente vergine
+                            let localIsBlank = !datiLocali.depositoAttivo && !datiLocali.history && (!datiLocali.variazioni || Object.keys(datiLocali.variazioni).length === 0);
+                            let cloudIsConfigured = datiCloud.depositoAttivo || datiCloud.history;
+
+                            if (localIsBlank && cloudIsConfigured) {
+                                // Il browser è nuovo, ma il Cloud ha i dati. 
+                                // Diamo al Cloud un timestamp infinito per farlo vincere forzatamente sul falso salvataggio locale!
+                                console.warn("Dispositivo vuoto rilevato: Ripristino dati forzato dal Cloud.");
+                                cloudTime = Infinity; 
+                            }
+                        }
+                        // ---------------------------------------------
 
                         if (cloudTime > localTime) {
                             // Controlliamo se un altro dispositivo ha cambiato il profilo attivo
