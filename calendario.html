@@ -1557,6 +1557,13 @@
     // ----------------------------------------------------
     function salvaLocal(timestampManuale = null) { 
         state.lastUpdate = timestampManuale || new Date().getTime(); // Marca temporale!
+        
+        // FIX PROFILI: Salva le modifiche manuali nel profilo specifico prima di sincronizzare
+        if (state.profiloAttivoId && state.profiliSalvati) {
+            let nomeAttuale = state.profiliSalvati[state.profiloAttivoId] ? state.profiliSalvati[state.profiloAttivoId].nome : "I Miei Turni";
+            salvaStatoInProfilo(state.profiloAttivoId, nomeAttuale);
+        }
+
         let copiaDati = JSON.parse(JSON.stringify(state)); 
         delete copiaDati.dbCache; 
         delete copiaDati.rotCache; 
@@ -1574,6 +1581,13 @@
     // Nuova funzione per fermare il bug della ricarica
     function salvaERicarica(timestampManuale = null) {
         state.lastUpdate = timestampManuale || new Date().getTime(); // Marca temporale!
+        
+        // FIX PROFILI: Salva le modifiche manuali nel profilo specifico prima di sincronizzare
+        if (state.profiloAttivoId && state.profiliSalvati) {
+            let nomeAttuale = state.profiliSalvati[state.profiloAttivoId] ? state.profiliSalvati[state.profiloAttivoId].nome : "I Miei Turni";
+            salvaStatoInProfilo(state.profiloAttivoId, nomeAttuale);
+        }
+
         let copiaDati = JSON.parse(JSON.stringify(state));
         delete copiaDati.dbCache;
         delete copiaDati.rotCache;
@@ -3082,16 +3096,42 @@
                         let localTime = datiLocali.lastUpdate || 0;
 
                         if (cloudTime > localTime) {
-                            // Il Cloud ha i dati PIÙ RECENTI (modificati da un altro dispositivo): li sovrascriviamo al telefono
+                            // Controlliamo se un altro dispositivo ha cambiato il profilo attivo
+                            let cambioProfiloDalCloud = (state.profiloAttivoId !== datiCloud.profiloAttivoId);
+
+                            // Il Cloud ha i dati PIÙ RECENTI: li sovrascriviamo al telefono
                             Object.assign(state, datiCloud);
+                            
+                            // FIX PROFILI: Ricarichiamo le variabili (turni, note, ecc) estraendole 
+                            // dal "cassetto" specifico, per evitare mescolamenti tra dispositivi
+                            if (state.profiliSalvati && state.profiliSalvati[state.profiloAttivoId]) {
+                                let p = state.profiliSalvati[state.profiloAttivoId];
+                                state.variazioni = p.variazioni || {};
+                                state.note = p.note || {};
+                                state.colori = p.colori || {};
+                                state.nebbia = p.nebbia || {};
+                                state.straordinario = p.straordinario || {};
+                                state.sospesoRiposo = p.sospesoRiposo || {};
+                                state.buonoPasto = p.buonoPasto || {};
+                                state.permessoSP = p.permessoSP || {};
+                                state.ferie = p.ferie || {};
+                            }
+
                             localStorage.setItem('myTurniApp', JSON.stringify(state));
                             
-                            // Aggiorna visivamente il calendario senza ricaricare la pagina
-                            if (typeof calendar !== 'undefined') {
+                            // FIX: Se l'app era ferma sulla modale iniziale (calendar indefinito)
+                            // oppure se è cambiato il profilo attivo da un altro dispositivo, forziamo il riavvio grafico.
+                            if (typeof calendar === 'undefined' || cambioProfiloDalCloud) {
+                                window.location.reload();
+                            } else {
+                                // Altrimenti aggiorniamo visivamente senza ricaricare
                                 calendar.refetchEvents(); 
+                                aggiornaUI();
+                                controllaEmptyState();
+                                if (typeof renderizzaProfiliUI === 'function') renderizzaProfiliUI();
                             }
                         } else if (localTime > cloudTime) {
-                            // Il telefono ha dati PIÙ RECENTI (es. eri offline): Forziamo l'aggiornamento verso il Cloud
+                            // Il telefono ha dati PIÙ RECENTI: Forziamo l'aggiornamento verso il Cloud
                             console.log("Dati locali più recenti, sincronizzo verso il cloud...");
                             Object.assign(state, datiLocali);
                             if (typeof window.syncToCloud === 'function') {
