@@ -6,6 +6,7 @@
     <title>Utility - Buoni Pasto</title>
 
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+    <script src="global.js"></script>
 
     <style>
         /* --- STILI GLOBALI UNIFICATI --- */
@@ -253,7 +254,6 @@
         let pid = stateApp.profiloAttivoId || 'default'; // 'pid' = Profile ID
 
         // --- MIGRAZIONE DATI VECCHI ---
-        // Se hai un vecchio salvataggio globale, lo passiamo al profilo attuale per non farti perdere i dati
         if (localStorage.getItem('buoni_salvati') !== null && localStorage.getItem(`buoni_salvati_${pid}`) === null) {
             localStorage.setItem(`buoni_salvati_${pid}`, localStorage.getItem('buoni_salvati'));
             localStorage.setItem(`buoni_integrazione_attiva_${pid}`, localStorage.getItem('buoni_integrazione_attiva') || 'false');
@@ -336,7 +336,6 @@
             return r.length > 0 ? "FEP" : null;
         }
 
-
         // --- FUNZIONE CENTRALE MATURAZIONE ---
         function isBuonoMaturato(dStr, state, esclusiArray, ignoraUso = false) {
             let isSospeso = state.sospesoRiposo && state.sospesoRiposo[dStr];
@@ -383,7 +382,7 @@
             await caricaFerie(); 
             inizializzaTondini();
             if (integrazioneAttiva) {
-                sincronizzaBuoni();
+                sincronizzaBuoni(false);
             } else {
                 document.getElementById('buoni-count').innerText = buoniAttuali;
             }
@@ -399,7 +398,8 @@
             }
         }
 
-        function sincronizzaBuoni() {
+        // FIX: Aggiunto parametro "fromCloud" per evitare il loop infinito
+        function sincronizzaBuoni(fromCloud = false) {
             document.getElementById('toggleInt').checked = true;
             
             let esclusiArray = [...TURNI_ESCLUSI_FISSI];
@@ -452,7 +452,11 @@
             
             document.getElementById('buoni-count').innerText = buoniAttuali;
             localStorage.setItem(`buoni_salvati_${pid}`, buoniAttuali);
-            if (typeof window.syncBuoniToCloud === 'function') window.syncBuoniToCloud();
+            
+            // FIX: Invio al Cloud solo se il calcolo è nato da un'azione sul telefono, non se stiamo scaricando.
+            if (!fromCloud && typeof window.syncBuoniToCloud === 'function') {
+                window.syncBuoniToCloud();
+            }
         }
 
         function impostaSaldoDaInput(inputValore) {
@@ -654,7 +658,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -672,37 +676,81 @@
 
         window.utenteLoggato = null;
 
-        onAuthStateChanged(auth, async (user) => {
+        onAuthStateChanged(auth, (user) => {
             if (user) {
                 window.utenteLoggato = user.uid;
-                try {
-                    const docRef = doc(db, "utenti", window.utenteLoggato);
-                    const docSnap = await getDoc(docRef);
+                const docRef = doc(db, "utenti", window.utenteLoggato);
 
+                onSnapshot(docRef, (docSnap) => {
                     if (docSnap.exists()) {
                         let datiCloud = docSnap.data();
+                        let datiLocali = JSON.parse(localStorage.getItem('myTurniApp')) || {};
+
+                        let cloudTime = datiCloud.lastUpdate || 0;
+                        let localTime = datiLocali.lastUpdate || 0;
+
+                        // 1. SINCRONIZZAZIONE BASE CALENDARIO 
+                        if (cloudTime > localTime) {
+                            Object.assign(stateApp, datiCloud);
+                            pid = stateApp.profiloAttivoId || 'default';
+                            
+                            if (stateApp.profiliSalvati && stateApp.profiliSalvati[pid]) {
+                                let p = stateApp.profiliSalvati[pid];
+                                stateApp.variazioni = p.variazioni || {};
+                                stateApp.note = p.note || {};
+                                stateApp.colori = p.colori || {};
+                                stateApp.nebbia = p.nebbia || {};
+                                stateApp.straordinario = p.straordinario || {};
+                                stateApp.sospesoRiposo = p.sospesoRiposo || {};
+                                stateApp.buonoPasto = p.buonoPasto || {};
+                                stateApp.permessoSP = p.permessoSP || {};
+                                stateApp.ferie = p.ferie || {};
+                            }
+                            
+                            localStorage.setItem('myTurniApp', JSON.stringify(stateApp));
+                            
+                            // Se il calendario cambia (es. da un altro dispositivo), ricalcoliamo senza inviare in loop
+                            if (integrazioneAttiva) {
+                                sincronizzaBuoni(true);
+                            }
+                        }
+
+                        // 2. RECUPERO E AGGIORNAMENTO DEL CONTATORE BUONI PASTO
+                        pid = stateApp.profiloAttivoId || 'default'; 
                         
-                        // Legge i dati specifici del PROFILO ATTIVO (pid) dal Cloud
                         if (datiCloud[`buoni_pasto_totali_${pid}`] !== undefined) {
-                            localStorage.setItem(`buoni_salvati_${pid}`, datiCloud[`buoni_pasto_totali_${pid}`]);
-                            localStorage.setItem(`buoni_integrazione_attiva_${pid}`, datiCloud[`buoni_integrazione_${pid}`] === true ? 'true' : 'false');
+                            let cloudInt = datiCloud[`buoni_integrazione_${pid}`] === true;
                             
-                            buoniAttuali = parseInt(datiCloud[`buoni_pasto_totali_${pid}`]);
-                            integrazioneAttiva = datiCloud[`buoni_integrazione_${pid}`] === true;
+                            // FIX: Sincronizziamo il "Punto di Partenza" del calcolo se esiste
+                            if (datiCloud[`buoni_base_saldo_${pid}`] !== undefined) {
+                                localStorage.setItem(`buoni_base_saldo_${pid}`, datiCloud[`buoni_base_saldo_${pid}`]);
+                                localStorage.setItem(`buoni_base_data_${pid}`, datiCloud[`buoni_base_data_${pid}`]);
+                            }
                             
-                            document.getElementById('buoni-count').innerText = buoniAttuali;
+                            integrazioneAttiva = cloudInt;
+                            localStorage.setItem(`buoni_integrazione_attiva_${pid}`, cloudInt ? 'true' : 'false');
                             document.getElementById('toggleInt').checked = integrazioneAttiva;
+                            
+                            // IL CUORE DELLA SOLUZIONE AL BUG:
+                            if (integrazioneAttiva) {
+                                // Se l'integrazione è attiva, la verità è SEMPRE il calcolo del calendario attuale, 
+                                // ignoriamo il numero fisso "buoni_pasto_totali" che Firebase ci sta spingendo!
+                                sincronizzaBuoni(true);
+                            } else {
+                                // Se l'integrazione NON è attiva, ci fidiamo del numero statico del Cloud
+                                let cloudBuoni = parseInt(datiCloud[`buoni_pasto_totali_${pid}`]);
+                                buoniAttuali = cloudBuoni;
+                                localStorage.setItem(`buoni_salvati_${pid}`, cloudBuoni);
+                                document.getElementById('buoni-count').innerText = buoniAttuali;
+                            }
+                            
                         } else {
                             if (localStorage.getItem(`buoni_salvati_${pid}`) !== null) {
                                 if (typeof window.syncBuoniToCloud === 'function') window.syncBuoniToCloud();
                             }
                         }
-                    } else {
-                        if (localStorage.getItem(`buoni_salvati_${pid}`) !== null) {
-                            if (typeof window.syncBuoniToCloud === 'function') window.syncBuoniToCloud();
-                        }
                     }
-                } catch(e) { console.error("Errore Cloud Buoni:", e); }
+                });
             }
         });
 
@@ -712,9 +760,12 @@
                     const docRef = doc(db, "utenti", window.utenteLoggato);
                     let dataToSave = {};
                     
-                    // Salva usando chiavi dinamiche in base al profilo
                     dataToSave[`buoni_pasto_totali_${pid}`] = buoniAttuali;
                     dataToSave[`buoni_integrazione_${pid}`] = integrazioneAttiva;
+                    
+                    // FIX: Salviamo anche i punti di base per garantire uguaglianza tra dispositivi
+                    dataToSave[`buoni_base_saldo_${pid}`] = parseInt(localStorage.getItem(`buoni_base_saldo_${pid}`)) || 0;
+                    dataToSave[`buoni_base_data_${pid}`] = localStorage.getItem(`buoni_base_data_${pid}`) || "";
                     
                     await setDoc(docRef, dataToSave, { merge: true });
                 } catch(e) { console.error("Errore Sync Cloud Buoni:", e); }
