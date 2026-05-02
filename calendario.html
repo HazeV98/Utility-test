@@ -56,7 +56,7 @@
 
 
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
-
+    <script src="global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
@@ -1583,10 +1583,10 @@
         document.body.style.opacity = '0.6'; // Feedback visivo
 
         if (typeof window.syncToCloud === 'function' && window.utenteLoggato) {
-            // Aspetta che il Cloud riceva il dato (o scade dopo 800ms se offline) per evitare il bounce-back
+            // Timeout aumentato a 2500ms per tollerare connessioni più lente
             Promise.race([
                 window.syncToCloud(copiaDati),
-                new Promise(resolve => setTimeout(resolve, 800))
+                new Promise(resolve => setTimeout(resolve, 2500))
             ]).then(() => {
                 location.reload();
             });
@@ -3037,7 +3037,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
     const firebaseConfig = {
@@ -3070,40 +3070,44 @@
 
             try {
                 const docRef = doc(db, "utenti", window.utenteLoggato);
-                const docSnap = await getDoc(docRef);
 
-                if (docSnap.exists()) {
-                    let datiCloud = docSnap.data();
-                    let datiLocali = JSON.parse(localStorage.getItem('myTurniApp')) || state;
+                // onSnapshot ascolta le modifiche in tempo reale E fa il fetch iniziale automatico
+                onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        let datiCloud = docSnap.data();
+                        let datiLocali = JSON.parse(localStorage.getItem('myTurniApp')) || state;
 
-                    // CONTROLLO TIMESTAMP
-                    let cloudTime = datiCloud.lastUpdate || 0;
-                    let localTime = datiLocali.lastUpdate || 0;
+                        // CONTROLLO TIMESTAMP
+                        let cloudTime = datiCloud.lastUpdate || 0;
+                        let localTime = datiLocali.lastUpdate || 0;
 
-                    if (cloudTime >= localTime) {
-                        // Il Cloud ha i dati più aggiornati: li sovrascriviamo al telefono
-                        Object.assign(state, datiCloud);
-                        localStorage.setItem('myTurniApp', JSON.stringify(state));
-                    } else {
-                        // Il telefono ha dati più nuovi (es. si era disconnesso). Forziamo l'aggiornamento verso il Cloud
-                        console.log("Dati locali più recenti, sincronizzo verso il cloud...");
-                        Object.assign(state, datiLocali);
-                        if (typeof window.syncToCloud === 'function') {
-                            window.syncToCloud(state);
+                        if (cloudTime > localTime) {
+                            // Il Cloud ha i dati PIÙ RECENTI (modificati da un altro dispositivo): li sovrascriviamo al telefono
+                            Object.assign(state, datiCloud);
+                            localStorage.setItem('myTurniApp', JSON.stringify(state));
+                            
+                            // Aggiorna visivamente il calendario senza ricaricare la pagina
+                            if (typeof calendar !== 'undefined') {
+                                calendar.refetchEvents(); 
+                            }
+                        } else if (localTime > cloudTime) {
+                            // Il telefono ha dati PIÙ RECENTI (es. eri offline): Forziamo l'aggiornamento verso il Cloud
+                            console.log("Dati locali più recenti, sincronizzo verso il cloud...");
+                            Object.assign(state, datiLocali);
+                            if (typeof window.syncToCloud === 'function') {
+                                window.syncToCloud(state);
+                            }
                         }
+                    } else {
+                        // Creazione documento se non esiste
+                        let stateDaSalvare = { ...state };
+                        delete stateDaSalvare.dbCache; 
+                        delete stateDaSalvare.rotCache; 
+                        delete stateDaSalvare.dispCache;
+                        setDoc(docRef, stateDaSalvare);
                     }
-                    
-                    // Ricarichiamo gli eventi del calendario
-                    if (typeof calendar !== 'undefined') {
-                        calendar.refetchEvents(); 
-                    }
-                } else {
-                    let stateDaSalvare = { ...state };
-                    delete stateDaSalvare.dbCache; 
-                    delete stateDaSalvare.rotCache; 
-                    delete stateDaSalvare.dispCache;
-                    await setDoc(docRef, stateDaSalvare);
-                }
+                });
+
             } catch(e) { console.error("Errore sincronizzazione Cloud:", e); }
         } else {
             window.utenteLoggato = null;
