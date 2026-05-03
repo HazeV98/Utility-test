@@ -25,6 +25,7 @@
             }
         }
     </script>
+    <script src="global.js"></script>
 
     <script>
         // Gestione importazione dati turni
@@ -97,7 +98,7 @@
             --success: #28a745; 
             --danger: #dc3545; 
             --text-color: #333;
-            --label-size: 11px;
+            --label-size: 14px;
         }
         
         body { 
@@ -678,7 +679,7 @@
         // ----------------------------------------------
 
         window.LayoutEngine = {
-            prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#5dade2", view: "grid", iconStyle: "box", fontSize: 11, apps: [] },
+            prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#5dade2", view: "grid", iconStyle: "box", fontSize: 14, apps: [] },
             isEditMode: false,
             sortableInstance: null,
             init: function(firebasePrefsStr) {
@@ -737,7 +738,7 @@
                 document.getElementById('set-appbg').value = this.prefs.appBg;
                 document.getElementById('set-viewmode').value = this.prefs.view;
                 document.getElementById('set-iconstyle').value = this.prefs.iconStyle || 'box';
-                document.getElementById('set-labelsize').value = this.prefs.fontSize || 11;
+                document.getElementById('set-labelsize').value = this.prefs.fontSize || 14;
             },
             render: function() {
                 const container = document.getElementById('app-container');
@@ -997,8 +998,23 @@
         };
 
         window.salvaProfilo = async () => {
-            const p = { nome: document.getElementById('profileNome').value, cognome: document.getElementById('profileCognome').value, progressivo: document.getElementById('profileProgressivo').value, matricola: document.getElementById('profileMatricola').value, mansione: document.getElementById('profileMansione').value };
-            await setDoc(doc(db, "utenti", auth.currentUser.uid), p, { merge: true }); alert("Salvato!"); window.chiudiModal('profileModal');
+            const p = { 
+                nome: document.getElementById('profileNome').value.trim(), 
+                cognome: document.getElementById('profileCognome').value.trim(), 
+                progressivo: document.getElementById('profileProgressivo').value.trim(), 
+                matricola: document.getElementById('profileMatricola').value.trim(), 
+                mansione: document.getElementById('profileMansione').value 
+            };
+
+            // BLOCCO DI SICUREZZA: Impedisce al sistema di sovrascrivere il Cloud con campi vuoti
+            if (!p.nome || !p.cognome || !p.matricola) {
+                alert("Errore: Impossibile salvare. Nome, Cognome e Matricola non possono essere vuoti.");
+                return;
+            }
+
+            await setDoc(doc(db, "utenti", auth.currentUser.uid), p, { merge: true }); 
+            alert("Salvato!"); 
+            window.chiudiModal('profileModal');
         };
 
         onAuthStateChanged(auth, async (user) => {
