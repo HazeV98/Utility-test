@@ -313,7 +313,8 @@
             const search = document.getElementById('searchInput').value.toLowerCase();
             container.innerHTML = '';
 
-            const filtered = allUnits.filter(u => u.id.toLowerCase().includes(search));
+            // Filtra convertendo l'underscore in slash per la ricerca
+            const filtered = allUnits.filter(u => u.id.replace(/_/g, '/').toLowerCase().includes(search));
 
             filtered.sort((a,b) => a.id.localeCompare(b.id)).forEach(unit => {
                 const isAdmin = currentUser.uid === ADMIN_UID;
@@ -321,9 +322,12 @@
                 card.className = 'unit-card';
                 card.onclick = () => showDetail(unit.id);
                 
+                // Variabile per mostrare a schermo il nome con lo slash (/)
+                const displayId = unit.id.replace(/_/g, '/');
+
                 card.innerHTML = `
                     <div class="unit-info">
-                        <h3>${unit.id}</h3>
+                        <h3>${displayId}</h3>
                         <div class="unit-rating">⭐ ${unit.mediaVoto || 'N/D'}</div>
                     </div>
                     ${isAdmin ? `
@@ -341,7 +345,7 @@
         // --- LOGICA DETTAGLIO ---
         window.showDetail = async function(unitId) {
             activeUnitId = unitId;
-            document.getElementById('detailTitle').innerText = unitId;
+            document.getElementById('detailTitle').innerText = unitId.replace(/_/g, '/');
             document.getElementById('listView').classList.remove('active');
             document.getElementById('detailView').classList.add('active');
 
@@ -478,7 +482,8 @@
             document.getElementById('modalDeleteBtn').classList.add('hidden');
             
             document.getElementById('modalConfirmBtn').onclick = async () => {
-                const name = document.getElementById('modalInput').value.trim();
+                // Sostituisce lo slash (/) con underscore (_) prima di inviare a Firebase
+                const name = document.getElementById('modalInput').value.trim().replace(/\//g, '_');
                 if (name) {
                     await setDoc(doc(db, "flotta_unita", name), { mediaVoto: 0 });
                     closeModal();
@@ -489,13 +494,17 @@
 
         window.openAdminMenu = function(unitId) {
             const overlay = document.getElementById('modalOverlay');
-            document.getElementById('modalTitle').innerText = "Gestisci " + unitId;
-            document.getElementById('modalInput').value = unitId;
+            const displayId = unitId.replace(/_/g, '/'); // Ripristina lo slash visivo per l'input
+
+            document.getElementById('modalTitle').innerText = "Gestisci " + displayId;
+            document.getElementById('modalInput').value = displayId;
+            
             const delBtn = document.getElementById('modalDeleteBtn');
             delBtn.classList.remove('hidden');
 
             document.getElementById('modalConfirmBtn').onclick = async () => {
-                const newName = document.getElementById('modalInput').value.trim();
+                // Se l'Admin rinomina, converte di nuovo lo slash (/) in underscore (_)
+                const newName = document.getElementById('modalInput').value.trim().replace(/\//g, '_');
                 if (newName && newName !== unitId) {
                     const oldData = allUnits.find(u => u.id === unitId);
                     await setDoc(doc(db, "flotta_unita", newName), { ...oldData });
@@ -505,7 +514,7 @@
             };
 
             delBtn.onclick = async () => {
-                if (confirm(`Sei sicuro di voler eliminare definitivamente l'unità ${unitId}?`)) {
+                if (confirm(`Sei sicuro di voler eliminare definitivamente l'unità ${displayId}?`)) {
                     await deleteDoc(doc(db, "flotta_unita", unitId));
                     closeModal();
                 }
