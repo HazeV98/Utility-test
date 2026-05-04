@@ -44,21 +44,17 @@
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/HazeV98/Utility/main/version.json";
 
         async function controllaAggiornamentiAPK() {
-            // Se non siamo dentro l'APK nativo (Capacitor), fermiamo tutto
             if (!window.Capacitor || !window.Capacitor.isNativePlatform() || !window.Capacitor.Plugins.App) {
                 return;
             }
 
             try {
-                // Legge la VERA versione dell'APK installato su Android
                 const appInfo = await window.Capacitor.Plugins.App.getInfo();
                 const versioneInstallata = appInfo.version; 
 
-                // Scarica la versione da GitHub
                 const response = await fetch(UPDATE_CHECK_URL + "?t=" + new Date().getTime());
                 const data = await response.json();
 
-                // Se la versione su GitHub è diversa da quella installata nel telefono, mostra il popup
                 if (data.latest_version && data.latest_version !== versioneInstallata) {
                     mostraPopupAggiornamento(data);
                 }
@@ -414,6 +410,11 @@
             <h2 id="authModalTitle">☁️ Accedi</h2>
             <input type="email" id="emailInput" placeholder="Email" class="input-field">
             <input type="password" id="passwordInput" placeholder="Password" class="input-field">
+            
+            <div id="forgotPasswordLink" style="margin-bottom: 15px; text-align: right;">
+                <a href="#" onclick="recuperaPassword(); return false;" style="font-size: 13px; color: #0056b3;">Password dimenticata?</a>
+            </div>
+
             <div id="registerFields" style="display: none; text-align: left;">
                 <input type="text" id="regNome" class="input-field" placeholder="Nome *">
                 <input type="text" id="regCognome" class="input-field" placeholder="Cognome *">
@@ -473,7 +474,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", storageBucket: "utility-haze.firebasestorage.app", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
@@ -504,9 +505,11 @@
             { id: "rotazioni", label: "Rotazioni", icon: "👥", href: "rotazioni.html" },
             { id: "turni", label: "Turni", icon: "🔄", href: "turni.html" },
             { id: "bachecaturni", label: "Bacheca\nTurni", icon: "📌", href: "bacheca_turni.html" },
+            { id: "barcadvisor", label: "BarcAdvisor", image: "Icone%20app/iconba.png", href: "barcadvisor.html", defaultColor: "#ffffff" },
             { id: "rubrica", label: "Rubrica", icon: "📞", href: "rubrica.html" },
             { id: "ferie", label: "Rotazione\nFerie", icon: "🌴", href: "rotazione_ferie.html" },
             { id: "orari", label: "Orari\nNavigaz.", icon: "🕒", href: "orari.html" },
+            { id: "chebateo", label: "CheBateo", image: "Icone%20app/iconcb.png", href: "https://m.chebateo.it/", defaultColor: "#ffffff" },
             { id: "documenti", label: "Documenti", icon: "📄", href: "documenti.html" },
             { id: "link", label: "Link", icon: "🔗", href: "link.html" },
             { id: "contatti", label: "Contatti", icon: "📇", href: "contatti.html" },
@@ -514,6 +517,7 @@
             { id: "promemoria", label: "Promemoria", icon: "⏰", href: "promemoria.html" },
             { id: "dds", label: "Archivio\nDDS", icon: "📂", href: "dds.html" },
             { id: "impostazioni", label: "Impostazioni", icon: "⚙️", onclick: "window.apriModal('settingsModal')", defaultColor: "#6c757d" },
+            { id: "spriss", label: "Spriss", image: "Icone%20app/iconspriss.png", href: "https://spriss.avmspa.it/", defaultColor: "#ffffff" },
             { id: "guida", label: "Guida", icon: "📖", href: "guida.html", defaultColor: "#7f8c8d" },
             { id: "admin", label: "Admin", icon: "🔒", href: "admin.html", condition: "admin", defaultColor: "#cb4335" },
             { id: "accessi", label: "Accessi", icon: "🛠️", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#2c3e50" }
@@ -572,7 +576,6 @@
             } catch(e) { console.error("Errore check promemoria:", e); }
         };
 
-        // --- GESTIONE NOTIFICHE NATIVE (CAPACITOR) ---
         window.inizializzaNotificheSeNativa = async (userData) => {
             if (window.Capacitor && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins.PushNotifications) {
                 const PushNotifications = window.Capacitor.Plugins.PushNotifications;
@@ -583,12 +586,10 @@
                 const btn = document.getElementById('btn-attiva-notifiche');
                 const prefSection = document.getElementById('notif-preferences-section');
 
-                // Mostra opzione rotazioni solo per admin/collaboratori
                 if (userData && (userData.ruolo === 'admin' || userData.ruolo === 'collaborator' || globalIsAdmin || globalIsCollab)) {
                     document.getElementById('label-notif-rotazioni').style.display = 'flex';
                 }
 
-                // Pre-carica le preferenze
                 if (userData && userData.preferenze_notifiche) {
                     document.getElementById('pref-notif-promemoria').checked = !!userData.preferenze_notifiche.promemoria;
                     document.getElementById('pref-notif-dds').checked = !!userData.preferenze_notifiche.dds;
@@ -628,7 +629,6 @@
 
                 let permStatus = await PushNotifications.checkPermissions();
                 
-                // SE L'APP NON HA ANCORA CHIESTO IL PERMESSO, LO CHIEDE IN AUTOMATICO
                 if (permStatus.receive === 'prompt') {
                     permStatus = await PushNotifications.requestPermissions();
                 }
@@ -676,7 +676,6 @@
                 console.error("Errore salvataggio preferenze notifiche:", error);
             }
         };
-        // ----------------------------------------------
 
         window.LayoutEngine = {
             prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#5dade2", view: "grid", iconStyle: "box", fontSize: 14, apps: [] },
@@ -785,13 +784,28 @@
                     this.sortableInstance = new Sortable(document.getElementById('app-container'), { animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: "sortable-ghost", onEnd: () => { this.aggiornaOrdineDaDOM(); } });
                 } else { if(this.sortableInstance) this.sortableInstance.destroy(); this.sincronizzaConFirebase(); }
             },
+            
+            // --- FUNZIONE CORRETTA E SROTOLATA ---
             aggiornaOrdineDaDOM: function() {
-                const nuovoOrdine = []; document.querySelectorAll('#app-container .app-btn').forEach(nodo => {
-                    const id = nodo.id.replace('btn-', ''); const app = this.prefs.apps.find(a => a.id === id); if (app) nuovoOrdine.push(app);
+                const nuovoOrdine = []; 
+                document.querySelectorAll('#app-container .app-btn').forEach(nodo => {
+                    const id = nodo.id.replace('btn-', ''); 
+                    const app = this.prefs.apps.find(a => a.id === id); 
+                    if (app) {
+                        nuovoOrdine.push(app);
+                    }
                 });
-                this.prefs.apps.forEach(app => { if (!nuovoOrdine.find(a => a.id === app.id)) nuovoOrdine.push(app); });
+                
+                this.prefs.apps.forEach(app => { 
+                    if (!nuovoOrdine.find(a => a.id === app.id)) {
+                        nuovoOrdine.push(app); 
+                    }
+                });
+                
                 this.prefs.apps = nuovoOrdine;
             },
+            // -------------------------------------
+
             apriEditorApp: function(appId) {
                 const app = this.prefs.apps.find(a => a.id === appId); if(!app) return;
                 document.getElementById('edit-app-id').value = app.id;
@@ -963,10 +977,12 @@
         let currentAuthMode = 'login';
         window.switchAuthMode = () => { currentAuthMode = currentAuthMode === 'login' ? 'register' : 'login'; window.aggiornaUIAuth(); };
         window.aggiornaUIAuth = () => {
-            document.getElementById('authModalTitle').innerText = currentAuthMode === 'login' ? "☁️ Accedi" : "📝 Registrati";
-            document.getElementById('btnEseguiAuth').innerText = currentAuthMode === 'login' ? "Accedi" : "Registrati";
-            document.getElementById('registerFields').style.display = currentAuthMode === 'login' ? "none" : "block";
-            document.getElementById('authSwitchLink').innerText = currentAuthMode === 'login' ? "Registrati qui" : "Accedi qui";
+            const isLogin = currentAuthMode === 'login';
+            document.getElementById('authModalTitle').innerText = isLogin ? "☁️ Accedi" : "📝 Registrati";
+            document.getElementById('btnEseguiAuth').innerText = isLogin ? "Accedi" : "Registrati";
+            document.getElementById('registerFields').style.display = isLogin ? "none" : "block";
+            document.getElementById('authSwitchLink').innerText = isLogin ? "Registrati qui" : "Accedi qui";
+            document.getElementById('forgotPasswordLink').style.display = isLogin ? "block" : "none";
         };
 
         window.eseguiAuth = async () => {
@@ -988,6 +1004,21 @@
             }
         };
 
+        window.recuperaPassword = async () => {
+            const email = document.getElementById('emailInput').value.trim();
+            if (!email) {
+                alert("Inserisci il tuo indirizzo email nel campo sopra per ricevere il link di ripristino.");
+                return;
+            }
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert("Email di ripristino inviata! Controlla la tua casella di posta (anche nella cartella Spam).");
+            } catch (error) {
+                console.error("Errore recupero password:", error);
+                alert("Si è verificato un errore. Verifica che l'indirizzo email sia corretto.");
+            }
+        };
+
         window.loginGoogle = async () => { try { await signInWithPopup(auth, provider); } catch(e) {} };
         window.logout = () => signOut(auth);
 
@@ -1006,7 +1037,6 @@
                 mansione: document.getElementById('profileMansione').value 
             };
 
-            // BLOCCO DI SICUREZZA: Impedisce al sistema di sovrascrivere il Cloud con campi vuoti
             if (!p.nome || !p.cognome || !p.matricola) {
                 alert("Errore: Impossibile salvare. Nome, Cognome e Matricola non possono essere vuoti.");
                 return;
@@ -1040,7 +1070,6 @@
                     
                     window.LayoutEngine.init(data.preferenze_layout);
                     
-                    // Inizializza le notifiche se siamo su App!
                     if(window.inizializzaNotificheSeNativa) window.inizializzaNotificheSeNativa(data);
 
                     document.getElementById('profileNome').value = data.nome || ''; document.getElementById('profileCognome').value = data.cognome || '';
