@@ -2,8 +2,13 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Utility</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script>
         const PAGE_RELOAD_KEY = 'reloaded_' + window.location.pathname;
@@ -65,15 +70,15 @@
 
         function mostraPopupAggiornamento(data) {
             const modale = document.createElement('div');
-            modale.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99999; display:flex; justify-content:center; align-items:center; padding:20px; box-sizing:border-box; backdrop-filter:blur(3px);";
+            modale.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99999; display:flex; justify-content:center; align-items:center; padding:20px; box-sizing:border-box; backdrop-filter:blur(5px); animation: fadeIn 0.3s ease;";
             
             modale.innerHTML = `
-                <div style="background:white; padding:25px; border-radius:15px; text-align:center; max-width:350px; width:100%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-family: Arial, sans-serif;">
-                    <h2 style="color:#0056b3; margin-top:0;">🚀 Nuovo Aggiornamento!</h2>
-                    <p style="font-size:14px; color:#555;">È disponibile la versione <b>${data.latest_version}</b>.</p>
-                    <p style="font-size:13px; color:#666; background:#f4f7f6; padding:12px; border-radius:8px; text-align: left; line-height: 1.5;">${data.note_aggiornamento}</p>
-                    <a href="${data.download_url}" style="display:block; background:#28a745; color:white; padding:15px; border-radius:10px; text-decoration:none; font-weight:bold; margin-top:20px; font-size: 16px;">Scarica e Aggiorna</a>
-                    <button onclick="this.parentElement.parentElement.remove()" style="margin-top:15px; background:none; border:none; color:#666; text-decoration:underline; font-size:14px; cursor:pointer;">Più tardi</button>
+                <div style="background:var(--surface); padding:30px; border-radius:24px; text-align:center; max-width:360px; width:100%; box-shadow: 0 20px 40px rgba(0,0,0,0.4); font-family: 'Inter', sans-serif;">
+                    <h2 style="color:var(--primary); margin-top:0; display:flex; align-items:center; justify-content:center; gap:10px;"><i class="fa-solid fa-rocket"></i> Nuovo Aggiornamento!</h2>
+                    <p style="font-size:15px; color:var(--text-main); font-weight: 500;">È disponibile la versione <b>${data.latest_version}</b>.</p>
+                    <p style="font-size:14px; color:var(--text-muted); background:var(--bg-color); padding:16px; border-radius:12px; text-align: left; line-height: 1.6; border: 1px solid var(--border-color);">${data.note_aggiornamento}</p>
+                    <a href="${data.download_url}" style="display:flex; justify-content:center; align-items:center; gap:10px; background:var(--success); color:white; padding:16px; border-radius:14px; text-decoration:none; font-weight:700; margin-top:24px; font-size: 16px; box-shadow: 0 4px 12px rgba(15,157,88,0.3);"><i class="fa-solid fa-download"></i> Scarica e Aggiorna</a>
+                    <button onclick="this.parentElement.parentElement.remove()" style="margin-top:16px; background:none; border:none; color:var(--text-muted); font-size:14px; cursor:pointer; font-weight: 600; text-decoration: underline;">Più tardi</button>
                 </div>
             `;
             document.body.appendChild(modale);
@@ -84,314 +89,450 @@
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
-    <meta name="theme-color" content="#0056b3">
+    <meta name="theme-color" content="#0066cc">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <style>
+        /* --- CORE DESIGN SYSTEM --- */
         :root { 
-            --primary: #0056b3; 
-            --success: #28a745; 
-            --danger: #dc3545; 
-            --text-color: #333;
+            --primary: #0066cc; 
+            --primary-hover: #0052a3;
+            --primary-glow: rgba(0, 102, 204, 0.2);
+            --bg-color: #f0f2f5; 
+            --surface: #ffffff;
+            --surface-hover: #f8f9fa;
+            --text-main: #1a1a1a; 
+            --text-muted: #5f6368;
+            --border-color: #e0e0e0;
+            --success: #0f9d58; 
+            --danger: #d93025;
+            --danger-light: #fce8e6;
+            --danger-border: #fad2cf;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            --radius-md: 14px;
+            --radius-lg: 20px;
             --label-size: 14px;
+            --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #4da3ff;
+                --primary-hover: #73b9ff;
+                --primary-glow: rgba(77, 163, 255, 0.25);
+                --bg-color: #0f1115;
+                --surface: #1a1d24;
+                --surface-hover: #232730;
+                --text-main: #e8eaed;
+                --text-muted: #9aa0a6;
+                --border-color: #2f333d;
+                --success: #34a853;
+                --danger: #ea4335;
+                --danger-light: rgba(234, 67, 53, 0.15);
+                --danger-border: rgba(234, 67, 53, 0.3);
+                --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
+                --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
+                --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
+            }
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
         body { 
-            font-family: Arial, sans-serif; 
-            background-color: #f4f7f6; 
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-color); 
             background-size: cover;
             background-position: center top;
             background-attachment: fixed;
             background-repeat: no-repeat;
-            color: var(--text-color); 
+            color: var(--text-main); 
             margin: 0; padding: 20px; 
             display: flex; flex-direction: column; align-items: center; 
-            transition: background-image 0.3s ease;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-image 0.5s ease;
+        }
+
+        /* --- ANIMAZIONI --- */
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); opacity: 0.8; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* --- HEADER --- */
+        .header { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 30px; z-index: 100; }
+        .header-side { flex: 1; display: flex; align-items: center; gap: 10px; }
+        .header-side.right { justify-content: flex-end; }
+        h2 { margin: 0; font-size: 30px; font-weight: 800; display: flex; align-items: center; justify-content: center; letter-spacing: -0.5px; color: var(--text-main); user-select: none; }
+        h2 img { height: 36px; margin-right: 4px; margin-bottom: 2px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+
+        .view-container { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; }
+
+        /* PULSANTI HEADER */
+        #install-btn { display: none; background-color: var(--success); color: white; border: none; padding: 10px 16px; font-size: 13px; font-weight: 700; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(15,157,88,0.3); white-space: nowrap; animation: pulse 2s infinite; display:flex; align-items:center; gap:6px;}
+        .btn-header-alt { background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 20px; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+        .btn-header-alt:active { transform: scale(0.95); }
+        .btn-header-alt:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* DASHBOARD GRID */
+        #app-container { width: 100%; max-width: 440px; }
+        .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px 10px; padding: 10px 5px; }
+        .app-grid .app-btn { display: flex; flex-direction: column; align-items: center; text-decoration: none; cursor: pointer; position: relative; animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .app-grid .app-btn:active { transform: scale(0.92); transition: transform 0.1s; }
+        
+        .app-grid .app-icon { 
+            width: 62px; height: 62px; margin: 0 auto 10px auto; border-radius: 18px; 
+            color: white; font-size: 26px; display: flex; align-items: center; justify-content: center; 
+            box-shadow: var(--shadow-md); transition: var(--transition); overflow: hidden; position: relative;
+        }
+        .app-grid .app-icon::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
         }
         
-        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: flex-start; margin-top: 10px; margin-bottom: 30px; position: relative; }
-        .header-side { flex: 1; display: flex; align-items: center; gap: 8px; }
-        .header-side.right { justify-content: flex-end; }
-        .header-center { display: flex; flex-direction: column; align-items: center; flex: 2; justify-content: center;}
-        h2 { margin: 0; color: var(--primary); font-size: 30px; font-weight: bold; text-align: center; user-select: none; -webkit-user-select: none; display: flex; align-items: center; justify-content: center;}
-        
-        .view-container { width: 100%; max-width: 400px; display: none; flex-direction: column; align-items: center; }
-
-        #install-btn { display: none; background-color: var(--success); color: white; border: none; padding: 8px 14px; font-size: 13px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); white-space: nowrap; animation: pulse 2s infinite; }
-        .btn-header-alt { background-color: var(--primary); color: white; border: none; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
-
-        #app-container { width: 100%; max-width: 400px; }
-        
-        /* GRIGLIA */
-        .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px 5px; padding: 10px 5px; box-sizing: border-box; }
-        .app-grid .app-btn { display: block; text-decoration: none; cursor: pointer; position: relative; }
-        .app-grid .app-btn:active { transform: scale(0.9); transition: transform 0.1s; }
-        .app-grid .app-icon { width: 60px; height: 60px; margin: 0 auto 8px auto; border-radius: 16px; color: white; font-size: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: background 0.3s; overflow: hidden; }
-        .app-grid .app-label { font-size: var(--label-size); color: #1a1a1a; font-weight: bold; text-align: center; line-height: 1.2; text-shadow: 0px 1px 2px rgba(255,255,255,0.8); word-wrap: break-word; }
+        .app-grid .app-label { 
+            font-size: var(--label-size); color: var(--text-main); font-weight: 600; text-align: center; 
+            line-height: 1.2; text-shadow: 0px 1px 3px rgba(255,255,255,0.8); word-wrap: break-word; max-width: 80px; 
+        }
 
         /* LISTA */
-        .app-list { display: flex; flex-direction: column; gap: 12px; padding: 10px; box-sizing: border-box; }
-        .app-list .app-btn { display: flex; align-items: center; background: rgba(255,255,255,0.85); padding: 12px 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.08); text-decoration: none; position: relative; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.4); }
-        .app-list .app-icon { width: 45px; height: 45px; margin: 0 15px 0 0; border-radius: 12px; color: white; font-size: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow: hidden; }
-        .app-list .app-label { font-size: calc(var(--label-size) + 3px); color: #333; font-weight: bold; margin: 0; text-shadow: none; flex: 1; }
+        .app-list { display: flex; flex-direction: column; gap: 12px; padding: 10px; }
+        .app-list .app-btn { 
+            display: flex; align-items: center; background: rgba(255,255,255,0.85); padding: 14px 20px; 
+            border-radius: var(--radius-md); box-shadow: var(--shadow-sm); text-decoration: none; position: relative; 
+            backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.4); 
+            animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        .app-list .app-icon { 
+            width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 20px; 
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: var(--shadow-sm); overflow: hidden; 
+        }
+        .app-list .app-label { font-size: calc(var(--label-size) + 2px); color: #1a1a1a; font-weight: 700; margin: 0; text-shadow: none; flex: 1; }
+
+        @media (prefers-color-scheme: dark) {
+            .app-grid .app-label { text-shadow: 0px 1px 3px rgba(0,0,0,0.8); }
+            .app-list .app-btn { background: rgba(30, 30, 30, 0.85); border: 1px solid rgba(255,255,255,0.1); }
+            .app-list .app-label { color: #e8eaed; }
+        }
 
         /* MODALITÀ ICONE TRASPARENTI */
-        .transparent-icons .app-icon { background-color: transparent !important; box-shadow: none !important; color: #333 !important; }
-        .transparent-icons.app-grid .app-icon { font-size: 48px !important; }
+        .transparent-icons .app-icon { background: transparent !important; box-shadow: none !important; color: var(--text-main) !important; }
+        .transparent-icons .app-icon::after { display: none; }
+        .transparent-icons.app-grid .app-icon { font-size: 42px !important; }
         .transparent-icons.app-list .app-icon { font-size: 32px !important; }
 
         /* WIGGLE & EDIT MODE */
         @keyframes wiggle { 0% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } 100% { transform: rotate(-2deg); } }
         .wiggle-mode .app-btn { animation: wiggle 0.3s infinite; cursor: grab; }
         .sortable-ghost { opacity: 0.3; transform: scale(0.9); }
-        .edit-badge { position: absolute; top: -8px; right: 0px; background: white; color: #333; border-radius: 50%; width: 26px; height: 26px; display: flex; justify-content: center; align-items: center; box-shadow: 0 3px 6px rgba(0,0,0,0.3); font-size: 14px; z-index: 10; border: 1px solid #ddd; pointer-events: none; }
+        .edit-badge { position: absolute; top: -8px; right: 0px; background: var(--surface); color: var(--text-main); border-radius: 50%; width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; box-shadow: var(--shadow-md); font-size: 14px; z-index: 10; border: 1px solid var(--border-color); pointer-events: none; }
 
-        .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
-        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; color: var(--text-color); max-height: 90vh; overflow-y: auto; }
-        .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; background-color: white;}
-        .btn-modal { border: none; border-radius: 8px; padding: 12px; cursor: pointer; font-weight: bold; font-size: 14px; width: 100%; margin-top: 10px; }
+        /* SIDEBAR */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 5999; animation: fadeIn 0.3s ease; }
+        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-lg); z-index: 6000; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; overflow-y: auto;}
+        .sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 28px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; }
+        .sidebar-header h3 { margin:0; font-weight: 700; display: flex; align-items: center; gap: 10px;}
+        .sidebar-link { padding: 16px 24px; text-decoration: none; color: var(--text-main); font-size: 15px; font-weight: 500; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; transition: all 0.2s; }
+        .sidebar-link i { width: 28px; text-align: left; font-size: 18px; color: var(--text-muted); transition: color 0.2s;}
+        .sidebar-link:active, .sidebar-link:hover { background-color: var(--surface-hover); color: var(--primary); padding-left: 28px; }
+        .sidebar-link:active i, .sidebar-link:hover i { color: var(--primary); }
+
+        /* ELEMENTI INTERFACCIA */
+        .btn-action { background-color: var(--success); color: white; border: none; padding: 16px; font-size: 16px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; margin-top: 10px; display:flex; justify-content:center; align-items:center; gap:8px; box-shadow: 0 4px 12px rgba(15,157,88,0.2); transition: all 0.2s;}
+        .btn-action:hover { transform: translateY(-2px); filter: brightness(1.05); }
+        .btn-action:active { transform: translateY(1px); box-shadow: none; }
         
-        .color-picker-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #e9ecef; }
-        .color-picker-row label { font-size: 13px; font-weight: bold; color: #555; }
-        input[type="color"] { width: 40px; height: 40px; border: none; border-radius: 8px; cursor: pointer; padding: 0; background: transparent; }
-        input[type="range"] { width: 100%; margin: 10px 0; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 7000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(8px); animation: fadeIn 0.3s ease; }
+        .modal-content { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 380px; text-align: left; box-shadow: var(--shadow-lg); border: 1px solid var(--border-color); position: relative; color: var(--text-main); max-height: 90vh; overflow-y: auto; }
+        
+        .input-field { width: 100%; padding: 14px; margin-bottom: 16px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 15px; background-color: var(--surface); color: var(--text-main); font-family: inherit; transition: all 0.2s;}
+        .input-field:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-glow); }
+        .input-field::placeholder { color: var(--text-muted); opacity: 0.7; }
+        
+        .btn-modal { border: none; border-radius: 12px; padding: 14px; cursor: pointer; font-weight: 700; font-size: 15px; width: 100%; margin-top: 10px; display:flex; justify-content:center; align-items:center; gap:8px; transition: all 0.2s;}
+        .btn-modal:active { transform: scale(0.98); }
+        
+        .color-picker-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: var(--surface-hover); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .color-picker-row label { font-size: 13px; font-weight: 600; color: var(--text-main); }
+        input[type="color"] { width: 44px; height: 44px; border: none; border-radius: 10px; cursor: pointer; padding: 0; background: transparent; }
+        input[type="range"] { width: 100%; margin: 10px 0; accent-color: var(--primary); }
 
-        /* BADGE NOTIFICHE ROTAZIONI */
-        .badge-rotazioni { position: absolute; top: -5px; right: -5px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: bold; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10; pointer-events: none;}
+        /* BADGE NOTIFICHE */
+        .badge-rotazioni { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(217,48,37,0.4); border: 2px solid var(--bg-color); z-index: 10; pointer-events: none;}
+
+        .banner-alert { padding: 14px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 20px; width: 100%; max-width: 440px; cursor: pointer; box-shadow: var(--shadow-sm); display:flex; align-items:center; justify-content:center; gap:10px; transition: transform 0.2s;}
+        .banner-alert:active { transform: scale(0.98); }
+        .banner-yellow { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .banner-red { background: var(--danger); color: white; }
+        .banner-blue { background: #17a2b8; color: white; }
     </style>
 </head>
 <body>
 
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3><i class="fa-solid fa-layer-group"></i> Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <a href="index.html" class="sidebar-link" style="background-color: var(--primary-glow); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary);"><i class="fa-solid fa-house" style="color: var(--primary);"></i> Home Page</a>
+        <a href="calendario.html?oggi=true" class="sidebar-link"><i class="fa-solid fa-bullseye"></i> Oggi</a>
+        <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
+        <a href="rotazioni.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
+        <a href="turni.html" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
+        <a href="barcadvisor.html" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
+        <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link"><i class="fa-solid fa-umbrella-beach"></i> Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link"><i class="fa-regular fa-clock"></i> Orari Navigazione</a>
+        <a href="https://m.chebateo.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-water"></i> CheBateo</a>
+        <a href="documenti.html" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Documenti</a>
+        <a href="link.html" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
+        <a href="contatti.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i> Contatti</a>
+        <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
+        <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
+        <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
+        <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
+        <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
+        
+        <a href="admin.html" class="sidebar-link" id="menu-admin" style="display:none; color: var(--danger); font-weight: bold;"><i class="fa-solid fa-lock" style="color: var(--danger);"></i> Admin</a>
+    </div>
+
     <div id="view-loading" class="view-container" style="display: flex; justify-content: center; align-items: center; height: 90vh; width: 100%;">
-        <img src="icon-512.png" alt="Logo" style="height: 100px; animation: pulse 1.5s infinite;">
+        <img src="icon-512.png" alt="Logo" style="height: 100px; animation: pulse 1.5s infinite; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));">
     </div>
 
     <div id="view-guest" class="view-container" style="display: none; justify-content: center; height: 90vh;">
-        <div style="background: rgba(255, 255, 255, 0.92); padding: 35px 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); text-align: center; width: 100%; box-sizing: border-box; backdrop-filter: blur(5px);">
-            <h1 style="margin: 0 0 25px 0; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 46px;">
-                <img src="icon-512.png" alt="U" style="height: 50px; margin-right: 2px; margin-bottom: 4px;">tility
+        <div class="card-panel" style="text-align: center; padding: 40px 24px;">
+            <h1 style="margin: 0 0 25px 0; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 46px; font-weight: 800; letter-spacing: -1px;">
+                <img src="icon-512.png" alt="U" style="height: 50px; margin-right: 4px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">tility
             </h1>
-            <p style="color: #444; font-size: 16px; line-height: 1.6; margin-bottom: 40px;">
-                Questa è un app non ufficiale gestita da un collega.<br>Accedi o registrati con il tasto qui sotto.
+            <p style="color: var(--text-muted); font-size: 16px; line-height: 1.6; margin-bottom: 40px;">
+                Questa è un app non ufficiale gestita da un collega.<br>Accedi o registrati per continuare.
             </p>
-            <button class="btn-action" style="background: var(--primary); margin-top: 0; padding: 18px; border-radius: 12px;" onclick="apriModal('authModal', 'login')">Accedi</button>
+            <button class="btn-action" style="padding: 18px;" onclick="apriModal('authModal', 'login')"><i class="fa-solid fa-right-to-bracket"></i> Accedi</button>
             <div style="margin-top: 25px;">
-                <a href="#" onclick="apriModal('authModal', 'register'); return false;" style="font-size: 15px; color: #0056b3; font-weight: bold;">Non sei registrato? Registrati qui</a>
+                <a href="#" onclick="apriModal('authModal', 'register'); return false;" style="font-size: 15px; color: var(--primary); font-weight: 600; text-decoration: none;">Non sei registrato? Registrati qui</a>
             </div>
         </div>
     </div>
 
     <div id="view-banned" class="view-container" style="display: none; justify-content: center; height: 90vh;">
-        <div style="background: #fff5f5; padding: 30px; border-radius: 12px; border: 2px solid #ffc9c9; text-align: center; width: 100%; box-sizing: border-box;">
-            <h3 style="color: var(--danger); margin-top: 0;">🚫 Accesso Revocato</h3>
-            <p style="color: #666; font-size: 14px;">Sei stato escluso da questa applicazione da un Amministratore.</p>
-            <button class="btn-action" style="background: var(--danger); width: auto; padding: 10px 20px;" onclick="logout()">Esci dall'Account</button>
+        <div class="card-panel" style="background: var(--danger-light); border: 2px solid var(--danger-border); text-align: center;">
+            <i class="fa-solid fa-ban" style="font-size: 48px; color: var(--danger); margin-bottom: 16px;"></i>
+            <h3 style="color: var(--danger); margin-top: 0; font-weight: 700;">Accesso Revocato</h3>
+            <p style="color: var(--text-main); font-size: 15px; margin-bottom: 24px;">Sei stato escluso da questa applicazione da un Amministratore.</p>
+            <button class="btn-action btn-danger" style="width: auto; padding: 12px 24px; margin: 0 auto;" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Esci dall'Account</button>
         </div>
     </div>
 
     <div id="view-app" class="view-container" style="display: none; width: 100%;">
         <div class="header">
             <div class="header-side">
-                <button id="btnOpenLogin" class="btn-header-alt" style="display:none; background:#ea4335;" onclick="apriModal('authModal', 'login')">☁️ Login</button>
-                <button id="btnOpenProfile" class="btn-header-alt" onclick="apriModal('profileModal')">👤 Profilo</button>
+                <button id="btnOpenLogin" class="btn-header-alt" style="display:none; color: var(--danger); border-color: var(--danger);" onclick="apriModal('authModal', 'login')"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
+                <button id="btnOpenProfile" class="btn-header-alt" onclick="apriModal('profileModal')"><i class="fa-solid fa-user-astronaut"></i> Profilo</button>
             </div>
             <div class="header-center">
-                <h2 id="main-title"><img src="icon-512.png" alt="U" style="height: 32px; margin-right: 1px; margin-bottom: 2px;">tility</h2>
+                <h2 id="main-title"><img src="icon-512.png" alt="U">tility</h2>
             </div>
             <div class="header-side right">
-                <button id="install-btn">Installa</button>
-                <div id="icona-bacheca" style="position: relative; cursor: pointer; margin-left: 10px;" onclick="apriBachecaUtility()">
-                    <span style="font-size: 26px;">📢</span>
-                    <div id="badge-messaggi" style="display: none; position: absolute; top: -5px; right: -8px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: bold; width: 18px; height: 18px; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">0</div>
+                <button id="install-btn"><i class="fa-solid fa-download"></i> Installa</button>
+                <div id="icona-bacheca" style="position: relative; cursor: pointer; margin-left: 10px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--surface); border-radius: 50%; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); transition: all 0.2s;" onclick="apriBachecaUtility()">
+                    <i class="fa-solid fa-bullhorn" style="font-size: 18px; color: var(--primary);"></i>
+                    <div id="badge-messaggi" class="badge-notif" style="display: none;">0</div>
                 </div>
             </div>
         </div>
 
-        <div id="banner-nuovo-messaggio" style="display: none; background: #ffc107; color: #856404; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 10px; width: 100%; max-width: 400px; cursor: pointer; border: 1px solid #ffeeba; box-sizing: border-box;" onclick="apriBachecaUtility()">
-            🔔 Nuovo avviso in Bacheca Utility!
+        <div id="banner-nuovo-messaggio" class="banner-alert banner-yellow" style="display: none;" onclick="apriBachecaUtility()">
+            <i class="fa-solid fa-bell fa-shake"></i> Nuovo avviso in Bacheca Utility!
         </div>
 
-        <div id="banner-dds-alert" style="display: none; background: #f5365c; color: white; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 20px; width: 100%; max-width: 400px; cursor: pointer;" onclick="apriBachecaUtility()">
-            ⚠️ Nuova DDS: <span id="titolo-dds-text"></span>
+        <div id="banner-dds-alert" class="banner-alert banner-red" style="display: none;" onclick="apriBachecaUtility()">
+            <i class="fa-solid fa-triangle-exclamation"></i> Nuova DDS: <span id="titolo-dds-text"></span>
         </div>
 
-        <div id="banner-promemoria-alert" style="display: none; background: #17a2b8; color: white; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 20px; width: 100%; max-width: 400px; cursor: pointer; box-sizing: border-box; box-shadow: 0 2px 5px rgba(0,0,0,0.1);" onclick="window.location.href='promemoria.html'">
-            ⏰ Hai dei promemoria in sospeso!
+        <div id="banner-promemoria-alert" class="banner-alert banner-blue" style="display: none;" onclick="window.location.href='promemoria.html'">
+            <i class="fa-solid fa-stopwatch fa-beat"></i> Hai dei promemoria in sospeso!
         </div>
 
         <div id="app-container" class="app-grid"></div>
-        <button id="btn-salva-layout" class="btn-action" style="display: none; background: #ff9800; color: white; margin-top: 20px;" onclick="LayoutEngine.toggleEditMode()">✅ Fatto (Salva Layout)</button>
+        <button id="btn-salva-layout" class="btn-action" style="display: none; background: #ff9800; color: white; margin-top: 30px; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);" onclick="LayoutEngine.toggleEditMode()"><i class="fa-solid fa-check"></i> Fatto (Salva Layout)</button>
     </div> 
 
     <div id="settingsModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'settingsModal')">
         <div class="modal-content">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('settingsModal')">&times;</span>
-            <h3 style="margin-top: 5px; color: #32325d; text-align: center;">⚙️ Impostazioni</h3>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="chiudiModal('settingsModal')"></i>
+            <h3 style="margin-top: 0; color: var(--text-main); font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-gear" style="color: var(--primary);"></i> Impostazioni</h3>
 
-            <div id="native-notifications-center" style="display: none; margin-top: 15px; margin-bottom: 15px; padding: 15px; background: #eef2f5; border-radius: 8px; border: 1px solid #d1d9e0;">
-                <h4 style="margin: 0 0 5px 0; color: #32325d; text-align: center;">🔔 Preferenze Notifiche App</h4>
-                <p id="notif-status-text" style="font-size: 12px; color: #666; text-align: center; margin-bottom: 10px;">Controllo stato in corso...</p>
-                <button id="btn-attiva-notifiche" class="btn-modal" style="background: var(--primary); color: white; margin-top: 0; display: none; width: 100%;" onclick="window.gestisciNotificheNative()">Abilita Notifiche sul Telefono</button>
+            <div id="native-notifications-center" style="display: none; margin-top: 20px; margin-bottom: 20px; padding: 20px; background: var(--surface-hover); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                <h4 style="margin: 0 0 10px 0; color: var(--text-main); text-align: center; font-weight: 700;"><i class="fa-solid fa-bell" style="color: var(--primary);"></i> Preferenze Notifiche App</h4>
+                <p id="notif-status-text" style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 15px; font-weight: 500;">Controllo stato in corso...</p>
+                <button id="btn-attiva-notifiche" class="btn-modal" style="background: var(--primary); color: white; margin-top: 0; display: none; width: 100%;" onclick="window.gestisciNotificheNative()"><i class="fa-solid fa-toggle-on"></i> Abilita Notifiche</button>
 
                 <div id="notif-preferences-section" style="display: none; margin-top: 15px; text-align: left; font-size: 14px;">
-                    <hr style="border: 0; border-top: 1px solid #d1d9e0; margin: 10px 0;">
+                    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
                     
-                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer;">
-                        <input type="checkbox" id="pref-notif-promemoria" onchange="window.salvaPreferenzeNotifiche()"> Promemoria
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; color: var(--text-main); font-weight: 500;">
+                        <input type="checkbox" id="pref-notif-promemoria" style="width:18px; height:18px; accent-color:var(--primary);" onchange="window.salvaPreferenzeNotifiche()"> Promemoria
                     </label>
-                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer;">
-                        <input type="checkbox" id="pref-notif-dds" onchange="window.salvaPreferenzeNotifiche()"> DDS
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; color: var(--text-main); font-weight: 500;">
+                        <input type="checkbox" id="pref-notif-dds" style="width:18px; height:18px; accent-color:var(--primary);" onchange="window.salvaPreferenzeNotifiche()"> DDS
                     </label>
-                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer;">
-                        <input type="checkbox" id="pref-notif-utility" onchange="window.salvaPreferenzeNotifiche()"> Annunci Bacheca Utility
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; color: var(--text-main); font-weight: 500;">
+                        <input type="checkbox" id="pref-notif-utility" style="width:18px; height:18px; accent-color:var(--primary);" onchange="window.salvaPreferenzeNotifiche()"> Annunci Bacheca Utility
                     </label>
 
-                    <label id="label-notif-rotazioni" style="display: none; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer; color: var(--primary); font-weight: bold;">
-                        <input type="checkbox" id="pref-notif-rotazioni" onchange="window.salvaPreferenzeNotifiche()"> Nuove Richieste Rotazioni
+                    <label id="label-notif-rotazioni" style="display: none; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; color: var(--primary); font-weight: 700;">
+                        <input type="checkbox" id="pref-notif-rotazioni" style="width:18px; height:18px; accent-color:var(--primary);" onchange="window.salvaPreferenzeNotifiche()"> Nuove Richieste Rotazioni
                     </label>
 
-                    <hr style="border: 0; border-top: 1px solid #d1d9e0; margin: 10px 0;">
-                    <strong style="display: block; margin-bottom: 8px; font-size: 13px; color: #32325d;">Annunci Bacheca Turni:</strong>
+                    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
+                    <strong style="display: block; margin-bottom: 12px; font-size: 13px; color: var(--text-muted); text-transform: uppercase;">Annunci Bacheca Turni:</strong>
                     
-                    <div id="mansioni-turni-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
-                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Preposto al comando" onchange="window.salvaPreferenzeNotifiche()"> Preposto al comando</label>
-                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Marinaio" onchange="window.salvaPreferenzeNotifiche()"> Marinaio</label>
-                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Comandante" onchange="window.salvaPreferenzeNotifiche()"> Comandante</label>
-                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Timoniere" onchange="window.salvaPreferenzeNotifiche()"> Timoniere</label>
-                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Marinaio polivalente" onchange="window.salvaPreferenzeNotifiche()"> Marinaio polivalente</label>
-                        <label style="cursor: pointer;"><input type="checkbox" class="pref-mansione" value="Direttore di macchina" onchange="window.salvaPreferenzeNotifiche()"> Dirett. di macchina</label>
+                    <div id="mansioni-turni-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+                        <label style="cursor: pointer; display:flex; align-items:center; gap:6px; color: var(--text-main);"><input type="checkbox" class="pref-mansione" style="accent-color:var(--primary);" value="Preposto al comando" onchange="window.salvaPreferenzeNotifiche()"> Preposto</label>
+                        <label style="cursor: pointer; display:flex; align-items:center; gap:6px; color: var(--text-main);"><input type="checkbox" class="pref-mansione" style="accent-color:var(--primary);" value="Marinaio" onchange="window.salvaPreferenzeNotifiche()"> Marinaio</label>
+                        <label style="cursor: pointer; display:flex; align-items:center; gap:6px; color: var(--text-main);"><input type="checkbox" class="pref-mansione" style="accent-color:var(--primary);" value="Comandante" onchange="window.salvaPreferenzeNotifiche()"> Comandante</label>
+                        <label style="cursor: pointer; display:flex; align-items:center; gap:6px; color: var(--text-main);"><input type="checkbox" class="pref-mansione" style="accent-color:var(--primary);" value="Timoniere" onchange="window.salvaPreferenzeNotifiche()"> Timoniere</label>
+                        <label style="cursor: pointer; display:flex; align-items:center; gap:6px; color: var(--text-main);"><input type="checkbox" class="pref-mansione" style="accent-color:var(--primary);" value="Marinaio polivalente" onchange="window.salvaPreferenzeNotifiche()"> Mar. Poliv.</label>
+                        <label style="cursor: pointer; display:flex; align-items:center; gap:6px; color: var(--text-main);"><input type="checkbox" class="pref-mansione" style="accent-color:var(--primary);" value="Direttore di macchina" onchange="window.salvaPreferenzeNotifiche()"> Dir. Macchina</label>
                     </div>
                 </div>
             </div>
             
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Colori Sfondo Onda:</label>
+            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Colori Sfondo Onda:</label>
             <div class="color-picker-row"><label>Colore 1 (Alto)</label><input type="color" id="set-col1"></div>
             <div class="color-picker-row"><label>Colore 2 (Centrale)</label><input type="color" id="set-col2"></div>
             <div class="color-picker-row"><label>Colore 3 (Basso)</label><input type="color" id="set-col3"></div>
             
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Colore Base App:</label>
+            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; margin-top: 15px; display:block;">Colore Base App:</label>
             <div class="color-picker-row"><label>Sfondo Icone</label><input type="color" id="set-appbg"></div>
 
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Visualizzazione:</label>
-            <select id="set-viewmode" class="input-field">
+            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; margin-top: 15px; display:block;">Visualizzazione:</label>
+            <select id="set-viewmode" class="input-field" style="cursor:pointer;">
                 <option value="grid">Griglia app</option>
                 <option value="list">Lista</option>
             </select>
 
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Stile Icone:</label>
-            <select id="set-iconstyle" class="input-field">
-                <option value="box">Con Sfondo</option>
+            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Stile Icone:</label>
+            <select id="set-iconstyle" class="input-field" style="cursor:pointer;">
+                <option value="box">Con Sfondo (Box)</option>
                 <option value="transparent">Solo Icona (Trasparente)</option>
             </select>
 
-            <label style="font-size: 12px; color: #666; font-weight: bold;">Dimensione Testo App:</label>
+            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Dimensione Testo App:</label>
             <input type="range" id="set-labelsize" min="10" max="18" step="1">
-            <div style="text-align:center; font-size:10px; color:#999; margin-bottom:15px;">Regola la grandezza dei titoli sotto le icone</div>
+            <div style="text-align:center; font-size:11px; color:var(--text-muted); margin-bottom:20px; font-weight:500;">Regola la grandezza dei titoli sotto le icone</div>
 
-            <button class="btn-modal" style="background: #ff9800; color: white;" onclick="LayoutEngine.toggleEditMode(); chiudiModal('settingsModal');">✏️ Modifica Layout (Trascina e Ordina)</button>
-            <button class="btn-modal" style="background: #17a2b8; color: white;" onclick="apriModal('customAppModal'); chiudiModal('settingsModal');">➕ Aggiungi App Personalizzata</button>
+            <button class="btn-modal" style="background: #ff9800; color: white;" onclick="LayoutEngine.toggleEditMode(); chiudiModal('settingsModal');"><i class="fa-solid fa-arrows-up-down-left-right"></i> Modifica Layout</button>
+            <button class="btn-modal" style="background: #17a2b8; color: white;" onclick="apriModal('customAppModal'); chiudiModal('settingsModal');"><i class="fa-solid fa-plus"></i> Aggiungi App Personalizzata</button>
             
-            <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 20px 0;">
-            <button class="btn-modal" style="background: var(--success); color: white;" onclick="LayoutEngine.salvaPreferenzeGlobali()">💾 Salva Impostazioni</button>
-            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger);" onclick="LayoutEngine.ripristinaPredefiniti()">🔄 Ripristina Predefiniti</button>
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 24px 0;">
+            <button class="btn-modal" style="background: var(--success); color: white;" onclick="LayoutEngine.salvaPreferenzeGlobali()"><i class="fa-solid fa-floppy-disk"></i> Salva Impostazioni</button>
+            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger);" onclick="LayoutEngine.ripristinaPredefiniti()"><i class="fa-solid fa-rotate-left"></i> Ripristina Predefiniti</button>
         </div>
     </div>
 
     <div id="editAppModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'editAppModal')">
         <div class="modal-content">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer;" onclick="chiudiModal('editAppModal')">&times;</span>
-            <h3 style="text-align: center; color: #32325d;">Modifica App</h3>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModal('editAppModal')"></i>
+            <h3 style="text-align: center; color: var(--text-main); margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px;"><i class="fa-solid fa-pen-to-square" style="color:var(--primary);"></i> Modifica App</h3>
             <input type="hidden" id="edit-app-id">
             
-            <label style="font-size: 11px; font-weight: bold; color: #666;">Titolo:</label>
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">TITOLO</label>
             <input type="text" id="edit-app-label" class="input-field">
             
-            <label style="font-size: 11px; font-weight: bold; color: #666;">Icona (Emoji o Immagine):</label>
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <input type="text" id="edit-app-icon" class="input-field" style="margin-bottom:0;" placeholder="Emoji" maxlength="2">
-                <button class="btn-modal" style="margin:0; background:#e9ecef; color:#333; width:auto; padding:0 15px; font-size:20px;" onclick="document.getElementById('edit-upload').click()">🖼️</button>
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">ICONA O IMMAGINE</label>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" id="edit-app-icon" class="input-field" style="margin-bottom:0;" placeholder="es. fa-solid fa-star">
+                <button class="btn-modal" style="margin:0; background:var(--surface-hover); color:var(--text-main); border:1px solid var(--border-color); width:auto; padding:0 20px; font-size:20px;" onclick="document.getElementById('edit-upload').click()"><i class="fa-regular fa-image"></i></button>
                 <input type="file" id="edit-upload" accept="image/*" style="display:none;" onchange="LayoutEngine.handleImageUpload(event, 'edit')">
             </div>
             
-            <div id="edit-app-img-preview" style="display:none; text-align:center; margin-bottom:10px; background:#f8f9fa; padding:10px; border-radius:8px;">
-                <img id="edit-app-img-preview-src" src="" style="width:50px; height:50px; border-radius:10px; object-fit:cover; vertical-align:middle; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
-                <button class="btn-modal" style="background:var(--danger); color:white; width:auto; padding:5px 10px; margin-left:10px;" onclick="LayoutEngine.rimuoviImmagine('edit')">Rimuovi Foto</button>
+            <div id="edit-app-img-preview" style="display:none; text-align:center; margin-bottom:20px; background:var(--surface-hover); padding:15px; border-radius:12px; border:1px solid var(--border-color);">
+                <img id="edit-app-img-preview-src" src="" style="width:60px; height:60px; border-radius:14px; object-fit:cover; vertical-align:middle; box-shadow:var(--shadow-sm);">
+                <button class="btn-modal" style="background:var(--danger); color:white; width:auto; padding:8px 16px; margin-left:15px; display:inline-flex; align-items:center; gap:6px; font-size:13px;" onclick="LayoutEngine.rimuoviImmagine('edit')"><i class="fa-solid fa-trash"></i> Rimuovi Foto</button>
             </div>
             <input type="hidden" id="edit-app-img-data">
 
-            <div class="color-picker-row"><label>Colore Specifco</label><input type="color" id="edit-app-color"></div>
+            <div class="color-picker-row"><label>Colore Specifico</label><input type="color" id="edit-app-color"></div>
             
-            <button class="btn-modal" style="background: var(--success); color: white;" onclick="LayoutEngine.salvaModificaSingolaApp()">Conferma</button>
-            <button id="btn-elimina-custom" class="btn-modal" style="background: transparent; color: var(--danger); border: 1px dashed var(--danger); display: none;" onclick="LayoutEngine.eliminaAppCorrente()">🗑️ Elimina</button>
+            <button class="btn-modal" style="background: var(--success); color: white; margin-top:20px;" onclick="LayoutEngine.salvaModificaSingolaApp()"><i class="fa-solid fa-check"></i> Conferma</button>
+            <button id="btn-elimina-custom" class="btn-modal" style="background: transparent; color: var(--danger); border: 2px dashed var(--danger); display: none;" onclick="LayoutEngine.eliminaAppCorrente()"><i class="fa-solid fa-trash-can"></i> Elimina App</button>
         </div>
     </div>
 
     <div id="customAppModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'customAppModal')">
         <div class="modal-content">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer;" onclick="chiudiModal('customAppModal')">&times;</span>
-            <h3 style="text-align: center; color: #32325d;">➕ Nuova App</h3>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModal('customAppModal')"></i>
+            <h3 style="text-align: center; color: var(--text-main); margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px;"><i class="fa-solid fa-plus" style="color:var(--success);"></i> Nuova App</h3>
             
-            <input type="text" id="new-app-label" class="input-field" placeholder="Nome App">
-            <input type="url" id="new-app-url" class="input-field" placeholder="Link: https://...">
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">NOME APP</label>
+            <input type="text" id="new-app-label" class="input-field" placeholder="Es. Intranet Aziendale">
             
-            <label style="font-size: 11px; font-weight: bold; color: #666;">Icona (Emoji o Immagine):</label>
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <input type="text" id="new-app-icon" class="input-field" style="margin-bottom:0;" placeholder="Emoji (es. 🚀)" maxlength="2">
-                <button class="btn-modal" style="margin:0; background:#e9ecef; color:#333; width:auto; padding:0 15px; font-size:20px;" onclick="document.getElementById('new-upload').click()">🖼️</button>
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">LINK (URL)</label>
+            <input type="url" id="new-app-url" class="input-field" placeholder="https://...">
+            
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">ICONA O IMMAGINE</label>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" id="new-app-icon" class="input-field" style="margin-bottom:0;" placeholder="es. fa-solid fa-globe">
+                <button class="btn-modal" style="margin:0; background:var(--surface-hover); color:var(--text-main); border:1px solid var(--border-color); width:auto; padding:0 20px; font-size:20px;" onclick="document.getElementById('new-upload').click()"><i class="fa-regular fa-image"></i></button>
                 <input type="file" id="new-upload" accept="image/*" style="display:none;" onchange="LayoutEngine.handleImageUpload(event, 'new')">
             </div>
 
-            <div id="new-app-img-preview" style="display:none; text-align:center; margin-bottom:10px; background:#f8f9fa; padding:10px; border-radius:8px;">
-                <img id="new-app-img-preview-src" src="" style="width:50px; height:50px; border-radius:10px; object-fit:cover; vertical-align:middle; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
-                <button class="btn-modal" style="background:var(--danger); color:white; width:auto; padding:5px 10px; margin-left:10px;" onclick="LayoutEngine.rimuoviImmagine('new')">Rimuovi Foto</button>
+            <div id="new-app-img-preview" style="display:none; text-align:center; margin-bottom:20px; background:var(--surface-hover); padding:15px; border-radius:12px; border:1px solid var(--border-color);">
+                <img id="new-app-img-preview-src" src="" style="width:60px; height:60px; border-radius:14px; object-fit:cover; vertical-align:middle; box-shadow:var(--shadow-sm);">
+                <button class="btn-modal" style="background:var(--danger); color:white; width:auto; padding:8px 16px; margin-left:15px; display:inline-flex; align-items:center; gap:6px; font-size:13px;" onclick="LayoutEngine.rimuoviImmagine('new')"><i class="fa-solid fa-trash"></i> Rimuovi Foto</button>
             </div>
             <input type="hidden" id="new-app-img-data">
 
-            <button class="btn-modal" style="background: var(--success); color: white;" onclick="LayoutEngine.creaAppPersonalizzata()">Crea</button>
+            <button class="btn-modal" style="background: var(--success); color: white; margin-top:20px;" onclick="LayoutEngine.creaAppPersonalizzata()"><i class="fa-solid fa-plus"></i> Crea App</button>
         </div>
     </div>
 
     <div id="profileModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'profileModal')">
         <div class="modal-content" style="text-align: left;">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('profileModal')">&times;</span>
-            <h3 style="text-align: center; color: #32325d; margin-top: 0; border-bottom: 2px solid #e9ecef; padding-bottom: 10px;">👤 Il tuo Profilo</h3>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModal('profileModal')"></i>
+            <h3 style="text-align: center; color: var(--text-main); margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-id-badge" style="color:var(--primary);"></i> Il tuo Profilo</h3>
             
-            <div id="adminBadge" style="display:none; text-align:center; background:#ea4335; color:white; padding:5px; border-radius:5px; margin-bottom:10px; font-weight:bold; font-size: 14px;">Admin</div>
+            <div id="adminBadge" style="display:none; text-align:center; background:var(--danger); color:white; padding:8px; border-radius:8px; margin-bottom:20px; font-weight:700; font-size: 13px; letter-spacing:1px;"><i class="fa-solid fa-shield-halved"></i> AMMINISTRATORE</div>
             
-            <label style="font-size: 11px; font-weight: bold; color: #666;">Email Autenticazione:</label>
-            <input type="text" id="profileEmail" class="input-field" disabled style="background: #f8f9fa;">
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">EMAIL ACCOUNT</label>
+            <input type="text" id="profileEmail" class="input-field" disabled style="background: var(--surface-hover); color:var(--text-muted);">
             
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 12px;">
                 <div style="flex: 1;">
-                    <label style="font-size: 11px; font-weight: bold; color: #666;">Nome:</label>
+                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">NOME</label>
                     <input type="text" id="profileNome" class="input-field" placeholder="Es. Mario">
                 </div>
                 <div style="flex: 1;">
-                    <label style="font-size: 11px; font-weight: bold; color: #666;">Cognome:</label>
+                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">COGNOME</label>
                     <input type="text" id="profileCognome" class="input-field" placeholder="Es. Rossi">
                 </div>
             </div>
 
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 12px;">
                 <div style="flex: 1;">
-                    <label style="font-size: 11px; font-weight: bold; color: #666;">Matricola:</label>
+                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">MATRICOLA</label>
                     <input type="text" id="profileMatricola" class="input-field" placeholder="Es. 123456">
                 </div>
                 <div style="flex: 1;">
-                    <label style="font-size: 11px; font-weight: bold; color: #666;">Numero Omonimia:</label>
-                    <input type="text" id="profileProgressivo" class="input-field" placeholder="(facoltativo) Es. 02">
+                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">N° OMONIMIA</label>
+                    <input type="text" id="profileProgressivo" class="input-field" placeholder="(Opz) Es. 02">
                 </div>
             </div>
 
-            <label style="font-size: 11px; font-weight: bold; color: #666;">Soprannome (Facoltativo):</label>
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">SOPRANNOME (FACOLTATIVO)</label>
             <input type="text" id="profileSoprannome" class="input-field" placeholder="Es. Il Capitano">
 
-            <label style="font-size: 11px; font-weight: bold; color: #666;">Mansione:</label>
-            <select id="profileMansione" class="input-field" style="background-color: white;">
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">MANSIONE</label>
+            <select id="profileMansione" class="input-field" style="cursor:pointer;">
                 <option value="" disabled selected>Seleziona Mansione (Facoltativo)</option>
                 <option value="Preposto al comando">Preposto al comando</option>
                 <option value="Marinaio">Marinaio</option>
@@ -401,21 +542,22 @@
                 <option value="Direttore di macchina">Direttore di macchina</option>
             </select>
 
-            <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 15px 0;">
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 24px 0;">
             
-            <button class="btn-modal" style="background: var(--success); color: white; margin-top: 5px;" onclick="salvaProfilo()">💾 Salva Modifiche</button>
-            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 10px;" onclick="logout()">Esci dall'Account</button>
+            <button class="btn-modal" style="background: var(--success); color: white;" onclick="salvaProfilo()"><i class="fa-solid fa-floppy-disk"></i> Salva Modifiche</button>
+            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 12px;" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Esci dall'Account</button>
         </div>
     </div>
 
     <div id="authModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'authModal')">
-        <div class="modal-content" style="text-align: center;">
-            <h2 id="authModalTitle">☁️ Accedi</h2>
-            <input type="email" id="emailInput" placeholder="Email" class="input-field">
+        <div class="modal-content" style="text-align: center; padding:40px 32px;">
+            <h2 id="authModalTitle" style="color:var(--primary); font-weight:800; margin-top:0; margin-bottom:24px; display:flex; align-items:center; justify-content:center; gap:10px;"><i class="fa-solid fa-cloud"></i> Accedi</h2>
+            
+            <input type="email" id="emailInput" placeholder="Indirizzo Email" class="input-field">
             <input type="password" id="passwordInput" placeholder="Password" class="input-field">
             
-            <div id="forgotPasswordLink" style="margin-bottom: 15px; text-align: right;">
-                <a href="#" onclick="recuperaPassword(); return false;" style="font-size: 13px; color: #0056b3;">Password dimenticata?</a>
+            <div id="forgotPasswordLink" style="margin-bottom: 20px; text-align: right;">
+                <a href="#" onclick="recuperaPassword(); return false;" style="font-size: 13px; color: var(--primary); font-weight:600; text-decoration:none;">Password dimenticata?</a>
             </div>
 
             <div id="registerFields" style="display: none; text-align: left;">
@@ -424,54 +566,74 @@
                 <input type="text" id="regMatricola" class="input-field" placeholder="Matricola *">
                 <input type="text" id="regProg" class="input-field" placeholder="Numero Omonimia (facoltativo) es. 02">
             </div>
-            <div id="authError" style="color: var(--danger); display: none; margin-bottom: 10px;"></div>
-            <button id="btnEseguiAuth" class="btn-modal" style="background: #32325d; color: white;" onclick="eseguiAuth()">Accedi</button>
-            <div style="margin-top: 15px;"><a href="#" id="authSwitchLink" onclick="switchAuthMode(); return false;">Registrati qui</a></div>
-            <hr><button class="btn-modal" style="background: #ea4335; color: white;" onclick="loginGoogle()">☁️ Accedi con Google</button>
+            
+            <div id="authError" style="color: var(--danger); background: var(--danger-light); padding:10px; border-radius:8px; border:1px solid var(--danger-border); display: none; margin-bottom: 15px; font-size:13px; font-weight:600;"></div>
+            
+            <button id="btnEseguiAuth" class="btn-action" style="background: var(--primary); margin-top:0;" onclick="eseguiAuth()"><i class="fa-solid fa-right-to-bracket"></i> Accedi</button>
+            
+            <div style="margin-top: 20px;">
+                <a href="#" id="authSwitchLink" onclick="switchAuthMode(); return false;" style="font-size: 14px; color: var(--text-muted); font-weight:600; text-decoration:underline;">Non hai un account? Registrati qui</a>
+            </div>
+            
+            <div style="display:flex; align-items:center; gap:15px; margin:24px 0;">
+                <div style="flex:1; height:1px; background:var(--border-color);"></div>
+                <div style="color:var(--text-muted); font-size:12px; font-weight:600; text-transform:uppercase;">Oppure</div>
+                <div style="flex:1; height:1px; background:var(--border-color);"></div>
+            </div>
+            
+            <button class="btn-modal" style="background: white; color: #333; border: 1px solid #ddd; box-shadow: var(--shadow-sm);" onclick="loginGoogle()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px; height:18px;"> Accedi con Google
+            </button>
         </div>
     </div>
 
     <div id="modal-dati-obbligatori" class="modal-overlay">
         <div class="modal-content" style="text-align: center;">
-            <h3>📝 Dati Obbligatori</h3>
-            <p style="font-size: 13px; color: #666;">Per la sicurezza dei dati inserisci i tuoi dati reali.</p>
+            <h3 style="color:var(--primary); margin-top:0; font-weight:800;"><i class="fa-solid fa-clipboard-user"></i> Dati Obbligatori</h3>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom:24px;">Per la sicurezza del database aziendale è richiesto l'inserimento dei dati reali.</p>
             <input type="text" id="obbl-nome" placeholder="Nome *" class="input-field">
             <input type="text" id="obbl-cognome" placeholder="Cognome *" class="input-field">
             <input type="text" id="obbl-matricola" placeholder="Matricola *" class="input-field">
             <input type="text" id="obbl-prog" placeholder="Numero Omonimia (facoltativo) es. 02" class="input-field">
-            <button class="btn-modal" style="background: var(--success); color: white;" onclick="salvaDatiObbligatori()">Salva e Continua</button>
+            <button class="btn-action" style="margin-top:10px;" onclick="salvaDatiObbligatori()"><i class="fa-solid fa-check"></i> Salva e Continua</button>
         </div>
     </div>
 
     <div id="modal-gestione" class="modal-overlay" onclick="chiudiSuSfondo(event, 'modal-gestione')">
-        <div class="modal-content" style="max-width: 400px;">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('modal-gestione')">&times;</span>
-            <h3 style="color: #32325d; margin-top: 0;">Utenti App</h3>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <div style="background: var(--primary); color: white; padding: 6px; border-radius: 8px; flex: 1; text-align: center;">Totali: <span id="badge-totali">0</span></div>
-                <div style="background: var(--success); color: white; padding: 6px; border-radius: 8px; flex: 1; text-align: center;">Oggi: <span id="badge-oggi">0</span></div>
+        <div class="modal-content" style="max-width: 440px;">
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModal('modal-gestione')"></i>
+            <h3 style="color: var(--text-main); margin-top: 0; font-weight:700; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-users-gear" style="color:var(--primary);"></i> Utenti App</h3>
+            
+            <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                <div style="background: var(--surface-hover); border: 1px solid var(--border-color); color: var(--text-main); padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 600; flex: 1; text-align: center; box-shadow: var(--shadow-sm);">Totali: <span id="badge-totali" style="font-size:16px; color:var(--primary); display:block; margin-top:4px;">0</span></div>
+                <div style="background: rgba(15,157,88,0.1); border: 1px solid rgba(15,157,88,0.2); color: var(--success); padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 600; flex: 1; text-align: center; box-shadow: var(--shadow-sm);">Oggi: <span id="badge-oggi" style="font-size:16px; display:block; margin-top:4px;">0</span></div>
             </div>
             
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <input type="text" id="search-utenti-app" placeholder="Cerca collega..." style="flex: 1; margin: 0; padding: 12px; font-size: 14px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;" onkeyup="filtraUtentiApp()">
-                <select id="sort-utenti-app" style="padding: 12px; font-size: 13px; margin: 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; background: white; cursor:pointer;" onchange="renderGestioneAccessi()">
+            <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                <div style="position:relative; flex:1;">
+                    <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted);"></i>
+                    <input type="text" id="search-utenti-app" placeholder="Cerca collega..." style="margin: 0; width:100%; padding: 12px 12px 12px 36px; font-size: 14px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; background: var(--surface); color:var(--text-main); outline:none;" onkeyup="filtraUtentiApp()">
+                </div>
+                <select id="sort-utenti-app" style="padding: 12px; font-size: 13px; margin: 0; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; background: var(--surface); color:var(--text-main); cursor:pointer; outline:none;" onchange="renderGestioneAccessi()">
                     <option value="recente">Recenti prima</option>
                     <option value="alfabetico">Alfabetico</option>
                 </select>
             </div>
             
-            <div id="lista-utenti-accessi" style="max-height: 55vh; overflow-y: auto;"></div>
+            <div id="lista-utenti-accessi" style="max-height: 55vh; overflow-y: auto; padding-right:5px;"></div>
         </div>
     </div>
 
     <div id="modal-dettaglio-utente" class="modal-overlay" onclick="chiudiSuSfondo(event, 'modal-dettaglio-utente')">
-        <div class="modal-content" style="max-width: 350px;">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="chiudiModal('modal-dettaglio-utente')">&times;</span>
-            <h3 style="margin-top: 0; color: #32325d; text-align: center;">Dettaglio Utente</h3>
-            <div id="dettaglio-utente-body" style="font-size: 14px; line-height: 1.6; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; margin-bottom: 15px;">
+        <div class="modal-content" style="max-width: 380px;">
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModal('modal-dettaglio-utente')"></i>
+            <h3 style="margin-top: 0; color: var(--text-main); font-weight:700; text-align: center; border-bottom:1px solid var(--border-color); padding-bottom:15px;"><i class="fa-regular fa-address-card" style="color:var(--primary);"></i> Dettaglio Utente</h3>
+            
+            <div id="dettaglio-utente-body" style="font-size: 14px; line-height: 1.6; background: var(--surface-hover); padding: 20px; border-radius: 14px; border: 1px solid var(--border-color); margin-bottom: 20px; color:var(--text-main);">
             </div>
-            <button id="btn-rendi-collab" class="btn-modal" style="background: #6f42c1; color: white;" onclick="cambiaRuoloUtente()">Rendi Collaboratore</button>
-            <button class="btn-modal" style="background: transparent; color: #666; border: 1px solid #ccc; margin-top: 8px;" onclick="chiudiModal('modal-dettaglio-utente')">Chiudi</button>
+            
+            <button id="btn-rendi-collab" class="btn-modal" style="background: #6f42c1; color: white; margin-bottom:10px;" onclick="cambiaRuoloUtente()"><i class="fa-solid fa-user-shield"></i> Rendi Collaboratore</button>
+            <button class="btn-modal" style="background: transparent; color: var(--text-muted); border: 2px solid var(--border-color);" onclick="chiudiModal('modal-dettaglio-utente')">Chiudi</button>
         </div>
     </div>
 
@@ -501,29 +663,38 @@
             "rot_17tr": "Rotazione Linea 17 Tron.", "tc_rot_17tr": "T.C. Rotazione Linea 17 Tronc."
         };
 
+        const ICON_MAP = {
+            oggi: "fa-solid fa-bullseye", calendario: "fa-solid fa-calendar-days", statistiche: "fa-solid fa-chart-simple",
+            rotazioni: "fa-solid fa-users", turni: "fa-solid fa-rotate", bachecaturni: "fa-solid fa-handshake-angle",
+            rubrica: "fa-solid fa-address-book", ferie: "fa-solid fa-umbrella-beach", orari: "fa-regular fa-clock",
+            documenti: "fa-solid fa-file-lines", link: "fa-solid fa-link", contatti: "fa-solid fa-id-card",
+            buoni: "fa-solid fa-utensils", promemoria: "fa-solid fa-stopwatch", dds: "fa-solid fa-box-archive",
+            impostazioni: "fa-solid fa-gear", guida: "fa-solid fa-book", admin: "fa-solid fa-lock", accessi: "fa-solid fa-users-gear"
+        };
+
         const DEFAULT_APPS = [
-            { id: "oggi", label: "Oggi", icon: "🎯", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
-            { id: "calendario", label: "Calendario", icon: "📅", href: "calendario.html" },
-            { id: "statistiche", label: "Statistiche", icon: "📊", href: "dati_calendario.html" },
-            { id: "rotazioni", label: "Rotazioni", icon: "👥", href: "rotazioni.html" },
-            { id: "turni", label: "Turni", icon: "🔄", href: "turni.html" },
-            { id: "bachecaturni", label: "Bacheca\nTurni", icon: "📌", href: "bacheca_turni.html" },
+            { id: "oggi", label: "Oggi", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
+            { id: "calendario", label: "Calendario", href: "calendario.html", defaultColor: "#0066cc" },
+            { id: "statistiche", label: "Statistiche", href: "dati_calendario.html", defaultColor: "#6f42c1" },
+            { id: "rotazioni", label: "Rotazioni", href: "rotazioni.html", defaultColor: "#fd7e14" },
+            { id: "turni", label: "Turni", href: "turni.html", defaultColor: "#20c997" },
+            { id: "bachecaturni", label: "Bacheca\nTurni", href: "bacheca_turni.html", defaultColor: "#e83e8c" },
             { id: "barcadvisor", label: "BarcAdvisor", image: "icone_app/iconba.png", href: "barcadvisor.html" },
-            { id: "rubrica", label: "Rubrica", icon: "📞", href: "rubrica.html" },
-            { id: "ferie", label: "Rotazione\nFerie", icon: "🌴", href: "rotazione_ferie.html" },
-            { id: "orari", label: "Orari\nNavigaz.", icon: "🕒", href: "orari.html" },
+            { id: "rubrica", label: "Rubrica", href: "rubrica.html", defaultColor: "#343a40" },
+            { id: "ferie", label: "Rotazione\nFerie", href: "rotazione_ferie.html", defaultColor: "#ffc107" },
+            { id: "orari", label: "Orari\nNavigaz.", href: "orari.html", defaultColor: "#17a2b8" },
             { id: "chebateo", label: "CheBateo", image: "icone_app/iconcb.png", href: "https://m.chebateo.it/" },
-            { id: "documenti", label: "Documenti", icon: "📄", href: "documenti.html" },
-            { id: "link", label: "Link", icon: "🔗", href: "link.html" },
-            { id: "contatti", label: "Contatti", icon: "📇", href: "contatti.html" },
-            { id: "buoni", label: "Buoni\nPasto", icon: "🍝", href: "buoni.html" },
-            { id: "promemoria", label: "Promemoria", icon: "⏰", href: "promemoria.html" },
-            { id: "dds", label: "Archivio\nDDS", icon: "📂", href: "dds.html" },
-            { id: "impostazioni", label: "Impostazioni", icon: "⚙️", onclick: "window.apriModal('settingsModal')" },
+            { id: "documenti", label: "Documenti", href: "documenti.html", defaultColor: "#6c757d" },
+            { id: "link", label: "Link", href: "link.html", defaultColor: "#495057" },
+            { id: "contatti", label: "Contatti", href: "contatti.html", defaultColor: "#2c3e50" },
+            { id: "buoni", label: "Buoni\nPasto", href: "buoni.html", defaultColor: "#d63384" },
+            { id: "promemoria", label: "Promemoria", href: "promemoria.html", defaultColor: "#0dcaf0" },
+            { id: "dds", label: "Archivio\nDDS", href: "dds.html", defaultColor: "#5856d6" },
+            { id: "impostazioni", label: "Impostazioni", onclick: "window.apriModal('settingsModal')", defaultColor: "#8e8e93" },
             { id: "spriss", label: "Spriss", image: "icone_app/iconspriss.png", href: "https://spriss.avmspa.it/" },
-            { id: "guida", label: "Guida", icon: "📖", href: "guida.html" },
-            { id: "admin", label: "Admin", icon: "🔒", href: "admin.html", condition: "admin", defaultColor: "#cb4335" },
-            { id: "accessi", label: "Accessi", icon: "🛠️", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#2c3e50" }
+            { id: "guida", label: "Guida", href: "guida.html", defaultColor: "#34c759" },
+            { id: "admin", label: "Admin", href: "admin.html", condition: "admin", defaultColor: "#ff3b30" },
+            { id: "accessi", label: "Accessi", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#1c1c1e" }
         ];
 
         window.controllaRichiesteSospese = async () => {
@@ -541,9 +712,9 @@
                 });
                 const btnRot = document.getElementById('btn-rotazioni');
                 if (btnRot) {
-                    let b = btnRot.querySelector('.badge-rotazioni');
+                    let b = btnRot.querySelector('.badge-notif');
                     if (b) b.remove();
-                    if (count > 0) btnRot.insertAdjacentHTML('beforeend', `<div class="badge-rotazioni">${count}</div>`);
+                    if (count > 0) btnRot.insertAdjacentHTML('beforeend', `<div class="badge-notif">${count}</div>`);
                 }
             } catch(e) {}
         };
@@ -566,14 +737,14 @@
                 if (activeCount > 0) {
                     const banner = document.getElementById('banner-promemoria-alert');
                     if (banner) {
-                        banner.innerHTML = `⏰ Hai ${activeCount} promemoria per oggi!`;
-                        banner.style.display = 'block';
+                        banner.innerHTML = `<i class="fa-solid fa-stopwatch fa-beat"></i> Hai ${activeCount} promemoria per oggi!`;
+                        banner.style.display = 'flex';
                     }
                     const btn = document.getElementById('btn-promemoria');
                     if (btn) {
-                        let b = btn.querySelector('.badge-rotazioni');
+                        let b = btn.querySelector('.badge-notif');
                         if (b) b.remove();
-                        btn.insertAdjacentHTML('beforeend', `<div class="badge-rotazioni" style="background:#17a2b8;">${activeCount}</div>`);
+                        btn.insertAdjacentHTML('beforeend', `<div class="badge-notif" style="background:#17a2b8; border-color:var(--bg-color);">${activeCount}</div>`);
                     }
                 }
             } catch(e) { console.error("Errore check promemoria:", e); }
@@ -608,12 +779,12 @@
 
                 const aggiornaGraficaPermessi = (isGranted) => {
                     if (isGranted) {
-                        statusText.innerText = "✅ Notifiche app attive";
+                        statusText.innerHTML = "<i class='fa-solid fa-circle-check'></i> Notifiche app attive";
                         statusText.style.color = "var(--success)";
                         btn.style.display = 'none';
                         prefSection.style.display = 'block';
                     } else {
-                        statusText.innerText = "⚠️ Notifiche bloccate da Android";
+                        statusText.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Notifiche bloccate da Android";
                         statusText.style.color = "#856404";
                         btn.style.display = 'block';
                         prefSection.style.display = 'none';
@@ -631,38 +802,31 @@
                 });
 
                 let permStatus = await PushNotifications.checkPermissions();
-                
-                if (permStatus.receive === 'prompt') {
-                    permStatus = await PushNotifications.requestPermissions();
-                }
+                if (permStatus.receive === 'prompt') { permStatus = await PushNotifications.requestPermissions(); }
 
                 if (permStatus.receive === 'granted') {
                     PushNotifications.register();
                     aggiornaGraficaPermessi(true);
-                } else {
-                    aggiornaGraficaPermessi(false);
-                }
+                } else { aggiornaGraficaPermessi(false); }
             }
         };
 
         window.gestisciNotificheNative = async () => {
             const PushNotifications = window.Capacitor.Plugins.PushNotifications;
-            document.getElementById('notif-status-text').innerText = "Richiesta permesso in corso...";
+            document.getElementById('notif-status-text').innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Richiesta permesso in corso...";
             
             let permStatus = await PushNotifications.requestPermissions();
             if (permStatus.receive === 'granted') {
                 await PushNotifications.register();
             } else {
-                document.getElementById('notif-status-text').innerText = "❌ Devi attivarle dalle Impostazioni del telefono.";
+                document.getElementById('notif-status-text').innerHTML = "<i class='fa-solid fa-xmark'></i> Devi attivarle dalle Impostazioni del telefono.";
                 document.getElementById('notif-status-text').style.color = "var(--danger)";
             }
         };
 
         window.salvaPreferenzeNotifiche = async () => {
             if (!auth.currentUser) return;
-
             const mansioniSelezionate = Array.from(document.querySelectorAll('.pref-mansione:checked')).map(cb => cb.value);
-
             const preferenze_notifiche = {
                 promemoria: document.getElementById('pref-notif-promemoria').checked,
                 dds: document.getElementById('pref-notif-dds').checked,
@@ -672,16 +836,12 @@
             };
 
             try {
-                await setDoc(doc(db, "utenti", auth.currentUser.uid), {
-                    preferenze_notifiche: preferenze_notifiche
-                }, { merge: true });
-            } catch (error) {
-                console.error("Errore salvataggio preferenze notifiche:", error);
-            }
+                await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_notifiche: preferenze_notifiche }, { merge: true });
+            } catch (error) { console.error("Errore salvataggio preferenze notifiche:", error); }
         };
 
         window.LayoutEngine = {
-            prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#5dade2", view: "grid", iconStyle: "box", fontSize: 14, apps: [] },
+            prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#0066cc", view: "grid", iconStyle: "box", fontSize: 14, apps: [] },
             isEditMode: false,
             sortableInstance: null,
             init: function(firebasePrefsStr) {
@@ -746,18 +906,45 @@
                 const container = document.getElementById('app-container');
                 container.innerHTML = '';
                 if(this.isEditMode) container.classList.add('wiggle-mode'); else container.classList.remove('wiggle-mode');
-                this.prefs.apps.forEach(app => {
+                
+                this.prefs.apps.forEach((app, index) => {
                     if (app.condition === 'admin' && !globalIsAdmin) return;
                     if (app.condition === 'collab' && !(globalIsAdmin || globalIsCollab)) return;
+                    
                     const finalColor = app.color || app.defaultColor || this.prefs.appBg;
                     const isLink = app.href ? `href="${app.href}"` : `onclick="${app.onclick}"`;
                     const editHandler = this.isEditMode ? `onclick="event.preventDefault(); window.LayoutEngine.apriEditorApp('${app.id}');"` : isLink;
-                    const badgeHtml = this.isEditMode ? `<div class="edit-badge">✏️</div>` : '';
+                    const badgeHtml = this.isEditMode ? `<div class="edit-badge"><i class="fa-solid fa-pen"></i></div>` : '';
+                    
                     let iconStyle = `background-color: ${finalColor};`;
-                    let iconContent = app.icon || "";
-                    if (app.image) { iconStyle += ` background-image: url('${app.image}'); background-size: cover; background-position: center;`; iconContent = ""; }
-                    container.innerHTML += `<a ${editHandler} class="app-btn" id="btn-${app.id}">${badgeHtml}<div class="app-icon" style="${iconStyle}">${iconContent}</div><div class="app-label">${app.label.replace('\n', '<br>')}</div></a>`;
+                    let iconContent = "";
+
+                    if (app.image) { 
+                        iconStyle += ` background-image: url('${app.image}'); background-size: cover; background-position: center;`; 
+                    } else if (ICON_MAP[app.id]) {
+                        iconContent = `<i class="${ICON_MAP[app.id]}"></i>`;
+                    } else {
+                        // Fallback icone personalizzate inserite dall'utente
+                        if (app.icon && app.icon.includes('fa-')) {
+                            iconContent = `<i class="${app.icon}"></i>`;
+                        } else if (app.icon) {
+                            iconContent = app.icon; // Se per caso aveva salvato un'emoji vecchia
+                        } else {
+                            iconContent = `<i class="fa-solid fa-link"></i>`;
+                        }
+                    }
+
+                    // Reset animation delay se non è in edit mode
+                    let animDelay = this.isEditMode ? "0s" : `${index * 0.04}s`;
+                    
+                    container.innerHTML += `
+                        <a ${editHandler} class="app-btn" id="btn-${app.id}" style="animation-delay: ${animDelay}">
+                            ${badgeHtml}
+                            <div class="app-icon" style="${iconStyle}">${iconContent}</div>
+                            <div class="app-label">${app.label.replace('\n', '<br>')}</div>
+                        </a>`;
                 });
+
                 setTimeout(() => {
                     window.controllaRichiesteSospese();
                     if(window.controllaPromemoria) window.controllaPromemoria();
@@ -781,42 +968,48 @@
             rimuoviImmagine: function(modalType) { document.getElementById(modalType + '-app-img-data').value = ""; document.getElementById(modalType + '-app-img-preview').style.display = 'none'; },
             toggleEditMode: function() {
                 this.isEditMode = !this.isEditMode;
-                document.getElementById('btn-salva-layout').style.display = this.isEditMode ? 'block' : 'none';
+                document.getElementById('btn-salva-layout').style.display = this.isEditMode ? 'flex' : 'none';
                 this.render(); 
                 if(this.isEditMode) {
                     this.sortableInstance = new Sortable(document.getElementById('app-container'), { animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: "sortable-ghost", onEnd: () => { this.aggiornaOrdineDaDOM(); } });
                 } else { if(this.sortableInstance) this.sortableInstance.destroy(); this.sincronizzaConFirebase(); }
             },
             
-            // --- FUNZIONE CORRETTA E SROTOLATA ---
             aggiornaOrdineDaDOM: function() {
                 const nuovoOrdine = []; 
                 document.querySelectorAll('#app-container .app-btn').forEach(nodo => {
                     const id = nodo.id.replace('btn-', ''); 
                     const app = this.prefs.apps.find(a => a.id === id); 
-                    if (app) {
-                        nuovoOrdine.push(app);
-                    }
+                    if (app) { nuovoOrdine.push(app); }
                 });
                 
                 this.prefs.apps.forEach(app => { 
-                    if (!nuovoOrdine.find(a => a.id === app.id)) {
-                        nuovoOrdine.push(app); 
-                    }
+                    if (!nuovoOrdine.find(a => a.id === app.id)) { nuovoOrdine.push(app); }
                 });
                 
                 this.prefs.apps = nuovoOrdine;
             },
-            // -------------------------------------
 
             apriEditorApp: function(appId) {
                 const app = this.prefs.apps.find(a => a.id === appId); if(!app) return;
                 document.getElementById('edit-app-id').value = app.id;
                 document.getElementById('edit-app-label').value = app.label.replace('\n', ' ');
-                document.getElementById('edit-app-icon').value = app.icon || "";
-                document.getElementById('edit-app-color').value = app.color || app.defaultColor || this.prefs.appBg || "#5dade2";
-                if (app.image) { document.getElementById('edit-app-img-data').value = app.image; document.getElementById('edit-app-img-preview-src').src = app.image; document.getElementById('edit-app-img-preview').style.display = 'block'; } else { this.rimuoviImmagine('edit'); }
-                document.getElementById('btn-elimina-custom').style.display = app.id.startsWith('custom_') ? 'block' : 'none';
+                
+                // Popola l'icona
+                let iconVal = app.icon || ICON_MAP[app.id] || "";
+                document.getElementById('edit-app-icon').value = iconVal;
+                
+                document.getElementById('edit-app-color').value = app.color || app.defaultColor || this.prefs.appBg || "#0066cc";
+                
+                if (app.image) { 
+                    document.getElementById('edit-app-img-data').value = app.image; 
+                    document.getElementById('edit-app-img-preview-src').src = app.image; 
+                    document.getElementById('edit-app-img-preview').style.display = 'block'; 
+                } else { 
+                    this.rimuoviImmagine('edit'); 
+                }
+                
+                document.getElementById('btn-elimina-custom').style.display = app.id.startsWith('custom_') ? 'flex' : 'none';
                 window.apriModal('editAppModal');
             },
             salvaModificaSingolaApp: function() {
@@ -825,8 +1018,15 @@
                     this.prefs.apps[index].label = document.getElementById('edit-app-label').value;
                     this.prefs.apps[index].color = document.getElementById('edit-app-color').value;
                     const imgData = document.getElementById('edit-app-img-data').value;
-                    if (imgData) { this.prefs.apps[index].image = imgData; this.prefs.apps[index].icon = ""; } else { delete this.prefs.apps[index].image; this.prefs.apps[index].icon = document.getElementById('edit-app-icon').value || "🔹"; }
-                } window.chiudiModal('editAppModal'); this.render(); this.sincronizzaConFirebase();
+                    if (imgData) { 
+                        this.prefs.apps[index].image = imgData; 
+                        this.prefs.apps[index].icon = ""; 
+                    } else { 
+                        delete this.prefs.apps[index].image; 
+                        this.prefs.apps[index].icon = document.getElementById('edit-app-icon').value || "fa-solid fa-link"; 
+                    }
+                } 
+                window.chiudiModal('editAppModal'); this.render(); this.sincronizzaConFirebase();
             },
             creaAppPersonalizzata: function() {
                 const label = document.getElementById('new-app-label').value.trim(); let url = document.getElementById('new-app-url').value.trim();
@@ -834,7 +1034,7 @@
                 if(!url.startsWith('http')) url = 'https://' + url;
                 const imgData = document.getElementById('new-app-img-data').value;
                 const newApp = { id: "custom_" + Date.now(), label: label, href: url, color: this.prefs.appBg };
-                if (imgData) newApp.image = imgData; else newApp.icon = document.getElementById('new-app-icon').value || "🔗";
+                if (imgData) newApp.image = imgData; else newApp.icon = document.getElementById('new-app-icon').value || "fa-solid fa-link";
                 this.prefs.apps.push(newApp); window.chiudiModal('customAppModal'); 
                 document.getElementById('new-app-label').value = ""; document.getElementById('new-app-url').value = "";
                 document.getElementById('new-app-icon').value = ""; this.rimuoviImmagine('new');
@@ -870,7 +1070,7 @@
             const container = document.getElementById('lista-utenti-accessi');
             const bTot = document.getElementById('badge-totali'); 
             const bOggi = document.getElementById('badge-oggi');
-            container.innerHTML = `<div style="text-align:center; padding:20px;">Attendere...</div>`;
+            container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Attendere...</div>`;
             
             try {
                 const snap = await getDocs(collection(db, "utenti")); 
@@ -889,7 +1089,7 @@
                 bTot.innerText = tot; bOggi.innerText = oggi;
                 window.renderGestioneAccessi();
 
-            } catch(e) { container.innerHTML = "Errore."; }
+            } catch(e) { container.innerHTML = "<div style='color:var(--danger); text-align:center;'><i class='fa-solid fa-triangle-exclamation'></i> Errore.</div>"; }
         };
 
         window.renderGestioneAccessi = () => {
@@ -927,8 +1127,8 @@
                 const isOggi = (u.last_app_access === oggiStr);
                 const isBanned = u.app_banned === true; 
                 const fullName = `${u.cognome || ''} ${u.nome || ''} ${u.progressivo || ''}`.trim() || 'Sconosciuto';
-                const dot = isOggi ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:5px;"></span>` : '';
-                const clickableName = `<span style="font-weight:bold; font-size:14px; cursor:pointer; color:var(--primary); text-decoration:underline;" onclick="apriDettaglioUtente('${u.uid}')">${fullName}</span>`;
+                const dot = isOggi ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:8px; box-shadow: 0 0 5px rgba(15,157,88,0.5);"></span>` : '';
+                const clickableName = `<span style="font-weight:700; font-size:14px; cursor:pointer; color:var(--primary); text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" onclick="apriDettaglioUtente('${u.uid}')">${fullName}</span>`;
                 const searchData = `${u.cognome || ''} ${u.nome || ''} ${u.matricola || ''}`.toUpperCase();
                 
                 let accessDisplay = 'Mai';
@@ -941,7 +1141,7 @@
                     else accessDisplay = u.last_app_access;
                 }
                 
-                return `<div class="utente-row-app" data-search="${searchData}" style="display:flex; justify-content:space-between; align-items:center; background:${isBanned ? '#fff5f5' : '#f8f9fa'}; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid ${isBanned ? '#ffc9c9' : '#e9ecef'};"><div><div>${clickableName}${dot}</div><div style="font-size:11px; color:#666; margin-top:3px;">(Matr. ${u.matricola || '??'}) • Accesso: ${accessDisplay}</div></div><button style="border:2px solid ${isBanned ? 'var(--success)' : 'var(--danger)'}; color:${isBanned ? 'var(--success)' : 'var(--danger)'}; background:none; padding:6px 10px; border-radius:8px; font-weight:bold;" onclick="toggleAppBan('${u.uid}', ${!isBanned})">${isBanned ? 'Sblocca' : 'Blocca'}</button></div>`;
+                return `<div class="utente-row-app" data-search="${searchData}" style="display:flex; justify-content:space-between; align-items:center; background:${isBanned ? 'var(--danger-light)' : 'var(--surface-hover)'}; padding:14px; border-radius:12px; margin-bottom:12px; border:1px solid ${isBanned ? 'var(--danger-border)' : 'var(--border-color)'}; box-shadow:var(--shadow-sm); transition: transform 0.2s;"><div><div style="display:flex; align-items:center;">${clickableName}${dot}</div><div style="font-size:12px; color:var(--text-muted); margin-top:4px;"><i class="fa-regular fa-id-badge"></i> ${u.matricola || '??'} • <i class="fa-regular fa-clock"></i> ${accessDisplay}</div></div><button style="border:1px solid ${isBanned ? 'var(--success)' : 'var(--danger)'}; color:${isBanned ? 'var(--success)' : 'var(--danger)'}; background:var(--surface); padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:13px; transition:all 0.2s;" onmouseover="this.style.background='${isBanned ? 'var(--success)' : 'var(--danger)'}'; this.style.color='white';" onmouseout="this.style.background='var(--surface)'; this.style.color='${isBanned ? 'var(--success)' : 'var(--danger)'}';" onclick="toggleAppBan('${u.uid}', ${!isBanned})">${isBanned ? '<i class="fa-solid fa-unlock"></i> Sblocca' : '<i class="fa-solid fa-ban"></i> Blocca'}</button></div>`;
             };
 
             let html = dataCopy.map(u => buildRiga(u)).join('');
@@ -968,10 +1168,16 @@
         window.apriDettaglioUtente = (uid) => {
             const u = window.utentiMap[uid]; if(!u) return;
             const isCollab = u.ruolo === 'collaborator';
-            document.getElementById('dettaglio-utente-body').innerHTML = `<div style="margin-bottom:8px;"><strong>Nome:</strong> ${u.nome || '-'}</div><div style="margin-bottom:8px;"><strong>Cognome:</strong> ${u.cognome || '-'}</div><div style="margin-bottom:8px;"><strong>Matricola:</strong> ${u.matricola || '-'}</div><div style="margin-bottom:8px;"><strong>Omonimia:</strong> ${u.progressivo || '-'}</div><div style="margin-bottom:8px;"><strong>Email:</strong> ${u.email || 'Non registrata'}</div><div style="margin-bottom:8px; font-size:12px; word-break: break-all;"><strong>ID Account:</strong> ${u.uid || '-'}</div>`;
+            document.getElementById('dettaglio-utente-body').innerHTML = `
+                <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-user" style="color:var(--primary); width:16px;"></i> <strong>Nome:</strong> ${u.nome || '-'}</div>
+                <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-regular fa-user" style="color:var(--primary); width:16px;"></i> <strong>Cognome:</strong> ${u.cognome || '-'}</div>
+                <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-hashtag" style="color:var(--primary); width:16px;"></i> <strong>Matricola:</strong> ${u.matricola || '-'}</div>
+                <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-tag" style="color:var(--primary); width:16px;"></i> <strong>Omonimia:</strong> ${u.progressivo || '-'}</div>
+                <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-envelope" style="color:var(--primary); width:16px;"></i> <strong>Email:</strong> ${u.email || 'Non registrata'}</div>
+                <div style="margin-bottom:5px; font-size:12px; color:var(--text-muted); word-break: break-all; margin-top:20px; border-top:1px solid var(--border-color); padding-top:10px;"><i class="fa-solid fa-fingerprint"></i> <strong>ID Account:</strong> ${u.uid || '-'}</div>`;
             const btnCollab = document.getElementById('btn-rendi-collab');
-            if (isCollab) { btnCollab.innerText = "Revoca Collaboratore"; btnCollab.style.background = "transparent"; btnCollab.style.color = "var(--danger)"; btnCollab.style.border = "1px solid var(--danger)"; btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'user'); }
-            else { btnCollab.innerText = "Rendi Collaboratore"; btnCollab.style.background = "#6f42c1"; btnCollab.style.color = "white"; btnCollab.style.border = "none"; btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'collaborator'); }
+            if (isCollab) { btnCollab.innerHTML = "<i class='fa-solid fa-user-minus'></i> Revoca Collaboratore"; btnCollab.style.background = "transparent"; btnCollab.style.color = "var(--danger)"; btnCollab.style.border = "2px solid var(--danger)"; btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'user'); }
+            else { btnCollab.innerHTML = "<i class='fa-solid fa-user-shield'></i> Rendi Collaboratore"; btnCollab.style.background = "#6f42c1"; btnCollab.style.color = "white"; btnCollab.style.border = "none"; btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'collaborator'); }
             window.apriModal('modal-dettaglio-utente');
         };
 
@@ -981,29 +1187,29 @@
         window.switchAuthMode = () => { currentAuthMode = currentAuthMode === 'login' ? 'register' : 'login'; window.aggiornaUIAuth(); };
         window.aggiornaUIAuth = () => {
             const isLogin = currentAuthMode === 'login';
-            document.getElementById('authModalTitle').innerText = isLogin ? "☁️ Accedi" : "📝 Registrati";
-            document.getElementById('btnEseguiAuth').innerText = isLogin ? "Accedi" : "Registrati";
+            document.getElementById('authModalTitle').innerHTML = isLogin ? "<i class='fa-solid fa-cloud'></i> Accedi" : "<i class='fa-solid fa-user-plus'></i> Registrati";
+            document.getElementById('btnEseguiAuth').innerHTML = isLogin ? "<i class='fa-solid fa-right-to-bracket'></i> Accedi" : "<i class='fa-solid fa-user-plus'></i> Registrati";
             document.getElementById('registerFields').style.display = isLogin ? "none" : "block";
-            document.getElementById('authSwitchLink').innerText = isLogin ? "Registrati qui" : "Accedi qui";
+            document.getElementById('authSwitchLink').innerText = isLogin ? "Non hai un account? Registrati qui" : "Hai già un account? Accedi qui";
             document.getElementById('forgotPasswordLink').style.display = isLogin ? "block" : "none";
         };
 
         window.eseguiAuth = async () => {
             const email = document.getElementById('emailInput').value.trim(); const pwd = document.getElementById('passwordInput').value;
             const err = document.getElementById('authError'); err.style.display='none';
-            if (!email || !pwd) { err.innerText = "Dati mancanti."; err.style.display='block'; return; }
+            if (!email || !pwd) { err.innerHTML = "<i class='fa-solid fa-circle-exclamation'></i> Dati mancanti."; err.style.display='block'; return; }
             if (currentAuthMode === 'login') { 
                 try { await signInWithEmailAndPassword(auth, email, pwd); window.chiudiModal('authModal'); } 
-                catch (e) { err.innerText = "Email o Pass errata."; err.style.display='block'; } 
+                catch (e) { err.innerHTML = "<i class='fa-solid fa-circle-exclamation'></i> Email o Password errata."; err.style.display='block'; } 
             }
             else {
                 const nome = document.getElementById('regNome').value.trim(); const cognome = document.getElementById('regCognome').value.trim(); const matricola = document.getElementById('regMatricola').value.trim();
-                if (!nome || !cognome || !matricola) { err.innerText = "Campi obbligatori."; err.style.display='block'; return; }
+                if (!nome || !cognome || !matricola) { err.innerHTML = "<i class='fa-solid fa-circle-exclamation'></i> Campi obbligatori mancanti."; err.style.display='block'; return; }
                 try { 
                     const res = await createUserWithEmailAndPassword(auth, email, pwd); 
                     await setDoc(doc(db, "utenti", res.user.uid), { nome, cognome, matricola, progressivo: document.getElementById('regProg').value.trim(), email: email }, { merge: true }); 
                     window.chiudiModal('authModal'); 
-                } catch (e) { err.innerText = "Errore."; err.style.display='block'; }
+                } catch (e) { err.innerHTML = "<i class='fa-solid fa-circle-exclamation'></i> Errore durante la registrazione."; err.style.display='block'; }
             }
         };
 
@@ -1027,7 +1233,7 @@
 
         window.salvaDatiObbligatori = async () => {
             const n = document.getElementById('obbl-nome').value.trim(); const c = document.getElementById('obbl-cognome').value.trim(); const m = document.getElementById('obbl-matricola').value.trim();
-            if (!n || !c || !m) { alert("Mancano dati!"); return; }
+            if (!n || !c || !m) { alert("Mancano dati obbligatori!"); return; }
             await setDoc(doc(db, "utenti", auth.currentUser.uid), { nome: n, cognome: c, matricola: m, progressivo: document.getElementById('obbl-prog').value.trim() }, { merge: true }); location.reload(); 
         };
 
@@ -1047,7 +1253,7 @@
             }
 
             await setDoc(doc(db, "utenti", auth.currentUser.uid), p, { merge: true }); 
-            alert("Salvato!"); 
+            alert("Salvato con successo!"); 
             window.chiudiModal('profileModal');
         };
 
@@ -1057,12 +1263,17 @@
                 try {
                     const docSnap = await getDoc(doc(db, "utenti", user.uid)); let data = docSnap.exists() ? docSnap.data() : {};
                     window.currentUserData = data; vLoad.style.display = 'none';
-                    if (data.app_banned === true) { document.body.style.backgroundImage = 'none'; document.body.style.backgroundColor = "white"; vGuest.style.display = 'none'; vApp.style.display = 'none'; vBanned.style.display = 'flex'; return; }
+                    if (data.app_banned === true) { document.body.style.backgroundImage = 'none'; document.body.style.backgroundColor = "var(--bg-color)"; vGuest.style.display = 'none'; vApp.style.display = 'none'; vBanned.style.display = 'flex'; return; }
                     if (!data.nome || !data.cognome || !data.matricola) document.getElementById('modal-dati-obbligatori').style.display = 'flex';
+                    
                     globalIsAdmin = (user.uid === ADMIN_UID); globalIsCollab = data.ruolo === 'collaborator';
-                    if(globalIsAdmin) document.getElementById('adminBadge').style.display = 'block';
+                    if(globalIsAdmin) {
+                        document.getElementById('adminBadge').style.display = 'block';
+                        document.getElementById('menu-admin').style.display = 'flex';
+                    }
+                    
                     vGuest.style.display = 'none'; vApp.style.display = 'flex'; vBanned.style.display = 'none';
-                    document.getElementById('btnOpenLogin').style.display = 'none'; document.getElementById('btnOpenProfile').style.display = 'block';
+                    document.getElementById('btnOpenLogin').style.display = 'none'; document.getElementById('btnOpenProfile').style.display = 'flex';
                     
                     document.getElementById('profileEmail').value = user.email;
                     
@@ -1084,7 +1295,9 @@
                     document.getElementById('profileMansione').value = data.mansione || '';
                     
                 } catch(e) { vLoad.style.display = 'none'; }
-            } else { vLoad.style.display = 'none'; window.LayoutEngine.init(); vGuest.style.display = 'flex'; vApp.style.display = 'none'; vBanned.style.display = 'none'; }
+            } else { 
+                vLoad.style.display = 'none'; window.LayoutEngine.init(); vGuest.style.display = 'flex'; vApp.style.display = 'none'; vBanned.style.display = 'none'; 
+            }
         });
     </script>
 </body>
