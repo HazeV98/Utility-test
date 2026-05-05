@@ -197,13 +197,13 @@
         .btn-header-alt:active { transform: scale(0.95); }
         .btn-header-alt:hover { border-color: var(--primary); color: var(--primary); }
 
-        /* DASHBOARD GRID - MODIFICATA PER CENTRATURA DINAMICA */
+        /* DASHBOARD GRID - CENTRATURA DINAMICA */
         #app-container { width: 100%; max-width: 440px; }
         .app-grid { 
             display: grid; 
             grid-template-columns: repeat(4, 1fr); 
-            gap: 28px 0; /* Gap verticale fisso, gap orizzontale automatico */
-            justify-items: center; /* Centra perfettamente ogni blocco nella sua colonna */
+            gap: 28px 0; 
+            justify-items: center; 
             padding: 10px 0; 
             width: 100%;
         }
@@ -215,7 +215,7 @@
             text-decoration: none; 
             cursor: pointer; 
             position: relative; 
-            width: 100%; /* Prende tutta la larghezza della frazione per rendere l'area cliccabile uniforme */
+            width: 100%; 
             animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; 
         }
         .app-grid .app-btn:active { transform: scale(0.92); transition: transform 0.1s; }
@@ -1389,6 +1389,38 @@
             } else { 
                 vLoad.style.display = 'none'; window.LayoutEngine.init(); vGuest.style.display = 'flex'; vApp.style.display = 'none'; vBanned.style.display = 'none'; 
             }
+        });
+
+        // --- LOGICA INSTALLAZIONE PWA ---
+        let deferredPrompt;
+        const installBtn = document.getElementById('install-btn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Previene la mini-infobar automatica
+            e.preventDefault();
+            // Salva l'evento per poterlo attivare dopo
+            deferredPrompt = e;
+            // Mostra il pulsante Installa
+            installBtn.style.display = 'flex';
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt !== null) {
+                // Mostra il prompt nativo
+                deferredPrompt.prompt();
+                // Attende la scelta dell'utente
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    // Nascondi il pulsante e svuota la variabile
+                    deferredPrompt = null;
+                    installBtn.style.display = 'none';
+                }
+            }
+        });
+
+        window.addEventListener('appinstalled', () => {
+            installBtn.style.display = 'none';
+            deferredPrompt = null;
         });
     </script>
 </body>
