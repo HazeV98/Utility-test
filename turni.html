@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
@@ -47,51 +49,53 @@
     </script>
 
     <style>
-        /* --- STILI GLOBALI UNIFICATI CON DARK MODE --- */
+        /* --- STILI GLOBALI UNIFICATI CON DARK MODE "PRO" --- */
         :root { 
-            --primary: #0056b3; 
-            --primary-hover: #004494;
-            --bg-color: #f4f7f6; 
+            --primary: #0066cc; 
+            --primary-hover: #0052a3;
+            --primary-glow: rgba(0, 102, 204, 0.2);
+            --bg-color: #f0f2f5; 
             --surface: #ffffff;
             --surface-hover: #f8f9fa;
-            --text-main: #333333; 
-            --text-muted: #666666;
-            --border-color: #e9ecef;
-            --success: #28a745; 
-            --danger: #dc3545;
-            --danger-light: #fff5f5;
-            --danger-border: #ffc9c9;
-            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
-            --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --glass-bg: rgba(255, 255, 255, 0.85);
-            --transition-speed: 0.25s;
+            --text-main: #1a1a1a; 
+            --text-muted: #5f6368;
+            --border-color: #e0e0e0;
+            --success: #0f9d58; 
+            --danger: #d93025;
+            --danger-light: #fce8e6;
+            --danger-border: #fad2cf;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --transition-speed: 0.3s;
         }
 
-        /* TEMA SCURO AUTOMATICO */
+        /* TEMA SCURO AUTOMATICO - Stile OLED/Deep */
         @media (prefers-color-scheme: dark) {
             :root {
                 --primary: #4da3ff;
                 --primary-hover: #73b9ff;
-                --bg-color: #121212;
-                --surface: #1e1e1e;
-                --surface-hover: #2a2a2a;
-                --text-main: #e0e0e0;
-                --text-muted: #a0a0a0;
-                --border-color: #333333;
-                --success: #2ea043;
-                --danger: #f85149;
-                --danger-light: rgba(220, 53, 69, 0.15);
-                --danger-border: rgba(220, 53, 69, 0.3);
-                --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
-                --shadow-md: 0 8px 24px rgba(0,0,0,0.5);
-                --glass-bg: rgba(30, 30, 30, 0.85);
+                --primary-glow: rgba(77, 163, 255, 0.25);
+                --bg-color: #0f1115;
+                --surface: #1a1d24;
+                --surface-hover: #232730;
+                --text-main: #e8eaed;
+                --text-muted: #9aa0a6;
+                --border-color: #2f333d;
+                --success: #34a853;
+                --danger: #ea4335;
+                --danger-light: rgba(234, 67, 53, 0.15);
+                --danger-border: rgba(234, 67, 53, 0.3);
+                --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
+                --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
+                --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
             }
         }
 
         body { 
-            font-family: 'Inter', Arial, sans-serif; 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
             background-color: var(--bg-color); 
             color: var(--text-main); 
             margin: 0; 
@@ -105,103 +109,122 @@
         
         /* ANIMAZIONI BASE */
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(15px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .animate-pop { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-pop { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
         /* HEADER */
-        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .hamburger-btn { background: none; border: none; font-size: 28px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; transition: transform 0.2s; }
+        .header { width: 100%; max-width: 420px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+        .hamburger-btn { background: none; border: none; font-size: 26px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; transition: transform 0.2s; display: flex; align-items: center;}
         .hamburger-btn:active { transform: scale(0.9); }
-        h2 { margin: 0; color: var(--primary); font-size: 24px; font-weight: 700; text-align: center; letter-spacing: -0.5px;}
+        h2 { margin: 0; color: var(--text-main); font-size: 24px; font-weight: 700; text-align: center; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px;}
+        h2 i { color: var(--primary); }
         
-        /* MENU LATERALE (GLASSMORPHISM) */
-        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(3px); z-index: 5999; animation: fadeIn 0.3s ease; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 260px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-md); z-index: 6000; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; overflow-y: auto;}
+        /* MENU LATERALE */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 5999; animation: fadeIn 0.3s ease; }
+        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-lg); z-index: 6000; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; overflow-y: auto;}
         .sidebar.open { left: 0; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 20px; background-color: var(--primary); color: white; }
-        .sidebar-link { padding: 16px 20px; text-decoration: none; color: var(--text-main); font-size: 16px; font-weight: 500; border-bottom: 1px solid var(--border-color); display: block; transition: all 0.2s; }
-        .sidebar-link:active, .sidebar-link:hover { background-color: var(--surface-hover); color: var(--primary); padding-left: 24px; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 28px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; }
+        .sidebar-header h3 { margin:0; font-weight: 700; display: flex; align-items: center; gap: 10px;}
+        .sidebar-link { padding: 16px 24px; text-decoration: none; color: var(--text-main); font-size: 15px; font-weight: 500; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; transition: all 0.2s; }
+        .sidebar-link i { width: 28px; text-align: left; font-size: 18px; color: var(--text-muted); transition: color 0.2s;}
+        .sidebar-link:active, .sidebar-link:hover { background-color: var(--surface-hover); color: var(--primary); padding-left: 28px; }
+        .sidebar-link:active i, .sidebar-link:hover i { color: var(--primary); }
+        .sidebar-link.active-link { background-color: var(--primary-glow); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary); padding-left: 20px;}
+        .sidebar-link.active-link i { color: var(--primary); }
 
         /* VISTE DI SICUREZZA E CONTENITORI */
-        .view-container { width: 100%; max-width: 400px; display: none; flex-direction: column; gap: 16px; text-align: center; }
-        .card-panel { background: var(--surface); padding: 30px 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); text-align: left; border: 1px solid var(--border-color); }
+        .view-container { width: 100%; max-width: 420px; display: none; flex-direction: column; gap: 20px; text-align: center; }
+        .card-panel { background: var(--surface); padding: 32px 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); text-align: left; border: 1px solid var(--border-color); }
         
         /* PULSANTI */
-        .btn-action { background-color: var(--success); color: white; border: none; padding: 16px; font-size: 16px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; width: 100%; transition: all 0.2s; margin-top: 10px; box-shadow: 0 4px 6px rgba(40, 167, 69, 0.2); }
-        .btn-action:hover { filter: brightness(1.05); transform: translateY(-1px); }
-        .btn-action:active { transform: translateY(2px); box-shadow: none; }
+        .btn-action { background-color: var(--primary); color: white; border: none; padding: 16px; font-size: 16px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; width: 100%; transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 4px 12px var(--primary-glow); }
+        .btn-action:hover { background-color: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 16px var(--primary-glow); }
+        .btn-action:active { transform: translateY(1px); box-shadow: none; }
         .btn-action:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-success { background-color: var(--success); box-shadow: 0 4px 12px rgba(15, 157, 88, 0.2); }
+        .btn-success:hover { background-color: #0d8a4d; box-shadow: 0 6px 16px rgba(15, 157, 88, 0.3); }
+        .btn-danger { background-color: var(--danger); box-shadow: 0 4px 12px rgba(217, 48, 37, 0.2); }
+        .btn-danger:hover { background-color: #c5221f; }
         
         .btn-outline { background-color: transparent; border: 2px solid var(--primary); color: var(--primary); padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .btn-outline:hover { background-color: var(--primary); color: white; }
 
         /* INPUTS */
-        .input-field { width: 100%; padding: 14px; margin-bottom: 16px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 15px; font-family: inherit; background-color: var(--surface); color: var(--text-main); transition: border-color 0.2s, box-shadow 0.2s; }
-        .input-field:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.1); }
-        .input-field::placeholder { color: var(--text-muted); opacity: 0.6; }
+        .input-field { width: 100%; padding: 16px; margin-bottom: 20px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 15px; font-family: inherit; background-color: var(--surface); color: var(--text-main); transition: all 0.2s; }
+        .input-field:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-glow); }
+        .input-field::placeholder { color: var(--text-muted); opacity: 0.7; }
 
         /* MODALI */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; animation: fadeIn 0.2s ease; }
-        .modal-content { background: var(--surface); padding: 28px; border-radius: var(--radius-lg); width: 100%; max-width: 360px; text-align: left; box-shadow: var(--shadow-md); position: relative; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-color); }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; animation: fadeIn 0.3s ease; }
+        .modal-content { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 380px; text-align: left; box-shadow: var(--shadow-lg); position: relative; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-color); }
         
-        /* LISTE UTENTI E ADMIN */
-        .user-list-item { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 16px; border-radius: var(--radius-md); margin-bottom: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); animation: fadeInUp 0.3s ease forwards; }
+        /* LISTE UTENTI */
+        .user-list-item { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 16px; border-radius: var(--radius-md); margin-bottom: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); transition: transform 0.2s; }
+        .user-list-item:hover { transform: translateX(4px); border-color: var(--primary); }
         .user-banned { background: var(--danger-light); border-color: var(--danger-border); }
+        .user-banned:hover { border-color: var(--danger); }
 
         /* CONTENUTI SPECIFICI TURNI */
-        .status-message { text-align: center; color: var(--text-muted); font-size: 15px; padding: 24px; background: var(--surface); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); font-weight: 500;}
+        .status-message { text-align: center; color: var(--text-muted); font-size: 15px; padding: 24px; background: var(--surface); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 10px;}
         
-        .folder-btn { background-color: var(--surface); color: var(--primary); border: 2px solid var(--primary); padding: 20px; font-size: 18px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; text-align: center; box-shadow: var(--shadow-sm); transition: all 0.2s; animation: fadeInUp 0.3s ease forwards; }
-        .folder-btn:hover { background-color: var(--primary); color: white; transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .folder-btn { background-color: var(--surface); color: var(--text-main); border: 2px solid var(--border-color); padding: 24px 20px; font-size: 16px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; text-align: left; box-shadow: var(--shadow-sm); transition: all 0.2s; display: flex; align-items: center; gap: 16px; }
+        .folder-btn i { font-size: 24px; color: var(--primary); transition: transform 0.2s; }
+        .folder-btn:hover { border-color: var(--primary); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .folder-btn:hover i { transform: scale(1.1); }
         
-        .file-row { display: flex; gap: 10px; width: 100%; align-items: stretch; animation: fadeInUp 0.3s ease forwards; }
-        .file-btn { flex-grow: 1; background-color: var(--primary); color: white; border: none; padding: 16px; font-size: 15px; border-radius: var(--radius-md); cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0, 86, 179, 0.2); }
-        .file-btn:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
+        .file-row { display: flex; gap: 12px; width: 100%; align-items: stretch; }
         
-        .download-btn { width: 55px; background-color: var(--surface); color: var(--primary); border: 2px solid var(--border-color); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; transition: all 0.2s; }
-        .download-btn:hover { border-color: var(--primary); background-color: rgba(0, 86, 179, 0.05); }
+        .file-btn { flex-grow: 1; background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); padding: 16px; font-size: 15px; border-radius: var(--radius-md); cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: flex-start; gap: 12px; font-weight: 600; transition: all 0.2s; box-shadow: var(--shadow-sm); }
+        .file-btn i { color: var(--danger); font-size: 18px; } /* Icona PDF rossa */
+        .file-btn:hover { border-color: var(--primary); background-color: var(--surface-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
         
-        .file-btn:active, .download-btn:active, .folder-btn:active { transform: translateY(2px); box-shadow: none; }
+        .icon-btn { width: 56px; background-color: var(--surface); color: var(--primary); border: 1px solid var(--border-color); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; transition: all 0.2s; box-shadow: var(--shadow-sm); }
+        .icon-btn:hover { background-color: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-md); }
         
-        .back-btn { background-color: var(--surface); color: var(--text-main); border: 2px solid var(--border-color); padding: 14px; border-radius: var(--radius-md); cursor: pointer; width: 100%; font-weight: 600; font-size: 16px; margin-bottom: 8px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;}
-        .back-btn:hover { background-color: var(--surface-hover); border-color: var(--text-muted); }
-        .back-btn:active { transform: translateY(2px); }
+        .btn-search-spec { background-color: var(--surface); color: var(--success); border: 1px solid var(--border-color); }
+        .btn-search-spec:hover { background-color: var(--success); color: white; border-color: var(--success); }
+
+        .back-btn { background-color: transparent; color: var(--text-muted); border: 2px solid var(--border-color); padding: 14px; border-radius: var(--radius-md); cursor: pointer; width: 100%; font-weight: 600; font-size: 15px; margin-bottom: 12px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;}
+        .back-btn:hover { background-color: var(--surface); color: var(--text-main); border-color: var(--text-main); }
 
         /* BARRA DI RICERCA IMMAGINI */
-        .search-container { position: relative; width: 100%; margin-bottom: 8px; animation: fadeInUp 0.3s ease; }
-        #shiftSearch { width: 100%; padding: 16px 20px; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px; box-sizing: border-box; outline: none; font-family: inherit; background: var(--surface); color: var(--text-main); transition: all 0.2s; box-shadow: var(--shadow-sm); }
-        #shiftSearch:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.1); }
+        .search-container { position: relative; width: 100%; margin-bottom: 12px; }
+        .search-wrapper { position: relative; display: flex; align-items: center; }
+        .search-wrapper i { position: absolute; left: 16px; color: var(--text-muted); font-size: 16px; }
+        #shiftSearch { width: 100%; padding: 16px 16px 16px 44px; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px; box-sizing: border-box; outline: none; font-family: inherit; background: var(--surface); color: var(--text-main); transition: all 0.2s; box-shadow: var(--shadow-sm); }
+        #shiftSearch:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); }
         
-        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: var(--shadow-md); display: none; margin-top: 8px; padding: 8px 0; }
+        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: var(--shadow-lg); display: none; margin-top: 8px; padding: 8px 0; }
         .suggestion-item { padding: 14px 20px; cursor: pointer; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; font-weight: 500; transition: background-color 0.2s; }
+        .suggestion-item i { color: var(--primary); font-size: 18px; }
         .suggestion-item:hover, .suggestion-item:active { background-color: var(--surface-hover); color: var(--primary); }
 
         /* MODALE RICERCA CORSE */
-        .modal-overlay-search { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px); animation: fadeIn 0.2s ease;}
-        .modal-content-search { background: var(--surface); padding: 24px; border-radius: var(--radius-lg); max-width: 90%; width: 420px; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: var(--shadow-md); border: 1px solid var(--border-color); }
-        .close-modal { position: absolute; right: 20px; top: 20px; font-size: 28px; cursor: pointer; color: var(--text-muted); line-height: 1; transition: color 0.2s;}
-        .close-modal:hover { color: var(--danger); }
+        .modal-overlay-search { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(8px); animation: fadeIn 0.3s ease;}
+        .modal-content-search { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); max-width: 90%; width: 420px; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: var(--shadow-lg); border: 1px solid var(--border-color); }
+        .close-modal { position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); line-height: 1; transition: all 0.2s;}
+        .close-modal:hover { color: var(--danger); transform: rotate(90deg); }
         
         .tipo-toggle-container { display: flex; gap: 12px; margin-bottom: 24px; margin-top: 10px; }
-        .btn-tipo { flex: 1; padding: 14px; border: 2px solid var(--border-color); background: var(--surface); color: var(--text-muted); font-size: 15px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s; }
-        .btn-tipo.active { border-color: var(--primary); background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3); }
+        .btn-tipo { flex: 1; padding: 16px; border: 2px solid var(--border-color); background: var(--surface); color: var(--text-muted); font-size: 15px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;}
+        .btn-tipo.active { border-color: var(--primary); background: var(--primary); color: white; box-shadow: 0 4px 12px var(--primary-glow); }
         
-        #sc-rest-form { opacity: 0.3; pointer-events: none; transition: opacity 0.3s ease; }
-        #sc-rest-form.unlocked { opacity: 1; pointer-events: auto; }
+        #sc-rest-form { opacity: 0.4; pointer-events: none; transition: opacity 0.3s ease; filter: grayscale(1); }
+        #sc-rest-form.unlocked { opacity: 1; pointer-events: auto; filter: grayscale(0); }
 
-        .sc-form-group { margin-bottom: 16px; display: flex; flex-direction: column; }
+        .sc-form-group { margin-bottom: 20px; display: flex; flex-direction: column; }
         .sc-form-group label { font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; text-align: left; text-transform: uppercase; letter-spacing: 0.5px;}
-        .sc-form-group input, .sc-form-group select { width: 100%; padding: 14px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 16px; font-family: inherit; background: var(--surface); color: var(--text-main); transition: all 0.2s; }
-        .sc-form-group input:focus, .sc-form-group select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.1); }
+        .sc-form-group input, .sc-form-group select { width: 100%; padding: 16px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 16px; font-family: inherit; background: var(--surface); color: var(--text-main); transition: all 0.2s; }
+        .sc-form-group input:focus, .sc-form-group select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-glow); }
         
-        .risultato-box { background: var(--surface-hover); border-left: 4px solid var(--primary); padding: 16px; margin-top: 20px; font-size: 15px; line-height: 1.6; border-radius: 0 var(--radius-md) var(--radius-md) 0; text-align: left; color: var(--text-main); border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); animation: fadeInUp 0.4s ease; }
+        .risultato-box { background: var(--surface-hover); border-left: 4px solid var(--primary); padding: 20px; margin-top: 24px; font-size: 15px; line-height: 1.6; border-radius: 0 var(--radius-md) var(--radius-md) 0; text-align: left; color: var(--text-main); border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); animation: fadeInUp 0.4s ease; box-shadow: var(--shadow-sm); }
         
         #sc-suggestions { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border-color); border-radius: 0 0 var(--radius-md) var(--radius-md); max-height: 160px; overflow-y: auto; z-index: 10; box-shadow: var(--shadow-md); margin-top: -4px; border-top: none; }
-        .sc-suggestion-item { padding: 14px; border-bottom: 1px solid var(--border-color); cursor: pointer; font-size: 16px; font-weight: 600; text-align: left; color: var(--text-main); }
+        .sc-suggestion-item { padding: 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; font-size: 16px; font-weight: 600; text-align: left; color: var(--text-main); }
         .sc-suggestion-item:last-child { border-bottom: none; }
-        .sc-suggestion-item:hover, .sc-suggestion-item:active { background-color: var(--surface-hover); color: var(--primary); }
+        .sc-suggestion-item:hover, .sc-suggestion-item:active { background-color: var(--surface-hover); color: var(--primary); padding-left: 20px; transition: padding 0.2s;}
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -211,125 +234,134 @@
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
-            <h3 style="margin:0; font-weight: 600;">Menu</h3>
-            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1;" onclick="chiudiMenuLaterale()">✕</button>
+            <h3><i class="fa-solid fa-layer-group"></i> Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
-        <a href="bacheca_utility.html" class="sidebar-link">📢 Bacheca Avvisi</a>
-        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
-        <a href="turni.html" class="sidebar-link" style="background-color: var(--surface-hover); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary);">🔄 Turni</a>
-        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
-        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
-        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
-        <a href="orari.html" class="sidebar-link">🕒 Orari Navigazione</a>
-        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
-        <a href="link.html" class="sidebar-link">🔗 Link</a>
-        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
-        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
-        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
-        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+        <a href="index.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Home Page</a>
+        <a href="bacheca_utility.html" class="sidebar-link"><i class="fa-solid fa-bullhorn"></i> Bacheca Avvisi</a>
+        <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
+        <a href="turni.html" class="sidebar-link active-link"><i class="fa-solid fa-rotate"></i> Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
+        <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link"><i class="fa-solid fa-umbrella-beach"></i> Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link"><i class="fa-regular fa-clock"></i> Orari Navigazione</a>
+        <a href="documenti.html" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Documenti</a>
+        <a href="link.html" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
+        <a href="contatti.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i> Contatti</a>
+        <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
+        <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
     </div>
 
     <div class="header">
-        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
-        <h2>🔄 Turni</h2>
+        <button class="hamburger-btn" onclick="apriMenuLaterale()"><i class="fa-solid fa-bars"></i></button>
+        <h2><i class="fa-solid fa-rotate"></i> Turni</h2>
         <div style="width: 50px;"></div>
     </div>
 
     <div id="view-loading" class="view-container" style="display: flex;">
-        <div class="status-message animate-pop">⏳ Verifica autorizzazioni...</div>
+        <div class="status-message animate-pop"><i class="fa-solid fa-circle-notch fa-spin" style="color: var(--primary); font-size: 20px;"></i> Verifica autorizzazioni...</div>
     </div>
 
     <div id="view-denied" class="view-container" style="align-items: center; justify-content: center; height: 50vh;">
         <div class="card-panel animate-pop" style="text-align: center;">
+            <i class="fa-solid fa-circle-exclamation" style="font-size: 48px; color: var(--danger); margin-bottom: 16px;"></i>
             <h3 style="color: var(--danger); margin-top: 0; font-weight: 700;">Accesso Negato</h3>
             <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 24px;">Devi effettuare il login nella Home Page per accedere ai turni aziendali.</p>
-            <button class="btn-action" style="background: var(--primary); width: auto; padding: 12px 24px;" onclick="window.location.href='index.html'">Torna alla Home</button>
+            <button class="btn-action" style="width: auto; padding: 12px 24px; margin: 0 auto;" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i> Torna alla Home</button>
         </div>
     </div>
 
     <div id="view-banned" class="view-container" style="align-items: center; justify-content: center; height: 50vh;">
         <div class="card-panel animate-pop" style="background: var(--danger-light); border: 2px solid var(--danger-border); text-align: center;">
-            <h3 style="color: var(--danger); margin-top: 0; font-weight: 700;">🚫 Accesso Revocato</h3>
+            <i class="fa-solid fa-ban" style="font-size: 48px; color: var(--danger); margin-bottom: 16px;"></i>
+            <h3 style="color: var(--danger); margin-top: 0; font-weight: 700;">Accesso Revocato</h3>
             <p style="color: var(--text-main); font-size: 15px; margin-bottom: 24px;">Sei stato escluso dalla visualizzazione di questa pagina da un Amministratore.</p>
-            <button class="btn-action" style="background: var(--danger); width: auto; padding: 12px 24px;" onclick="window.location.href='index.html'">Torna alla Home</button>
+            <button class="btn-action btn-danger" style="width: auto; padding: 12px 24px; margin: 0 auto;" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i> Torna alla Home</button>
         </div>
     </div>
 
     <div id="view-profile-required" class="view-container">
         <div class="card-panel animate-pop">
-            <h3 style="margin-top: 0; color: var(--primary); text-align: center; font-weight: 700;">Completa il Profilo</h3>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <i class="fa-solid fa-user-pen" style="font-size: 40px; color: var(--primary);"></i>
+            </div>
+            <h3 style="margin-top: 0; color: var(--text-main); text-align: center; font-weight: 700;">Completa il Profilo</h3>
             <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px; text-align: center; line-height: 1.5;">Per visualizzare i turni è obbligatorio inserire i tuoi dati anagrafici reali.</p>
             
-            <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom:6px;">Nome *</label>
-            <input type="text" id="req-nome" class="input-field" placeholder="Il tuo nome">
+            <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom:8px;">Nome *</label>
+            <input type="text" id="req-nome" class="input-field" placeholder="Inserisci il tuo nome">
             
-            <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom:6px;">Cognome *</label>
-            <input type="text" id="req-cognome" class="input-field" placeholder="Il tuo cognome">
+            <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom:8px;">Cognome *</label>
+            <input type="text" id="req-cognome" class="input-field" placeholder="Inserisci il tuo cognome">
             
-            <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom:6px;">Matricola *</label>
-            <input type="text" id="req-matricola" class="input-field" placeholder="La tua matricola">
+            <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom:8px;">Matricola *</label>
+            <input type="text" id="req-matricola" class="input-field" placeholder="La tua matricola aziendale">
 
-            <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom:6px;">Numero Omonimia (Facoltativo)</label>
+            <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom:8px;">Numero Omonimia (Facoltativo)</label>
             <input type="text" id="req-prog" class="input-field" placeholder="Es. 02, 03...">
 
-            <button id="btn-save-profile" class="btn-action" style="margin-top: 20px;" onclick="salvaProfiloObbligatorio()">Salva e Accedi</button>
+            <button id="btn-save-profile" class="btn-action btn-success" style="margin-top: 10px;" onclick="salvaProfiloObbligatorio()"><i class="fa-solid fa-check"></i> Salva e Accedi</button>
         </div>
     </div>
 
     <div id="view-main" class="view-container animate-pop">
-        <button id="btn-admin-gestione" class="btn-action" style="background: #32325d; display: none; margin-top: 0; margin-bottom: 16px;" onclick="apriGestioneAccessi()">🛠️ Gestione Accessi Turni</button>
+        <button id="btn-admin-gestione" class="btn-action" style="background: #1e293b; display: none; margin-top: 0; margin-bottom: 20px;" onclick="apriGestioneAccessi()"><i class="fa-solid fa-shield-halved"></i> Gestione Accessi Turni</button>
         <div id="content-area" style="display: flex; flex-direction: column; gap: 16px;"></div>
     </div>
 
     <div id="modal-gestione" class="modal-overlay" onclick="chiudiSeSfondoModale(event, 'modal-gestione')">
-        <div class="modal-content" style="max-width: 420px;">
-            <span style="position: absolute; right: 20px; top: 16px; font-size: 28px; cursor: pointer; color: var(--text-muted);" onclick="document.getElementById('modal-gestione').style.display='none'">&times;</span>
-            <h3 style="margin-top: 5px; margin-bottom: 20px; color: var(--text-main); font-weight: 700;">
-                Utenti Autorizzati
+        <div class="modal-content" style="max-width: 440px;">
+            <i class="fa-solid fa-xmark close-modal" onclick="document.getElementById('modal-gestione').style.display='none'"></i>
+            <h3 style="margin-top: 0; margin-bottom: 24px; color: var(--text-main); font-weight: 700; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-users-gear" style="color: var(--primary);"></i> Utenti Autorizzati
             </h3>
             
-            <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-                <div style="background: var(--primary); color: white; padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; flex: 1; text-align: center; box-shadow: var(--shadow-sm);">
-                    Totali: <span id="badge-totali" style="font-size: 16px;">0</span>
+            <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                <div style="background: var(--surface-hover); border: 1px solid var(--border-color); color: var(--text-main); padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; flex: 1; text-align: center; box-shadow: var(--shadow-sm);">
+                    Totali: <span id="badge-totali" style="font-size: 18px; color: var(--primary); display:block; margin-top:4px;">0</span>
                 </div>
-                <div style="background: var(--success); color: white; padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; flex: 1; text-align: center; box-shadow: var(--shadow-sm);">
-                    Oggi: <span id="badge-oggi" style="font-size: 16px;">0</span>
+                <div style="background: rgba(15, 157, 88, 0.1); border: 1px solid rgba(15, 157, 88, 0.2); color: var(--success); padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; flex: 1; text-align: center; box-shadow: var(--shadow-sm);">
+                    Oggi: <span id="badge-oggi" style="font-size: 18px; display:block; margin-top:4px;">0</span>
                 </div>
             </div>
 
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Elenco di chi ha avuto accesso alla pagina Turni.</p>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;"><i class="fa-solid fa-circle-info"></i> Elenco di chi ha effettuato l'accesso alla pagina.</p>
             
             <div id="lista-utenti-accessi" style="margin-top: 10px; max-height: 50vh; overflow-y: auto; padding-right: 5px;">
-                <div class="status-message">Caricamento utenti...</div>
+                <div class="status-message"><i class="fa-solid fa-spinner fa-spin"></i> Caricamento utenti...</div>
             </div>
         </div>
     </div>
 
-    <div id="imageModal" style="display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); overflow: hidden; animation: fadeIn 0.3s ease;" onclick="chiudiSeSfondoImg(event)">
-        <div style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 24px; font-size: 40px; color: white; cursor: pointer; text-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 20001; line-height: 1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiImageModal()">&times;</div>
+    <div id="imageModal" style="display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); overflow: hidden; animation: fadeIn 0.3s ease;" onclick="chiudiSeSfondoImg(event)">
+        <i class="fa-solid fa-xmark" style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 24px; font-size: 32px; color: white; cursor: pointer; text-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 20001; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiImageModal()"></i>
         <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px; padding-bottom: 100px; position: relative;">
-            <img id="turnoImage" src="" style="max-width: 100%; max-height: 75vh; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); object-fit: contain; background: white;">
-            <div id="imageBanner" style="position: relative; z-index: 20001; margin-top: 20px; background: rgba(30,30,30,0.8); backdrop-filter: blur(10px); color: #fff; padding: 12px 24px; border-radius: 12px; font-size: 14px; text-align: center; max-width: 90%; box-shadow: 0 8px 20px rgba(0,0,0,0.4); font-weight: 500; border: 1px solid rgba(255,255,255,0.1);">
-                ⚠️ Controllare sempre la presenza di eventuali varianti ai turni.
+            <img id="turnoImage" src="" style="max-width: 100%; max-height: 75vh; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); object-fit: contain; background: white;">
+            <div id="imageBanner" style="position: relative; z-index: 20001; margin-top: 24px; background: rgba(20,20,20,0.85); backdrop-filter: blur(10px); color: #fff; padding: 14px 24px; border-radius: 12px; font-size: 14px; text-align: center; max-width: 90%; box-shadow: 0 8px 20px rgba(0,0,0,0.4); font-weight: 500; border: 1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-triangle-exclamation" style="color: #fbbc04; font-size: 18px;"></i> Controllare sempre eventuali varianti.
             </div>
         </div>
-        <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(40px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: var(--primary); color: white; border: none; padding: 16px 32px; border-radius: 30px; font-weight: 700; font-size: 16px; box-shadow: 0 8px 25px rgba(0, 86, 179, 0.5); cursor: pointer; z-index: 20001; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 20px;">📥</span> Scarica Turno
+        <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(40px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: var(--primary); color: white; border: none; padding: 16px 32px; border-radius: 30px; font-weight: 700; font-size: 16px; box-shadow: 0 8px 25px var(--primary-glow); cursor: pointer; z-index: 20001; transition: all 0.2s; display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-download" style="font-size: 18px;"></i> Scarica Turno
         </button>
     </div>
 
     <div id="searchCorseModal" class="modal-overlay-search" onclick="chiudiSeSfondoSearch(event)">
         <div class="modal-content-search">
-            <span class="close-modal" onclick="chiudiSearchCorseModal()">&times;</span>
-            <h3 style="margin-top:0; color:var(--primary); border-bottom: 2px solid var(--border-color); padding-bottom: 16px; font-weight: 700;">Cerca Corsa</h3>
+            <i class="fa-solid fa-xmark close-modal" onclick="chiudiSearchCorseModal()"></i>
+            <h3 style="margin-top:0; color:var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 20px; font-weight: 700; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-route" style="color: var(--primary);"></i> Cerca Corsa
+            </h3>
             
-            <div id="sc-status" class="status-message" style="padding: 16px; font-size:14px; display:none; margin-top: 10px;">Caricamento dati in corso...</div>
+            <div id="sc-status" class="status-message" style="padding: 20px; font-size:14px; display:none; margin-top: 20px;">
+                <i class="fa-solid fa-spinner fa-spin" style="color:var(--primary);"></i> Caricamento dati in corso...
+            </div>
             
-            <div id="sc-form" style="display:none; margin-top: 20px;">
+            <div id="sc-form" style="display:none; margin-top: 24px;">
                 <div class="tipo-toggle-container">
-                    <button id="btn-partenza" class="btn-tipo" onclick="selezionaTipo('partenza')">🛫 Partenza</button>
-                    <button id="btn-arrivo" class="btn-tipo" onclick="selezionaTipo('arrivo')">🛬 Arrivo</button>
+                    <button id="btn-partenza" class="btn-tipo" onclick="selezionaTipo('partenza')"><i class="fa-solid fa-plane-departure"></i> Partenza</button>
+                    <button id="btn-arrivo" class="btn-tipo" onclick="selezionaTipo('arrivo')"><i class="fa-solid fa-plane-arrival"></i> Arrivo</button>
                 </div>
                 <input type="hidden" id="sc-tipo" value="">
 
@@ -339,7 +371,7 @@
                         <select id="sc-luogo" onchange="aggiornaSuggerimentiOrario()"></select>
                     </div>
                     <div class="sc-form-group">
-                        <label>Giorno (Opzionale per rotazioni):</label>
+                        <label>Giorno (Opz. per rotazioni):</label>
                         <input type="date" id="sc-giorno">
                     </div>
                     <div class="sc-form-group" style="position: relative;">
@@ -347,7 +379,7 @@
                         <input type="text" id="sc-orario" inputmode="numeric" placeholder="es. 07.30" oninput="formattaOrario(event)" autocomplete="off">
                         <div id="sc-suggestions"></div>
                     </div>
-                    <button class="file-btn" style="width: 100%; border-radius: var(--radius-md); margin-top: 10px; padding: 16px; font-size: 16px;" onclick="eseguiRicercaCorsa()">🔍 Trova Turno</button>
+                    <button class="btn-action" style="margin-top: 10px;" onclick="eseguiRicercaCorsa()"><i class="fa-solid fa-magnifying-glass"></i> Trova Turno</button>
                 </div>
 
                 <div id="sc-risultato" class="risultato-box" style="display:none;"></div>
@@ -397,7 +429,7 @@
             }
 
             if (user.uid === ADMIN_UID) {
-                document.getElementById('btn-admin-gestione').style.display = 'block';
+                document.getElementById('btn-admin-gestione').style.display = 'flex';
             }
 
             document.getElementById('view-loading').style.display = 'flex';
@@ -438,7 +470,6 @@
                 document.getElementById('view-main').style.display = 'flex';
                 initTurniApp();
 
-                // --- TRACCIAMENTO ACCESSI (UNA VOLTA AL GIORNO) ---
                 const oggiStr = new Date().toISOString().split('T')[0]; 
                 if (data.turni_access !== true || data.last_turni_access !== oggiStr) {
                     await setDoc(docRef, { 
@@ -448,7 +479,7 @@
                 }
 
             } catch (error) {
-                document.getElementById('view-loading').innerHTML = "<div class='status-message' style='color:var(--danger);'>Errore di connessione.</div>";
+                document.getElementById('view-loading').innerHTML = "<div class='status-message' style='color:var(--danger);'><i class='fa-solid fa-triangle-exclamation'></i> Errore di connessione.</div>";
             }
         });
 
@@ -467,7 +498,7 @@
             }
 
             const btn = document.getElementById('btn-save-profile');
-            btn.innerText = "⏳ Salvataggio..."; btn.disabled = true;
+            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Salvataggio..."; btn.disabled = true;
 
             const oggiStr = new Date().toISOString().split('T')[0];
             const profileData = { 
@@ -490,7 +521,7 @@
                 location.reload();
             } catch (e) {
                 alert("Errore durante il salvataggio.");
-                btn.innerText = "Salva e Accedi"; btn.disabled = false;
+                btn.innerHTML = "<i class='fa-solid fa-check'></i> Salva e Accedi"; btn.disabled = false;
             }
         };
 
@@ -501,7 +532,7 @@
             const badgeOggi = document.getElementById('badge-oggi');
             const oggiStr = new Date().toISOString().split('T')[0];
 
-            container.innerHTML = `<div class="status-message">Caricamento in corso...</div>`;
+            container.innerHTML = `<div class="status-message"><i class="fa-solid fa-spinner fa-spin"></i> Caricamento in corso...</div>`;
             badgeTotali.innerText = "0";
             badgeOggi.innerText = "0";
 
@@ -525,28 +556,28 @@
                         const fullName = `${u.cognome || ''} ${u.nome || ''}${omo}`.trim() || 'Utente Sconosciuto';
                         const matr = u.matricola ? `(Matr. ${u.matricola})` : '';
                         
-                        const dotOggi = (u.last_turni_access === oggiStr) ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:8px; box-shadow: 0 0 5px var(--success);" title="Accesso effettuato oggi"></span>` : '';
+                        const dotOggi = (u.last_turni_access === oggiStr) ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:8px; box-shadow: 0 0 8px rgba(15,157,88,0.6);" title="Accesso effettuato oggi"></span>` : '';
 
                         let btnHtml = isBanned 
-                            ? `<button class="btn-outline" style="color:var(--success); border-color:var(--success);" onclick="toggleBan('${d.id}', false)">Sblocca</button>` 
-                            : `<button class="btn-outline" style="color:var(--danger); border-color:var(--danger);" onclick="toggleBan('${d.id}', true)">Blocca</button>`;
+                            ? `<button class="btn-outline" style="color:var(--success); border-color:var(--success); padding: 6px 12px; font-size:13px;" onclick="toggleBan('${d.id}', false)"><i class="fa-solid fa-unlock"></i> Sblocca</button>` 
+                            : `<button class="btn-outline" style="color:var(--danger); border-color:var(--danger); padding: 6px 12px; font-size:13px;" onclick="toggleBan('${d.id}', true)"><i class="fa-solid fa-ban"></i> Blocca</button>`;
 
                         html += `<div class="user-list-item ${isBanned ? 'user-banned' : ''}">
                                 <div><div style="font-weight: 600; font-size: 15px; color: var(--text-main); display:flex; align-items:center;">${fullName}${dotOggi}</div>
-                                <div style="font-size: 12px; color: var(--text-muted); margin-top:2px;">${matr}</div></div>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top:4px;"><i class="fa-regular fa-id-badge"></i> ${matr}</div></div>
                                 <div>${btnHtml}</div></div>`;
                     }
                 });
                 
                 if (html === "") {
-                    container.innerHTML = `<div class="status-message">Nessun utente ha ancora registrato l'accesso.</div>`;
+                    container.innerHTML = `<div class="status-message"><i class="fa-solid fa-folder-open"></i> Nessun utente ha ancora registrato l'accesso.</div>`;
                 } else {
                     container.innerHTML = html;
                     badgeTotali.innerText = numeroTotali;
                     badgeOggi.innerText = numeroOggi;
                 }
             } catch (e) { 
-                container.innerHTML = `<div class="status-message" style="color:var(--danger);">Errore.</div>`; 
+                container.innerHTML = `<div class="status-message" style="color:var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> Errore caricamento.</div>`; 
             }
         };
 
@@ -627,28 +658,29 @@
                     dirs.forEach((d, index) => {
                         const btn = document.createElement('button'); 
                         btn.className = "folder-btn";
-                        btn.style.animationDelay = `${index * 0.05}s`;
+                        btn.style.animation = `fadeInUp 0.4s ease forwards ${index * 0.05}s`;
+                        btn.style.opacity = "0";
                         btn.onclick = () => window.caricaFiles(d); 
                         area.appendChild(btn);
                         
                         if (d.includes("varianti")) {
-                            btn.innerText = "Caricamento...";
+                            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Caricamento...";
                             fetch(`${d}/nome.txt?t=${new Date().getTime()}`)
                                 .then(response => { if (response.ok) return response.text(); throw new Error("File txt assente"); })
-                                .then(testo => { btn.innerText = testo.trim() || d.replace("turni_varianti_", "").replace(/_/g, " "); })
-                                .catch(() => { btn.innerText = d.replace("turni_varianti_", "").replace(/_/g, " "); });
+                                .then(testo => { btn.innerHTML = `<i class="fa-solid fa-code-merge"></i> ${testo.trim() || d.replace("turni_varianti_", "").replace(/_/g, " ")}`; })
+                                .catch(() => { btn.innerHTML = `<i class="fa-solid fa-code-merge"></i> ${d.replace("turni_varianti_", "").replace(/_/g, " ")}`; });
                         } else {
                             let label = d.replace("turni_pdf_", "").split("-").reverse().join("-");
-                            btn.innerText = "📁 Turni dal " + label;
+                            btn.innerHTML = `<i class="fa-regular fa-folder-open"></i> Turni dal ${label}`;
                         }
                     });
                 }
-            } catch (e) { area.innerHTML = "<div class='status-message'>In attesa di primo caricamento dati...</div>"; }
+            } catch (e) { area.innerHTML = "<div class='status-message'><i class='fa-solid fa-spinner fa-spin'></i> In attesa di caricamento dati...</div>"; }
         }
 
         window.caricaFiles = async (dir) => {
             const area = document.getElementById('content-area'); 
-            area.innerHTML = "<div class='status-message'>Caricamento dati...</div>";
+            area.innerHTML = "<div class='status-message'><i class='fa-solid fa-spinner fa-spin'></i> Caricamento file in corso...</div>";
             
             let imgDir = "";
             if (dir.startsWith("turni_pdf_")) imgDir = dir.replace("turni_pdf_", "turni_");
@@ -675,32 +707,34 @@
                 
                 if (numCartelle > 1) { 
                     const b = document.createElement('button'); 
-                    b.className = "back-btn"; b.innerHTML = "← Indietro"; 
+                    b.className = "back-btn"; b.innerHTML = "<i class='fa-solid fa-arrow-left'></i> Indietro"; 
                     b.onclick = initTurniApp; area.appendChild(b); 
                 }
                 
                 if (currentImgList.length > 0) {
                     const searchDiv = document.createElement('div'); searchDiv.className = "search-container";
-                    searchDiv.innerHTML = `<input type="text" id="shiftSearch" placeholder="🔍 Cerca turno (es. 1B01)" autocomplete="off" oninput="filtraTurni()" onfocus="filtraTurni()"><div id="suggestionsBox" class="suggestions-box"></div>`;
+                    searchDiv.style.animation = "fadeInUp 0.4s ease";
+                    searchDiv.innerHTML = `<div class="search-wrapper"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="shiftSearch" placeholder="Cerca codice turno (es. 1B01)" autocomplete="off" oninput="filtraTurni()" onfocus="filtraTurni()"></div><div id="suggestionsBox" class="suggestions-box"></div>`;
                     area.appendChild(searchDiv);
                 }
                 
                 pdfs.forEach((f, index) => {
                     let nomeOrig = f.name; let nomeVis = "";
                     if (nomeOrig.includes("libro_turni_completo")) {
-                        nomeVis = "📄 Libro turni completo";
+                        nomeVis = "Libro turni completo";
                     } else {
                         let n = nomeOrig.replace(/\.pdf$/i, "").replace(/_/g, " ");
                         n = n.split(/\s+dal\s+/i)[0]; n = n.replace(/\s+pdf$/i, "").trim(); n = n.replace(/\blinea\b/gi, "linea");
-                        nomeVis = "📄 " + n.charAt(0).toUpperCase() + n.slice(1);
+                        nomeVis = n.charAt(0).toUpperCase() + n.slice(1);
                     }
 
                     const row = document.createElement('div'); row.className = "file-row";
-                    row.style.animationDelay = `${index * 0.05}s`;
-                    if (nomeOrig.includes("libro")) row.style.marginBottom = "12px";
+                    row.style.animation = `fadeInUp 0.4s ease forwards ${index * 0.05}s`;
+                    row.style.opacity = "0";
+                    if (nomeOrig.includes("libro")) row.style.marginBottom = "16px";
 
-                    const aOpen = document.createElement('a'); aOpen.className = "file-btn"; aOpen.innerText = nomeVis; aOpen.href = `${dir}/${nomeOrig}`; aOpen.target = "_blank";
-                    const aDown = document.createElement('div'); aDown.className = "download-btn"; aDown.innerHTML = "⬇️"; aDown.onclick = () => window.downloadForzato(`${dir}/${nomeOrig}`, nomeOrig);
+                    const aOpen = document.createElement('a'); aOpen.className = "file-btn"; aOpen.innerHTML = `<i class="fa-solid fa-file-pdf"></i> <span>${nomeVis}</span>`; aOpen.href = `${dir}/${nomeOrig}`; aOpen.target = "_blank";
+                    const aDown = document.createElement('div'); aDown.className = "icon-btn"; aDown.innerHTML = '<i class="fa-solid fa-download"></i>'; aDown.onclick = () => window.downloadForzato(`${dir}/${nomeOrig}`, nomeOrig);
 
                     row.appendChild(aOpen); row.appendChild(aDown);
 
@@ -708,15 +742,15 @@
                     const hasJson = jsons.some(j => j.name.substring(0, j.name.lastIndexOf('.')) === baseName);
 
                     if (hasJson) {
-                        aDown.style.width = "50px"; 
                         const btnSearch = document.createElement('button');
-                        btnSearch.className = "file-btn"; btnSearch.style.backgroundColor = "var(--success)"; btnSearch.style.flexGrow = "0"; btnSearch.style.width = "55px"; btnSearch.style.padding = "0"; btnSearch.style.fontSize = "22px"; btnSearch.style.marginLeft = "8px"; btnSearch.innerText = "🔍";
+                        btnSearch.className = "icon-btn btn-search-spec"; 
+                        btnSearch.innerHTML = '<i class="fa-solid fa-route"></i>';
                         btnSearch.onclick = () => window.apriRicercaCorse(nomeOrig, dir);
                         row.appendChild(btnSearch);
                     }
                     area.appendChild(row);
                 });
-            } catch (e) { area.innerHTML = "<div class='status-message'>Errore caricamento PDF.</div>"; }
+            } catch (e) { area.innerHTML = "<div class='status-message' style='color:var(--danger);'><i class='fa-solid fa-triangle-exclamation'></i> Errore caricamento PDF.</div>"; }
         };
 
         window.filtraTurni = () => {
@@ -736,13 +770,13 @@
                 matches.forEach(m => {
                     const nomeSenzaExt = m.name.replace(/\.[^/.]+$/, "").toUpperCase();
                     const item = document.createElement('div'); item.className = 'suggestion-item';
-                    item.innerHTML = `<span>Turno <strong>${nomeSenzaExt}</strong></span> <span style="font-size:18px;">🖼️</span>`;
+                    item.innerHTML = `<span>Turno <strong>${nomeSenzaExt}</strong></span> <i class="fa-regular fa-image"></i>`;
                     item.onclick = () => { window.apriImmagineTurno(m.name); box.style.display = 'none'; input.value = ''; };
                     box.appendChild(item);
                 });
                 box.style.display = 'block';
             } else {
-                box.innerHTML = '<div style="padding: 16px 20px; color: var(--text-muted);">Nessun turno trovato.</div>'; box.style.display = 'block';
+                box.innerHTML = '<div style="padding: 16px 20px; color: var(--text-muted);"><i class="fa-regular fa-face-frown-open"></i> Nessun turno trovato.</div>'; box.style.display = 'block';
             }
         };
 
@@ -769,7 +803,7 @@
             document.getElementById('sc-tipo').value = ""; document.getElementById('btn-partenza').classList.remove('active'); document.getElementById('btn-arrivo').classList.remove('active'); document.getElementById('sc-rest-form').classList.remove('unlocked');
             document.getElementById('label-luogo').innerText = "Luogo:"; document.getElementById('label-orario').innerText = "Orario:"; document.getElementById('sc-orario').value = ""; document.getElementById('sc-giorno').valueAsDate = new Date(); 
 
-            statusEl.style.display = 'block'; statusEl.innerText = "Caricamento dati corse in corso...";
+            statusEl.style.display = 'block'; statusEl.innerHTML = "<i class='fa-solid fa-spinner fa-spin' style='color:var(--primary);'></i> Caricamento dati corse...";
 
             const jsonName = pdfName.substring(0, pdfName.lastIndexOf('.')) + ".json";
             
@@ -779,7 +813,7 @@
                 if (!res.ok) throw new Error("File dati (JSON) non trovato.");
                 currentCorseData = await res.json();
                 statusEl.style.display = 'none'; document.getElementById('sc-form').style.display = 'block';
-            } catch(e) { statusEl.innerHTML = `<span style='color:var(--danger); font-weight: 600;'>Errore: ${e.message}</span>`; }
+            } catch(e) { statusEl.innerHTML = `<span style='color:var(--danger); font-weight: 600;'><i class='fa-solid fa-triangle-exclamation'></i> Errore: ${e.message}</span>`; }
         };
 
         window.selezionaTipo = (tipo) => {
@@ -841,9 +875,9 @@
 
         window.eseguiRicercaCorsa = async () => {
             const tipo = document.getElementById('sc-tipo').value; const luogo = document.getElementById('sc-luogo').value; const giorno = document.getElementById('sc-giorno').value; const orarioInput = document.getElementById('sc-orario').value; const box = document.getElementById('sc-risultato');
-            if (!luogo || !orarioInput || orarioInput.length < 5) { box.style.display = 'block'; box.innerHTML = "<span style='color:var(--danger); font-weight:600;'>Seleziona un luogo e inserisci un orario completo.</span>"; return; }
+            if (!luogo || !orarioInput || orarioInput.length < 5) { box.style.display = 'block'; box.innerHTML = "<span style='color:var(--danger); font-weight:600;'><i class='fa-solid fa-circle-exclamation'></i> Seleziona un luogo e inserisci un orario completo.</span>"; return; }
 
-            box.style.display = 'block'; box.innerHTML = "⏳ Ricerca in corso...";
+            box.style.display = 'block'; box.innerHTML = "<i class='fa-solid fa-spinner fa-spin' style='color:var(--primary);'></i> Ricerca in corso...";
 
             let p = orarioInput.split('.'); let targetFormat1 = `${parseInt(p[0], 10)}:${p[1]}`; let targetFormat2 = `${parseInt(p[0], 10)}.${p[1]}`; let targetFormat3 = `${p[0]}:${p[1]}`; 
             let turniTrovati = [];
@@ -879,13 +913,13 @@
                                     }
                                 }
                             }
-                            if (colleghiTrovati.length > 0) rotazioniHtml = `<div style="margin-top:20px; padding-top:16px; border-top: 1px dashed var(--border-color); font-size:15px; color:var(--text-main);"><div style="color:var(--primary); margin-bottom:8px;"><strong>👥 Assegnazioni in Rotazione:</strong></div>${colleghiTrovati.join('<br>')}</div>`;
+                            if (colleghiTrovati.length > 0) rotazioniHtml = `<div style="margin-top:20px; padding-top:16px; border-top: 1px solid var(--border-color); font-size:15px; color:var(--text-main);"><div style="color:var(--primary); margin-bottom:12px;"><i class="fa-solid fa-users"></i> <strong>Assegnazioni in Rotazione:</strong></div>${colleghiTrovati.join('<br>')}</div>`;
                         }
                     } catch(e) {}
                 }
 
-                box.innerHTML = `<strong style="color:var(--primary);">Data:</strong> ${giorno ? giorno.split('-').reverse().join('/') : "Oggi"}<br><strong style="color:var(--primary);">${tipo === 'partenza' ? 'Partenza da' : 'Arrivo a'}:</strong> ${luogo} alle ${orarioInput}<br><div style="margin-top:16px;"><strong style="display:block; margin-bottom:8px;">Turni che effettuano la corsa:</strong><div style="display:flex; flex-wrap:wrap; gap:8px;">${turniTrovati.map(t => `<button class="file-btn" style="flex-grow:0; width:auto; padding: 10px 16px; font-size: 14px; margin:0;" onclick="apriImmagineTurnoDallaRicerca('${t}')">🖼️ ${t}</button>`).join('')}</div></div>${rotazioniHtml}`;
-            } else { box.innerHTML = "Nessun turno trovato nel database per questa selezione."; }
+                box.innerHTML = `<div style="margin-bottom:8px;"><i class="fa-regular fa-calendar" style="color:var(--primary); width:20px;"></i> <strong>Data:</strong> ${giorno ? giorno.split('-').reverse().join('/') : "Oggi"}</div><div style="margin-bottom:16px;"><i class="fa-solid fa-location-dot" style="color:var(--primary); width:20px;"></i> <strong>${tipo === 'partenza' ? 'Partenza da' : 'Arrivo a'}:</strong> ${luogo} alle ${orarioInput}</div><strong style="display:block; margin-bottom:12px; color:var(--text-muted); font-size:13px; text-transform:uppercase;">Turni che effettuano la corsa:</strong><div style="display:flex; flex-wrap:wrap; gap:10px;">${turniTrovati.map(t => `<button class="file-btn" style="flex-grow:0; width:auto; padding: 10px 16px; font-size: 14px; margin:0;" onclick="apriImmagineTurnoDallaRicerca('${t}')"><i class="fa-regular fa-image" style="color:var(--primary);"></i> ${t}</button>`).join('')}</div>${rotazioniHtml}`;
+            } else { box.innerHTML = "<i class='fa-solid fa-circle-info' style='color:var(--primary);'></i> Nessun turno trovato nel database per questa selezione."; }
         };
 
         document.addEventListener('click', function(e) {
