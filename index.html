@@ -192,12 +192,12 @@
         .view-container { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; }
 
         /* PULSANTI HEADER */
-        #install-btn { display: none; background-color: var(--success); color: white; border: none; padding: 10px 16px; font-size: 13px; font-weight: 700; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(15,157,88,0.3); white-space: nowrap; animation: pulse 2s infinite; display:flex; align-items:center; gap:6px;}
+        #install-btn { display: none; background-color: var(--success); color: white; border: none; padding: 10px 16px; font-size: 13px; font-weight: 700; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(15,157,88,0.3); white-space: nowrap; animation: pulse 2s infinite; align-items:center; gap:6px;}
         .btn-header-alt { background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 20px; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
         .btn-header-alt:active { transform: scale(0.95); }
         .btn-header-alt:hover { border-color: var(--primary); color: var(--primary); }
 
-        /* DASHBOARD GRID - CENTRATURA DINAMICA */
+        /* DASHBOARD GRID */
         #app-container { width: 100%; max-width: 440px; }
         .app-grid { 
             display: grid; 
@@ -907,7 +907,6 @@
                     } catch(e) {}
                 } else { this.prefs.apps = JSON.parse(JSON.stringify(DEFAULT_APPS)); }
                 
-                // Track system theme changes if set to system
                 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
                     if(this.prefs.theme === 'system') this.applicaGrafica();
                 });
@@ -957,7 +956,6 @@
 
                 let isDark = this.isDarkMode();
                 
-                // Overlay colori dark mode (grigio scuro sopra/sotto, più chiaro centro)
                 let actualC1 = isDark ? "#1a1a1a" : this.prefs.c1;
                 let actualC2 = isDark ? "#2d2d2d" : this.prefs.c2;
                 let actualC3 = isDark ? "#1a1a1a" : this.prefs.c3;
@@ -1000,7 +998,6 @@
                     let iconStyle = `background-color: ${finalColor};`;
                     let iconContent = "";
 
-                    // Controllo intelligente: se è un percorso file (.png, .svg, ecc) o contiene "icone_app", lo tratta come immagine
                     let isImagePath = false;
                     let imagePath = "";
 
@@ -1014,20 +1011,19 @@
 
                     if (isImagePath) { 
                         iconStyle += ` background-image: url('${imagePath}'); background-size: cover; background-position: center; background-repeat: no-repeat;`; 
-                        iconContent = ""; // Se c'è un'immagine, svuota il contenuto testuale
+                        iconContent = ""; 
                     } else if (app.icon) {
                         if (app.icon.includes('fa-')) {
                             iconContent = `<i class="${app.icon}"></i>`;
                         } else {
-                            iconContent = app.icon; // Può essere un'emoji
+                            iconContent = app.icon;
                         }
                     } else if (ICON_MAP[app.id]) {
                         iconContent = `<i class="${ICON_MAP[app.id]}"></i>`;
                     } else {
-                        iconContent = "🔗"; // Fallback generico
+                        iconContent = "🔗"; 
                     }
 
-                    // Disattiva il ritardo animazione in edit mode
                     let animDelay = this.isEditMode ? "0s" : `${index * 0.04}s`;
                     
                     container.innerHTML += `
@@ -1186,7 +1182,7 @@
         window.renderGestioneAccessi = () => {
             const container = document.getElementById('lista-utenti-accessi');
             const sortMode = document.getElementById('sort-utenti-app') ? document.getElementById('sort-utenti-app').value : 'recente';
-            const oggiStr = new Date().toISOString().split('T')[0];
+            const oggiStr = new DatetoISOString().split('T')[0];
             
             let dataCopy = [...window.utentiArrayCache];
 
@@ -1395,33 +1391,41 @@
         let deferredPrompt;
         const installBtn = document.getElementById('install-btn');
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Previene la mini-infobar automatica
-            e.preventDefault();
-            // Salva l'evento per poterlo attivare dopo
-            deferredPrompt = e;
-            // Mostra il pulsante Installa
-            installBtn.style.display = 'flex';
-        });
+        // Controlla in modo assoluto se l'app è in esecuzione in modalità standalone/nativa (già installata)
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-        installBtn.addEventListener('click', async () => {
-            if (deferredPrompt !== null) {
-                // Mostra il prompt nativo
-                deferredPrompt.prompt();
-                // Attende la scelta dell'utente
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    // Nascondi il pulsante e svuota la variabile
-                    deferredPrompt = null;
-                    installBtn.style.display = 'none';
+        if (!isStandalone) {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                // Previene la mini-infobar automatica
+                e.preventDefault();
+                // Salva l'evento per poterlo attivare dopo
+                deferredPrompt = e;
+                // Mostra il pulsante Installa
+                installBtn.style.display = 'flex';
+            });
+
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt !== null) {
+                    // Mostra il prompt nativo
+                    deferredPrompt.prompt();
+                    // Attende la scelta dell'utente
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        // Nascondi il pulsante e svuota la variabile
+                        deferredPrompt = null;
+                        installBtn.style.display = 'none';
+                    }
                 }
-            }
-        });
+            });
 
-        window.addEventListener('appinstalled', () => {
+            window.addEventListener('appinstalled', () => {
+                installBtn.style.display = 'none';
+                deferredPrompt = null;
+            });
+        } else {
+            // È già installata o aperta come app nativa, forziamo il nascondimento
             installBtn.style.display = 'none';
-            deferredPrompt = null;
-        });
+        }
     </script>
 </body>
 </html>
