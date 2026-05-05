@@ -118,8 +118,29 @@
             --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
+        /* TEMA SCURO - Override Esplicito */
+        :root[data-theme="dark"] {
+            --primary: #4da3ff;
+            --primary-hover: #73b9ff;
+            --primary-glow: rgba(77, 163, 255, 0.25);
+            --bg-color: #0f1115;
+            --surface: #1a1d24;
+            --surface-hover: #232730;
+            --text-main: #e8eaed;
+            --text-muted: #9aa0a6;
+            --border-color: #2f333d;
+            --success: #34a853;
+            --danger: #ea4335;
+            --danger-light: rgba(234, 67, 53, 0.15);
+            --danger-border: rgba(234, 67, 53, 0.3);
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
+        }
+
+        /* TEMA SCURO - Default di Sistema (Se non c'è forzatura Light) */
         @media (prefers-color-scheme: dark) {
-            :root {
+            :root:not([data-theme="light"]) {
                 --primary: #4da3ff;
                 --primary-hover: #73b9ff;
                 --primary-glow: rgba(77, 163, 255, 0.25);
@@ -153,7 +174,7 @@
             display: flex; flex-direction: column; align-items: center; 
             min-height: 100vh;
             overflow-x: hidden;
-            transition: background-image 0.5s ease;
+            transition: background-image 0.5s ease, background-color 0.3s;
         }
 
         /* --- ANIMAZIONI --- */
@@ -184,7 +205,7 @@
         
         .app-grid .app-icon { 
             width: 62px; height: 62px; margin: 0 auto 10px auto; border-radius: 18px; 
-            color: white; font-size: 26px; display: flex; align-items: center; justify-content: center; 
+            color: white; font-size: 32px; display: flex; align-items: center; justify-content: center; 
             box-shadow: var(--shadow-md); transition: var(--transition); overflow: hidden; position: relative;
         }
         .app-grid .app-icon::after {
@@ -206,21 +227,26 @@
             animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
         .app-list .app-icon { 
-            width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 20px; 
+            width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 24px; 
             display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: var(--shadow-sm); overflow: hidden; 
         }
         .app-list .app-label { font-size: calc(var(--label-size) + 2px); color: #1a1a1a; font-weight: 700; margin: 0; text-shadow: none; flex: 1; }
 
+        /* TEMA SCURO TEXT SHADOWS E SFONDI */
+        :root[data-theme="dark"] .app-grid .app-label { text-shadow: 0px 1px 3px rgba(0,0,0,0.8); }
+        :root[data-theme="dark"] .app-list .app-btn { background: rgba(30, 30, 30, 0.85); border: 1px solid rgba(255,255,255,0.1); }
+        :root[data-theme="dark"] .app-list .app-label { color: #e8eaed; }
+        
         @media (prefers-color-scheme: dark) {
-            .app-grid .app-label { text-shadow: 0px 1px 3px rgba(0,0,0,0.8); }
-            .app-list .app-btn { background: rgba(30, 30, 30, 0.85); border: 1px solid rgba(255,255,255,0.1); }
-            .app-list .app-label { color: #e8eaed; }
+            :root:not([data-theme="light"]) .app-grid .app-label { text-shadow: 0px 1px 3px rgba(0,0,0,0.8); }
+            :root:not([data-theme="light"]) .app-list .app-btn { background: rgba(30, 30, 30, 0.85); border: 1px solid rgba(255,255,255,0.1); }
+            :root:not([data-theme="light"]) .app-list .app-label { color: #e8eaed; }
         }
 
         /* MODALITÀ ICONE TRASPARENTI */
         .transparent-icons .app-icon { background: transparent !important; box-shadow: none !important; color: var(--text-main) !important; }
         .transparent-icons .app-icon::after { display: none; }
-        .transparent-icons.app-grid .app-icon { font-size: 42px !important; }
+        .transparent-icons.app-grid .app-icon { font-size: 48px !important; }
         .transparent-icons.app-list .app-icon { font-size: 32px !important; }
 
         /* WIGGLE & EDIT MODE */
@@ -405,8 +431,15 @@
                     </div>
                 </div>
             </div>
+
+            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Tema dell'App:</label>
+            <select id="set-theme" class="input-field" style="cursor:pointer;">
+                <option value="system">Impostazioni di Sistema</option>
+                <option value="light">Chiaro</option>
+                <option value="dark">Scuro</option>
+            </select>
             
-            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Colori Sfondo Onda:</label>
+            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; margin-top: 15px; display:block;">Colori Sfondo Onda:</label>
             <div class="color-picker-row"><label>Colore 1 (Alto)</label><input type="color" id="set-col1"></div>
             <div class="color-picker-row"><label>Colore 2 (Centrale)</label><input type="color" id="set-col2"></div>
             <div class="color-picker-row"><label>Colore 3 (Basso)</label><input type="color" id="set-col3"></div>
@@ -450,7 +483,7 @@
             
             <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">ICONA O IMMAGINE</label>
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <input type="text" id="edit-app-icon" class="input-field" style="margin-bottom:0;" placeholder="es. fa-solid fa-star">
+                <input type="text" id="edit-app-icon" class="input-field" style="margin-bottom:0;" placeholder="Emoji (es. 🚀)">
                 <button class="btn-modal" style="margin:0; background:var(--surface-hover); color:var(--text-main); border:1px solid var(--border-color); width:auto; padding:0 20px; font-size:20px;" onclick="document.getElementById('edit-upload').click()"><i class="fa-regular fa-image"></i></button>
                 <input type="file" id="edit-upload" accept="image/*" style="display:none;" onchange="LayoutEngine.handleImageUpload(event, 'edit')">
             </div>
@@ -481,7 +514,7 @@
             
             <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">ICONA O IMMAGINE</label>
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <input type="text" id="new-app-icon" class="input-field" style="margin-bottom:0;" placeholder="es. fa-solid fa-globe">
+                <input type="text" id="new-app-icon" class="input-field" style="margin-bottom:0;" placeholder="Emoji (es. 🚀)">
                 <button class="btn-modal" style="margin:0; background:var(--surface-hover); color:var(--text-main); border:1px solid var(--border-color); width:auto; padding:0 20px; font-size:20px;" onclick="document.getElementById('new-upload').click()"><i class="fa-regular fa-image"></i></button>
                 <input type="file" id="new-upload" accept="image/*" style="display:none;" onchange="LayoutEngine.handleImageUpload(event, 'new')">
             </div>
@@ -663,38 +696,29 @@
             "rot_17tr": "Rotazione Linea 17 Tron.", "tc_rot_17tr": "T.C. Rotazione Linea 17 Tronc."
         };
 
-        const ICON_MAP = {
-            oggi: "fa-solid fa-bullseye", calendario: "fa-solid fa-calendar-days", statistiche: "fa-solid fa-chart-simple",
-            rotazioni: "fa-solid fa-users", turni: "fa-solid fa-rotate", bachecaturni: "fa-solid fa-handshake-angle",
-            rubrica: "fa-solid fa-address-book", ferie: "fa-solid fa-umbrella-beach", orari: "fa-regular fa-clock",
-            documenti: "fa-solid fa-file-lines", link: "fa-solid fa-link", contatti: "fa-solid fa-id-card",
-            buoni: "fa-solid fa-utensils", promemoria: "fa-solid fa-stopwatch", dds: "fa-solid fa-box-archive",
-            impostazioni: "fa-solid fa-gear", guida: "fa-solid fa-book", admin: "fa-solid fa-lock", accessi: "fa-solid fa-users-gear"
-        };
-
         const DEFAULT_APPS = [
-            { id: "oggi", label: "Oggi", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
-            { id: "calendario", label: "Calendario", href: "calendario.html", defaultColor: "#0066cc" },
-            { id: "statistiche", label: "Statistiche", href: "dati_calendario.html", defaultColor: "#6f42c1" },
-            { id: "rotazioni", label: "Rotazioni", href: "rotazioni.html", defaultColor: "#fd7e14" },
-            { id: "turni", label: "Turni", href: "turni.html", defaultColor: "#20c997" },
-            { id: "bachecaturni", label: "Bacheca\nTurni", href: "bacheca_turni.html", defaultColor: "#e83e8c" },
+            { id: "oggi", label: "Oggi", icon: "🎯", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
+            { id: "calendario", label: "Calendario", icon: "📅", href: "calendario.html", defaultColor: "#0066cc" },
+            { id: "statistiche", label: "Statistiche", icon: "📊", href: "dati_calendario.html", defaultColor: "#6f42c1" },
+            { id: "rotazioni", label: "Rotazioni", icon: "👥", href: "rotazioni.html", defaultColor: "#fd7e14" },
+            { id: "turni", label: "Turni", icon: "🔄", href: "turni.html", defaultColor: "#20c997" },
+            { id: "bachecaturni", label: "Bacheca\nTurni", icon: "📌", href: "bacheca_turni.html", defaultColor: "#e83e8c" },
             { id: "barcadvisor", label: "BarcAdvisor", image: "icone_app/iconba.png", href: "barcadvisor.html" },
-            { id: "rubrica", label: "Rubrica", href: "rubrica.html", defaultColor: "#343a40" },
-            { id: "ferie", label: "Rotazione\nFerie", href: "rotazione_ferie.html", defaultColor: "#ffc107" },
-            { id: "orari", label: "Orari\nNavigaz.", href: "orari.html", defaultColor: "#17a2b8" },
+            { id: "rubrica", label: "Rubrica", icon: "📞", href: "rubrica.html", defaultColor: "#343a40" },
+            { id: "ferie", label: "Rotazione\nFerie", icon: "🌴", href: "rotazione_ferie.html", defaultColor: "#ffc107" },
+            { id: "orari", label: "Orari\nNavigaz.", icon: "🕒", href: "orari.html", defaultColor: "#17a2b8" },
             { id: "chebateo", label: "CheBateo", image: "icone_app/iconcb.png", href: "https://m.chebateo.it/" },
-            { id: "documenti", label: "Documenti", href: "documenti.html", defaultColor: "#6c757d" },
-            { id: "link", label: "Link", href: "link.html", defaultColor: "#495057" },
-            { id: "contatti", label: "Contatti", href: "contatti.html", defaultColor: "#2c3e50" },
-            { id: "buoni", label: "Buoni\nPasto", href: "buoni.html", defaultColor: "#d63384" },
-            { id: "promemoria", label: "Promemoria", href: "promemoria.html", defaultColor: "#0dcaf0" },
-            { id: "dds", label: "Archivio\nDDS", href: "dds.html", defaultColor: "#5856d6" },
-            { id: "impostazioni", label: "Impostazioni", onclick: "window.apriModal('settingsModal')", defaultColor: "#8e8e93" },
+            { id: "documenti", label: "Documenti", icon: "📄", href: "documenti.html", defaultColor: "#6c757d" },
+            { id: "link", label: "Link", icon: "🔗", href: "link.html", defaultColor: "#495057" },
+            { id: "contatti", label: "Contatti", icon: "📇", href: "contatti.html", defaultColor: "#2c3e50" },
+            { id: "buoni", label: "Buoni\nPasto", icon: "🍝", href: "buoni.html", defaultColor: "#d63384" },
+            { id: "promemoria", label: "Promemoria", icon: "⏰", href: "promemoria.html", defaultColor: "#0dcaf0" },
+            { id: "dds", label: "Archivio\nDDS", icon: "📂", href: "dds.html", defaultColor: "#5856d6" },
+            { id: "impostazioni", label: "Impostazioni", icon: "⚙️", onclick: "window.apriModal('settingsModal')", defaultColor: "#8e8e93" },
             { id: "spriss", label: "Spriss", image: "icone_app/iconspriss.png", href: "https://spriss.avmspa.it/" },
-            { id: "guida", label: "Guida", href: "guida.html", defaultColor: "#34c759" },
-            { id: "admin", label: "Admin", href: "admin.html", condition: "admin", defaultColor: "#ff3b30" },
-            { id: "accessi", label: "Accessi", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#1c1c1e" }
+            { id: "guida", label: "Guida", icon: "📖", href: "guida.html", defaultColor: "#34c759" },
+            { id: "admin", label: "Admin", icon: "🔒", href: "admin.html", condition: "admin", defaultColor: "#ff3b30" },
+            { id: "accessi", label: "Accessi", icon: "🛠️", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#1c1c1e" }
         ];
 
         window.controllaRichiesteSospese = async () => {
@@ -841,7 +865,7 @@
         };
 
         window.LayoutEngine = {
-            prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#0066cc", view: "grid", iconStyle: "box", fontSize: 14, apps: [] },
+            prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#0066cc", view: "grid", iconStyle: "box", fontSize: 14, theme: "system", apps: [] },
             isEditMode: false,
             sortableInstance: null,
             init: function(firebasePrefsStr) {
@@ -854,6 +878,12 @@
                         this.mergeWithDefaults();
                     } catch(e) {}
                 } else { this.prefs.apps = JSON.parse(JSON.stringify(DEFAULT_APPS)); }
+                
+                // Track system theme changes if set to system
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                    if(this.prefs.theme === 'system') this.applicaGrafica();
+                });
+
                 this.applicaGrafica();
                 this.popolaModaleImpostazioni();
                 this.render();
@@ -884,8 +914,30 @@
                     }
                 });
             },
+            isDarkMode: function() {
+                if (this.prefs.theme === 'dark') return true;
+                if (this.prefs.theme === 'light') return false;
+                return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            },
             applicaGrafica: function() {
-                const c1 = encodeURIComponent(this.prefs.c1); const c2 = encodeURIComponent(this.prefs.c2); const c3 = encodeURIComponent(this.prefs.c3);
+                const themePref = this.prefs.theme || 'system';
+                if(themePref !== 'system') {
+                    document.documentElement.setAttribute('data-theme', themePref);
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
+
+                let isDark = this.isDarkMode();
+                
+                // Overlay colori dark mode (grigio scuro sopra/sotto, più chiaro centro)
+                let actualC1 = isDark ? "#1a1a1a" : this.prefs.c1;
+                let actualC2 = isDark ? "#2d2d2d" : this.prefs.c2;
+                let actualC3 = isDark ? "#1a1a1a" : this.prefs.c3;
+
+                const c1 = encodeURIComponent(actualC1); 
+                const c2 = encodeURIComponent(actualC2); 
+                const c3 = encodeURIComponent(actualC3);
+                
                 const svg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Crect width='100' height='100' fill='${c3}'/%3E%3Cpath d='M0,60 C35,90 65,30 100,60 L100,0 L0,0 Z' fill='${c2}'/%3E%3Cpath d='M0,45 C35,65 65,25 100,45 L100,0 L0,0 Z' fill='${c1}'/%3E%3C/svg%3E`;
                 document.body.style.backgroundImage = `url("${svg}")`;
                 document.documentElement.style.setProperty('--label-size', this.prefs.fontSize + 'px');
@@ -894,13 +946,14 @@
                 document.getElementById('app-container').className = baseClass;
             },
             popolaModaleImpostazioni: function() {
-                document.getElementById('set-col1').value = this.prefs.c1;
-                document.getElementById('set-col2').value = this.prefs.c2;
-                document.getElementById('set-col3').value = this.prefs.c3;
-                document.getElementById('set-appbg').value = this.prefs.appBg;
-                document.getElementById('set-viewmode').value = this.prefs.view;
-                document.getElementById('set-iconstyle').value = this.prefs.iconStyle || 'box';
+                document.getElementById('set-col1').value = this.prefs.c1 || "#a9dfcd";
+                document.getElementById('set-col2').value = this.prefs.c2 || "#ffffff";
+                document.getElementById('set-col3').value = this.prefs.c3 || "#a4c5e3";
+                document.getElementById('set-appbg').value = this.prefs.appBg || "#0066cc";
+                document.getElementById('set-viewmode').value = this.prefs.view || "grid";
+                document.getElementById('set-iconstyle').value = this.prefs.iconStyle || "box";
                 document.getElementById('set-labelsize').value = this.prefs.fontSize || 14;
+                document.getElementById('set-theme').value = this.prefs.theme || 'system';
             },
             render: function() {
                 const container = document.getElementById('app-container');
@@ -921,17 +974,10 @@
 
                     if (app.image) { 
                         iconStyle += ` background-image: url('${app.image}'); background-size: cover; background-position: center;`; 
-                    } else if (ICON_MAP[app.id]) {
-                        iconContent = `<i class="${ICON_MAP[app.id]}"></i>`;
+                    } else if (app.icon) {
+                        iconContent = app.icon;
                     } else {
-                        // Fallback icone personalizzate inserite dall'utente
-                        if (app.icon && app.icon.includes('fa-')) {
-                            iconContent = `<i class="${app.icon}"></i>`;
-                        } else if (app.icon) {
-                            iconContent = app.icon; // Se per caso aveva salvato un'emoji vecchia
-                        } else {
-                            iconContent = `<i class="fa-solid fa-link"></i>`;
-                        }
+                        iconContent = "🔗";
                     }
 
                     // Reset animation delay se non è in edit mode
@@ -995,10 +1041,7 @@
                 document.getElementById('edit-app-id').value = app.id;
                 document.getElementById('edit-app-label').value = app.label.replace('\n', ' ');
                 
-                // Popola l'icona
-                let iconVal = app.icon || ICON_MAP[app.id] || "";
-                document.getElementById('edit-app-icon').value = iconVal;
-                
+                document.getElementById('edit-app-icon').value = app.icon || "";
                 document.getElementById('edit-app-color').value = app.color || app.defaultColor || this.prefs.appBg || "#0066cc";
                 
                 if (app.image) { 
@@ -1023,7 +1066,7 @@
                         this.prefs.apps[index].icon = ""; 
                     } else { 
                         delete this.prefs.apps[index].image; 
-                        this.prefs.apps[index].icon = document.getElementById('edit-app-icon').value || "fa-solid fa-link"; 
+                        this.prefs.apps[index].icon = document.getElementById('edit-app-icon').value || "🔗"; 
                     }
                 } 
                 window.chiudiModal('editAppModal'); this.render(); this.sincronizzaConFirebase();
@@ -1034,7 +1077,7 @@
                 if(!url.startsWith('http')) url = 'https://' + url;
                 const imgData = document.getElementById('new-app-img-data').value;
                 const newApp = { id: "custom_" + Date.now(), label: label, href: url, color: this.prefs.appBg };
-                if (imgData) newApp.image = imgData; else newApp.icon = document.getElementById('new-app-icon').value || "fa-solid fa-link";
+                if (imgData) newApp.image = imgData; else newApp.icon = document.getElementById('new-app-icon').value || "🔗";
                 this.prefs.apps.push(newApp); window.chiudiModal('customAppModal'); 
                 document.getElementById('new-app-label').value = ""; document.getElementById('new-app-url').value = "";
                 document.getElementById('new-app-icon').value = ""; this.rimuoviImmagine('new');
@@ -1045,6 +1088,7 @@
                 this.prefs.c1 = document.getElementById('set-col1').value; this.prefs.c2 = document.getElementById('set-col2').value; this.prefs.c3 = document.getElementById('set-col3').value;
                 this.prefs.appBg = document.getElementById('set-appbg').value; this.prefs.view = document.getElementById('set-viewmode').value;
                 this.prefs.iconStyle = document.getElementById('set-iconstyle').value; this.prefs.fontSize = parseInt(document.getElementById('set-labelsize').value);
+                this.prefs.theme = document.getElementById('set-theme').value;
                 this.applicaGrafica(); this.render(); window.chiudiModal('settingsModal'); this.sincronizzaConFirebase();
             },
             sincronizzaConFirebase: async function() {
