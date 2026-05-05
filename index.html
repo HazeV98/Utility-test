@@ -182,8 +182,57 @@
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); opacity: 0.8; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        /* --- HEADER --- */
-        .header { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 30px; z-index: 100; }
+        /* --- FISSAGGIO HEADER E SFUMATURA --- */
+        #view-app {
+            position: fixed !important;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 440px;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            padding: 0;
+            z-index: 50;
+        }
+
+        #view-app .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 20px 10px 20px;
+            margin: 0;
+            box-sizing: border-box;
+            z-index: 100;
+            background: transparent;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .scroll-area {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 95px 20px 40px 20px; /* Spazio per l'header */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            
+            /* Maschera di sfumatura al top */
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0px, transparent 65px, black 120px, black 100%);
+            mask-image: linear-gradient(to bottom, transparent 0px, transparent 65px, black 120px, black 100%);
+            
+            /* Nascondere la scrollbar per un look pulito */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .scroll-area::-webkit-scrollbar { display: none; }
+
         .header-side { flex: 1; display: flex; align-items: center; gap: 10px; }
         .header-side.right { justify-content: flex-end; }
         h2 { margin: 0; font-size: 30px; font-weight: 800; display: flex; align-items: center; justify-content: center; letter-spacing: -0.5px; color: var(--primary); user-select: none; }
@@ -376,7 +425,7 @@
         </div>
     </div>
 
-    <div id="view-app" class="view-container" style="display: none; width: 100%;">
+    <div id="view-app" style="display: none;">
         <div class="header">
             <div class="header-side">
                 <button id="btnOpenLogin" class="btn-header-alt" style="display:none; color: var(--danger); border-color: var(--danger);" onclick="apriModal('authModal', 'login')"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
@@ -394,20 +443,22 @@
             </div>
         </div>
 
-        <div id="banner-nuovo-messaggio" class="banner-alert banner-yellow" style="display: none;" onclick="apriBachecaUtility()">
-            <i class="fa-solid fa-bell fa-shake"></i> Nuovo avviso in Bacheca Utility!
-        </div>
+        <div class="scroll-area">
+            <div id="banner-nuovo-messaggio" class="banner-alert banner-yellow" style="display: none;" onclick="apriBachecaUtility()">
+                <i class="fa-solid fa-bell fa-shake"></i> Nuovo avviso in Bacheca Utility!
+            </div>
 
-        <div id="banner-dds-alert" class="banner-alert banner-red" style="display: none;" onclick="apriBachecaUtility()">
-            <i class="fa-solid fa-triangle-exclamation"></i> Nuova DDS: <span id="titolo-dds-text"></span>
-        </div>
+            <div id="banner-dds-alert" class="banner-alert banner-red" style="display: none;" onclick="apriBachecaUtility()">
+                <i class="fa-solid fa-triangle-exclamation"></i> Nuova DDS: <span id="titolo-dds-text"></span>
+            </div>
 
-        <div id="banner-promemoria-alert" class="banner-alert banner-blue" style="display: none;" onclick="window.location.href='promemoria.html'">
-            <i class="fa-solid fa-stopwatch fa-beat"></i> Hai dei promemoria in sospeso!
-        </div>
+            <div id="banner-promemoria-alert" class="banner-alert banner-blue" style="display: none;" onclick="window.location.href='promemoria.html'">
+                <i class="fa-solid fa-stopwatch fa-beat"></i> Hai dei promemoria in sospeso!
+            </div>
 
-        <div id="app-container" class="app-grid"></div>
-        <button id="btn-salva-layout" class="btn-action" style="display: none; background: #ff9800; color: white; margin-top: 30px; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);" onclick="LayoutEngine.toggleEditMode()"><i class="fa-solid fa-check"></i> Fatto (Salva Layout)</button>
+            <div id="app-container" class="app-grid"></div>
+            <button id="btn-salva-layout" class="btn-action" style="display: none; background: #ff9800; color: white; margin-top: 30px; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4); width:100%; max-width:440px;" onclick="LayoutEngine.toggleEditMode()"><i class="fa-solid fa-check"></i> Fatto (Salva Layout)</button>
+        </div>
     </div> 
 
     <div id="settingsModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'settingsModal')">
@@ -1182,7 +1233,7 @@
         window.renderGestioneAccessi = () => {
             const container = document.getElementById('lista-utenti-accessi');
             const sortMode = document.getElementById('sort-utenti-app') ? document.getElementById('sort-utenti-app').value : 'recente';
-            const oggiStr = new DatetoISOString().split('T')[0];
+            const oggiStr = new Date().toISOString().split('T')[0];
             
             let dataCopy = [...window.utentiArrayCache];
 
@@ -1391,27 +1442,20 @@
         let deferredPrompt;
         const installBtn = document.getElementById('install-btn');
 
-        // Controlla in modo assoluto se l'app è in esecuzione in modalità standalone/nativa (già installata)
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
         if (!isStandalone) {
             window.addEventListener('beforeinstallprompt', (e) => {
-                // Previene la mini-infobar automatica
                 e.preventDefault();
-                // Salva l'evento per poterlo attivare dopo
                 deferredPrompt = e;
-                // Mostra il pulsante Installa
                 installBtn.style.display = 'flex';
             });
 
             installBtn.addEventListener('click', async () => {
                 if (deferredPrompt !== null) {
-                    // Mostra il prompt nativo
                     deferredPrompt.prompt();
-                    // Attende la scelta dell'utente
                     const { outcome } = await deferredPrompt.userChoice;
                     if (outcome === 'accepted') {
-                        // Nascondi il pulsante e svuota la variabile
                         deferredPrompt = null;
                         installBtn.style.display = 'none';
                     }
@@ -1423,7 +1467,6 @@
                 deferredPrompt = null;
             });
         } else {
-            // È già installata o aperta come app nativa, forziamo il nascondimento
             installBtn.style.display = 'none';
         }
     </script>
