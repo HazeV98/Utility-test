@@ -205,7 +205,7 @@
         
         .app-grid .app-icon { 
             width: 62px; height: 62px; margin: 0 auto 10px auto; border-radius: 18px; 
-            color: white; font-size: 32px; display: flex; align-items: center; justify-content: center; 
+            color: white; font-size: 28px; display: flex; align-items: center; justify-content: center; 
             box-shadow: var(--shadow-md); transition: var(--transition); overflow: hidden; position: relative;
         }
         .app-grid .app-icon::after {
@@ -215,7 +215,7 @@
         
         .app-grid .app-label { 
             font-size: var(--label-size); color: var(--text-main); font-weight: 600; text-align: center; 
-            line-height: 1.2; text-shadow: 0px 1px 3px rgba(255,255,255,0.8); word-wrap: break-word; width: 100%; 
+            line-height: 1.2; text-shadow: 0px 1px 3px rgba(255,255,255,0.8); width: 100%; word-wrap: break-word; 
         }
 
         /* LISTA */
@@ -227,7 +227,7 @@
             animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
         .app-list .app-icon { 
-            width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 24px; 
+            width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 20px; 
             display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: var(--shadow-sm); overflow: hidden; 
         }
         .app-list .app-label { font-size: calc(var(--label-size) + 2px); color: #1a1a1a; font-weight: 700; margin: 0; text-shadow: none; flex: 1; }
@@ -244,9 +244,9 @@
         }
 
         /* MODALITÀ ICONE TRASPARENTI */
-        .transparent-icons .app-icon { background: transparent !important; box-shadow: none !important; color: var(--text-main) !important; }
+        .transparent-icons .app-icon { background-color: transparent !important; box-shadow: none !important; color: var(--text-main) !important; }
         .transparent-icons .app-icon::after { display: none; }
-        .transparent-icons.app-grid .app-icon { font-size: 48px !important; }
+        .transparent-icons.app-grid .app-icon { font-size: 44px !important; }
         .transparent-icons.app-list .app-icon { font-size: 32px !important; }
 
         /* WIGGLE & EDIT MODE */
@@ -483,7 +483,7 @@
             
             <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">ICONA O IMMAGINE</label>
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <input type="text" id="edit-app-icon" class="input-field" style="margin-bottom:0;" placeholder="Emoji (es. 🚀)">
+                <input type="text" id="edit-app-icon" class="input-field" style="margin-bottom:0;" placeholder="es. fa-solid fa-star">
                 <button class="btn-modal" style="margin:0; background:var(--surface-hover); color:var(--text-main); border:1px solid var(--border-color); width:auto; padding:0 20px; font-size:20px;" onclick="document.getElementById('edit-upload').click()"><i class="fa-regular fa-image"></i></button>
                 <input type="file" id="edit-upload" accept="image/*" style="display:none;" onchange="LayoutEngine.handleImageUpload(event, 'edit')">
             </div>
@@ -514,7 +514,7 @@
             
             <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">ICONA O IMMAGINE</label>
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <input type="text" id="new-app-icon" class="input-field" style="margin-bottom:0;" placeholder="Emoji (es. 🚀)">
+                <input type="text" id="new-app-icon" class="input-field" style="margin-bottom:0;" placeholder="es. fa-solid fa-globe">
                 <button class="btn-modal" style="margin:0; background:var(--surface-hover); color:var(--text-main); border:1px solid var(--border-color); width:auto; padding:0 20px; font-size:20px;" onclick="document.getElementById('new-upload').click()"><i class="fa-regular fa-image"></i></button>
                 <input type="file" id="new-upload" accept="image/*" style="display:none;" onchange="LayoutEngine.handleImageUpload(event, 'new')">
             </div>
@@ -696,29 +696,38 @@
             "rot_17tr": "Rotazione Linea 17 Tron.", "tc_rot_17tr": "T.C. Rotazione Linea 17 Tronc."
         };
 
+        const ICON_MAP = {
+            oggi: "fa-solid fa-bullseye", calendario: "fa-solid fa-calendar-days", statistiche: "fa-solid fa-chart-simple",
+            rotazioni: "fa-solid fa-users", turni: "fa-solid fa-rotate", bachecaturni: "fa-solid fa-handshake-angle",
+            rubrica: "fa-solid fa-address-book", ferie: "fa-solid fa-umbrella-beach", orari: "fa-regular fa-clock",
+            documenti: "fa-solid fa-file-lines", link: "fa-solid fa-link", contatti: "fa-solid fa-id-card",
+            buoni: "fa-solid fa-utensils", promemoria: "fa-solid fa-stopwatch", dds: "fa-solid fa-box-archive",
+            impostazioni: "fa-solid fa-gear", guida: "fa-solid fa-book", admin: "fa-solid fa-lock", accessi: "fa-solid fa-users-gear"
+        };
+
         const DEFAULT_APPS = [
-            { id: "oggi", label: "Oggi", icon: "🎯", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
-            { id: "calendario", label: "Calendario", icon: "📅", href: "calendario.html", defaultColor: "#0066cc" },
-            { id: "statistiche", label: "Statistiche", icon: "📊", href: "dati_calendario.html", defaultColor: "#6f42c1" },
-            { id: "rotazioni", label: "Rotazioni", icon: "👥", href: "rotazioni.html", defaultColor: "#fd7e14" },
-            { id: "turni", label: "Turni", icon: "🔄", href: "turni.html", defaultColor: "#20c997" },
-            { id: "bachecaturni", label: "Bacheca\nTurni", icon: "📌", href: "bacheca_turni.html", defaultColor: "#e83e8c" },
+            { id: "oggi", label: "Oggi", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
+            { id: "calendario", label: "Calendario", href: "calendario.html", defaultColor: "#0066cc" },
+            { id: "statistiche", label: "Statistiche", href: "dati_calendario.html", defaultColor: "#6f42c1" },
+            { id: "rotazioni", label: "Rotazioni", href: "rotazioni.html", defaultColor: "#fd7e14" },
+            { id: "turni", label: "Turni", href: "turni.html", defaultColor: "#20c997" },
+            { id: "bachecaturni", label: "Bacheca\nTurni", href: "bacheca_turni.html", defaultColor: "#e83e8c" },
             { id: "barcadvisor", label: "BarcAdvisor", image: "icone_app/iconba.png", href: "barcadvisor.html" },
-            { id: "rubrica", label: "Rubrica", icon: "📞", href: "rubrica.html", defaultColor: "#343a40" },
-            { id: "ferie", label: "Rotazione\nFerie", icon: "🌴", href: "rotazione_ferie.html", defaultColor: "#ffc107" },
-            { id: "orari", label: "Orari\nNavigaz.", icon: "🕒", href: "orari.html", defaultColor: "#17a2b8" },
+            { id: "rubrica", label: "Rubrica", href: "rubrica.html", defaultColor: "#343a40" },
+            { id: "ferie", label: "Rotazione\nFerie", href: "rotazione_ferie.html", defaultColor: "#ffc107" },
+            { id: "orari", label: "Orari\nNavigaz.", href: "orari.html", defaultColor: "#17a2b8" },
             { id: "chebateo", label: "CheBateo", image: "icone_app/iconcb.png", href: "https://m.chebateo.it/" },
-            { id: "documenti", label: "Documenti", icon: "📄", href: "documenti.html", defaultColor: "#6c757d" },
-            { id: "link", label: "Link", icon: "🔗", href: "link.html", defaultColor: "#495057" },
-            { id: "contatti", label: "Contatti", icon: "📇", href: "contatti.html", defaultColor: "#2c3e50" },
-            { id: "buoni", label: "Buoni\nPasto", icon: "🍝", href: "buoni.html", defaultColor: "#d63384" },
-            { id: "promemoria", label: "Promemoria", icon: "⏰", href: "promemoria.html", defaultColor: "#0dcaf0" },
-            { id: "dds", label: "Archivio\nDDS", icon: "📂", href: "dds.html", defaultColor: "#5856d6" },
-            { id: "impostazioni", label: "Impostazioni", icon: "⚙️", onclick: "window.apriModal('settingsModal')", defaultColor: "#8e8e93" },
+            { id: "documenti", label: "Documenti", href: "documenti.html", defaultColor: "#6c757d" },
+            { id: "link", label: "Link", href: "link.html", defaultColor: "#495057" },
+            { id: "contatti", label: "Contatti", href: "contatti.html", defaultColor: "#2c3e50" },
+            { id: "buoni", label: "Buoni\nPasto", href: "buoni.html", defaultColor: "#d63384" },
+            { id: "promemoria", label: "Promemoria", href: "promemoria.html", defaultColor: "#0dcaf0" },
+            { id: "dds", label: "Archivio\nDDS", href: "dds.html", defaultColor: "#5856d6" },
+            { id: "impostazioni", label: "Impostazioni", onclick: "window.apriModal('settingsModal')", defaultColor: "#8e8e93" },
             { id: "spriss", label: "Spriss", image: "icone_app/iconspriss.png", href: "https://spriss.avmspa.it/" },
-            { id: "guida", label: "Guida", icon: "📖", href: "guida.html", defaultColor: "#34c759" },
-            { id: "admin", label: "Admin", icon: "🔒", href: "admin.html", condition: "admin", defaultColor: "#ff3b30" },
-            { id: "accessi", label: "Accessi", icon: "🛠️", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#1c1c1e" }
+            { id: "guida", label: "Guida", href: "guida.html", defaultColor: "#34c759" },
+            { id: "admin", label: "Admin", href: "admin.html", condition: "admin", defaultColor: "#ff3b30" },
+            { id: "accessi", label: "Accessi", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#1c1c1e" }
         ];
 
         window.controllaRichiesteSospese = async () => {
@@ -972,15 +981,34 @@
                     let iconStyle = `background-color: ${finalColor};`;
                     let iconContent = "";
 
-                    if (app.image) { 
-                        iconStyle += ` background-image: url('${app.image}'); background-size: cover; background-position: center;`; 
-                    } else if (app.icon) {
-                        iconContent = app.icon;
-                    } else {
-                        iconContent = "🔗";
+                    // Controllo intelligente: se è un percorso file (.png, .svg, ecc) o contiene "icone_app", lo tratta come immagine
+                    let isImagePath = false;
+                    let imagePath = "";
+
+                    if (app.image) {
+                        isImagePath = true;
+                        imagePath = app.image;
+                    } else if (app.icon && (app.icon.includes('.png') || app.icon.includes('.jpg') || app.icon.includes('.svg') || app.icon.includes('icone_app/'))) {
+                        isImagePath = true;
+                        imagePath = app.icon;
                     }
 
-                    // Reset animation delay se non è in edit mode
+                    if (isImagePath) { 
+                        iconStyle += ` background-image: url('${imagePath}'); background-size: cover; background-position: center; background-repeat: no-repeat;`; 
+                        iconContent = ""; // Se c'è un'immagine, svuota il contenuto testuale
+                    } else if (app.icon) {
+                        if (app.icon.includes('fa-')) {
+                            iconContent = `<i class="${app.icon}"></i>`;
+                        } else {
+                            iconContent = app.icon; // Può essere un'emoji
+                        }
+                    } else if (ICON_MAP[app.id]) {
+                        iconContent = `<i class="${ICON_MAP[app.id]}"></i>`;
+                    } else {
+                        iconContent = "🔗"; // Fallback generico
+                    }
+
+                    // Disattiva il ritardo animazione in edit mode
                     let animDelay = this.isEditMode ? "0s" : `${index * 0.04}s`;
                     
                     container.innerHTML += `
@@ -992,7 +1020,7 @@
                 });
 
                 setTimeout(() => {
-                    window.controllaRichiesteSospese();
+                    if(window.controllaRichiesteSospese) window.controllaRichiesteSospese();
                     if(window.controllaPromemoria) window.controllaPromemoria();
                 }, 200);
             },
