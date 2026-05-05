@@ -138,7 +138,7 @@
             --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
         }
 
-        /* TEMA SCURO - Default di Sistema (Se non c'è forzatura Light) */
+        /* TEMA SCURO - Default di Sistema */
         @media (prefers-color-scheme: dark) {
             :root:not([data-theme="light"]) {
                 --primary: #4da3ff;
@@ -197,10 +197,27 @@
         .btn-header-alt:active { transform: scale(0.95); }
         .btn-header-alt:hover { border-color: var(--primary); color: var(--primary); }
 
-        /* DASHBOARD GRID */
+        /* DASHBOARD GRID - MODIFICATA PER CENTRATURA DINAMICA */
         #app-container { width: 100%; max-width: 440px; }
-        .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px 15px; padding: 10px 5px; }
-        .app-grid .app-btn { display: flex; flex-direction: column; align-items: center; text-decoration: none; cursor: pointer; position: relative; animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .app-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 28px 0; /* Gap verticale fisso, gap orizzontale automatico */
+            justify-items: center; /* Centra perfettamente ogni blocco nella sua colonna */
+            padding: 10px 0; 
+            width: 100%;
+        }
+        .app-grid .app-btn { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: flex-start;
+            text-decoration: none; 
+            cursor: pointer; 
+            position: relative; 
+            width: 100%; /* Prende tutta la larghezza della frazione per rendere l'area cliccabile uniforme */
+            animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; 
+        }
         .app-grid .app-btn:active { transform: scale(0.92); transition: transform 0.1s; }
         
         .app-grid .app-icon { 
@@ -219,18 +236,19 @@
         }
 
         /* LISTA */
-        .app-list { display: flex; flex-direction: column; gap: 12px; padding: 10px; }
+        .app-list { display: flex; flex-direction: column; gap: 12px; padding: 10px; width: 100%; }
         .app-list .app-btn { 
             display: flex; align-items: center; background: rgba(255,255,255,0.85); padding: 14px 20px; 
             border-radius: var(--radius-md); box-shadow: var(--shadow-sm); text-decoration: none; position: relative; 
             backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.4); 
             animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+            width: 100%;
         }
         .app-list .app-icon { 
             width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 20px; 
             display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: var(--shadow-sm); overflow: hidden; 
         }
-        .app-list .app-label { font-size: calc(var(--label-size) + 2px); color: #1a1a1a; font-weight: 700; margin: 0; text-shadow: none; flex: 1; }
+        .app-list .app-label { font-size: calc(var(--label-size) + 2px); color: #1a1a1a; font-weight: 700; margin: 0; text-shadow: none; flex: 1; text-align: left; }
 
         /* TEMA SCURO TEXT SHADOWS E SFONDI */
         :root[data-theme="dark"] .app-grid .app-label { text-shadow: 0px 1px 3px rgba(0,0,0,0.8); }
@@ -253,7 +271,8 @@
         @keyframes wiggle { 0% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } 100% { transform: rotate(-2deg); } }
         .wiggle-mode .app-btn { animation: wiggle 0.3s infinite; cursor: grab; }
         .sortable-ghost { opacity: 0.3; transform: scale(0.9); }
-        .edit-badge { position: absolute; top: -8px; right: 0px; background: var(--surface); color: var(--text-main); border-radius: 50%; width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; box-shadow: var(--shadow-md); font-size: 14px; z-index: 10; border: 1px solid var(--border-color); pointer-events: none; }
+        .edit-badge { position: absolute; top: -8px; right: 10px; background: var(--surface); color: var(--text-main); border-radius: 50%; width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; box-shadow: var(--shadow-md); font-size: 14px; z-index: 10; border: 1px solid var(--border-color); pointer-events: none; }
+        .app-list .edit-badge { right: auto; left: 0; top: -10px; }
 
         /* SIDEBAR */
         .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 5999; animation: fadeIn 0.3s ease; }
