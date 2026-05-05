@@ -2,130 +2,250 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Utility - Statistiche Calendario</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+    <script src="global.js"></script>
+
+    <script>
+        // --- GESTIONE TEMA DA PREFERENZE ---
+        (function applicaTema() {
+            try {
+                let prefStr = localStorage.getItem('preferenze_layout_haze');
+                if (prefStr) {
+                    let prefs = JSON.parse(prefStr);
+                    let theme = prefs.theme || 'system';
+                    if (theme !== 'system') {
+                        document.documentElement.setAttribute('data-theme', theme);
+                    } else {
+                        document.documentElement.removeAttribute('data-theme');
+                    }
+                }
+            } catch(e) {}
+        })();
+    </script>
 
     <style>
-        /* --- STILI GLOBALI UNIFICATI --- */
-        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; }
-        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        
-        /* HEADER */
-        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
-        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
-        
-        /* MENU LATERALE */
-        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        /* --- STILI GLOBALI UNIFICATI CON DARK MODE "PRO" --- */
+        :root { 
+            --primary: #0066cc; 
+            --primary-hover: #0052a3;
+            --primary-glow: rgba(0, 102, 204, 0.2);
+            --bg-color: #f0f2f5; 
+            --surface: #ffffff;
+            --surface-hover: #f8f9fa;
+            --text-main: #1a1a1a; 
+            --text-muted: #5f6368;
+            --border-color: #e0e0e0;
+            --success: #0f9d58; 
+            --danger: #d93025;
+            --danger-light: #fce8e6;
+            --danger-border: #fad2cf;
+            --warning: #f57c00;
+            --info: #17a2b8;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --transition-speed: 0.3s;
+        }
+
+        /* TEMA SCURO - Override Esplicito */
+        :root[data-theme="dark"] {
+            --primary: #4da3ff;
+            --primary-hover: #73b9ff;
+            --primary-glow: rgba(77, 163, 255, 0.25);
+            --bg-color: #0f1115;
+            --surface: #1a1d24;
+            --surface-hover: #232730;
+            --text-main: #e8eaed;
+            --text-muted: #9aa0a6;
+            --border-color: #2f333d;
+            --success: #34a853;
+            --danger: #ea4335;
+            --danger-light: rgba(234, 67, 53, 0.15);
+            --danger-border: rgba(234, 67, 53, 0.3);
+            --warning: #ffb74d;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
+        }
+
+        /* TEMA SCURO - Default di Sistema */
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --primary: #4da3ff; --primary-hover: #73b9ff; --primary-glow: rgba(77, 163, 255, 0.25); --bg-color: #0f1115; --surface: #1a1d24; --surface-hover: #232730; --text-main: #e8eaed; --text-muted: #9aa0a6; --border-color: #2f333d; --success: #34a853; --danger: #ea4335; --danger-light: rgba(234, 67, 53, 0.15); --danger-border: rgba(234, 67, 53, 0.3); --warning: #ffb74d; --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3); --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4); --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
+            }
+        }
+
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ANIMAZIONI BASE */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-pop { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        /* HEADER UNIFICATO */
+        .header { width: 100%; max-width: 420px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+        .hamburger-btn { background: none; border: none; font-size: 26px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; transition: transform 0.2s; display: flex; align-items: center;}
+        .hamburger-btn:active { transform: scale(0.9); }
+        h2 { margin: 0; color: var(--text-main); font-size: 24px; font-weight: 700; text-align: center; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px;}
+        h2 i { color: var(--primary); }
+
+        /* MENU LATERALE UNIFICATO */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 5999; animation: fadeIn 0.3s ease; }
+        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-lg); z-index: 6000; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; overflow-y: auto;}
         .sidebar.open { left: 0; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
-        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; }
-        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 28px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; }
+        .sidebar-header h3 { margin:0; font-weight: 700; display: flex; align-items: center; gap: 10px;}
+        .sidebar-link { padding: 16px 24px; text-decoration: none; color: var(--text-main); font-size: 15px; font-weight: 500; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; transition: all 0.2s; }
+        .sidebar-link i { width: 28px; text-align: left; font-size: 18px; color: var(--text-muted); transition: color 0.2s;}
+        .sidebar-link:active, .sidebar-link:hover { background-color: var(--surface-hover); color: var(--primary); padding-left: 28px; }
+        .sidebar-link:active i, .sidebar-link:hover i { color: var(--primary); }
+        .sidebar-link.active-link { background-color: var(--primary-glow); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary); padding-left: 20px;}
+        .sidebar-link.active-link i { color: var(--primary); }
 
         /* AREA CONTENUTI SPECIFICA */
-        .content-area { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+        .content-area { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 16px; }
         
-        .input-group { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 10px; }
-        .input-group label { font-size: 14px; font-weight: bold; color: #555; }
-        .input-group input[type="date"] { padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 16px; font-family: inherit; }
-        .input-help { font-size: 12px; color: #888; margin-top: -5px; }
+        .card-panel { background: var(--surface); padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 16px; }
+        .editor-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-align: left; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;}
+        .input-field { width: 100%; padding: 16px; margin-bottom: 8px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 15px; font-family: inherit; background-color: var(--surface); color: var(--text-main); transition: all 0.2s; }
+        .input-field:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-glow); }
+        .input-help { font-size: 13px; color: var(--text-muted); margin-top: -4px; margin-bottom: 16px;}
         
-        .btn-calc { background-color: var(--primary); color: white; border: none; padding: 16px; font-size: 18px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s; }
-        .btn-calc:active { transform: translateY(2px); }
+        .btn-action { background-color: var(--primary); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; width: 100%; transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 12px var(--primary-glow); }
+        .btn-action:hover { background-color: var(--primary-hover); transform: translateY(-2px); }
+        .btn-action:active { transform: translateY(1px); box-shadow: none; }
 
         /* RISULTATI */
-        .results-container { display: none; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 10px; }
-        .results-title { color: var(--primary); font-size: 18px; margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .results-container { display: none; background: var(--surface); padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--border-color); margin-top: 10px; }
+        .results-title { color: var(--text-main); font-size: 18px; font-weight: 700; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; display:flex; align-items:center; gap:8px; }
         
-        .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f4f7f6; }
-        .stat-row:last-child { border-bottom: none; }
-        .stat-label { font-size: 16px; color: #555; display: flex; align-items: center; gap: 8px; }
-        .stat-value { font-size: 18px; font-weight: bold; color: var(--primary); }
-        .stat-value.highlight { color: #f5365c; }
-        .stat-value.parental { color: #8965e0; }
-        .stat-value.nebbia { color: #5e72e4; }
+        .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border-color); }
+        .stat-row:last-child { border-bottom: none; padding-bottom: 0;}
+        .stat-label { font-size: 14px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .stat-label i { width: 20px; text-align: center; font-size: 16px; }
+        .stat-value { font-size: 16px; font-weight: 700; color: var(--text-main); background: var(--surface-hover); padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border-color); min-width: 30px; text-align: center;}
+        
+        /* Colori per le etichette per identificarle meglio */
+        .color-ferie { color: var(--success); }
+        .color-parentale { color: var(--info); }
+        .color-sospeso { color: var(--danger); }
+        .color-nebbia { color: var(--primary); }
+        .color-malattia { color: var(--warning); }
+        .color-sangue { color: var(--danger); }
+        .color-straord { color: var(--primary); }
+        .color-sp { color: var(--text-muted); }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
-        <h2>Statistiche</h2>
+        <button class="hamburger-btn" onclick="apriMenuLaterale()"><i class="fa-solid fa-bars"></i></button>
+        <h2><i class="fa-solid fa-chart-simple"></i> Statistiche</h2>
         <div style="width: 50px;"></div>
     </div>
 
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
-            <h3 style="margin:0; color:white;">Menu</h3>
-            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+            <h3><i class="fa-solid fa-layer-group"></i> Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
-        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
-        <a href="dati_calendario.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">📊 Statistiche Calendario</a>
-        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
-        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
-        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
-        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
-        <a href="orari.html" class="sidebar-link">🕒 Orari</a>
-        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
-        <a href="link.html" class="sidebar-link">🔗 Link</a>
-        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
-        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
-        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
-        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+        
+        <a href="index.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Home Page</a>
+        <a href="calendario.html?oggi=true" class="sidebar-link"><i class="fa-solid fa-bullseye"></i> Oggi</a>
+        <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link active-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
+        <a href="rotazioni.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
+        <a href="turni.html" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
+        <a href="barcadvisor.html" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
+        <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link"><i class="fa-solid fa-umbrella-beach"></i> Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link"><i class="fa-regular fa-clock"></i> Orari Navigazione</a>
+        <a href="https://m.chebateo.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-water"></i> CheBateo</a>
+        <a href="documenti.html" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Documenti</a>
+        <a href="link.html" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
+        <a href="contatti.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i> Contatti</a>
+        <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
+        <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
+        <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
+        <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
+        <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
+        
+        <a href="admin.html" class="sidebar-link" id="menu-admin" style="display:none; color: var(--danger); font-weight: bold;"><i class="fa-solid fa-lock" style="color: var(--danger);"></i> Admin</a>
     </div>
 
-    <div class="content-area">
-        <div class="input-group">
-            <label>Da (Inizio):</label>
-            <input type="date" id="dateStart">
+    <div class="content-area animate-pop">
+        <div class="card-panel">
+            <div>
+                <label class="editor-label">Da (Inizio):</label>
+                <input type="date" id="dateStart" class="input-field">
+            </div>
             
-            <label>A (Fine):</label>
-            <input type="date" id="dateEnd">
+            <div>
+                <label class="editor-label">A (Fine):</label>
+                <input type="date" id="dateEnd" class="input-field" style="margin-bottom: 8px;">
+                <div class="input-help">Lascia vuoti i campi per calcolare i dati totali registrati.</div>
+            </div>
             
-            <div class="input-help">Lascia vuoti i campi per calcolare i dati totali registrati.</div>
+            <button class="btn-action" onclick="calcolaStatistiche(false)"><i class="fa-solid fa-calculator"></i> Calcola Statistiche</button>
         </div>
 
-        <button class="btn-calc" onclick="calcolaStatistiche(false)">Calcola Statistiche</button>
-
-        <div id="results" class="results-container">
-            <h3 class="results-title" id="titoloRisultati">Risultati Totali Registrati</h3>
+        <div id="results" class="results-container animate-pop">
+            <h3 class="results-title" id="titoloRisultati"><i class="fa-solid fa-square-poll-vertical" style="color:var(--primary);"></i> Risultati Totali Registrati</h3>
             
             <div class="stat-row">
-                <div class="stat-label">🏖️ Ferie (FER)</div>
+                <div class="stat-label"><i class="fa-solid fa-umbrella-beach color-ferie"></i> Ferie (FER)</div>
                 <div class="stat-value" id="resFerie">0</div>
             </div>
             <div class="stat-row">
-                <div class="stat-label">🍼 Congedi Parentali (KNOP)</div>
-                <div class="stat-value parental" id="resParentali">0</div>
+                <div class="stat-label"><i class="fa-solid fa-baby-carriage color-parentale"></i> Congedi Parentali (KNOP)</div>
+                <div class="stat-value" id="resParentali">0</div>
             </div>
             <div class="stat-row">
-                <div class="stat-label">🔴 Sospesi Riposo</div>
-                <div class="stat-value highlight" id="resSospesi">0</div>
+                <div class="stat-label"><i class="fa-solid fa-circle-exclamation color-sospeso"></i> Sospesi Riposo</div>
+                <div class="stat-value" id="resSospesi">0</div>
             </div>
             <div class="stat-row">
-                <div class="stat-label">🌫️ Indennità Nebbia</div>
-                <div class="stat-value nebbia" id="resNebbia">0</div>
+                <div class="stat-label"><i class="fa-solid fa-smog color-nebbia"></i> Indennità Nebbia</div>
+                <div class="stat-value" id="resNebbia">0</div>
             </div>
             <div class="stat-row">
-                <div class="stat-label">⚕️ Malattia (KMAL)</div>
+                <div class="stat-label"><i class="fa-solid fa-house-medical color-malattia"></i> Malattia (KMAL)</div>
                 <div class="stat-value" id="resMalattia">0</div>
             </div>
             <div class="stat-row">
-                <div class="stat-label">🩸 Donazione Sangue</div>
+                <div class="stat-label"><i class="fa-solid fa-droplet color-sangue"></i> Donazione Sangue</div>
                 <div class="stat-value" id="resSangue">0</div>
             </div>
             <div class="stat-row">
-                <div class="stat-label">⏱️ Ore Straordinario</div>
+                <div class="stat-label"><i class="fa-solid fa-stopwatch color-straord"></i> Ore Straordinario</div>
                 <div class="stat-value" id="resStraord">0h 0m</div>
             </div>
             <div class="stat-row">
-                <div class="stat-label">💸 Permesso Senza Paga</div>
-                <div class="stat-value highlight" id="resPermessoSP">0h 0m</div>
+                <div class="stat-label"><i class="fa-solid fa-money-bill-transfer color-sp"></i> Permesso Senza Paga</div>
+                <div class="stat-value" id="resPermessoSP">0h 0m</div>
             </div>
         </div>
     </div>
@@ -178,10 +298,9 @@
                 
                 if (dateArray.length === 0 && !isAutoLoad) {
                     alert("Nessun dato registrato nel calendario.");
-                    // Non fermiamo lo script, così mostra semplicemente gli zeri
                 }
                 
-                document.getElementById('titoloRisultati').innerText = "Risultati Totali Registrati";
+                document.getElementById('titoloRisultati').innerHTML = '<i class="fa-solid fa-square-poll-vertical" style="color:var(--primary);"></i> Risultati Totali Registrati';
             } else {
                 // Altrimenti, calcola le statistiche giorno per giorno nel periodo selezionato
                 let currentDate = new Date(startStr);
@@ -195,7 +314,7 @@
                     currentDate.setDate(currentDate.getDate() + 1);
                 }
                 
-                document.getElementById('titoloRisultati').innerText = "Risultati del periodo";
+                document.getElementById('titoloRisultati').innerHTML = '<i class="fa-solid fa-calendar-day" style="color:var(--primary);"></i> Risultati del periodo';
             }
 
             // Calcolo effettivo sulle date selezionate o totali
@@ -278,6 +397,13 @@
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
+                // Sblocco voce Admin nel menu laterale
+                const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2";
+                if(user.uid === ADMIN_UID) {
+                    const adminMenu = document.getElementById('menu-admin');
+                    if(adminMenu) adminMenu.style.display = 'block';
+                }
+
                 try {
                     const docRef = doc(db, "utenti", user.uid);
                     const docSnap = await getDoc(docRef);
@@ -300,4 +426,3 @@
     </script>
 </body>
 </html>
- 
