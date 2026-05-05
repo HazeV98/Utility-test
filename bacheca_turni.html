@@ -4,53 +4,192 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Utility - Bacheca Cambi</title>
-    <meta name="theme-color" content="#0056b3">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
+    <script src="global.js"></script>
+
+    <script>
+        // --- GESTIONE TEMA DA PREFERENZE ---
+        (function applicaTema() {
+            try {
+                let prefStr = localStorage.getItem('preferenze_layout_haze');
+                if (prefStr) {
+                    let prefs = JSON.parse(prefStr);
+                    let theme = prefs.theme || 'system';
+                    if (theme !== 'system') {
+                        document.documentElement.setAttribute('data-theme', theme);
+                    } else {
+                        document.documentElement.removeAttribute('data-theme');
+                    }
+                }
+            } catch(e) {}
+        })();
+    </script>
 
     <style>
-        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #dc3545; --warning: #ffc107; --info: #17a2b8;}
-        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
-        
+        /* --- STILI GLOBALI UNIFICATI CON DARK MODE "PRO" --- */
+        :root { 
+            --primary: #0066cc; 
+            --primary-hover: #0052a3;
+            --primary-glow: rgba(0, 102, 204, 0.2);
+            --bg-color: #f0f2f5; 
+            --surface: #ffffff;
+            --surface-hover: #f8f9fa;
+            --text-main: #1a1a1a; 
+            --text-muted: #5f6368;
+            --border-color: #e0e0e0;
+            --success: #0f9d58; 
+            --danger: #d93025;
+            --danger-light: #fce8e6;
+            --danger-border: #fad2cf;
+            --warning: #f57c00;
+            --info: #17a2b8;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --transition-speed: 0.3s;
+
+            /* Colori specifici per i turni */
+            --badge-primo-bg: #e6f2ff; --badge-primo-text: #004085; --badge-primo-border: #b8daff;
+            --badge-mezzo-bg: #d4edda; --badge-mezzo-text: #155724; --badge-mezzo-border: #c3e6cb;
+            --badge-terzo-bg: #f8d7da; --badge-terzo-text: #721c24; --badge-terzo-border: #f5c6cb;
+            --badge-riposo-bg: #e2e3e5; --badge-riposo-text: #383d41; --badge-riposo-border: #d6d8db;
+        }
+
+        /* TEMA SCURO - Override Esplicito */
+        :root[data-theme="dark"] {
+            --primary: #4da3ff;
+            --primary-hover: #73b9ff;
+            --primary-glow: rgba(77, 163, 255, 0.25);
+            --bg-color: #0f1115;
+            --surface: #1a1d24;
+            --surface-hover: #232730;
+            --text-main: #e8eaed;
+            --text-muted: #9aa0a6;
+            --border-color: #2f333d;
+            --success: #34a853;
+            --danger: #ea4335;
+            --danger-light: rgba(234, 67, 53, 0.15);
+            --danger-border: rgba(234, 67, 53, 0.3);
+            --warning: #ffb74d;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
+
+            /* Colori specifici per i turni scuri */
+            --badge-primo-bg: rgba(77, 163, 255, 0.15); --badge-primo-text: #73b9ff; --badge-primo-border: rgba(77, 163, 255, 0.3);
+            --badge-mezzo-bg: rgba(52, 168, 83, 0.15); --badge-mezzo-text: #81c995; --badge-mezzo-border: rgba(52, 168, 83, 0.3);
+            --badge-terzo-bg: rgba(234, 67, 53, 0.15); --badge-terzo-text: #f28b82; --badge-terzo-border: rgba(234, 67, 53, 0.3);
+            --badge-riposo-bg: rgba(154, 160, 166, 0.15); --badge-riposo-text: #bdc1c6; --badge-riposo-border: rgba(154, 160, 166, 0.3);
+        }
+
+        /* TEMA SCURO - Default di Sistema */
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --primary: #4da3ff; --primary-hover: #73b9ff; --primary-glow: rgba(77, 163, 255, 0.25); --bg-color: #0f1115; --surface: #1a1d24; --surface-hover: #232730; --text-main: #e8eaed; --text-muted: #9aa0a6; --border-color: #2f333d; --success: #34a853; --danger: #ea4335; --danger-light: rgba(234, 67, 53, 0.15); --danger-border: rgba(234, 67, 53, 0.3); --warning: #ffb74d; --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3); --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4); --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
+                --badge-primo-bg: rgba(77, 163, 255, 0.15); --badge-primo-text: #73b9ff; --badge-primo-border: rgba(77, 163, 255, 0.3); --badge-mezzo-bg: rgba(52, 168, 83, 0.15); --badge-mezzo-text: #81c995; --badge-mezzo-border: rgba(52, 168, 83, 0.3); --badge-terzo-bg: rgba(234, 67, 53, 0.15); --badge-terzo-text: #f28b82; --badge-terzo-border: rgba(234, 67, 53, 0.3); --badge-riposo-bg: rgba(154, 160, 166, 0.15); --badge-riposo-text: #bdc1c6; --badge-riposo-border: rgba(154, 160, 166, 0.3);
+            }
+        }
+
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ANIMAZIONI BASE */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-pop { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        /* HEADER */
+        .header { width: 100%; max-width: 420px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+        .hamburger-btn { background: none; border: none; font-size: 26px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; transition: transform 0.2s; display: flex; align-items: center;}
+        .hamburger-btn:active { transform: scale(0.9); }
+        h2 { margin: 0; color: var(--text-main); font-size: 24px; font-weight: 700; text-align: center; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px;}
+        h2 i { color: var(--primary); }
+
         /* MENU LATERALE UNIFICATO */
-        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
-        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 5999; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 6000; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 5999; animation: fadeIn 0.3s ease; }
+        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-lg); z-index: 6000; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; overflow-y: auto;}
         .sidebar.open { left: 0; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
-        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; text-transform: none; }
-        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 28px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; }
+        .sidebar-header h3 { margin:0; font-weight: 700; display: flex; align-items: center; gap: 10px;}
+        .sidebar-link { padding: 16px 24px; text-decoration: none; color: var(--text-main); font-size: 15px; font-weight: 500; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; transition: all 0.2s; }
+        .sidebar-link i { width: 28px; text-align: left; font-size: 18px; color: var(--text-muted); transition: color 0.2s;}
+        .sidebar-link:active, .sidebar-link:hover { background-color: var(--surface-hover); color: var(--primary); padding-left: 28px; }
+        .sidebar-link:active i, .sidebar-link:hover i { color: var(--primary); }
+        .sidebar-link.active-link { background-color: var(--primary-glow); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary); padding-left: 20px;}
+        .sidebar-link.active-link i { color: var(--primary); }
 
-        .view-container { width: 100%; max-width: 400px; display: none; flex-direction: column; gap: 15px; text-align: center; }
+        .view-container { width: 100%; max-width: 420px; display: none; flex-direction: column; gap: 16px; }
         
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; margin-bottom: 15px; position: relative; }
-        .card-suggested { background: #fffff8; border: 2px solid var(--warning); padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; margin-bottom: 15px; position: relative;}
-        .card-suggested::before { content: "✨ MATCH"; position: absolute; top: -10px; right: 15px; background: var(--warning); color: #fff; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 10px; }
+        .card-panel { background: var(--surface); padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--border-color); text-align: left; }
+        
+        /* CARDS ANNUNCI */
+        .card { background: var(--surface); padding: 20px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); text-align: left; position: relative; transition: transform 0.2s; animation: fadeInUp 0.4s ease forwards;}
+        .card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-md);}
+        
+        .card-suggested { background: var(--surface-hover); border: 2px solid var(--warning); padding: 20px; border-radius: var(--radius-md); box-shadow: var(--shadow-md); text-align: left; position: relative; animation: fadeInUp 0.4s ease forwards;}
+        .card-suggested::before { content: "✨ MATCH IDEALE"; position: absolute; top: -12px; right: 20px; background: var(--warning); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; box-shadow: 0 2px 8px rgba(245, 124, 0, 0.4); letter-spacing: 0.5px;}
 
-        .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; transition: opacity 0.2s; margin-top: 10px; }
-        .btn-action:active { opacity: 0.8; }
+        /* PULSANTI */
+        .btn-action { background-color: var(--primary); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; width: 100%; transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 12px var(--primary-glow); }
+        .btn-action:hover { background-color: var(--primary-hover); transform: translateY(-2px); }
+        .btn-action:active { transform: translateY(1px); box-shadow: none; }
         
-        .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white; text-transform: uppercase;}
-        .input-field::placeholder { text-transform: none; }
-        .suggested-header { font-size: 14px; font-weight: bold; color: #856404; text-align: left; margin-bottom: 10px; margin-top: 5px; text-transform: none;}
+        .input-field { width: 100%; padding: 16px; margin-bottom: 12px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 15px; font-family: inherit; background-color: var(--surface); color: var(--text-main); transition: all 0.2s; text-transform: uppercase;}
+        .input-field:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-glow); }
+        .input-field::placeholder { color: var(--text-muted); text-transform: none; opacity: 0.7; }
         
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
-        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; max-height: 90vh; overflow-y: auto;}
-        
-        .tabs { display: flex; background: #e9ecef; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 12px; text-align: center; font-weight: bold; color: #666; cursor: pointer; background: transparent; border: none; transition: 0.2s; }
-        .tab-btn.active { background: var(--primary); color: white; }
+        select.input-field { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 16px center; background-size: 16px; padding-right: 40px;}
 
-        .badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 4px; }
-        .badge-primo { background: #cce5ff; color: #004085; }
-        .badge-mezzo { background: #d4edda; color: #155724; }
-        .badge-terzo { background: #f8d7da; color: #721c24; }
-        .badge-riposo { background: #e2e3e5; color: #383d41; }
+        .suggested-header { font-size: 15px; font-weight: 600; color: var(--warning); text-align: left; margin-bottom: 16px; margin-top: 10px; display:flex; align-items:center; gap:8px;}
+        
+        /* MODALI */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(8px); animation: fadeIn 0.3s ease; }
+        .modal-content { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 380px; text-align: left; box-shadow: var(--shadow-lg); position: relative; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-color);}
+        .close-modal { position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); line-height: 1; transition: all 0.2s;}
+        .close-modal:hover { color: var(--danger); transform: rotate(90deg); }
+        
+        /* TABS */
+        .tabs { display: flex; background: var(--surface-hover); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 24px; border: 1px solid var(--border-color); padding: 4px;}
+        .tab-btn { flex: 1; padding: 12px; text-align: center; font-weight: 600; color: var(--text-muted); cursor: pointer; background: transparent; border: none; transition: 0.2s; border-radius: 10px; font-size: 14px;}
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: var(--shadow-sm); }
 
-        .contact-actions { display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 10px;}
-        .action-icon { background: #e9ecef; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px; color: var(--text-color); cursor: pointer;}
+        /* BADGES */
+        .badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 6px; border: 1px solid; letter-spacing: 0.5px;}
+        .badge-primo { background: var(--badge-primo-bg); color: var(--badge-primo-text); border-color: var(--badge-primo-border); }
+        .badge-mezzo { background: var(--badge-mezzo-bg); color: var(--badge-mezzo-text); border-color: var(--badge-mezzo-border); }
+        .badge-terzo { background: var(--badge-terzo-bg); color: var(--badge-terzo-text); border-color: var(--badge-terzo-border); }
+        .badge-riposo { background: var(--badge-riposo-bg); color: var(--badge-riposo-text); border-color: var(--badge-riposo-border); }
+
+        /* CONTACT ACTIONS */
+        .contact-actions { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 12px;}
+        .action-icon { background: var(--surface-hover); border: 1px solid var(--border-color); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 18px; color: var(--text-main); cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow-sm);}
+        .action-icon:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .wa-icon { background: #25D366; color: white; border: none; }
+        .wa-icon:hover { background: #20bd5a; }
+        .share-icon { background: var(--primary); color: white; border: none; }
+        .delete-icon { background: var(--danger-light); color: var(--danger); border-color: var(--danger-border); }
+        .delete-icon:hover { background: var(--danger); color: white; }
+
+        .editor-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-align: left; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;}
+        hr.divider { border: 0; border-top: 1px dashed var(--border-color); margin: 20px 0; }
     </style>
 </head>
 <body>
@@ -58,47 +197,56 @@
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
-            <h3 style="margin:0; color:white;">Menu</h3>
-            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+            <h3><i class="fa-solid fa-layer-group"></i> Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
-        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
-        <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
-        <a href="rotazioni.html" class="sidebar-link">👥 Rotazioni (test)</a>
-        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
-        <a href="bacheca_turni.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">🔄 Bacheca Turni</a>
-        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
-        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
-        <a href="orari.html" class="sidebar-link">🕒 Orari Navigazione</a>
-        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
-        <a href="link.html" class="sidebar-link">🔗 Link</a>
-        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
-        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
-        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
-        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+        
+        <a href="index.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Home Page</a>
+        <a href="calendario.html?oggi=true" class="sidebar-link"><i class="fa-solid fa-bullseye"></i> Oggi</a>
+        <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
+        <a href="rotazioni.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
+        <a href="turni.html" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link active-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
+        <a href="barcadvisor.html" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
+        <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link"><i class="fa-solid fa-umbrella-beach"></i> Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link"><i class="fa-regular fa-clock"></i> Orari Navigazione</a>
+        <a href="https://m.chebateo.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-water"></i> CheBateo</a>
+        <a href="documenti.html" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Documenti</a>
+        <a href="link.html" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
+        <a href="contatti.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i> Contatti</a>
+        <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
+        <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
+        <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
+        <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
+        <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
+        
+        <a href="admin.html" class="sidebar-link" id="menu-admin" style="display:none; color: var(--danger); font-weight: bold;"><i class="fa-solid fa-lock" style="color: var(--danger);"></i> Admin</a>
     </div>
 
     <div class="header">
-        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
-        <h2>🔄 Cambi Turno</h2>
+        <button class="hamburger-btn" onclick="apriMenuLaterale()"><i class="fa-solid fa-bars"></i></button>
+        <h2><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</h2>
         <div style="width: 50px;"></div>
     </div>
 
     <div id="view-no-auth" class="view-container">
-        <div class="card" style="text-align: center;">
-            <h3 style="color: var(--danger);">Accesso Richiesto</h3>
-            <p style="color: #666; font-size: 15px; line-height: 1.5; text-transform: none;">Per accedere alla bacheca scambi devi effettuare il login tramite la Home page.</p>
-            <button class="btn-action" style="background-color: var(--primary);" onclick="window.location.href='index.html'">Torna alla Home</button>
+        <div class="card-panel animate-pop" style="text-align: center;">
+            <i class="fa-solid fa-circle-exclamation" style="font-size: 48px; color: var(--danger); margin-bottom: 16px;"></i>
+            <h3 style="color: var(--danger); margin-top: 0; font-weight: 700;">Accesso Richiesto</h3>
+            <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 24px;">Per accedere alla bacheca scambi devi effettuare il login tramite la Home page.</p>
+            <button class="btn-action" style="width: auto; padding: 12px 24px; margin: 0 auto;" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i> Torna alla Home</button>
         </div>
     </div>
 
-    <div id="view-main" class="view-container">
-        <button class="btn-action" style="margin-top: 0; margin-bottom: 10px;" onclick="apriModaleAnnuncio()">+ Nuovo Scambio</button>
+    <div id="view-main" class="view-container animate-pop">
+        <button class="btn-action" style="margin-top: 0; margin-bottom: 10px;" onclick="apriModaleAnnuncio()"><i class="fa-solid fa-plus"></i> Nuovo Scambio</button>
         
-        <div class="card" style="padding: 15px; margin-bottom: 15px;">
-            <div style="display: flex; gap: 10px;">
+        <div class="card-panel" style="padding: 20px; margin-bottom: 8px;">
+            <div style="display: flex; gap: 12px;">
                 <div style="flex: 1;">
-                    <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Filtra Mansione:</label>
+                    <label class="editor-label">Filtra Mansione:</label>
                     <select id="filtroMansione" class="input-field" style="margin-bottom: 0; text-transform: none;" onchange="caricaBacheca()">
                         <option value="Tutte">Tutte le mansioni</option>
                         <option value="Marinaio">Marinaio</option>
@@ -110,25 +258,28 @@
                     </select>
                 </div>
                 <div style="flex: 1;">
-                    <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Filtra Data:</label>
+                    <label class="editor-label">Filtra Data:</label>
                     <input type="date" id="filtroData" class="input-field" style="margin-bottom: 0; text-transform: none;" onchange="caricaBacheca()">
                 </div>
             </div>
         </div>
         
-        <div id="suggeriti-bacheca-container" style="display: none; border-bottom: 2px dashed #ddd; padding-bottom: 15px; margin-bottom: 15px;">
-            <div class="suggested-header">✨ Suggeriti per te (Offrono ciò che cerchi)</div>
-            <div id="suggeriti-bacheca"></div>
+        <div id="suggeriti-bacheca-container" style="display: none; border-bottom: 2px dashed var(--border-color); padding-bottom: 16px; margin-bottom: 16px;">
+            <div class="suggested-header"><i class="fa-solid fa-wand-magic-sparkles"></i> Suggeriti per te (Offrono ciò che cerchi)</div>
+            <div id="suggeriti-bacheca" style="display:flex; flex-direction: column; gap:12px;"></div>
         </div>
 
-        <div id="lista-annunci"></div>
+        <div id="lista-annunci" style="display:flex; flex-direction: column; gap:12px;"></div>
     </div>
 
     <div id="profileModal" class="modal-overlay" onclick="chiudiSeSfondo(event, 'profileModal')" style="z-index: 5010;">
         <div class="modal-content">
-            <span id="btnCloseProfileModal" style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f; display:none;" onclick="chiudiModaleProfilo()">&times;</span>
-            <h3 style="margin-top: 5px; color: #32325d; text-align: center; text-transform: none;">I Tuoi Dati</h3>
-            <p style="font-size: 13px; color: #666; text-align: center; text-transform: none;">Questi dati verranno mostrati nei tuoi annunci.</p>
+            <i id="btnCloseProfileModal" class="fa-solid fa-xmark close-modal" style="display:none;" onclick="chiudiModaleProfilo()"></i>
+            <h3 style="margin-top: 0; color: var(--text-main); text-align: center; display:flex; flex-direction:column; align-items:center; gap:10px;">
+                <i class="fa-solid fa-user-pen" style="color:var(--primary); font-size: 32px;"></i> Dati Profilo
+            </h3>
+            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 20px;">Questi dati verranno mostrati nei tuoi annunci.</p>
+            
             <input type="text" id="regNome" class="input-field" placeholder="Nome" style="text-transform: capitalize;">
             <input type="text" id="regCognome" class="input-field" placeholder="Cognome" style="text-transform: capitalize;">
             <input type="text" id="regProgressivo" class="input-field" placeholder="Numero omonimia es. 02, 03 ecc (facoltativo)" style="text-transform: none;">
@@ -143,14 +294,16 @@
                 <option value="Marinaio polivalente">Marinaio polivalente</option>
                 <option value="Direttore di macchina">Direttore di macchina</option>
             </select>
-            <button id="btnSalvaProfilo" class="btn-action" onclick="salvaProfilo()">Salva Dati</button>
+            <button id="btnSalvaProfilo" class="btn-action btn-success" style="margin-top: 10px;" onclick="salvaProfilo()"><i class="fa-solid fa-check"></i> Salva Dati</button>
         </div>
     </div>
 
     <div id="adModal" class="modal-overlay" onclick="chiudiSeSfondo(event, 'adModal')">
         <div class="modal-content">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('adModal').style.display='none'">&times;</span>
-            <h3 style="margin-top: 5px; color: #32325d; text-transform: none;">Crea Annuncio</h3>
+            <i class="fa-solid fa-xmark close-modal" onclick="document.getElementById('adModal').style.display='none'"></i>
+            <h3 style="margin-top: 0; margin-bottom: 24px; color: var(--text-main); display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-bullhorn" style="color:var(--primary);"></i> Crea Annuncio
+            </h3>
             
             <div class="tabs">
                 <button id="tab-ad-turno" class="tab-btn active" onclick="switchAdTab('turno')">Cambio Turno</button>
@@ -158,12 +311,12 @@
             </div>
 
             <div id="form-ad-turno">
-                <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Data del cambio:</label>
+                <label class="editor-label">Data del cambio:</label>
                 <input type="date" id="adDataTurno" class="input-field" style="text-transform: none;" onchange="verificaTurno()">
                 
-                <div style="display: flex; gap: 10px;">
+                <div style="display: flex; gap: 12px;">
                     <div style="flex: 1;">
-                        <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Cedo:</label>
+                        <label class="editor-label">Cedo:</label>
                         <select id="adCedoTurno" class="input-field" style="text-transform: none;">
                             <option value="primo">Primo</option>
                             <option value="mezzo">Mezzo</option>
@@ -171,7 +324,7 @@
                         </select>
                     </div>
                     <div style="flex: 1;">
-                        <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Cerco:</label>
+                        <label class="editor-label">Cerco:</label>
                         <select id="adCercoTurno" class="input-field" style="text-transform: none;">
                             <option value="primo">Primo</option>
                             <option value="mezzo">Mezzo</option>
@@ -180,18 +333,18 @@
                     </div>
                 </div>
 
-                <hr style="border: 0; border-top: 1px dashed #ccc; margin: 15px 0;">
+                <hr class="divider">
                 
-                <label style="font-size: 11px; font-weight: bold; color: var(--primary); text-transform: none;">Codice Turno Ceduto:</label>
+                <label class="editor-label" style="color: var(--primary);">Codice Turno Ceduto:</label>
                 <input type="text" id="adCodiceTurno" class="input-field" placeholder="es. 1C01, 1B01 ecc..." oninput="this.value = this.value.toUpperCase(); verificaTurno()">
                 
-                <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none; display: block; margin-top: 5px;">Info Turno (Facoltativo):</label>
+                <label class="editor-label" style="margin-top: 16px;">Info Turno (Facoltativo):</label>
                 
-                <div style="display: flex; gap: 10px;">
+                <div style="display: flex; gap: 12px;">
                     <input type="time" id="adOraInizio" class="input-field" placeholder="Ora Inizio" style="flex:1; text-transform: none;">
                     <input type="text" id="adLuogoInizio" class="input-field" placeholder="Luogo Inizio" style="flex:2; text-transform: none;">
                 </div>
-                <div style="display: flex; gap: 10px;">
+                <div style="display: flex; gap: 12px;">
                     <input type="time" id="adOraFine" class="input-field" placeholder="Ora Fine" style="flex:1; text-transform: none;">
                     <input type="text" id="adLuogoFine" class="input-field" placeholder="Luogo Fine" style="flex:2; text-transform: none;">
                 </div>
@@ -201,39 +354,39 @@
             </div>
 
             <div id="form-ad-riposo" style="display: none;">
-                <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Cerco Riposo il giorno:</label>
+                <label class="editor-label">Cerco Riposo il giorno:</label>
                 <input type="date" id="adDataRiposo" class="input-field" style="text-transform: none;">
                 
-                <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none;">Giorni in cui posso restituirlo (Facoltativo):</label>
-                <input type="date" id="adDataRestituzione1" class="input-field" style="margin-bottom: 5px; text-transform: none;">
+                <label class="editor-label" style="margin-top: 16px;">Giorni in cui posso restituirlo (Facoltativo):</label>
+                <input type="date" id="adDataRestituzione1" class="input-field" style="margin-bottom: 8px; text-transform: none;">
                 <input type="date" id="adDataRestituzione2" class="input-field" style="text-transform: none;">
-                <p style="font-size: 10px; color: #999; margin-top: 0; text-transform: none;">Puoi lasciare vuoto se vuoi concordarlo in chat.</p>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 0; text-transform: none;">Puoi lasciare vuoto se vuoi concordarlo in chat.</p>
             </div>
 
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
-            <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: none; display: block;">Note (Facoltative):</label>
-            <textarea id="adNote" class="input-field" placeholder="Es. Cerco solo mattina, flessibile sull'orario..." style="text-transform: none; resize: vertical; min-height: 60px;"></textarea>
+            <hr class="divider">
+            <label class="editor-label">Note (Facoltative):</label>
+            <textarea id="adNote" class="input-field" placeholder="Es. Cerco solo mattina, flessibile sull'orario..." style="text-transform: none; resize: vertical; min-height: 80px;"></textarea>
 
-            <button id="btnPubblica" class="btn-action" onclick="pubblicaAnnuncio()">Pubblica Annuncio</button>
-            <button class="btn-action" style="background: #e9ecef; color: #32325d; margin-top: 10px;" onclick="apriModaleProfilo()">👤 I Miei Dati</button>
+            <button id="btnPubblica" class="btn-action btn-success" style="margin-top: 10px;" onclick="pubblicaAnnuncio()"><i class="fa-solid fa-paper-plane"></i> Pubblica Annuncio</button>
+            <button class="btn-action" style="background: transparent; color: var(--primary); border: 2px solid var(--primary); box-shadow:none; margin-top: 12px;" onclick="apriModaleProfilo()"><i class="fa-regular fa-user"></i> Controlla i miei Dati</button>
         </div>
     </div>
 
-    <div id="imageModal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); overflow: hidden; backdrop-filter: blur(5px);" onclick="chiudiImageModalSeSfondo(event)">
-        <div style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; font-size: 35px; color: white; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10001;" onclick="chiudiImageModal()">&times;</div>
-        
-        <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px; padding-bottom: 80px; position: relative;">
-            <img id="turnoImage" src="" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain;">
+    <div id="imageModal" style="display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); overflow: hidden; animation: fadeIn 0.3s ease;" onclick="chiudiImageModalSeSfondo(event)">
+        <i class="fa-solid fa-xmark" style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 24px; font-size: 32px; color: white; cursor: pointer; text-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 20001; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiImageModal()"></i>
+        <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px; padding-bottom: 100px; position: relative;">
+            <img id="turnoImage" src="" style="max-width: 100%; max-height: 75vh; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); object-fit: contain; background: white;">
             
-            <div id="imageBanner" style="position: relative; z-index: 10001; margin-top: 15px; background: rgba(0,0,0,0.7); color: #fff; padding: 10px 20px; border-radius: 12px; font-size: 13px; text-align: center; max-width: 90%; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
-                ⚠️ Controllare sempre i turni ufficiali e la presenza di eventuali varianti ai turni.
+            <div id="imageBanner" style="position: relative; z-index: 20001; margin-top: 24px; background: rgba(20,20,20,0.85); backdrop-filter: blur(10px); color: #fff; padding: 14px 24px; border-radius: 12px; font-size: 14px; text-align: center; max-width: 90%; box-shadow: 0 8px 20px rgba(0,0,0,0.4); font-weight: 500; border: 1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:10px;">
+                ⚠️ Controllare sempre la presenza di eventuali varianti ai turni.
             </div>
         </div>
-        
-        <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #11cdef; color: white; border: none; padding: 12px 24px; border-radius: 20px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 10001;">📥 Scarica</button>
+        <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(40px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: var(--primary); color: white; border: none; padding: 16px 32px; border-radius: 30px; font-weight: 700; font-size: 16px; box-shadow: 0 8px 25px var(--primary-glow); cursor: pointer; z-index: 20001; transition: all 0.2s; display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-download" style="font-size: 18px;"></i> Scarica Turno
+        </button>
     </div>
 
-    <div id="error-box" style="display: none; padding: 20px; color: red; text-align: center; width: 100%;"></div>
+    <div id="error-box" style="display: none; padding: 20px; color: var(--danger); background: var(--danger-light); border: 1px solid var(--danger-border); border-radius: var(--radius-md); text-align: center; width: 100%; max-width: 420px; margin-top: 20px;"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
@@ -253,10 +406,6 @@
         let currentImagePath = "";
         let imgBaseFallback = "";
         let pzInstance = null;
-
-        const svgWa = `<svg viewBox="0 0 24 24" width="22" height="22" fill="#25D366"><path d="M12.031 0C5.385 0 .018 5.366.018 12.012c0 2.125.553 4.197 1.603 6.012L.05 24l6.115-1.604c1.745.965 3.738 1.474 5.866 1.474 6.646 0 12.013-5.366 12.013-12.012S18.677 0 12.031 0zm-.018 21.84c-1.796 0-3.553-.483-5.093-1.396l-.365-.216-3.791.994.996-3.697-.238-.377a9.98 9.98 0 0 1-1.528-5.337C1.994 6.452 6.444 2.016 12.013 2.016c2.705 0 5.247 1.053 7.158 2.966 1.91 1.912 2.964 4.456 2.964 7.165 0 5.564-4.45 10.003-10.012 10.003l-.11-.31zm5.503-7.534c-.302-.151-1.785-.881-2.062-.981-.277-.101-.479-.151-.68.151-.202.302-.781.981-.957 1.182-.176.202-.353.226-.655.075-.302-.151-1.275-.47-2.428-1.503-.896-.803-1.501-1.794-1.677-2.096-.176-.302-.019-.465.132-.616.136-.136.302-.353.453-.53.151-.176.202-.302.302-.504.101-.202.05-.378-.025-.53-.075-.151-.68-1.64-.932-2.245-.245-.59-.495-.51-.68-.52-.176-.01-.378-.01-.58-.01-.202 0-.53.076-.807.378-.277.302-1.058 1.034-1.058 2.52 0 1.487 1.083 2.924 1.234 3.125.151.202 2.132 3.255 5.163 4.561 2.222.956 2.87.805 3.373.68.591-.148 1.785-.73 2.037-1.435.252-.705.252-1.31.176-1.435-.075-.126-.277-.202-.58-.353z"/></svg>`;
-        const svgCamera = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2-2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm8 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg>`;
-        const svgShare = `<svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg>`;
 
         // Funzioni per l'apertura e la chiusura del menù laterale
         window.apriMenuLaterale = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; };
@@ -393,7 +542,7 @@
         // --- Inizializzazione Panzoom ---
         document.addEventListener('DOMContentLoaded', async function() {
             
-            await precaricaTuttiDB(); // Scarica i DB di base immediatamente come Calendario!
+            await precaricaTuttiDB(); 
 
             const imgElem = document.getElementById('turnoImage');
             if (typeof Panzoom !== 'undefined') {
@@ -442,7 +591,7 @@
                     document.getElementById('view-no-auth').style.display = 'flex';
                 }
             } catch(err) {
-                document.getElementById('error-box').innerHTML = "Errore di connessione o lettura dati: " + err.message;
+                document.getElementById('error-box').innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Errore di connessione o lettura dati: " + err.message;
                 document.getElementById('error-box').style.display = 'block';
             }
         });
@@ -459,14 +608,14 @@
                 document.getElementById('view-main').style.display = 'flex';
 
                 if (!ok) {
-                    apriModaleProfilo(); // Forza apertura
-                    document.getElementById('btnCloseProfileModal').style.display = 'none'; // Nascondi X se non è completo
+                    apriModaleProfilo(); 
+                    document.getElementById('btnCloseProfileModal').style.display = 'none'; 
                     return;
                 }
 
                 document.getElementById('filtroMansione').value = userDataPrivate.mansione || "Tutte";
                 
-                const today = getOggiLocale(); // Evita i bug di fuso orario!
+                const today = getOggiLocale(); 
                 
                 let qCleanup = isAdmin ? collection(db, "bacheca_turni") : query(collection(db, "bacheca_turni"), where("uid", "==", currentUser.uid));
                 const adsSnap = await getDocs(qCleanup);
@@ -493,7 +642,6 @@
             document.getElementById('regTelefono').value = userDataPrivate.telefono || "";
             document.getElementById('regMansione').value = userDataPrivate.mansione || "";
             
-            // Mostra la X solo se ha già i dati minimi salvati
             const ok = userDataPrivate.nome && userDataPrivate.cognome && userDataPrivate.matricola && userDataPrivate.mansione && userDataPrivate.telefono;
             document.getElementById('btnCloseProfileModal').style.display = ok ? 'block' : 'none';
 
@@ -514,13 +662,13 @@
 
             if(!n || !c || !mat || !tel || !man) return alert("Compila tutti i campi per usare la bacheca.");
             
-            document.getElementById('btnSalvaProfilo').innerText = "⏳ Salvataggio...";
+            document.getElementById('btnSalvaProfilo').innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Salvataggio...";
             try {
                 await setDoc(doc(db, "utenti", currentUser.uid), { nome: n, cognome: c, progressivo: p, matricola: mat, telefono: tel, mansione: man }, { merge: true });
-                document.getElementById('btnSalvaProfilo').innerText = "Salva Dati";
+                document.getElementById('btnSalvaProfilo').innerHTML = "<i class='fa-solid fa-check'></i> Salva Dati";
                 chiudiModaleProfilo();
                 checkStato();
-            } catch(e) { alert("Errore"); document.getElementById('btnSalvaProfilo').innerText = "Salva Dati"; }
+            } catch(e) { alert("Errore"); document.getElementById('btnSalvaProfilo').innerHTML = "<i class='fa-solid fa-check'></i> Salva Dati"; }
         };
 
         let adTypeSelezionato = 'turno';
@@ -561,7 +709,7 @@
             let dateStr = document.getElementById('adDataTurno').value;
             if(!dateStr) dateStr = getOggiLocale();
             
-            caricaDbCorrenteSincrono(dateStr); // Cerca sincrono nella cache
+            caricaDbCorrenteSincrono(dateStr);
 
             const codiceBase = document.getElementById('adCodiceTurno').value.trim().toUpperCase();
             
@@ -593,8 +741,6 @@
                 uid: currentUser.uid,
                 nome: userDataPrivate.nome, cognome: userDataPrivate.cognome, 
                 progressivo: userDataPrivate.progressivo || "",
-                // IL CAMPO MANSIONE VIENE PRESO DIRETTAMENTE DAL PROFILO, 
-                // È ESSENZIALE PER I FILTRI DELLE NOTIFICHE!
                 mansione: userDataPrivate.mansione.trim(), 
                 matricola: userDataPrivate.matricola, telefono: userDataPrivate.telefono,
                 timestamp: new Date().getTime(), tipo_annuncio: adTypeSelezionato,
@@ -630,13 +776,13 @@
                 payload.restituzione = res;
             }
 
-            btn.innerText = "⏳ Pubblicazione...";
+            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Pubblicazione...";
             try {
                 await addDoc(collection(db, "bacheca_turni"), payload);
                 document.getElementById('adModal').style.display = 'none';
-                btn.innerText = "Pubblica Annuncio";
+                btn.innerHTML = "<i class='fa-solid fa-paper-plane'></i> Pubblica Annuncio";
                 checkStato();
-            } catch(e) { alert("Errore"); btn.innerText = "Pubblica Annuncio"; }
+            } catch(e) { alert("Errore"); btn.innerHTML = "<i class='fa-solid fa-paper-plane'></i> Pubblica Annuncio"; }
         };
 
         function formattaData(isoStr) {
@@ -645,7 +791,6 @@
             return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
         }
 
-        // --- Logica Immagine Perfettamente Identica a Calendario ---
         window.apriImmagineTurno = function(codiceTurno, dataScambio) {
             if (!codiceTurno || !dataScambio) {
                 alert("Dati mancanti per aprire l'immagine.");
@@ -653,9 +798,9 @@
             }
             
             let codicePulito = codiceTurno.toUpperCase().trim();
-            caricaDbCorrenteSincrono(dataScambio); // Inizializza dbInUso e dataAttivaDb localmente
+            caricaDbCorrenteSincrono(dataScambio); 
 
-            let dataAttiva = dataAttivaDb || "2026-03-02"; // Fallback di sicurezza 
+            let dataAttiva = dataAttivaDb || "2026-03-02"; 
             let chiaveTrovata = trovaChiaveEsatta(dbInUso, codicePulito, dataScambio);
 
             if (chiaveTrovata && chiaveTrovata !== codicePulito && dbInUso && dbInUso[chiaveTrovata]) { 
@@ -713,9 +858,9 @@
             
             const fMan = document.getElementById('filtroMansione').value;
             const fData = document.getElementById('filtroData').value;
-            const today = getOggiLocale(); // Risolve il bug fuso orario visivo
+            const today = getOggiLocale(); 
 
-            containerRes.innerHTML = "<p style='color:#666;'>Caricamento annunci in corso...</p>";
+            containerRes.innerHTML = "<div style='color:var(--text-muted); text-align:center; padding: 20px;'><i class='fa-solid fa-spinner fa-spin'></i> Caricamento annunci...</div>";
             containerSug.innerHTML = "";
 
             try {
@@ -735,7 +880,7 @@
 
                 annunci.forEach(a => {
                     const isMe = a.uid === currentUser.uid;
-                    const canDelete = isMe || isAdmin; // Logica ADMIN integrata
+                    const canDelete = isMe || isAdmin; 
                     const progLabel = a.progressivo ? ` (${a.progressivo})` : "";
                     
                     let isSuggested = false;
@@ -758,10 +903,10 @@
                         let infoTurnoHTML = "";
                         if (a.ora_inizio || a.luogo_inizio) {
                             infoTurnoHTML = `
-                                <div style="font-size: 11px; color: #555; margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid var(--primary);">
-                                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                                        <span><b>Inizio:</b> ${a.ora_inizio || '--:--'}</span>
-                                        <span><b>Fine:</b> ${a.ora_fine || '--:--'}</span>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding: 12px; background: var(--bg-color); border-radius: 8px; border-left: 3px solid var(--primary);">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                        <span><b><i class="fa-regular fa-clock"></i> Inizio:</b> ${a.ora_inizio || '--:--'}</span>
+                                        <span><b><i class="fa-regular fa-clock"></i> Fine:</b> ${a.ora_fine || '--:--'}</span>
                                     </div>
                                     <div style="display: flex; justify-content: space-between;">
                                         <span><b>Da:</b> ${a.luogo_inizio || '--'}</span>
@@ -777,12 +922,12 @@
                             let isRiposo = (codBase === 'RI' || codBase === 'RIPOSO' || codBase === 'AL' || codBase === 'DISP' || codBase === 'NESSUN TURNO');
                             
                             if (!isRiposo) {
-                                btnImmagine = `<div style="margin-top: 10px;"><button onclick="apriImmagineTurno('${a.codice_turno}', '${a.data_scambio}')" style="background:transparent; border:1px solid var(--primary); color:var(--primary); padding:6px 12px; border-radius:12px; font-size:12px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:5px; width: 100%; justify-content: center;">${svgCamera} Mostra Immagine Turno</button></div>`;
+                                btnImmagine = `<div style="margin-top: 12px;"><button onclick="apriImmagineTurno('${a.codice_turno}', '${a.data_scambio}')" style="background:transparent; border:2px solid var(--primary); color:var(--primary); padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px; width: 100%; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='var(--primary)'; this.style.color='white';" onmouseout="this.style.background='transparent'; this.style.color='var(--primary)';"><i class="fa-regular fa-image"></i> Mostra Immagine Turno</button></div>`;
                             }
                         }
 
                         corpoHTML = `
-                            <div style="font-size: 13px; font-weight: bold; margin-bottom: 5px;">📅 ${dateFormatted}</div>
+                            <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text-main);"><i class="fa-regular fa-calendar" style="color:var(--primary);"></i> ${dateFormatted}</div>
                             <div><span class="badge badge-${a.cerco}">CERCA: ${a.cerco.toUpperCase()}</span></div>
                             <div style="margin-top: 4px;"><span class="badge badge-${a.cedo}">CEDE: ${a.cedo.toUpperCase()} ${a.codice_turno ? '('+a.codice_turno+')' : ''}</span></div>
                             ${infoTurnoHTML}
@@ -791,25 +936,23 @@
                     } else {
                         let restStr = a.restituzione && a.restituzione.length > 0 ? a.restituzione.map(formattaData).join(' o ') : "Da concordare";
                         corpoHTML = `
-                            <div style="font-size: 13px; font-weight: bold; margin-bottom: 5px;">📅 CERCA RIPOSO IL: ${dateFormatted}</div>
+                            <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text-main);"><i class="fa-solid fa-bed" style="color:var(--text-muted);"></i> CERCA RIPOSO IL: ${dateFormatted}</div>
                             <div style="margin-top: 4px;"><span class="badge badge-riposo">RESTITUISCE: ${restStr}</span></div>
                         `;
                     }
                     
                     let noteHTML = "";
                     if (a.note) {
-                        noteHTML = `<div style="font-size: 12px; color: #555; background: #fff3cd; padding: 8px; border-radius: 6px; margin-top: 8px; border-left: 3px solid var(--warning);"><b>Note:</b> ${a.note}</div>`;
+                        noteHTML = `<div style="font-size: 13px; color: var(--text-main); background: var(--danger-light); padding: 10px; border-radius: 8px; margin-top: 12px; border-left: 3px solid var(--warning);"><b>Note:</b> ${a.note}</div>`;
                     }
 
-                    // Creazione sequenziale dei bottoni laterali
                     let actionsHTML = "";
                     
                     if (showWa) {
-                        actionsHTML += `<a href="https://wa.me/39${numClean}" target="_blank" class="action-icon" style="background:transparent;" title="Contatta su WhatsApp">${svgWa}</a>`;
+                        actionsHTML += `<a href="https://wa.me/39${numClean}" target="_blank" class="action-icon wa-icon" title="Contatta su WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>`;
                     }
                     
                     if (isMe) {
-                        // Creazione stringa messaggio per condivisione
                         let shareText = "";
                         if (a.tipo_annuncio === 'turno') {
                             shareText = `Cedo per il giorno ${dateFormatted} il turno ${a.codice_turno || ''}`;
@@ -826,26 +969,25 @@
                             if (a.note) shareText += ` Note: ${a.note}.`;
                             shareText += ` condiviso da Utility https://hazev98.github.io/Utility/bacheca_turni.html`;
                         }
-                        
                         const encodedShare = encodeURIComponent(shareText);
                         
-                        actionsHTML += `<a href="https://wa.me/?text=${encodedShare}" target="_blank" class="action-icon" style="background:#25D366; color:white; border:none;" title="Condividi su WhatsApp">${svgShare}</a>`;
+                        actionsHTML += `<a href="https://wa.me/?text=${encodedShare}" target="_blank" class="action-icon share-icon" title="Condividi su WhatsApp"><i class="fa-solid fa-share-nodes"></i></a>`;
                     }
                     
                     if (canDelete) {
-                        actionsHTML += `<button onclick="cancellaAnnuncio('${a.id}')" class="action-icon" style="background:var(--danger); color:white; border:none; padding:8px; width:auto; height:auto; font-size: 16px;">🗑️</button>`;
+                        actionsHTML += `<button onclick="cancellaAnnuncio('${a.id}')" class="action-icon delete-icon"><i class="fa-solid fa-trash-can"></i></button>`;
                     }
 
                     const html = `
                         <div class="${itemClass}">
                             <div style="display:flex; justify-content: space-between;">
                                 <div style="flex: 1;">
-                                    <div style="font-weight:bold; color:var(--text-color); margin-bottom: 2px;">${a.cognome} ${a.nome}${progLabel}</div>
-                                    <div style="font-size:11px; color:#666; margin-bottom: 8px;">${a.mansione} | Mat: ${a.matricola} | Tel: ${a.telefono}</div>
+                                    <div style="font-weight:700; font-size:15px; color:var(--text-main); margin-bottom: 4px;">${a.cognome} ${a.nome}${progLabel}</div>
+                                    <div style="font-size:12px; color:var(--text-muted); margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">${a.mansione} | Mat: ${a.matricola} | Tel: ${a.telefono}</div>
                                     ${corpoHTML}
                                     ${noteHTML}
                                 </div>
-                                <div class="contact-actions" style="flex-direction:column; justify-content:center; padding-left: 10px;">
+                                <div class="contact-actions" style="flex-direction:column; justify-content:center; padding-left: 12px; border-left: 1px dashed var(--border-color); margin-left: 12px;">
                                     ${actionsHTML}
                                 </div>
                             </div>
@@ -857,7 +999,7 @@
                 });
 
                 divSugContainer.style.display = suggeriti > 0 ? 'block' : 'none';
-                if (annunci.length === 0) containerRes.innerHTML = "<p style='color:#666;'>Nessun annuncio in bacheca.</p>";
+                if (annunci.length === 0) containerRes.innerHTML = "<div style='color:var(--text-muted); text-align:center; padding: 20px;'><i class='fa-regular fa-face-frown-open'></i> Nessun annuncio in bacheca.</div>";
 
             } catch(e) { containerRes.innerHTML = "<p>Errore caricamento bacheca: " + e.message + "</p>"; }
         }
