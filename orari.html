@@ -35,6 +35,25 @@
                 window.location.reload(true);
             }
         }
+
+        // --- GESTIONE TEMA DA PREFERENZE ---
+        (function applicaTema() {
+            try {
+                let prefStr = localStorage.getItem('preferenze_layout_haze');
+                if (prefStr) {
+                    let prefs = JSON.parse(prefStr);
+                    let theme = prefs.theme || 'system';
+                    if (theme !== 'system') {
+                        document.documentElement.setAttribute('data-theme', theme);
+                    } else {
+                        document.documentElement.removeAttribute('data-theme');
+                    }
+                } else {
+                    const oldTheme = localStorage.getItem('theme');
+                    if (oldTheme && oldTheme !== 'system') document.documentElement.setAttribute('data-theme', oldTheme);
+                }
+            } catch(e) {}
+        })();
     </script>
     <script src="global.js"></script>
 
@@ -54,6 +73,12 @@
             --danger: #d93025;
             --danger-light: #fce8e6;
             --danger-border: #fad2cf;
+            --warning: #f2a600;
+            --warning-light: #fff8e1;
+            --warning-border: #ffecb3;
+            --info: #0088ff;
+            --info-light: #e6f3ff;
+            --info-border: #b3dfff;
             --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
             --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
             --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
@@ -62,7 +87,8 @@
             --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* TEMA SCURO - Default di Sistema */
+        /* --- TEMA SCURO FORZATO (DA MENU) E DI SISTEMA --- */
+        :root[data-theme="dark"],
         @media (prefers-color-scheme: dark) {
             :root:not([data-theme="light"]) {
                 --primary: #4da3ff;
@@ -78,7 +104,21 @@
                 --danger: #ea4335;
                 --danger-light: rgba(234, 67, 53, 0.15);
                 --danger-border: rgba(234, 67, 53, 0.3);
+                --warning: #ffb74d;
+                --warning-light: rgba(255, 152, 0, 0.15);
+                --warning-border: rgba(255, 152, 0, 0.3);
+                --info: #33aaff;
+                --info-light: rgba(51, 170, 255, 0.15);
+                --info-border: rgba(51, 170, 255, 0.3);
+                --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
+                --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
+                --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
             }
+        }
+
+        /* Copia di sicurezza per supporto browser mobile */
+        :root[data-theme="dark"] {
+            --primary: #4da3ff; --primary-hover: #73b9ff; --primary-glow: rgba(77, 163, 255, 0.25); --bg-color: #0f1115; --surface: #1a1d24; --surface-hover: #232730; --text-main: #e8eaed; --text-muted: #9aa0a6; --border-color: #2f333d; --success: #34a853; --danger: #ea4335; --danger-light: rgba(234, 67, 53, 0.15); --danger-border: rgba(234, 67, 53, 0.3); --warning: #ffb74d; --warning-light: rgba(255, 152, 0, 0.15); --warning-border: rgba(255, 152, 0, 0.3); --info: #33aaff; --info-light: rgba(51, 170, 255, 0.15); --info-border: rgba(51, 170, 255, 0.3); --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3); --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4); --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
