@@ -2,54 +2,157 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Utility - Rotazione Ferie</title>
-    <meta name="theme-color" content="#0056b3">
+    <meta name="theme-color" content="#0066cc">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="global.js"></script>
 
     <style>
-        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #dc3545; --warning: #ffc107; --suggested: #d4edda; --suggested-border: #c3e6cb;}
-        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
+        /* --- CORE DESIGN SYSTEM --- */
+        :root { 
+            --primary: #0066cc; 
+            --primary-hover: #0052a3;
+            --primary-glow: rgba(0, 102, 204, 0.2);
+            --bg-color: #f0f2f5; 
+            --surface: #ffffff;
+            --surface-hover: #f8f9fa;
+            --text-main: #1a1a1a; 
+            --text-muted: #5f6368;
+            --border-color: #e0e0e0;
+            --success: #0f9d58; 
+            --danger: #d93025;
+            --danger-light: #fce8e6;
+            --danger-border: #fad2cf;
+            --warning: #f2a600; /* Leggermente scurito per leggibilità */
+            --warning-light: #fff8e1;
+            --warning-border: #ffecb3;
+            --suggested: #e6f4ea;
+            --suggested-border: #ceead6;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* TEMA SCURO - Default di Sistema */
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --primary: #4da3ff;
+                --primary-hover: #73b9ff;
+                --primary-glow: rgba(77, 163, 255, 0.25);
+                --bg-color: #0f1115;
+                --surface: #1a1d24;
+                --surface-hover: #232730;
+                --text-main: #e8eaed;
+                --text-muted: #9aa0a6;
+                --border-color: #2f333d;
+                --success: #34a853;
+                --danger: #ea4335;
+                --danger-light: rgba(234, 67, 53, 0.15);
+                --danger-border: rgba(234, 67, 53, 0.3);
+                --warning: #ffb74d;
+                --warning-light: rgba(255, 152, 0, 0.15);
+                --warning-border: rgba(255, 152, 0, 0.3);
+                --suggested: rgba(52, 168, 83, 0.15);
+                --suggested-border: rgba(52, 168, 83, 0.3);
+            }
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            margin: 0; padding: 20px; 
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh;
+        }
         
-        /* MENU LATERALE UNIFICATO */
-        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
-        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 5999; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 6000; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        /* HEADER */
+        .header { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .hamburger-btn { background: none; border: none; font-size: 24px; color: var(--text-main); cursor: pointer; padding: 10px; border-radius: 50%; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
+        .hamburger-btn:active { background: var(--surface-hover); }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
+        
+        /* SIDEBAR */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 5999; animation: fadeIn 0.3s ease; }
+        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-lg); z-index: 6000; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; overflow-y: auto;}
         .sidebar.open { left: 0; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
-        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; text-transform: none; }
-        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 28px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; }
+        .sidebar-header h3 { margin:0; font-weight: 700; display: flex; align-items: center; gap: 10px;}
+        .sidebar-link { padding: 16px 24px; text-decoration: none; color: var(--text-main); font-size: 15px; font-weight: 500; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; transition: all 0.2s; }
+        .sidebar-link i { width: 28px; text-align: left; font-size: 18px; color: var(--text-muted); transition: color 0.2s;}
+        .sidebar-link:active, .sidebar-link:hover { background-color: var(--surface-hover); color: var(--primary); padding-left: 28px; }
+        .sidebar-link:active i, .sidebar-link:hover i { color: var(--primary); }
 
-        .top-actions { width: 100%; max-width: 400px; display: flex; gap: 10px; margin-bottom: 15px; }
-        .btn-top { flex: 1; padding: 10px; font-size: 13px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; color: white; }
-
-        .view-container { width: 100%; max-width: 400px; display: none; flex-direction: column; gap: 15px; text-align: center; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; margin-bottom: 15px; }
-        .card-suggested { background: #fffff8; border: 2px solid var(--warning); padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; margin-bottom: 10px; position: relative;}
-        .card-suggested::before { content: "✨ MATCH"; position: absolute; top: -10px; right: 15px; background: var(--warning); color: #fff; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 10px; }
-
-        .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; transition: opacity 0.2s; margin-top: 10px; }
-        .btn-danger-outline { background: transparent; color: var(--danger); border: 2px solid var(--danger); padding: 10px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; }
+        /* VISTE E CONTENITORI */
+        .view-container { width: 100%; max-width: 440px; display: none; flex-direction: column; gap: 16px; text-align: center; }
         
-        .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; background-color: white; font-family: inherit;}
-        .warning-box { background: #fff3cd; color: #856404; padding: 12px; border-radius: 8px; font-size: 13px; text-align: left; margin-bottom: 15px; border: 1px solid #ffeeba; }
-        .section-title { font-size: 12px; font-weight: bold; color: var(--primary); text-transform: uppercase; margin: 15px 0 8px 0; border-bottom: 1px solid #eee; padding-bottom: 3px; }
+        /* PULSANTI TOP BAR */
+        .top-actions { width: 100%; max-width: 440px; display: flex; gap: 12px; margin-bottom: 20px; }
+        .btn-top { flex: 1; padding: 14px 10px; font-size: 13px; font-weight: 700; border-radius: 12px; border: none; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: var(--shadow-sm); transition: all 0.2s; }
+        .btn-top:active { transform: scale(0.97); }
 
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; backdrop-filter: blur(3px); }
-        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; position: relative; max-height: 90vh; overflow-y: auto;}
-        
-        .tabs { display: flex; background: #e9ecef; border-radius: 10px; overflow: hidden; margin-bottom: 15px; width: 100%; max-width: 400px;}
-        .tab-btn { flex: 1; padding: 12px; text-align: center; font-weight: bold; color: #666; cursor: pointer; background: transparent; border: none; }
-        .tab-btn.active { background: var(--primary); color: white; }
+        /* CARDS */
+        .card { background: var(--surface); padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); text-align: left; margin-bottom: 16px; border: 1px solid var(--border-color); }
+        .card-suggested { background: var(--warning-light); border: 2px solid var(--warning); padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); text-align: left; margin-bottom: 16px; position: relative; }
+        .card-suggested::before { content: "✨ MATCH IDEALE"; position: absolute; top: -12px; right: 20px; background: var(--warning); color: #fff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 12px; letter-spacing: 0.5px; box-shadow: 0 2px 5px rgba(242, 166, 0, 0.3); }
 
-        .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 13px; background: #f8f9fa; padding: 8px; border-radius: 6px; border: 1px solid #ddd;}
+        /* PULSANTI GENERALI */
+        .btn-action { background-color: var(--success); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; transition: all 0.2s; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(15,157,88,0.2); }
+        .btn-action:hover { transform: translateY(-2px); filter: brightness(1.05); }
+        .btn-action:active { transform: translateY(1px); box-shadow: none; }
         
-        .badge-estivo { background: #ffeeba; color: #856404; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; display: inline-block; margin-bottom: 4px; }
-        .badge-invernale { background: #cce5ff; color: #004085; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; display: inline-block; margin-bottom: 4px; }
-        .badge-scambiato { background: #e2e3e5; color: #383d41; padding: 2px 6px; border-radius: 4px; font-size: 9px; margin-left: 5px; vertical-align: middle; }
-        .action-icon { background: #e9ecef; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px; color: var(--text-color); cursor: pointer;}
+        .btn-danger-outline { background: transparent; color: var(--danger); border: 2px solid var(--danger); padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+        .btn-danger-outline:active { background: var(--danger-light); transform: scale(0.98); }
+        
+        /* FORM ELEMENTS */
+        .input-field { width: 100%; padding: 14px; margin-bottom: 16px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 15px; background-color: var(--surface); color: var(--text-main); font-family: inherit; transition: all 0.2s;}
+        .input-field:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-glow); }
+        
+        .warning-box { background: var(--warning-light); color: var(--warning); padding: 16px; border-radius: var(--radius-md); font-size: 14px; text-align: left; margin-bottom: 20px; border: 1px dashed var(--warning-border); display: flex; gap: 10px; align-items: flex-start; }
+        .section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin: 24px 0 10px 0; border-bottom: 2px solid var(--border-color); padding-bottom: 6px; letter-spacing: 0.5px; }
+
+        /* MODALE */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 7000; padding: 20px; box-sizing: border-box; animation: fadeIn 0.3s ease; }
+        .modal-content { background-color: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 440px; text-align: left; box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative;}
+        
+        /* TABS */
+        .tabs { display: flex; background: var(--surface-hover); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 20px; width: 100%; max-width: 440px; border: 1px solid var(--border-color); padding: 4px; }
+        .tab-btn { flex: 1; padding: 12px; text-align: center; font-weight: 600; color: var(--text-muted); cursor: pointer; background: transparent; border: none; border-radius: 10px; transition: all 0.2s; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .tab-btn.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
+
+        /* CHECKBOXES E BADGES */
+        .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; background: var(--surface-hover); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); cursor: pointer; color: var(--text-main); }
+        .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; margin: 0; accent-color: var(--primary); cursor: pointer; }
+        
+        .badge-estivo { background: #fff3e0; color: #e65100; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 6px; border: 1px solid #ffe0b2;}
+        .badge-invernale { background: #e3f2fd; color: #0d47a1; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 6px; border: 1px solid #bbdefb;}
+        .badge-cerco { background: var(--surface-hover); color: var(--text-muted); padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; border: 1px dashed var(--border-color);}
+        
+        .badge-scambiato { background: var(--danger-light); color: var(--danger); padding: 2px 8px; border-radius: 6px; font-size: 10px; margin-left: 8px; border: 1px solid var(--danger-border); }
+        
+        .action-icon { background: var(--surface-hover); border: 1px solid var(--border-color); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px; color: var(--text-main); cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow-sm); flex-shrink: 0;}
+        .action-icon:active { transform: scale(0.95); background: var(--border-color); }
+        .action-icon.btn-wa { background: #25D366; border-color: #25D366; color: white; }
+        .action-icon.btn-wa:active { background: #128C7E; border-color: #128C7E; }
+
+        .contact-actions { display: flex; flex-direction: column; justify-content: center; gap: 10px; padding-left: 15px; border-left: 1px dashed var(--border-color); }
+
+        .result-banner { text-align: center; margin-bottom: 20px; font-size: 15px; font-weight: 600; background: var(--surface); color: var(--text-main); padding: 14px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -57,74 +160,91 @@
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
-            <h3 style="margin:0; color:white;">Menu</h3>
-            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+            <h3><i class="fa-solid fa-layer-group"></i> Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
-        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
-        <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
-        <a href="rotazioni.html" class="sidebar-link">👥 Rotazioni (test)</a>
-        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
-        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
-        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
-        <a href="rotazione_ferie.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">🌴 Rotazione Ferie</a>
-        <a href="orari.html" class="sidebar-link">🕒 Orari Navigazione</a>
-        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
-        <a href="link.html" class="sidebar-link">🔗 Link</a>
-        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
-        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
-        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
-        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+        
+        <a href="index.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Home Page</a>
+        <a href="calendario.html?oggi=true" class="sidebar-link"><i class="fa-solid fa-bullseye"></i> Oggi</a>
+        <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
+        <a href="rotazioni.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
+        <a href="turni.html" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
+        <a href="barcadvisor.html" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
+        <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link" style="background-color: var(--primary-glow); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary);"><i class="fa-solid fa-umbrella-beach" style="color: var(--primary);"></i> Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link"><i class="fa-regular fa-clock"></i> Orari Navigazione</a>
+        <a href="https://m.chebateo.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-water"></i> CheBateo</a>
+        <a href="documenti.html" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Documenti</a>
+        <a href="link.html" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
+        <a href="contatti.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i> Contatti</a>
+        <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
+        <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
+        <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
+        <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
     </div>
 
     <div class="header">
-        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
-        <h2>🏖️ Ferie</h2>
-        <div style="width: 50px;"></div>
+        <button class="hamburger-btn" onclick="apriMenuLaterale()"><i class="fa-solid fa-bars"></i></button>
+        <h2><i class="fa-solid fa-umbrella-beach"></i> Ferie</h2>
+        <div style="width: 44px;"></div>
     </div>
 
     <div id="top-actions-bar" class="top-actions" style="display: none;">
-        <button class="btn-top" style="background: var(--primary);" onclick="apriModaleCondivisione()">✏️ Modifica Dati</button>
-        <button class="btn-top" style="background: var(--danger);" onclick="revocaCondivisione()">🚫 Annulla condivisione</button>
+        <button class="btn-top" style="background: var(--primary);" onclick="apriModaleCondivisione()"><i class="fa-solid fa-pen-to-square"></i> I Tuoi Dati</button>
+        <button class="btn-top" style="background: var(--danger);" onclick="revocaCondivisione()"><i class="fa-solid fa-user-slash"></i> Annulla Condivisione</button>
     </div>
 
     <div id="view-no-auth" class="view-container">
         <div class="card" style="text-align: center;">
-            <h3 style="color: var(--danger);">Accesso Richiesto</h3>
-            <p style="color: #666; font-size: 15px;">Effettua il login in Home per accedere.</p>
-            <button class="btn-action" style="background-color: var(--primary);" onclick="window.location.href='index.html'">Torna alla Home</button>
+            <i class="fa-solid fa-lock" style="font-size: 48px; color: var(--text-muted); margin-bottom: 16px;"></i>
+            <h3 style="color: var(--text-main); margin-top: 0; font-weight: 800;">Accesso Richiesto</h3>
+            <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 24px;">Effettua il login in Home per accedere alle rotazioni ferie.</p>
+            <button class="btn-action" style="background-color: var(--primary); margin: 0 auto;" onclick="window.location.href='index.html'"><i class="fa-solid fa-house"></i> Torna alla Home</button>
         </div>
     </div>
 
     <div id="view-opt-in" class="view-container">
         <div class="card" style="text-align: center;">
-            <h3 style="color: var(--primary); margin-top: 0;">🤝 Condividi per accedere</h3>
-            <p style="color: #666; font-size: 14px;">Solo chi condivide le proprie ferie può cercare e proporre scambi.</p>
+            <i class="fa-solid fa-handshake" style="font-size: 48px; color: var(--primary); margin-bottom: 16px;"></i>
+            <h3 style="color: var(--primary); margin-top: 0; font-weight: 800;">Condividi per accedere</h3>
+            <p style="color: var(--text-main); font-size: 15px; margin-bottom: 24px;">Solo chi condivide le proprie ferie può cercare e proporre scambi agli altri colleghi.</p>
+            
             <div id="strike-warning" class="warning-box">
-                ⚠️ <b>Regola Anti-Furbetti:</b> Se revochi ripetutamente la condivisione l'accesso alle ferie sarà bloccato permanentemente.
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 24px;"></i>
+                <div>
+                    <strong style="display:block; margin-bottom:4px;">Regola Anti-Furbetti</strong>
+                    Se revochi ripetutamente la condivisione per "sbirciare" senza farti vedere, l'accesso a questa sezione verrà bloccato permanentemente.
+                </div>
             </div>
-            <button class="btn-action" onclick="apriModaleCondivisione()">Inserisci le tue ferie</button>
+            
+            <button class="btn-action" onclick="apriModaleCondivisione()"><i class="fa-solid fa-share-nodes"></i> Inserisci le tue ferie</button>
         </div>
     </div>
 
     <div id="view-blocked" class="view-container">
-        <div class="card" style="text-align: center;">
-            <h3 style="color: var(--danger); margin-top: 0;">🚫 Accesso Bloccato</h3>
-            <p style="color: #666; font-size: 15px;">Hai superato il limite di 3 revoche. L'accesso alle ferie è stato disabilitato.</p>
-            <button class="btn-action" style="background-color: #6c757d;" onclick="window.location.href='index.html'">Home</button>
+        <div class="card" style="text-align: center; background: var(--danger-light); border-color: var(--danger-border);">
+            <i class="fa-solid fa-ban" style="font-size: 48px; color: var(--danger); margin-bottom: 16px;"></i>
+            <h3 style="color: var(--danger); margin-top: 0; font-weight: 800;">Accesso Bloccato</h3>
+            <p style="color: var(--text-main); font-size: 15px; margin-bottom: 24px;">Hai superato il limite massimo di 3 revoche. L'accesso alla sezione ferie è stato disabilitato per il tuo account.</p>
+            <button class="btn-action" style="background-color: var(--text-muted); margin: 0 auto;" onclick="window.location.href='index.html'"><i class="fa-solid fa-house"></i> Home Page</button>
         </div>
     </div>
 
     <div id="view-main" class="view-container">
         <div class="tabs">
-            <button id="tab-cerca" class="tab-btn active" onclick="switchTab('cerca')">🔍 Cerca</button>
-            <button id="tab-bacheca" class="tab-btn" onclick="switchTab('bacheca')">📌 Bacheca</button>
+            <button id="tab-cerca" class="tab-btn active" onclick="switchTab('cerca')"><i class="fa-solid fa-magnifying-glass"></i> Ricerca</button>
+            <button id="tab-bacheca" class="tab-btn" onclick="switchTab('bacheca')"><i class="fa-solid fa-thumbtack"></i> Bacheca</button>
         </div>
 
         <div id="panel-cerca">
-            <div class="card" style="padding: 15px;">
-                <label style="font-size: 11px; font-weight: bold; color: #666;">Anno Ricerca:</label>
+            <div class="card" style="padding: 20px;">
+                <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">ANNO RICERCA</label>
                 <input type="number" id="searchAnno" class="input-field" onchange="eseguiRicerca()">
+                
+                <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">FILTRO MANSIONE</label>
                 <select id="searchMansione" class="input-field" onchange="eseguiRicerca()">
                     <option value="Tutte">Tutte le mansioni</option>
                     <option value="Marinaio">Marinaio</option>
@@ -134,26 +254,28 @@
                     <option value="Marinaio polivalente">Marinaio polivalente</option>
                     <option value="Direttore di macchina">Direttore di macchina</option>
                 </select>
-                <select id="searchPeriodo" class="input-field" onchange="eseguiRicerca()">
+                
+                <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">FILTRO PERIODO</label>
+                <select id="searchPeriodo" class="input-field" style="margin-bottom: 0;" onchange="eseguiRicerca()">
                     <option value="">Tutti i periodi</option>
-                    <optgroup label="Estive" id="optgroup-estive-ricerca"></optgroup>
-                    <optgroup label="Invernali" id="optgroup-invernali-ricerca"></optgroup>
+                    <optgroup label="Ferie Estive" id="optgroup-estive-ricerca"></optgroup>
+                    <optgroup label="Ferie Invernali" id="optgroup-invernali-ricerca"></optgroup>
                 </select>
             </div>
             
-            <div class="section-title" style="text-align: center; margin-bottom: 15px; font-size: 14px; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                Risultati Ferie Anno: <span id="span-anno-ricerca" style="font-size: 16px;"></span>
+            <div class="result-banner">
+                Risultati Ferie Anno: <span id="span-anno-ricerca" style="font-size: 18px; color: var(--primary); font-weight: 800; margin-left: 5px;"></span>
             </div>
 
-            <div id="suggeriti-ricerca-container" style="display: none; margin-bottom: 15px;"><div id="suggeriti-ricerca"></div></div>
+            <div id="suggeriti-ricerca-container" style="display: none; margin-bottom: 20px;"><div id="suggeriti-ricerca"></div></div>
             <div id="risultati-ricerca"></div>
         </div>
 
         <div id="panel-bacheca" style="display: none;">
-            <button class="btn-action" style="margin-top: 0; margin-bottom: 15px;" onclick="apriModaleAnnuncio()">+ Inserisci Annuncio</button>
+            <button class="btn-action" style="margin-top: 0; margin-bottom: 20px;" onclick="apriModaleAnnuncio()"><i class="fa-solid fa-plus"></i> Inserisci Annuncio</button>
             
-            <div class="card" style="padding: 15px; margin-bottom: 15px;">
-                <label style="font-size: 12px; font-weight: bold; color: #666;">Filtro Mansione:</label>
+            <div class="card" style="padding: 20px; margin-bottom: 20px;">
+                <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">FILTRA ANNUNCI PER MANSIONE</label>
                 <select id="filtroMansioneBacheca" class="input-field" style="margin-bottom: 0;" onchange="caricaBacheca()">
                     <option value="Tutte">Tutte le mansioni</option>
                     <option value="Marinaio">Marinaio</option>
@@ -165,22 +287,24 @@
                 </select>
             </div>
 
-            <div id="suggeriti-bacheca-container" style="display: none; margin-bottom: 15px;"><div id="suggeriti-bacheca"></div></div>
+            <div id="suggeriti-bacheca-container" style="display: none; margin-bottom: 20px;"><div id="suggeriti-bacheca"></div></div>
             <div id="lista-annunci"></div>
         </div>
     </div>
 
     <div id="shareModal" class="modal-overlay">
-        <div class="modal-content">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('shareModal').style.display='none'">&times;</span>
-            <h3 style="text-align: center; margin-top: 5px;">Le mie Ferie</h3>
+        <div class="modal-content" style="max-width: 480px;">
+            <i class="fa-solid fa-xmark" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="document.getElementById('shareModal').style.display='none'"></i>
+            <h3 style="text-align: center; margin-top: 0; margin-bottom: 20px; color: var(--text-main); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-clipboard-user" style="color: var(--primary);"></i> Le mie Ferie</h3>
 
-            <div class="section-title">Dati Profilo</div>
-            <input type="text" id="regNome" class="input-field" placeholder="Nome">
-            <input type="text" id="regCognome" class="input-field" placeholder="Cognome">
-            <input type="text" id="regProgressivo" class="input-field" placeholder="Numero omonimia es. 02, 03 ecc (facoltativo)">
-            <input type="text" id="regMatricola" class="input-field" placeholder="Matricola">
-            <input type="tel" id="regTelefono" class="input-field" placeholder="Telefono">
+            <div class="section-title">DATI PERSONALI</div>
+            <input type="text" id="regNome" class="input-field" placeholder="Nome *">
+            <input type="text" id="regCognome" class="input-field" placeholder="Cognome *">
+            <input type="text" id="regProgressivo" class="input-field" placeholder="Numero omonimia es. 02 (Opzionale)">
+            <input type="text" id="regMatricola" class="input-field" placeholder="Matricola *">
+            <input type="tel" id="regTelefono" class="input-field" placeholder="Telefono *">
+            
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">MANSIONE *</label>
             <select id="regMansione" class="input-field">
                 <option value="Marinaio">Marinaio</option>
                 <option value="Preposto al comando">Preposto al comando</option>
@@ -190,51 +314,71 @@
                 <option value="Direttore di macchina">Direttore di macchina</option>
             </select>
 
-            <div class="section-title">Ferie assegnate</div>
-            <input type="number" id="regAnno" class="input-field" placeholder="Anno Riferimento">
-            <div style="display: flex; gap: 5px;">
-                <div style="flex: 1;"><label style="font-size: 10px;">Estiva Base:</label><select id="regEstive" class="input-field"></select></div>
-                <div style="flex: 1;"><label style="font-size: 10px;">Invernale Base:</label><select id="regInvernali" class="input-field"></select></div>
+            <div class="section-title">FERIE ASSEGNATE ALL'ASSUNZIONE</div>
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">ANNO DI RIFERIMENTO *</label>
+            <input type="number" id="regAnno" class="input-field" placeholder="Es. 2024">
+            
+            <div style="display: flex; gap: 12px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">PERIODO ESTIVO *</label>
+                    <select id="regEstive" class="input-field"></select>
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">PERIODO INVERNALE *</label>
+                    <select id="regInvernali" class="input-field"></select>
+                </div>
             </div>
 
-            <div class="section-title">Ferie attuali cambiate (Opzionale)</div>
-            <div style="display: flex; gap: 5px;">
-                <div style="flex: 1;"><label style="font-size: 10px;">Estive cambiate:</label><select id="currEstive" class="input-field"></select></div>
-                <div style="flex: 1;"><label style="font-size: 10px;">Invernali cambiate:</label><select id="currInvernali" class="input-field"></select></div>
+            <div class="section-title">FERIE ATTUALI CAMBIATE (OPZIONALE)</div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 0; margin-bottom: 12px; line-height: 1.4;">Compila solo se nel tempo hai cambiato gruppo ferie rispetto a quello assegnato all'assunzione.</p>
+            <div style="display: flex; gap: 12px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">NUOVO ESTIVO</label>
+                    <select id="currEstive" class="input-field"></select>
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">NUOVO INVERNALE</label>
+                    <select id="currInvernali" class="input-field"></select>
+                </div>
             </div>
 
-            <button id="btnSalvaFerie" class="btn-action" onclick="salvaFerie()">Salva Dati</button>
+            <button id="btnSalvaFerie" class="btn-action" onclick="salvaFerie()"><i class="fa-solid fa-floppy-disk"></i> Salva Dati Profilo</button>
         </div>
     </div>
 
     <div id="adModal" class="modal-overlay">
         <div class="modal-content">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('adModal').style.display='none'">&times;</span>
-            <h3 id="titoloModalAnnuncio">Nuovo Annuncio</h3>
+            <i class="fa-solid fa-xmark" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="document.getElementById('adModal').style.display='none'"></i>
+            <h3 id="titoloModalAnnuncio" style="margin-top: 0; margin-bottom: 24px; color: var(--text-main); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-bullhorn" style="color: var(--primary);"></i> Nuovo Annuncio</h3>
             
             <input type="hidden" id="editAdId">
 
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">TIPO FERIE DA SCAMBIARE *</label>
             <select id="adTipoFerie" class="input-field" onchange="aggiornaFormAnnuncio()">
-                <option value="estive">Estive</option>
-                <option value="invernali">Invernali</option>
+                <option value="estive">☀️ Estive</option>
+                <option value="invernali">❄️ Invernali</option>
             </select>
             
-            <label style="font-size: 11px; font-weight: bold;">Anno di Riferimento *:</label>
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">ANNO DI RIFERIMENTO DELLO SCAMBIO *</label>
             <input type="number" id="adAnnoRiferimento" class="input-field" placeholder="Es. 2026">
 
-            <label style="font-size: 11px; font-weight: bold;">Cedo il periodo:</label>
-            <select id="adPeriodoOfferto" class="input-field"></select>
+            <div style="background: var(--surface-hover); padding: 16px; border-radius: var(--radius-md); border: 1px dashed var(--border-color); margin-bottom: 16px;">
+                <label style="font-size: 12px; font-weight: 800; color: var(--primary); display: block; margin-bottom: 10px;"><i class="fa-solid fa-arrow-right-from-bracket"></i> CEDO IL PERIODO:</label>
+                <select id="adPeriodoOfferto" class="input-field" style="margin-bottom: 0; border-color: var(--primary);"></select>
+            </div>
             
-            <label style="font-size: 11px; font-weight: bold;">Cerco:</label>
-            <select id="adCercoTipo" class="input-field" onchange="aggiornaFormAnnuncio()">
-                <option value="mesi">Mesi Generici</option>
-                <option value="periodo">Periodo Specifico</option>
-            </select>
+            <div style="background: var(--surface-hover); padding: 16px; border-radius: var(--radius-md); border: 1px dashed var(--border-color); margin-bottom: 16px;">
+                <label style="font-size: 12px; font-weight: 800; color: var(--success); display: block; margin-bottom: 10px;"><i class="fa-solid fa-arrow-right-to-bracket"></i> IN CAMBIO CERCO:</label>
+                <select id="adCercoTipo" class="input-field" onchange="aggiornaFormAnnuncio()">
+                    <option value="mesi">Mesi Generici (Es. Agosto o Luglio)</option>
+                    <option value="periodo">Un Periodo Specifico Esatto</option>
+                </select>
+                
+                <div id="cerco-mesi-container"><div id="checkboxes-mesi" class="checkbox-grid" style="margin-bottom:0;"></div></div>
+                <div id="cerco-periodo-container" style="display:none;"><select id="adPeriodoCercato" class="input-field" style="margin-bottom: 0; border-color: var(--success);"></select></div>
+            </div>
             
-            <div id="cerco-mesi-container"><div id="checkboxes-mesi" class="checkbox-grid"></div></div>
-            <div id="cerco-periodo-container" style="display:none;"><select id="adPeriodoCercato" class="input-field"></select></div>
-            
-            <button id="btnSalvaAnnuncio" class="btn-action" onclick="pubblicaAnnuncio()">Pubblica</button>
+            <button id="btnSalvaAnnuncio" class="btn-action" onclick="pubblicaAnnuncio()"><i class="fa-solid fa-paper-plane"></i> Pubblica Annuncio</button>
         </div>
     </div>
 
@@ -253,14 +397,12 @@
         let myFerieData = null;
         let myAnnunciAttivi = [];
         let jsonFerie = { estive: [], invernali: [] };
-        let bachecaAdsCache = {}; // Cache per le modifiche
+        let bachecaAdsCache = {}; 
         const isAdmin = localStorage.getItem('dev_mode_active') === 'true';
 
         const mesiEstivi = ["Giugno", "Luglio", "Agosto", "Settembre"];
         const mesiInvernali = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Ottobre", "Novembre", "Dicembre"];
-        const svgWa = `<svg viewBox="0 0 24 24" width="22" height="22" fill="#25D366"><path d="M12.031 0C5.385 0 .018 5.366.018 12.012c0 2.125.553 4.197 1.603 6.012L.05 24l6.115-1.604c1.745.965 3.738 1.474 5.866 1.474 6.646 0 12.013-5.366 12.013-12.012S18.677 0 12.031 0zm-.018 21.84c-1.796 0-3.553-.483-5.093-1.396l-.365-.216-3.791.994.996-3.697-.238-.377a9.98 9.98 0 0 1-1.528-5.337C1.994 6.452 6.444 2.016 12.013 2.016c2.705 0 5.247 1.053 7.158 2.966 1.91 1.912 2.964 4.456 2.964 7.165 0 5.564-4.45 10.003-10.012 10.003l-.11-.31zm5.503-7.534c-.302-.151-1.785-.881-2.062-.981-.277-.101-.479-.151-.68.151-.202.302-.781.981-.957 1.182-.176.202-.353.226-.655.075-.302-.151-1.275-.47-2.428-1.503-.896-.803-1.501-1.794-1.677-2.096-.176-.302-.019-.465.132-.616.136-.136.302-.353.453-.53.151-.176.202-.302.302-.504.101-.202.05-.378-.025-.53-.075-.151-.68-1.64-.932-2.245-.245-.59-.495-.51-.68-.52-.176-.01-.378-.01-.58-.01-.202 0-.53.076-.807.378-.277.302-1.058 1.034-1.058 2.52 0 1.487 1.083 2.924 1.234 3.125.151.202 2.132 3.255 5.163 4.561 2.222.956 2.87.805 3.373.68.591-.148 1.785-.73 2.037-1.435.252-.705.252-1.31.176-1.435-.075-.126-.277-.202-.58-.353z"/></svg>`;
 
-        // Funzioni per l'apertura e la chiusura del menù laterale
         window.apriMenuLaterale = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; };
         window.chiudiMenuLaterale = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; };
         
@@ -270,7 +412,7 @@
             const res = await fetch('rotazione_ferie.json');
             jsonFerie = await res.json();
             const pop = (el, arr, sub = false) => {
-                if(!el) return; el.innerHTML = sub ? '' : '<option value="">--</option>';
+                if(!el) return; el.innerHTML = sub ? '' : '<option value="">-- Seleziona --</option>';
                 arr.forEach(i => { const o = document.createElement('option'); o.value = i.n; o.innerText = i.n; el.appendChild(o); });
             };
             const lists = [document.getElementById('regEstive'), document.getElementById('regInvernali'), document.getElementById('currEstive'), document.getElementById('currInvernali')];
@@ -330,7 +472,6 @@
                         const dataPub = new Date(a.timestamp);
                         const mesePub = dataPub.getMonth();
                         
-                        // Per il cleanup consideriamo l'anno di riferimento (se presente) o l'anno di pubblicazione come base
                         let baseAnnoT = a.anno_riferimento ? parseInt(a.anno_riferimento) : dataPub.getFullYear();
 
                         if (a.cerco_tipo === 'mesi' && a.cerco_valori?.length > 0) {
@@ -383,6 +524,7 @@
         };
 
         window.salvaFerie = async () => {
+            const btn = document.getElementById('btnSalvaFerie');
             const n = document.getElementById('regNome').value.trim();
             const c = document.getElementById('regCognome').value.trim();
             const p = document.getElementById('regProgressivo').value.trim();
@@ -393,20 +535,27 @@
             const est = document.getElementById('regEstive').value;
             const inv = document.getElementById('regInvernali').value;
 
-            if(!n || !c || !mat || !tel || !anno || !man || !est || !inv) return alert("Compila tutti i campi!");
+            if(!n || !c || !mat || !tel || !anno || !man || !est || !inv) return alert("Compila tutti i campi obbligatori (*)");
+
+            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Salvataggio..."; btn.disabled = true;
 
             const payloadFerie = { uid: currentUser.uid, nome: n, cognome: c, progressivo: p, matricola: mat, telefono: tel, mansione: man, anno_base: anno, periodo_estivo: est, periodo_invernale: inv, est_attuale: document.getElementById('currEstive').value, inv_attuale: document.getElementById('currInvernali').value };
             const payloadUtente = { nome: n, cognome: c, progressivo: p, matricola: mat, telefono: tel, mansione: man };
 
-            await setDoc(doc(db, "ferie_condivise", currentUser.uid), payloadFerie);
-            await setDoc(doc(db, "utenti", currentUser.uid), payloadUtente, { merge: true });
-            location.reload();
+            try {
+                await setDoc(doc(db, "ferie_condivise", currentUser.uid), payloadFerie);
+                await setDoc(doc(db, "utenti", currentUser.uid), payloadUtente, { merge: true });
+                location.reload();
+            } catch (e) {
+                alert("Errore durante il salvataggio.");
+                btn.innerHTML = "<i class='fa-solid fa-floppy-disk'></i> Salva Dati Profilo"; btn.disabled = false;
+            }
         };
 
         window.revocaCondivisione = async () => {
             if(isAdmin) { await deleteDoc(doc(db, "ferie_condivise", currentUser.uid)); location.reload(); return; }
             let r = userDataPrivate.revoche_ferie || 0;
-            if(confirm(`Attenzione! Ti rimangono ${2-r} tentativi prima del blocco.`)) {
+            if(confirm(`Attenzione! Ti rimangono ${2-r} tentativi prima del blocco permanente dell'accesso.\nSei sicuro di voler annullare la condivisione?`)) {
                 await deleteDoc(doc(db, "ferie_condivise", currentUser.uid));
                 await setDoc(doc(db, "utenti", currentUser.uid), { revoche_ferie: r + 1 }, { merge: true });
                 location.reload();
@@ -429,14 +578,16 @@
             const annoInput = document.getElementById('searchAnno').value;
             const ar = parseInt(annoInput) || new Date().getFullYear();
             
-            // Aggiorna Banner Anno
             document.getElementById('span-anno-ricerca').innerText = ar;
 
             const mf = document.getElementById('searchMansione').value;
             const pf = document.getElementById('searchPeriodo').value;
             
+            resC.innerHTML = `<div class="status-message" style="text-align:center; padding:20px; color:var(--text-muted);"><i class="fa-solid fa-circle-notch fa-spin"></i> Ricerca in corso...</div>`;
+            sugC.innerHTML = "";
+            
             const snap = await getDocs(collection(db, "ferie_condivise"));
-            resC.innerHTML = ""; sugC.innerHTML = ""; let sCount = 0;
+            resC.innerHTML = ""; let sCount = 0; let rCount = 0;
 
             snap.forEach(d => {
                 const u = d.data(); if (mf !== "Tutte" && u.mansione !== mf) return;
@@ -447,21 +598,29 @@
                 const isS = u.uid !== currentUser.uid && (match(ec, 'estive') || match(ic, 'invernali'));
                 const hasExchange = ar === new Date().getFullYear() && (u.est_attuale !== u.periodo_estivo || u.inv_attuale !== u.periodo_invernale);
                 const progLabel = u.progressivo ? ` (${u.progressivo})` : "";
+                
+                const isMe = u.uid === currentUser.uid;
 
-                const html = `<div class="${isS?'card-suggested':'card'}" style="padding:15px">
+                const html = `<div class="${isS?'card-suggested':'card'}" style="padding:20px; animation: slideInUp 0.3s ease both;">
                     <div style="display:flex; justify-content: space-between;">
-                        <div>
-                            <div style="font-weight:bold; color:var(--primary)">${u.cognome} ${u.nome}${progLabel}${u.uid===currentUser.uid?' (Tu)':''}</div>
-                            <div style="font-size:11px; color:#666">${u.mansione} | Mat: ${u.matricola || 'N/D'}</div>
-                            <span class="badge-estivo">☀️ ${ec}${hasExchange && ec===u.est_attuale ? '<span class="badge-scambiato">SCAMBIATO</span>' : ''}</span><br>
-                            <span class="badge-invernale">❄️ ${ic}${hasExchange && ic===u.inv_attuale ? '<span class="badge-scambiato">SCAMBIATO</span>' : ''}</span>
+                        <div style="flex:1;">
+                            <div style="font-weight:800; font-size:16px; color:var(--primary); margin-bottom:4px;">${u.cognome} ${u.nome}${progLabel}${isMe?' <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">(Tu)</span>':''}</div>
+                            <div style="font-size:12px; color:var(--text-muted); font-weight:600; margin-bottom: 12px;"><i class="fa-solid fa-id-badge"></i> ${u.mansione} | Matr: ${u.matricola || 'N/D'}</div>
+                            
+                            <span class="badge-estivo"><i class="fa-solid fa-sun"></i> ${ec}${hasExchange && ec===u.est_attuale ? '<span class="badge-scambiato"><i class="fa-solid fa-right-left"></i> Scambiato</span>' : ''}</span><br>
+                            <span class="badge-invernale"><i class="fa-solid fa-snowflake"></i> ${ic}${hasExchange && ic===u.inv_attuale ? '<span class="badge-scambiato"><i class="fa-solid fa-right-left"></i> Scambiato</span>' : ''}</span>
                         </div>
-                        <div class="contact-actions">${u.uid!==currentUser.uid?`<a href="https://wa.me/39${u.telefono.replace(/\s+/g,'')}" target="_blank" class="action-icon">${svgWa}</a>`:''}</div>
+                        ${!isMe ? `<div class="contact-actions"><a href="https://wa.me/39${u.telefono.replace(/\s+/g,'')}" target="_blank" class="action-icon btn-wa" title="Contatta su WhatsApp"><i class="fa-brands fa-whatsapp"></i></a></div>` : ''}
                     </div>
                 </div>`;
-                if(isS) { sCount++; sugC.innerHTML += html; } else resC.innerHTML += html;
+                
+                if(isS) { sCount++; sugC.innerHTML += html; } else { rCount++; resC.innerHTML += html; }
             });
+            
             document.getElementById('suggeriti-ricerca-container').style.display = sCount>0?'block':'none';
+            if(rCount === 0 && sCount === 0) {
+                resC.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted); background:var(--surface-hover); border-radius:var(--radius-md); border:1px dashed var(--border-color);"><i class="fa-solid fa-user-slash" style="font-size:32px; display:block; margin-bottom:10px;"></i> Nessun collega trovato per questi criteri.</div>`;
+            }
         };
 
         window.switchTab = (t) => {
@@ -473,20 +632,19 @@
 
         window.apriModaleAnnuncio = () => { 
             document.getElementById('editAdId').value = "";
-            document.getElementById('titoloModalAnnuncio').innerText = "Nuovo Annuncio";
+            document.getElementById('titoloModalAnnuncio').innerHTML = "<i class='fa-solid fa-bullhorn' style='color:var(--primary);'></i> Nuovo Annuncio";
             document.getElementById('adTipoFerie').value = 'estive'; 
             document.getElementById('adAnnoRiferimento').value = new Date().getFullYear();
-            document.getElementById('btnSalvaAnnuncio').innerText = "Pubblica";
+            document.getElementById('btnSalvaAnnuncio').innerHTML = "<i class='fa-solid fa-paper-plane'></i> Pubblica Annuncio";
             aggiornaFormAnnuncio(); 
             document.getElementById('adModal').style.display = 'flex'; 
         };
 
         window.aggiornaFormAnnuncio = () => {
             const t = document.getElementById('adTipoFerie').value; const ct = document.getElementById('adCercoTipo').value;
-            const pop = (el, arr) => { el.innerHTML = '<option value="">--</option>'; arr.forEach(i => { const o = document.createElement('option'); o.value = i.n; o.innerText = i.n; el.appendChild(o); }); };
+            const pop = (el, arr) => { el.innerHTML = '<option value="">-- Seleziona --</option>'; arr.forEach(i => { const o = document.createElement('option'); o.value = i.n; o.innerText = i.n; el.appendChild(o); }); };
             pop(document.getElementById('adPeriodoOfferto'), jsonFerie[t]);
             
-            // Seleziona il periodo attuale come default solo se è un nuovo annuncio (editAdId vuoto)
             const idModifica = document.getElementById('editAdId').value;
             if(myFerieData && !idModifica) {
                 const def = t === 'estive' ? (myFerieData.est_attuale || myFerieData.periodo_estivo) : (myFerieData.inv_attuale || myFerieData.periodo_invernale);
@@ -507,13 +665,12 @@
             if(!a) return;
             
             document.getElementById('editAdId').value = id;
-            document.getElementById('titoloModalAnnuncio').innerText = "Modifica Annuncio";
+            document.getElementById('titoloModalAnnuncio').innerHTML = "<i class='fa-solid fa-pen-to-square' style='color:var(--primary);'></i> Modifica Annuncio";
             document.getElementById('adTipoFerie').value = a.tipo_ferie;
             document.getElementById('adAnnoRiferimento').value = a.anno_riferimento || new Date().getFullYear();
             
             aggiornaFormAnnuncio();
             
-            // Ritardo di sicurezza per lasciare aggiornare il DOM da aggiornaFormAnnuncio()
             setTimeout(() => {
                 document.getElementById('adPeriodoOfferto').value = a.periodo_offerto;
                 document.getElementById('adCercoTipo').value = a.cerco_tipo;
@@ -527,7 +684,7 @@
                     } else {
                         document.getElementById('adPeriodoCercato').value = a.cerco_valori[0] || '';
                     }
-                    document.getElementById('btnSalvaAnnuncio').innerText = "Salva Modifiche";
+                    document.getElementById('btnSalvaAnnuncio').innerHTML = "<i class='fa-solid fa-floppy-disk'></i> Salva Modifiche";
                     document.getElementById('adModal').style.display = 'flex';
                 }, 50);
             }, 50);
@@ -546,7 +703,7 @@
                 return alert("Completa tutti i campi prima di procedere!");
             }
             
-            btn.innerText = "⏳ Salvataggio...";
+            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Salvataggio..."; btn.disabled = true;
             
             try {
                 if (idModifica) {
@@ -578,64 +735,81 @@
                 location.reload();
             } catch (error) {
                 console.error("Errore Firebase:", error);
-                alert("Errore durante l'operazione: " + error.message);
-                btn.innerText = idModifica ? "Salva Modifiche" : "Pubblica";
+                alert("Errore durante l'operazione.");
+                btn.innerHTML = idModifica ? "<i class='fa-solid fa-floppy-disk'></i> Salva Modifiche" : "<i class='fa-solid fa-paper-plane'></i> Pubblica";
+                btn.disabled = false;
             }
         };
 
         window.caricaBacheca = async function() {
             const sugC = document.getElementById('suggeriti-bacheca'); const resC = document.getElementById('lista-annunci');
             const fMan = document.getElementById('filtroMansioneBacheca').value;
+            
+            resC.innerHTML = `<div class="status-message" style="text-align:center; padding:20px; color:var(--text-muted);"><i class="fa-solid fa-circle-notch fa-spin"></i> Caricamento bacheca...</div>`;
+            
             let q = fMan === "Tutte" ? collection(db, "bacheca_ferie") : query(collection(db, "bacheca_ferie"), where("mansione", "==", fMan));
             const ads = await getDocs(q);
             
-            bachecaAdsCache = {}; // Resetta la cache
-            sugC.innerHTML = ""; resC.innerHTML = ""; let sCount = 0;
+            bachecaAdsCache = {}; 
+            sugC.innerHTML = ""; resC.innerHTML = ""; let sCount = 0; let rCount = 0;
             
             ads.forEach(d => {
                 const a = d.data(); 
-                bachecaAdsCache[d.id] = a; // Salva in cache per eventuali modifiche
+                bachecaAdsCache[d.id] = a; 
                 
                 const isMe = a.uid === currentUser.uid;
-                const canDelete = isMe || isAdmin; // CONTROLLO AMMINISTRATORE
+                const canDelete = isMe || isAdmin; 
                 const progLabel = a.progressivo ? ` (${a.progressivo})` : "";
                 
                 const match = !isMe && myAnnunciAttivi.some(m => m.tipo_ferie === a.tipo_ferie && (m.cerco_tipo === 'periodo' ? m.cerco_valori[0] === a.periodo_offerto : m.cerco_valori.some(mes => a.periodo_offerto.toLowerCase().includes(mes.toLowerCase()))));
                 
                 let actionsHTML = "";
                 if (!isMe && a.telefono) {
-                    actionsHTML += `<a href="https://wa.me/39${a.telefono.replace(/\s+/g,'')}" target="_blank" class="action-icon">${svgWa}</a>`;
+                    actionsHTML += `<a href="https://wa.me/39${a.telefono.replace(/\s+/g,'')}" target="_blank" class="action-icon btn-wa" title="Contatta su WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>`;
                 }
                 if (isMe) {
-                    actionsHTML += `<button onclick="modificaAnnuncioFerie('${d.id}')" class="action-icon" style="background:var(--primary); color:white; border:none; padding:8px; width:auto; height:auto; font-size:16px; margin-top: 5px; cursor: pointer;">✏️</button>`;
+                    actionsHTML += `<button onclick="modificaAnnuncioFerie('${d.id}')" class="action-icon" style="color:var(--primary);"><i class="fa-solid fa-pen"></i></button>`;
                 }
                 if (canDelete) {
-                    actionsHTML += `<button onclick="cancellaAnnuncioFerie('${d.id}')" class="action-icon" style="background:var(--danger); color:white; border:none; padding:8px; width:auto; height:auto; font-size:16px; margin-top: 5px; cursor: pointer;">🗑️</button>`;
+                    actionsHTML += `<button onclick="cancellaAnnuncioFerie('${d.id}')" class="action-icon" style="color:var(--danger);"><i class="fa-solid fa-trash-can"></i></button>`;
                 }
 
-                // Generazione Badge Anno Sicuro
-                const annoBadge = a.anno_riferimento ? `Anno: ${a.anno_riferimento}` : `<span style="color:var(--danger);">[Anno Mancante]</span>`;
+                const annoBadge = a.anno_riferimento ? `Anno: ${a.anno_riferimento}` : `<span style="color:var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> N/D</span>`;
+                const tipoIcon = a.tipo_ferie === 'estive' ? '<i class="fa-solid fa-sun" style="color: #e65100;"></i>' : '<i class="fa-solid fa-snowflake" style="color: #0d47a1;"></i>';
+                const borderColor = a.tipo_ferie === 'estive' ? 'var(--warning)' : 'var(--primary)';
 
-                const h = `<div class="${match?'card-suggested':'card'}" style="border-left:4px solid ${a.tipo_ferie==='estive'?'#ffc107':'#17a2b8'}">
+                const h = `<div class="${match?'card-suggested':'card'}" style="border-left:5px solid ${borderColor}; padding:20px; animation: slideInUp 0.3s ease both;">
                     <div style="display:flex; justify-content: space-between;">
-                        <div>
-                            <div style="font-weight:bold">${a.cognome} ${a.nome}${progLabel}</div>
-                            <div style="font-size:11px; color:#666; margin-bottom: 5px;">${a.mansione} | Mat: ${a.matricola || 'N/D'} | Tel: ${a.telefono}</div>
-                            <span class="${a.tipo_ferie==='estive'?'badge-estivo':'badge-invernale'}">CEDE: ${a.periodo_offerto} <span style="margin-left: 5px; padding-left: 5px; border-left: 1px solid #ccc;">${annoBadge}</span></span><br>
-                            <span class="badge-invernale" style="background:#eee; color:#333">CERCA: ${a.cerco_valori.join(', ')}</span>
+                        <div style="flex:1;">
+                            <div style="font-weight:800; font-size:16px; color:var(--text-main); margin-bottom:4px;">${a.cognome} ${a.nome}${progLabel}${isMe?' <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">(Il tuo annuncio)</span>':''}</div>
+                            <div style="font-size:12px; color:var(--text-muted); font-weight:600; margin-bottom: 15px;"><i class="fa-solid fa-id-badge"></i> ${a.mansione}</div>
+                            
+                            <div style="background:var(--surface-hover); border:1px solid var(--border-color); border-radius: 12px; padding:12px; margin-bottom: 10px;">
+                                <div style="font-size:11px; font-weight:800; color:var(--text-muted); margin-bottom:6px;">CEDE (Scambio ${annoBadge})</div>
+                                <span class="${a.tipo_ferie==='estive'?'badge-estivo':'badge-invernale'}" style="margin:0;">${tipoIcon} ${a.periodo_offerto}</span>
+                            </div>
+                            
+                            <div style="background:var(--surface-hover); border:1px solid var(--border-color); border-radius: 12px; padding:12px;">
+                                <div style="font-size:11px; font-weight:800; color:var(--text-muted); margin-bottom:6px;">CERCA</div>
+                                <span class="badge-cerco" style="margin:0;">${a.cerco_valori.join(', ')}</span>
+                            </div>
                         </div>
-                        <div class="contact-actions" style="flex-direction:column; justify-content:center; padding-left: 10px;">
+                        <div class="contact-actions">
                             ${actionsHTML}
                         </div>
                     </div>
                 </div>`;
-                if(match) { sCount++; sugC.innerHTML += h; } else resC.innerHTML += h;
+                if(match) { sCount++; sugC.innerHTML += h; } else { rCount++; resC.innerHTML += h; }
             });
+            
             document.getElementById('suggeriti-bacheca-container').style.display = sCount>0?'block':'none';
+            if(rCount === 0 && sCount === 0) {
+                resC.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted); background:var(--surface-hover); border-radius:var(--radius-md); border:1px dashed var(--border-color);"><i class="fa-regular fa-clipboard" style="font-size:32px; display:block; margin-bottom:10px;"></i> Nessun annuncio presente.</div>`;
+            }
         }
 
         window.cancellaAnnuncioFerie = async function(id) {
-            if(!confirm("Vuoi cancellare questo annuncio?")) return;
+            if(!confirm("Sei sicuro di voler cancellare questo annuncio?")) return;
             await deleteDoc(doc(db, "bacheca_ferie", id));
             location.reload();
         };
