@@ -2,194 +2,211 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rotazioni Colleghi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Utility - Rotazioni</title>
     
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0056b3">
+    <meta name="theme-color" content="#0066cc">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="global.js"></script>
     
     <style>
-        /* --- STILI BASE E AUTENTICAZIONE --- */
-        :root {
-            --primary: #0056b3;
-            --bg-color: #f4f7f6;
-            --text-color: #333;
-            --success: #28a745;
-            --danger: #dc3545;
-            --info: #17a2b8;
+        /* --- CORE DESIGN SYSTEM --- */
+        :root { 
+            --primary: #0066cc; 
+            --primary-hover: #0052a3;
+            --primary-glow: rgba(0, 102, 204, 0.2);
+            --bg-color: #f0f2f5; 
+            --surface: #ffffff;
+            --surface-hover: #f8f9fa;
+            --text-main: #1a1a1a; 
+            --text-muted: #5f6368;
+            --border-color: #e0e0e0;
+            --success: #0f9d58; 
+            --danger: #d93025;
+            --danger-light: #fce8e6;
+            --danger-border: #fad2cf;
+            --warning: #f2a600;
+            --warning-light: #fff8e1;
+            --warning-border: #ffecb3;
+            --info: #0088ff;
+            --info-light: #e6f3ff;
+            --info-border: #b3dfff;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        body {
-            font-family: Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        /* TEMA SCURO - Default di Sistema */
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --primary: #4da3ff;
+                --primary-hover: #73b9ff;
+                --primary-glow: rgba(77, 163, 255, 0.25);
+                --bg-color: #0f1115;
+                --surface: #1a1d24;
+                --surface-hover: #232730;
+                --text-main: #e8eaed;
+                --text-muted: #9aa0a6;
+                --border-color: #2f333d;
+                --success: #34a853;
+                --danger: #ea4335;
+                --danger-light: rgba(234, 67, 53, 0.15);
+                --danger-border: rgba(234, 67, 53, 0.3);
+                --warning: #ffb74d;
+                --warning-light: rgba(255, 152, 0, 0.15);
+                --warning-border: rgba(255, 152, 0, 0.3);
+                --info: #33aaff;
+                --info-light: rgba(51, 170, 255, 0.15);
+                --info-border: rgba(51, 170, 255, 0.3);
+            }
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            margin: 0; padding: 20px; 
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh;
         }
 
         /* --- HEADER E MENU LATERALE --- */
-        .header { 
-            width: 100%; 
-            max-width: 400px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-top: 10px; 
-            margin-bottom: 30px; 
-        }
-        
-        .hamburger-btn { 
-            background: none; 
-            border: none; 
-            font-size: 30px; 
-            color: var(--primary); 
-            cursor: pointer; 
-            padding: 0; 
-            width: 50px; 
-            text-align: left; 
-        }
-        
-        h2 { 
-            margin: 0; 
-            color: var(--primary); 
-            font-size: 28px; 
-            font-weight: bold; 
-            text-align: center; 
-            flex: 2; 
-        }
+        .header { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .hamburger-btn { background: none; border: none; font-size: 24px; color: var(--text-main); cursor: pointer; padding: 10px; border-radius: 50%; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
+        .hamburger-btn:active { background: var(--surface-hover); }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; flex: 2; justify-content: center;}
 
-        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 5999; animation: fadeIn 0.3s ease; }
+        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-lg); z-index: 6000; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; overflow-y: auto;}
         .sidebar.open { left: 0; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
-        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; }
-        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 28px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; }
+        .sidebar-header h3 { margin:0; font-weight: 700; display: flex; align-items: center; gap: 10px;}
+        .sidebar-link { padding: 16px 24px; text-decoration: none; color: var(--text-main); font-size: 15px; font-weight: 500; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; transition: all 0.2s; }
+        .sidebar-link i { width: 28px; text-align: left; font-size: 18px; color: var(--text-muted); transition: color 0.2s;}
+        .sidebar-link:active, .sidebar-link:hover { background-color: var(--surface-hover); color: var(--primary); padding-left: 28px; }
+        .sidebar-link:active i, .sidebar-link:hover i { color: var(--primary); }
         
-        #auth-section {
-            width: 100%;
-            max-width: 400px;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            box-sizing: border-box;
-            text-align: center;
-        }
+        /* CARD PANELS (Auth/Request) */
+        .card-panel { width: 100%; max-width: 440px; background: var(--surface); padding: 32px 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); box-sizing: border-box; text-align: center; border: 1px solid var(--border-color); margin-bottom: 20px;}
 
-        #content-section { 
-            display: none; 
-            width: 100%;
-            max-width: 400px;
-            flex-direction: column;
-            gap: 15px;
-        }
+        #content-section { display: none; width: 100%; max-width: 440px; flex-direction: column; gap: 16px; }
         
-        p { color: #555; font-size: 15px; line-height: 1.4; }
+        p { color: var(--text-muted); font-size: 15px; line-height: 1.5; margin-bottom: 20px; }
 
         input[type="text"], input[type="number"], input[type="date"], select {
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 16px;
-            text-align: center;
-            font-family: inherit;
+            width: 100%; padding: 14px; margin-bottom: 16px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 15px; background-color: var(--surface); color: var(--text-main); font-family: inherit; transition: all 0.2s;
+        }
+        input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, select:focus {
+            border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-glow);
         }
 
-        #input-codice-turno { font-size: 20px; text-transform: uppercase; letter-spacing: 2px; }
-        #input-codice-turno::placeholder { text-transform: none; font-size: 16px; letter-spacing: normal; }
+        #input-codice-turno { font-size: 18px; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; text-align: center;}
+        #input-codice-turno::placeholder { text-transform: none; font-size: 15px; letter-spacing: normal; font-weight: normal; }
         
-        .btn {
-            background-color: var(--primary); color: white; border: none; padding: 16px;
-            font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer;
-            width: 100%; transition: opacity 0.2s; margin-bottom: 10px;
-        }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn:active:not(:disabled) { transform: translateY(2px); opacity: 0.9; }
+        /* BOTTONI */
+        .btn { background-color: var(--primary); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; transition: all 0.2s; margin-bottom: 12px; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,102,204,0.2); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+        .btn:active:not(:disabled) { transform: translateY(1px); box-shadow: none; }
+        .btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.05); }
         
-        #error-msg { color: var(--danger); font-size: 14px; margin-top: 10px; min-height: 20px; font-weight: bold; }
+        .btn-outline { background-color: transparent; border: 2px solid var(--border-color); color: var(--text-muted); padding: 14px; font-size: 15px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+        .btn-outline:active { background-color: var(--surface-hover); transform: scale(0.98); }
+
+        #error-msg { color: var(--danger); font-size: 14px; margin-top: 10px; min-height: 20px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;}
 
         /* --- STILI CARDS MENSILI E BOTTONI --- */
-        .status-message { text-align: center; color: #666; font-size: 16px; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .status-message { text-align: center; color: var(--text-muted); font-size: 15px; font-weight: 500; padding: 40px 20px; background: var(--surface-hover); border-radius: var(--radius-md); border: 1px dashed var(--border-color); display: flex; flex-direction: column; align-items: center; gap: 12px; }
         
-        .month-card { background: white; border-radius: 12px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; }
-        .month-card h3 { margin-top: 0; color: var(--primary); text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; text-transform: capitalize; }
-        .btn-grid { display: flex; flex-direction: column; gap: 10px; }
+        .month-card { background: var(--surface); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow-md); width: 100%; box-sizing: border-box; border: 1px solid var(--border-color); animation: slideInUp 0.4s ease both;}
+        .month-card h3 { margin-top: 0; color: var(--text-main); text-align: center; border-bottom: 2px solid var(--border-color); padding-bottom: 16px; margin-bottom: 20px; text-transform: capitalize; font-weight: 800; font-size: 18px;}
+        
+        .rot-container { background: var(--surface-hover); border: 1px solid var(--border-color); padding: 20px; border-radius: 16px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
+        .rot-title { margin: 0 0 16px 0; color: var(--primary); font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;}
 
-        .file-btn { width: 100%; background-color: var(--primary); color: white; border: none; padding: 14px 10px; font-size: 16px; border-radius: 10px; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: opacity 0.2s; box-sizing: border-box;}
-        .file-btn:active { transform: translateY(2px); opacity: 0.9; }
-        .btn-search { background-color: var(--success); } 
+        .btn-grid { display: flex; flex-direction: column; gap: 12px; }
+
+        .file-btn { width: 100%; background-color: var(--primary); color: white; border: none; padding: 14px 16px; font-size: 15px; border-radius: 12px; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: 600; box-shadow: var(--shadow-sm); transition: all 0.2s; box-sizing: border-box; gap: 8px;}
+        .file-btn:active { transform: translateY(1px); box-shadow: none; }
+        .btn-search { background-color: var(--success); color: white; } 
         .btn-table { background-color: var(--info); color: white; }
-        .btn-pdf { background-color: #6c757d; }
+        .btn-pdf { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-muted); box-shadow: none;}
+        .btn-pdf:active { background-color: var(--surface-hover); }
 
         /* --- STILI PER LE MODAL (RICERCA E TABELLA) --- */
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); z-index: 3000; align-items: center; justify-content: center;
-        }
-        .modal-content {
-            background: white; padding: 20px; border-radius: 12px; max-width: 95%; width: 400px;
-            max-height: 85vh; overflow-y: auto; position: relative; box-sizing: border-box;
-        }
-        .modal-table-content { width: 98%; max-width: 1200px; padding: 15px; display: flex; flex-direction: column; } 
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 7000; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; animation: fadeIn 0.3s ease; }
+        .modal-content { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; position: relative; box-sizing: border-box; box-shadow: var(--shadow-lg); border: 1px solid var(--border-color);}
+        .modal-table-content { max-width: 1200px; padding: 20px; display: flex; flex-direction: column; } 
         
-        .close-modal { position: absolute; right: 15px; top: 15px; font-size: 24px; cursor: pointer; color: #666; background: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; }
+        .close-modal { position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); background: transparent; border: none; padding: 0; line-height: 1; transition: transform 0.2s; z-index: 10; }
+        .close-modal:hover { transform: scale(1.1); color: var(--danger); }
         
-        .modulo-ricerca { background: #fafafa; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-top: 15px; }
-        .modulo-ricerca h4 { margin-top: 0; color: var(--primary); margin-bottom: 5px;}
-        .risultato-box { background: #e9ecef; border-left: 4px solid var(--primary); padding: 10px; margin-top: 10px; min-height: 30px; font-size: 14px; }
-        .risultato-box ul { padding-left: 20px; margin: 10px 0 0 0; }
+        .modulo-ricerca { background: var(--surface-hover); border: 1px solid var(--border-color); padding: 20px; border-radius: 16px; margin-top: 20px; }
+        .modulo-ricerca h4 { margin-top: 0; color: var(--primary); margin-bottom: 12px; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px;}
+        
+        .risultato-box { background: var(--surface); border: 1px solid var(--border-color); border-left: 4px solid var(--primary); padding: 16px; border-radius: 0 12px 12px 0; margin-top: 16px; min-height: 40px; font-size: 14px; color: var(--text-main); }
+        .risultato-box ul { padding-left: 20px; margin: 12px 0 0 0; color: var(--text-main); }
+        .risultato-box li { margin-bottom: 8px; }
         
         /* Box dettaglio turno */
-        .turn-details-box { margin-top: 6px; font-size: 13px; color: #555; background: #fff; padding: 10px; border-radius: 6px; border: 1px solid #ddd; }
+        .turn-details-box { margin-top: 10px; font-size: 13px; color: var(--text-muted); background: var(--surface-hover); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); line-height: 1.5;}
 
         /* --- STILI TABELLA HTML (JSON) --- */
-        .table-responsive { 
-            width: 100%; 
-            max-height: 70vh; 
-            overflow: auto; 
-            -webkit-overflow-scrolling: touch; 
-            margin-top: 10px; 
-            border: 1px solid #ddd; 
-            border-radius: 8px; 
-            position: relative;
-        }
-        .rotazioni-table { border-collapse: separate; border-spacing: 0; width: max-content; background: white; font-size: 14px; text-align: center; }
-        .rotazioni-table th, .rotazioni-table td { border-bottom: 1px solid #ddd; border-right: 1px solid #ddd; padding: 10px; white-space: nowrap; }
+        .table-responsive { width: 100%; max-height: 75vh; overflow: auto; -webkit-overflow-scrolling: touch; margin-top: 16px; border: 1px solid var(--border-color); border-radius: 12px; position: relative; background: var(--surface); box-shadow: var(--shadow-sm); }
+        .rotazioni-table { border-collapse: separate; border-spacing: 0; width: max-content; background: var(--surface); font-size: 13px; text-align: center; }
+        .rotazioni-table th, .rotazioni-table td { border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); padding: 12px 10px; white-space: nowrap; color: var(--text-main); }
         
-        .rotazioni-table th { background-color: var(--primary); color: white; position: sticky; top: 0; z-index: 2; border-top: 1px solid var(--primary); }
-        .rotazioni-table td:first-child, .rotazioni-table th:first-child { position: sticky; left: 0; min-width: 100px; max-width: 140px; white-space: normal; line-height: 1.3; }
-        .rotazioni-table td:first-child { background-color: #f9f9f9; font-weight: bold; text-align: left; border-right: 2px solid #aaa; color: var(--primary); font-size: 13px; z-index: 3; }
-        .rotazioni-table th:first-child { z-index: 4; border-right: 2px solid #003d82; }
+        .rotazioni-table th { background-color: var(--primary); color: white; position: sticky; top: 0; z-index: 2; font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;}
+        .rotazioni-table td:first-child, .rotazioni-table th:first-child { position: sticky; left: 0; min-width: 120px; max-width: 160px; white-space: normal; line-height: 1.4; }
+        .rotazioni-table td:first-child { background-color: var(--surface-hover); font-weight: 700; text-align: left; border-right: 2px solid var(--border-color); color: var(--primary); font-size: 12px; z-index: 3; }
+        .rotazioni-table th:first-child { z-index: 4; border-right: 2px solid var(--primary-hover); }
 
-        .cell-al { background-color: #28a745; color: white; font-weight: bold; }
-        .cell-ri { background-color: #5cb85c; color: white; }
-        .cell-disp { background-color: #ffc107; color: black; font-weight: bold;}
-        .cell-espe { background-color: #6f42c1; color: white; }
-        .cell-fer { background-color: #20c997; color: white; font-size: 12px; font-weight: bold; }
+        .cell-al { background-color: #e8f5e9; color: #2e7d32; font-weight: 700; border: 1px solid #c8e6c9;}
+        .cell-ri { background-color: #f1f8e9; color: #558b2f; border: 1px solid #dcedc8;}
+        .cell-disp { background-color: #fff8e1; color: #f57f17; font-weight: 700; border: 1px solid #ffecb3;}
+        .cell-espe { background-color: #f3e5f5; color: #6a1b9a; font-weight: 700; border: 1px solid #e1bee7;}
+        .cell-fer { background-color: #e0f7fa; color: #00838f; font-size: 11px; font-weight: 800; border: 1px solid #b2ebf2;}
+
+        /* LISTE UTENTI E ADMIN */
+        .utente-row { background: var(--surface-hover); border: 1px solid var(--border-color); padding: 16px; margin-bottom: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s; box-shadow: var(--shadow-sm);}
+        .utente-row:active { transform: scale(0.98); }
         
+        .badge-req { background: var(--danger); color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; line-height: 20px; text-align: center; font-weight: 800; display: inline-block; box-shadow: 0 2px 4px rgba(217, 48, 37, 0.4);}
+        
+        .header-icon-btn { background: var(--surface-hover); border: 1px solid var(--border-color); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--text-main); cursor: pointer; transition: all 0.2s; position: relative;}
+        .header-icon-btn:active { transform: scale(0.95); }
+
         details > summary::-webkit-details-marker { display: none; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
-        <h2>Rotazioni</h2>
-        <div style="display: flex; gap: 15px; align-items: center; justify-content: flex-end; width: 80px;">
-            <button id="btn-miei-dati" style="display:none; background:none; border:none; font-size:24px; cursor:pointer; padding:0;" onclick="apriMieiDatiModal()" title="I Miei Dati">👤</button>
-            <button id="btn-gestione-accessi" style="display:none; background:none; border:none; font-size:24px; cursor:pointer; padding:0; position:relative;" onclick="apriGestioneAccessiModal()" title="Gestione">
-                ⚙️
-                <span id="badge-header" style="display:none; position:absolute; top:-4px; right:-6px; background:var(--danger); color:white; border-radius:50%; width:18px; height:18px; font-size:11px; line-height:18px; text-align:center; font-weight:bold; font-family:sans-serif; box-shadow: 0 1px 3px rgba(0,0,0,0.3);"></span>
+        <button class="hamburger-btn" onclick="apriMenuLaterale()"><i class="fa-solid fa-bars"></i></button>
+        <h2><i class="fa-solid fa-users"></i> Rotazioni</h2>
+        <div style="display: flex; gap: 12px; align-items: center; justify-content: flex-end; width: auto;">
+            <button id="btn-miei-dati" class="header-icon-btn" style="display:none;" onclick="apriMieiDatiModal()" title="I Miei Dati">
+                <i class="fa-solid fa-user-pen"></i>
+            </button>
+            <button id="btn-gestione-accessi" class="header-icon-btn" style="display:none;" onclick="apriGestioneAccessiModal()" title="Gestione">
+                <i class="fa-solid fa-users-gear"></i>
+                <span id="badge-header" class="badge-req" style="display:none; position:absolute; top:-6px; right:-6px;"></span>
             </button>
         </div>
     </div>
@@ -197,63 +214,72 @@
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
-            <h3 style="margin:0; color:white;">Menu</h3>
-            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+            <h3><i class="fa-solid fa-layer-group"></i> Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
-        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
-        <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
-        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
-        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
-        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
-        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
-        <a href="orari.html" class="sidebar-link">🕒 Orari</a>
-        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
-        <a href="rotazionef9.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">👥 Rotazione F.Nove</a>
-        <a href="link.html" class="sidebar-link">🔗 Link</a>
-        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
-        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
-        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
-        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+        
+        <a href="index.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Home Page</a>
+        <a href="calendario.html?oggi=true" class="sidebar-link"><i class="fa-solid fa-bullseye"></i> Oggi</a>
+        <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
+        <a href="rotazioni.html" class="sidebar-link" style="background-color: var(--primary-glow); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary);"><i class="fa-solid fa-users" style="color: var(--primary);"></i> Rotazioni</a>
+        <a href="turni.html" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
+        <a href="barcadvisor.html" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
+        <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link"><i class="fa-solid fa-umbrella-beach"></i> Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link"><i class="fa-regular fa-clock"></i> Orari Navigazione</a>
+        <a href="https://m.chebateo.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-water"></i> CheBateo</a>
+        <a href="documenti.html" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Documenti</a>
+        <a href="link.html" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
+        <a href="contatti.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i> Contatti</a>
+        <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
+        <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
+        <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
+        <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
     </div>
 
-    <div id="auth-section">
+    <div id="auth-section" class="card-panel">
         <div id="login-warning" style="display: none; text-align: center;">
-            <p>Accesso riservato. Effettua il login o registrati dalla Home Page per continuare.</p>
-            <a href="index.html" class="btn file-btn" style="text-decoration:none; display: inline-block;">🏠 Vai alla Home</a>
+            <i class="fa-solid fa-lock" style="font-size: 48px; color: var(--text-muted); margin-bottom: 16px;"></i>
+            <h3 style="color: var(--text-main); margin-top: 0; font-weight: 800;">Accesso Riservato</h3>
+            <p>Effettua il login o registrati dalla Home Page per continuare.</p>
+            <a href="index.html" class="btn" style="text-decoration:none;"><i class="fa-solid fa-house"></i> Vai alla Home</a>
         </div>
         
         <div id="pending-section" style="display: none; text-align: center;">
-            <p style="color: var(--primary); font-weight: bold; font-size: 18px; margin-bottom: 5px;">⏳ Richiesta In Attesa</p>
+            <i class="fa-solid fa-hourglass-half" style="font-size: 48px; color: var(--info); margin-bottom: 16px;"></i>
+            <h3 style="color: var(--info); font-weight: 800; font-size: 20px; margin-top: 0;">Richiesta In Attesa</h3>
             <p>La tua richiesta di accesso è in fase di valutazione da parte di un amministratore.</p>
-            <button class="btn" onclick="location.reload()" style="background-color: var(--info);">🔄 Aggiorna Pagina</button>
+            <button class="btn" style="background-color: var(--info);" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Aggiorna Pagina</button>
         </div>
 
         <div id="request-section" style="display: none; text-align: left;">
-            <h3 style="color: var(--primary); text-align: center; margin-top: 0; font-size: 20px;">Richiesta Accesso</h3>
+            <h3 style="color: var(--primary); text-align: center; margin-top: 0; font-size: 22px; font-weight: 800;"><i class="fa-solid fa-address-card"></i> Richiesta Accesso</h3>
             
             <div id="intro-request">
-                <p style="font-size: 14px; color: #555; text-align: center; margin-bottom: 20px; line-height: 1.5;">
-                    In questa pagina troverai le rotazioni dei turni. Per accedere si deve dare il consenso a condividere i propri dati nelle rotazioni. Puoi richiedere l'accesso qui sotto.
+                <p style="font-size: 15px; color: var(--text-muted); text-align: center; margin-bottom: 24px; line-height: 1.5;">
+                    In questa pagina troverai le rotazioni dei turni.<br>Per accedere si deve dare il consenso a condividere i propri dati nelle rotazioni. Puoi richiedere l'accesso qui sotto.
                 </p>
-                <button class="btn" style="background-color: var(--primary);" onclick="mostraFormRichiesta()">Richiedi Accesso</button>
+                <button class="btn" onclick="mostraFormRichiesta()"><i class="fa-solid fa-paper-plane"></i> Compila Richiesta</button>
             </div>
 
             <div id="form-request" style="display: none;">
-                <p style="font-size: 13px; color: #666; text-align: center; margin-bottom: 15px;">Verifica i tuoi dati e scegli la tua rotazione di appartenenza.</p>
+                <p style="font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 20px; font-weight: 500;">Verifica i tuoi dati e scegli la tua rotazione di appartenenza.</p>
                 
-                <input type="text" id="req-nome" placeholder="Nome">
-                <input type="text" id="req-cognome" placeholder="Cognome">
-                <input type="text" id="req-matricola" placeholder="Matricola">
-                <input type="text" id="req-omonimia" placeholder="Numero omonimia es. 02, 03 ecc (facoltativo)">
+                <input type="text" id="req-nome" placeholder="Nome *">
+                <input type="text" id="req-cognome" placeholder="Cognome *">
+                <input type="text" id="req-matricola" placeholder="Matricola *">
+                <input type="text" id="req-omonimia" placeholder="Numero omonimia es. 02 (Opzionale)">
                 
-                <select id="req-rotazione" style="margin-top: 10px; width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #ccc; font-size: 14px; background: white;">
-                    <option value="" disabled selected>Seleziona Rotazione di Appartenenza</option>
+                <select id="req-rotazione" style="margin-top: 8px;">
+                    <option value="" disabled selected>-- Seleziona Rotazione di Appartenenza --</option>
                 </select>
 
-                <div id="div-mansione-req" style="display:none; margin-top: 10px;">
-                    <select id="req-mansione" style="width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #ccc; font-size: 14px; background: white;">
-                        <option value="" disabled selected>Seleziona Mansione</option>
+                <div id="div-mansione-req" style="display:none; margin-top: 8px;">
+                    <select id="req-mansione">
+                        <option value="" disabled selected>-- Seleziona Mansione --</option>
                         <option value="Preposto al comando">Preposto al comando</option>
                         <option value="Marinaio">Marinaio</option>
                         <option value="Comandante">Comandante</option>
@@ -263,18 +289,20 @@
                     </select>
                 </div>
                 
-                <div id="div-data-riposo-req" style="display:none; margin-top: 10px;">
-                    <label style="font-size: 14px; font-weight: bold; color: #555; text-align: left; display: block; margin-bottom: 5px;">Data di un tuo Riposo Singolo:</label>
-                    <input type="date" id="req-data-riposo" style="margin: 0; padding: 12px;">
+                <div id="div-data-riposo-req" style="display:none; margin-top: 8px;">
+                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-align: left; display: block; margin-bottom: 8px;">DATA DI UN TUO RIPOSO SINGOLO *</label>
+                    <input type="date" id="req-data-riposo">
                 </div>
                 
-                <label style="display: flex; align-items: center; margin-top: 15px; font-size: 14px; color: #333; cursor: pointer; text-align: left; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
-                    <input type="checkbox" id="req-consenso" style="width: auto; transform: scale(1.3); margin-right: 12px; margin-left: 5px;">
-                    <span style="flex:1;">Accetto di condividere i miei dati nelle rotazioni.</span>
-                </label>
+                <div style="background: var(--surface-hover); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-top: 16px;">
+                    <label style="display: flex; align-items: flex-start; gap: 12px; font-size: 14px; color: var(--text-main); cursor: pointer; font-weight: 500;">
+                        <input type="checkbox" id="req-consenso" style="width: 20px; height: 20px; margin: 0; margin-top: 2px; accent-color: var(--primary); cursor: pointer;">
+                        <span style="flex:1; line-height: 1.4;">Accetto di condividere i miei dati nelle tabelle delle rotazioni visibili agli altri colleghi.</span>
+                    </label>
+                </div>
 
-                <button class="btn" id="btn-invia-req" style="margin-top: 15px; background-color: var(--success);" onclick="inviaRichiestaAccesso()">Invia Richiesta</button>
-                <div id="req-error-msg" style="color: var(--danger); font-size: 14px; text-align: center; margin-top: 10px; font-weight: bold;"></div>
+                <button class="btn" id="btn-invia-req" style="margin-top: 20px; background-color: var(--success);" onclick="inviaRichiestaAccesso()"><i class="fa-solid fa-paper-plane"></i> Invia Richiesta</button>
+                <div id="req-error-msg"></div>
             </div>
         </div>
     </div>
@@ -285,30 +313,36 @@
 
     <div id="search-modal" class="modal-overlay" onclick="chiudiSeSfondo(event, 'search-modal')">
         <div class="modal-content">
-            <span class="close-modal" onclick="chiudiModal('search-modal')">&times;</span>
-            <h3 id="modal-title" style="margin-top:0; color:var(--primary);">Ricerca Turni</h3>
-            <div id="modal-status" class="status-message" style="padding: 10px; font-size:14px;">In attesa...</div>
+            <button class="close-modal" onclick="chiudiModal('search-modal')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 id="modal-title" style="margin-top:0; margin-bottom: 20px; color:var(--primary); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-magnifying-glass"></i> Ricerca Turni</h3>
+            
+            <div id="modal-status" class="status-message">
+                <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px; color: var(--primary);"></i>
+                In attesa elaborazione dati...
+            </div>
 
             <div id="modal-search-sections" style="display:none;">
-                <div class="modulo-ricerca">
-                    <h4>Cerca chi fa un turno</h4>
-                    <input type="number" id="input-giorno-turno" min="1" max="31" placeholder="Giorno (Es. 15)">
-                    <input type="text" id="input-codice-turno" placeholder="Turno (es. 1C01, 4P01...)">
-                    <button class="btn" style="padding: 12px; margin-top:5px;" onclick="cercaTurno()">Cerca</button>
-                    <div id="risultato-turno" class="risultato-box"></div>
+                <div class="modulo-ricerca" style="margin-top: 0;">
+                    <h4><i class="fa-solid fa-user-clock"></i> Cerca chi fa un turno</h4>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="input-giorno-turno" min="1" max="31" placeholder="Giorno (Es. 15)" style="flex: 1;">
+                        <input type="text" id="input-codice-turno" placeholder="Turno" style="flex: 2;">
+                    </div>
+                    <button class="btn" style="padding: 14px; margin-top:5px;" onclick="cercaTurno()"><i class="fa-solid fa-search"></i> Cerca</button>
+                    <div id="risultato-turno" class="risultato-box" style="display: none;"></div>
                 </div>
 
                 <div class="modulo-ricerca">
-                    <h4>Trova cambi turno</h4>
+                    <h4><i class="fa-solid fa-right-left"></i> Trova colleghi per un cambio</h4>
                     <input type="number" id="input-giorno-cambio" min="1" max="31" placeholder="Giorno del mese (1-31)">
                     <select id="select-fase-cambio">
-                        <option value="Terzo">Di Terzo</option>
-                        <option value="Mezzo">Di Mezzo</option>
-                        <option value="Primo">Di Primo</option>
-                        <option value="Riposo">Di Riposo</option>
+                        <option value="Terzo">Fase: Di Terzo</option>
+                        <option value="Mezzo">Fase: Di Mezzo</option>
+                        <option value="Primo">Fase: Di Primo</option>
+                        <option value="Riposo">Fase: Di Riposo</option>
                     </select>
-                    <button class="btn" style="padding: 12px; margin-top:5px;" onclick="cercaCambi()">Cerca</button>
-                    <div id="risultato-cambi" class="risultato-box"></div>
+                    <button class="btn" style="padding: 14px; margin-top:5px; background-color: var(--success);" onclick="cercaCambi()"><i class="fa-solid fa-search"></i> Cerca Cambi</button>
+                    <div id="risultato-cambi" class="risultato-box" style="display: none;"></div>
                 </div>
             </div>
         </div>
@@ -316,53 +350,56 @@
 
     <div id="future-search-modal" class="modal-overlay" onclick="chiudiSeSfondo(event, 'future-search-modal')">
         <div class="modal-content">
-            <span class="close-modal" onclick="chiudiModal('future-search-modal')">&times;</span>
-            <h3 id="future-modal-title" style="margin-top:0; color:var(--primary);">Ricerca Mesi Successivi</h3>
+            <button class="close-modal" onclick="chiudiModal('future-search-modal')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 id="future-modal-title" style="margin-top:0; margin-bottom: 20px; color:var(--primary); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-crystal-ball"></i> Ricerca Mesi Successivi</h3>
 
-            <div class="modulo-ricerca" style="margin-top: 0;">
-                <label style="font-size: 14px; font-weight: bold; color: #555; display:block; margin-bottom:5px;">Data:</label>
-                <input type="date" id="input-date-futura" style="margin-bottom: 15px;">
+            <div class="modulo-ricerca" style="margin-top: 0; background: transparent; border: none; padding: 0;">
+                <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display:block; margin-bottom:8px;">DATA FUTURA *</label>
+                <div style="position: relative;">
+                    <i class="fa-regular fa-calendar" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                    <input type="date" id="input-date-futura" style="margin-bottom: 20px; padding-left: 40px;">
+                </div>
                 
-                <label style="font-size: 14px; font-weight: bold; color: #555; display:block; margin-bottom:5px;">Trova:</label>
-                <select id="select-fase-futura">
+                <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display:block; margin-bottom:8px;">TROVA I COLLEGHI IN FASE DI:</label>
+                <select id="select-fase-futura" style="margin-bottom: 20px;">
                     <option value="Terzo">Di Terzo (1° o 2° Giorno)</option>
                     <option value="Mezzo">Di Mezzo (3° o 4° Giorno)</option>
                     <option value="Primo">Di Primo (5° o 6° Giorno)</option>
                     <option value="Riposo">Di Riposo (Singolo o Doppio)</option>
                 </select>
                 
-                <button class="btn" style="background-color: var(--success); padding: 12px; margin-top:10px;" onclick="eseguiRicercaFutura()">Cerca</button>
-                <div id="risultato-futuro" class="risultato-box"></div>
+                <button class="btn" style="background-color: var(--success); padding: 16px;" onclick="eseguiRicercaFutura()"><i class="fa-solid fa-search"></i> Avvia Previsione</button>
+                <div id="risultato-futuro" class="risultato-box" style="display: none;"></div>
             </div>
         </div>
     </div>
 
     <div id="table-modal" class="modal-overlay" onclick="chiudiSeSfondo(event, 'table-modal')">
-        <div class="modal-content modal-table-content">
-            <span class="close-modal" onclick="chiudiModal('table-modal')">&times;</span>
-            <h3 id="table-modal-title" style="margin-top:0; color:var(--primary); padding-right: 30px;">Tabella Rotazione</h3>
+        <div class="modal-content modal-table-content" style="background: var(--bg-color);">
+            <button class="close-modal" onclick="chiudiModal('table-modal')" style="background: var(--surface);"><i class="fa-solid fa-xmark"></i></button>
+            <h3 id="table-modal-title" style="margin-top:0; color:var(--primary); padding-right: 40px; font-weight: 800; font-size: 20px;"><i class="fa-solid fa-table"></i> Tabella Rotazione</h3>
             <div id="table-container"></div>
         </div>
     </div>
 
     <div id="modal-miei-dati" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-miei-dati')">
-        <div class="modal-content" style="max-width: 400px; text-align: left;">
-            <span class="close-modal" onclick="chiudiModal('modal-miei-dati')">&times;</span>
-            <h3 style="margin-top:0; color:var(--primary); text-align: center;">I Miei Dati</h3>
-            <p style="font-size: 13px; color: #666; text-align: center; margin-bottom: 15px;">Aggiorna i tuoi dati o la tua rotazione di appartenenza.</p>
+        <div class="modal-content" style="max-width: 440px; text-align: left;">
+            <button class="close-modal" onclick="chiudiModal('modal-miei-dati')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="margin-top:0; margin-bottom: 20px; color:var(--primary); text-align: center; font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-user-pen"></i> I Miei Dati</h3>
+            <p style="font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 20px; font-weight: 500;">Aggiorna i tuoi dati o la tua rotazione di appartenenza.</p>
             
-            <input type="text" id="edit-nome" placeholder="Nome">
-            <input type="text" id="edit-cognome" placeholder="Cognome">
-            <input type="text" id="edit-matricola" placeholder="Matricola">
-            <input type="text" id="edit-omonimia" placeholder="Numero omonimia es. 02, 03 ecc (facoltativo)">
+            <input type="text" id="edit-nome" placeholder="Nome *">
+            <input type="text" id="edit-cognome" placeholder="Cognome *">
+            <input type="text" id="edit-matricola" placeholder="Matricola *">
+            <input type="text" id="edit-omonimia" placeholder="Numero omonimia es. 02 (Opzionale)">
             
-            <select id="edit-rotazione" style="margin-top: 10px; width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #ccc; font-size: 14px; background: white;">
-                <option value="" disabled selected>Seleziona Rotazione di Appartenenza</option>
+            <select id="edit-rotazione" style="margin-top: 10px;">
+                <option value="" disabled selected>-- Seleziona Rotazione --</option>
             </select>
 
             <div id="div-mansione-edit" style="display:none; margin-top: 10px;">
-                <select id="edit-mansione" style="width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #ccc; font-size: 14px; background: white;">
-                    <option value="" disabled selected>Seleziona Mansione</option>
+                <select id="edit-mansione">
+                    <option value="" disabled selected>-- Seleziona Mansione --</option>
                     <option value="Preposto al comando">Preposto al comando</option>
                     <option value="Marinaio">Marinaio</option>
                     <option value="Comandante">Comandante</option>
@@ -373,80 +410,94 @@
             </div>
             
             <div id="div-data-riposo-edit" style="display:none; margin-top: 10px;">
-                <label style="font-size: 14px; font-weight: bold; color: #555; text-align: left; display: block; margin-bottom: 5px;">Data di un tuo Riposo Singolo:</label>
-                <input type="date" id="edit-data-riposo" style="margin: 0; padding: 12px;">
+                <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-align: left; display: block; margin-bottom: 8px;">DATA DI UN TUO RIPOSO SINGOLO *</label>
+                <input type="date" id="edit-data-riposo">
             </div>
             
-            <button class="btn" id="btn-salva-dati" style="margin-top: 15px; background-color: var(--success);" onclick="salvaMieiDati()">Salva Modifiche</button>
-            <div id="edit-error-msg" style="color: var(--danger); font-size: 14px; text-align: center; margin-top: 10px; font-weight: bold;"></div>
+            <button class="btn" id="btn-salva-dati" style="margin-top: 20px; background-color: var(--success);" onclick="salvaMieiDati()"><i class="fa-solid fa-floppy-disk"></i> Salva Modifiche</button>
+            <div id="edit-error-msg"></div>
         </div>
     </div>
 
     <div id="modal-gestione-accessi" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-gestione-accessi')">
-        <div class="modal-content" style="max-width: 400px;">
-            <span class="close-modal" onclick="chiudiModal('modal-gestione-accessi')">&times;</span>
-            <h3 style="margin-top:0; color:var(--primary);">Gestione Accessi</h3>
-            <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-                <button class="btn" style="background: var(--info); padding: 10px; font-size: 13px; margin: 0; flex: 1; position:relative;" onclick="apriGestioneRichieste()">
-                    🔔 Richieste
-                    <span id="badge-modal" style="display:none; background:var(--danger); color:white; border-radius:10px; padding:2px 6px; font-size:11px; margin-left:5px;"></span>
+        <div class="modal-content" style="max-width: 440px;">
+            <button class="close-modal" onclick="chiudiModal('modal-gestione-accessi')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="margin-top:0; margin-bottom: 20px; color:var(--primary); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-users-gear"></i> Gestione Accessi</h3>
+            
+            <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                <button class="btn" style="background: var(--info); padding: 12px; font-size: 14px; margin: 0; flex: 1; position:relative; box-shadow: var(--shadow-sm);" onclick="apriGestioneRichieste()">
+                    <i class="fa-solid fa-bell"></i> Richieste
+                    <span id="badge-modal" class="badge-req" style="display:none; position:absolute; top:-6px; right:-6px;"></span>
                 </button>
-                <button id="btn-collab-admin" class="btn" style="display:none; background: #6f42c1; padding: 10px; font-size: 13px; margin: 0; flex: 1;" onclick="apriGestioneCollaboratori()">👥 Collab.</button>
+                <button id="btn-collab-admin" class="btn" style="display:none; background: #9c27b0; padding: 12px; font-size: 14px; margin: 0; flex: 1; box-shadow: var(--shadow-sm);" onclick="apriGestioneCollaboratori()">
+                    <i class="fa-solid fa-user-shield"></i> Collaboratori
+                </button>
             </div>
             
-            <input type="text" id="search-utenti-abilitati" placeholder="Cerca collega..." style="text-align: left; margin-top: 0; margin-bottom: 10px; padding: 12px; font-size: 14px; width: 100%; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;" onkeyup="filtraUtentiAbilitati()">
+            <div style="position: relative; margin-bottom: 16px;">
+                <i class="fa-solid fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                <input type="text" id="search-utenti-abilitati" placeholder="Cerca collega abilitato..." style="padding-left: 40px; margin-bottom: 0;" onkeyup="filtraUtentiAbilitati()">
+            </div>
             
-            <div id="lista-utenti-abilitati" style="max-height: 55vh; overflow-y: auto;"></div>
+            <div id="lista-utenti-abilitati" style="max-height: 55vh; overflow-y: auto; padding-right: 5px;"></div>
         </div>
     </div>
 
     <div id="modal-gestione-richieste" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-gestione-richieste')">
-        <div class="modal-content" style="max-width: 400px; padding: 15px;">
-            <span class="close-modal" onclick="chiudiModal('modal-gestione-richieste')">&times;</span>
-            <h3 style="margin-top:0; color:var(--info);">Richieste in Attesa</h3>
-            <button class="btn" style="background: #6c757d; padding: 8px; font-size: 13px; margin-bottom: 15px;" onclick="chiudiModal('modal-gestione-richieste'); apriGestioneAccessiModal();">⬅️ Indietro</button>
-            <div id="lista-richieste" style="max-height: 55vh; overflow-y: auto;"></div>
+        <div class="modal-content" style="max-width: 440px; padding: 24px;">
+            <button class="close-modal" onclick="chiudiModal('modal-gestione-richieste')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="margin-top:0; margin-bottom: 20px; color:var(--info); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-bell"></i> Richieste in Attesa</h3>
+            
+            <button class="btn-outline" style="margin-bottom: 20px;" onclick="chiudiModal('modal-gestione-richieste'); apriGestioneAccessiModal();"><i class="fa-solid fa-arrow-left"></i> Torna alla Gestione</button>
+            <div id="lista-richieste" style="max-height: 55vh; overflow-y: auto; padding-right: 5px;"></div>
         </div>
     </div>
 
     <div id="modal-dettaglio-utente" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-dettaglio-utente')">
-        <div class="modal-content" style="max-width: 350px;">
-            <span class="close-modal" onclick="chiudiModal('modal-dettaglio-utente')">&times;</span>
-            <h3 style="margin-top:0; color:var(--primary); text-align: center;">Dettaglio Utente</h3>
-            <div id="dettaglio-utente-body" style="font-size: 14px; line-height: 1.6; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; margin-bottom: 15px;">
-                </div>
-            <button id="btn-scarica-pdf" class="btn" style="background: var(--info); color: white; padding: 12px; margin: 0;" onclick="scaricaPDFConsenso()">📄 Scarica PDF Consenso</button>
+        <div class="modal-content" style="max-width: 380px;">
+            <button class="close-modal" onclick="chiudiModal('modal-dettaglio-utente')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="margin-top:0; margin-bottom: 20px; color:var(--primary); text-align: center; font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-id-card"></i> Scheda Utente</h3>
+            
+            <div id="dettaglio-utente-body" style="font-size: 14px; line-height: 1.8; background: var(--surface-hover); padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 20px; color: var(--text-main);">
+            </div>
+            
+            <button id="btn-scarica-pdf" class="btn" style="background: var(--info); margin: 0;" onclick="scaricaPDFConsenso()"><i class="fa-solid fa-file-pdf"></i> Scarica Modulo Consenso</button>
         </div>
     </div>
 
     <div id="modal-gestione-collaboratori" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-gestione-collaboratori')">
-        <div class="modal-content" style="max-width: 400px;">
-            <span class="close-modal" onclick="chiudiModal('modal-gestione-collaboratori')">&times;</span>
-            <h3 style="margin-top:0; color:#6f42c1;">Collaboratori</h3>
-            <button class="btn" style="background: #6c757d; padding: 8px; font-size: 13px; margin-bottom: 15px;" onclick="chiudiModal('modal-gestione-collaboratori'); apriGestioneAccessiModal();">⬅️ Indietro</button>
-            <div id="lista-collaboratori" style="max-height: 55vh; overflow-y: auto;"></div>
+        <div class="modal-content" style="max-width: 440px;">
+            <button class="close-modal" onclick="chiudiModal('modal-gestione-collaboratori')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="margin-top:0; margin-bottom: 20px; color:#9c27b0; font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-user-shield"></i> Collaboratori</h3>
+            
+            <button class="btn-outline" style="margin-bottom: 20px;" onclick="chiudiModal('modal-gestione-collaboratori'); apriGestioneAccessiModal();"><i class="fa-solid fa-arrow-left"></i> Torna alla Gestione</button>
+            <div id="lista-collaboratori" style="max-height: 55vh; overflow-y: auto; padding-right: 5px;"></div>
         </div>
     </div>
     
     <div id="modal-permessi-collaboratore" class="modal-overlay" onclick="chiudiSeSfondo(event, 'modal-permessi-collaboratore')">
-        <div class="modal-content" style="max-width: 400px;">
-            <span class="close-modal" onclick="chiudiModal('modal-permessi-collaboratore')">&times;</span>
-            <h3 style="margin-top:0; color:#6f42c1;">Permessi <span id="nome-collab-titolo"></span></h3>
+        <div class="modal-content" style="max-width: 440px;">
+            <button class="close-modal" onclick="chiudiModal('modal-permessi-collaboratore')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="margin-top:0; margin-bottom: 20px; color:#9c27b0; font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-key"></i> Permessi: <span id="nome-collab-titolo" style="color:var(--text-main);"></span></h3>
+            
             <input type="hidden" id="uid-collab-edit">
-            <div id="lista-checkbox-rotazioni" style="max-height: 50vh; overflow-y: auto; text-align: left; margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ddd;"></div>
-            <button class="btn" style="background: var(--success);" onclick="salvaPermessiCollab()">Salva Permessi</button>
+            <div id="lista-checkbox-rotazioni" style="max-height: 50vh; overflow-y: auto; text-align: left; margin-bottom: 20px; background: var(--surface-hover); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);"></div>
+            <button class="btn" style="background: var(--success); margin: 0;" onclick="salvaPermessiCollab()"><i class="fa-solid fa-floppy-disk"></i> Salva Permessi</button>
         </div>
     </div>
 
-    <div id="imageModal" style="display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); overflow: hidden;" onclick="chiudiSeSfondoModalImg(event)">
-        <div style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; font-size: 35px; color: white; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 20001;" onclick="chiudiImageModal()">&times;</div>
-        <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px; padding-bottom: 80px; position: relative;">
-            <img id="turnoImage" src="" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain;">
-            <div id="imageBanner" style="position: relative; z-index: 20001; margin-top: 15px; background: rgba(0,0,0,0.7); color: #fff; padding: 10px 20px; border-radius: 12px; font-size: 13px; text-align: center; max-width: 90%; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
-                ⚠️ Controllare sempre la presenza di eventuali varianti ai turni.
+    <div id="imageModal" style="display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); overflow: hidden; animation: fadeIn 0.2s ease;" onclick="chiudiSeSfondoModalImg(event)">
+        <button style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; font-size: 28px; color: white; cursor: pointer; background: rgba(255,255,255,0.2); border: none; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 20001; backdrop-filter: blur(4px);" onclick="chiudiImageModal()"><i class="fa-solid fa-xmark"></i></button>
+        
+        <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px; padding-bottom: 90px; position: relative;">
+            <img id="turnoImage" src="" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain; background: white;">
+            
+            <div id="imageBanner" style="position: relative; z-index: 20001; margin-top: 20px; background: rgba(242,166,0,0.9); color: #fff; padding: 12px 20px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; text-align: center; max-width: 90%; box-shadow: 0 4px 15px rgba(242,166,0,0.3); display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 16px;"></i> Controllare sempre la presenza di eventuali varianti.
             </div>
         </div>
-        <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #11cdef; color: white; border: none; padding: 12px 24px; border-radius: 20px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 20001;">📥 Scarica</button>
+        
+        <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: var(--info); color: white; border: none; padding: 14px 28px; border-radius: 24px; font-weight: 700; font-size: 16px; box-shadow: 0 8px 20px rgba(0,136,255,0.4); cursor: pointer; z-index: 20001; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;"><i class="fa-solid fa-download"></i> Scarica Immagine</button>
     </div>
 
     <script>
@@ -523,7 +574,7 @@
 
         async function caricaRotazioni() {
             const area = document.getElementById('rotazioni-list');
-            area.innerHTML = `<div class="status-message">Scansione rotazioni in corso...</div>`;
+            area.innerHTML = `<div class="status-message"><i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px; color: var(--primary);"></i> Scansione documenti in corso...</div>`;
 
             try {
                 const timestamp = new Date().getTime();
@@ -550,15 +601,17 @@
                 area.innerHTML = "";
 
                 if (Object.keys(groups).length === 0) {
-                    area.innerHTML = `<div class="status-message">Nessun documento trovato.</div>`;
+                    area.innerHTML = `<div class="status-message"><i class="fa-regular fa-folder-open" style="font-size:32px; color:var(--text-muted);"></i> Nessun documento trovato.</div>`;
                     return;
                 }
 
+                let indexRot = 0;
                 for (let base in groups) {
                     let g = groups[base];
                     let monthCard = document.createElement('div');
                     monthCard.className = "month-card";
-                    monthCard.innerHTML = `<h3>${pulisciNome(g.base)}</h3>`;
+                    monthCard.style.animationDelay = `${indexRot * 0.1}s`;
+                    monthCard.innerHTML = `<h3><i class="fa-regular fa-calendar" style="color: var(--text-muted); font-size: 16px;"></i> ${pulisciNome(g.base)}</h3>`;
 
                     let btnGrid = document.createElement('div');
                     btnGrid.className = "btn-grid";
@@ -647,36 +700,32 @@
 
                             Object.keys(jsonData).forEach(rotName => {
                                 let rotContainer = document.createElement('div');
-                                rotContainer.style.background = "#fafafa";
-                                rotContainer.style.border = "1px solid #ddd";
-                                rotContainer.style.padding = "12px";
-                                rotContainer.style.borderRadius = "10px";
-                                rotContainer.style.marginBottom = "10px";
+                                rotContainer.className = "rot-container";
 
                                 let rotTitle = document.createElement('h4');
-                                rotTitle.innerText = rotName;
-                                rotTitle.style.margin = "0 0 10px 0";
-                                rotTitle.style.color = "var(--primary)";
-                                rotTitle.style.fontSize = "16px";
+                                rotTitle.className = "rot-title";
+                                rotTitle.innerHTML = `<i class="fa-solid fa-folder-tree" style="color: var(--text-muted); font-size: 14px;"></i> ${rotName}`;
                                 rotContainer.appendChild(rotTitle);
 
                                 let btnTab = document.createElement('button');
                                 btnTab.className = "file-btn btn-table";
-                                btnTab.innerHTML = `📅 Visualizza Tabella`;
+                                btnTab.innerHTML = `<i class="fa-solid fa-table"></i> Visualizza Tabella`;
                                 btnTab.onclick = () => apriTabella(rotName, jsonData);
                                 rotContainer.appendChild(btnTab);
 
                                 let btnSearch = document.createElement('button');
                                 btnSearch.className = "file-btn btn-search";
-                                btnSearch.style.marginTop = "8px";
-                                btnSearch.innerHTML = `🔍 Cerca Colleghi e Cambi`;
+                                btnSearch.style.marginTop = "10px";
+                                btnSearch.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> Cerca Colleghi e Cambi`;
                                 btnSearch.onclick = () => apriRicercaJson(rotName, jsonData);
                                 rotContainer.appendChild(btnSearch);
 
                                 let btnFuturo = document.createElement('button');
                                 btnFuturo.className = "file-btn btn-search";
-                                btnFuturo.style.marginTop = "8px";
-                                btnFuturo.innerHTML = `🔮 Ricerca mesi successivi`;
+                                btnFuturo.style.marginTop = "10px";
+                                btnFuturo.style.backgroundColor = "var(--warning)";
+                                btnFuturo.style.color = "#fff";
+                                btnFuturo.innerHTML = `<i class="fa-solid fa-crystal-ball"></i> Ricerca mesi successivi`;
                                 btnFuturo.onclick = () => apriRicercaFutura(g.base, rotName, jsonData);
                                 rotContainer.appendChild(btnFuturo);
 
@@ -686,7 +735,7 @@
                     } else if (g.excel) {
                         let btnSearch = document.createElement('button');
                         btnSearch.className = "file-btn btn-search";
-                        btnSearch.innerHTML = `🔍 Cerca (Modalità Lenta)`;
+                        btnSearch.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> Cerca (Modalità Lenta)`;
                         btnSearch.onclick = () => apriFinestraRicerca(g.pdf ? g.pdf : g.excel, files);
                         btnGrid.appendChild(btnSearch);
                     }
@@ -694,7 +743,7 @@
                     if (g.pdf) {
                         let btnPdf = document.createElement('a');
                         btnPdf.className = "file-btn btn-pdf";
-                        btnPdf.innerHTML = `📄 Apri PDF Originale`;
+                        btnPdf.innerHTML = `<i class="fa-regular fa-file-pdf"></i> Apri PDF Originale`;
                         btnPdf.href = `${CARTELLA_BASE}/${g.pdf}?t=${timestamp}`; 
                         btnPdf.target = "_blank";
                         btnGrid.appendChild(btnPdf);
@@ -702,15 +751,34 @@
 
                     monthCard.appendChild(btnGrid);
                     area.appendChild(monthCard);
+                    indexRot++;
                 }
 
             } catch (e) { 
-                area.innerHTML = `<div class="status-message">Errore: Indice Mappa non trovato. Attendi l'aggiornamento del server.</div>`; 
+                area.innerHTML = `<div class="status-message" style="color:var(--danger); border-color:var(--danger-border); background:var(--danger-light);"><i class="fa-solid fa-triangle-exclamation" style="font-size:28px;"></i> Errore: Indice Mappa non trovato.<br>Attendi l'aggiornamento del server.</div>`; 
             }
         }
 
-        function chiudiModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
+        function chiudiModal(modalId) { 
+            document.getElementById(modalId).style.display = 'none'; 
+            
+            // Pulisce i risultati quando si chiude la modale di ricerca
+            if(modalId === 'search-modal') {
+                document.getElementById('risultato-turno').innerHTML = '';
+                document.getElementById('risultato-turno').style.display = 'none';
+                document.getElementById('risultato-cambi').innerHTML = '';
+                document.getElementById('risultato-cambi').style.display = 'none';
+                document.getElementById('input-codice-turno').value = '';
+                document.getElementById('input-giorno-turno').value = '';
+                document.getElementById('input-giorno-cambio').value = '';
+            } else if (modalId === 'future-search-modal') {
+                document.getElementById('risultato-futuro').innerHTML = '';
+                document.getElementById('risultato-futuro').style.display = 'none';
+                document.getElementById('input-date-futura').value = '';
+            }
+        }
         function chiudiSeSfondo(event, modalId) { if (event.target.id === modalId) chiudiModal(modalId); }
+        function chiudiSeSfondoModalImg(event) { if (event.target.id === 'imageModal' || event.target.id === 'imageFlexContainer') chiudiImageModal(); }
 
         function getClassForTurno(turno) {
             let t = turno.toUpperCase().replace(/\s+/g, '');
@@ -729,7 +797,7 @@
             const title = document.getElementById('table-modal-title');
             const container = document.getElementById('table-container');
 
-            title.innerText = rotName;
+            title.innerHTML = `<i class="fa-solid fa-table" style="color:var(--text-muted); font-size:18px;"></i> ${rotName}`;
             
             let html = `<div class="table-responsive"><table class="rotazioni-table">`;
             html += `<thead><tr><th>Colleghi</th>`;
@@ -777,12 +845,14 @@
                 });
             }
 
-            document.getElementById('modal-title').innerText = "Ricerca: " + rotName;
+            document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> ${rotName}`;
             document.getElementById('search-modal').style.display = 'flex';
             document.getElementById('modal-status').style.display = 'none';
             document.getElementById('modal-search-sections').style.display = 'block';
             document.getElementById('risultato-turno').innerHTML = "";
+            document.getElementById('risultato-turno').style.display = 'none';
             document.getElementById('risultato-cambi').innerHTML = "";
+            document.getElementById('risultato-cambi').style.display = 'none';
         }
 
         function cercaTurno() {
@@ -790,8 +860,10 @@
             const codice = document.getElementById('input-codice-turno').value.trim().toUpperCase();
             const boxRisultato = document.getElementById('risultato-turno');
 
+            boxRisultato.style.display = 'block';
+
             if (!giorno || !codice) {
-                boxRisultato.innerHTML = "Compila tutti i campi prima di cercare.";
+                boxRisultato.innerHTML = "<i class='fa-solid fa-triangle-exclamation' style='color:var(--warning);'></i> Compila sia il Giorno che il Turno.";
                 return;
             }
 
@@ -808,21 +880,21 @@
                     let info = globalShiftData[codice];
                     detailsHtml = `
                         <div class="turn-details-box">
-                            Inizio: <strong>${info.luogoInizio} (${info.inizio})</strong><br>
-                            Fine: <strong>${info.luogoFine} (${info.fine})</strong>
-                            <br><button class="file-btn" style="padding: 8px 12px; margin-top: 8px; font-size: 14px; width: 100%; box-sizing:border-box; background-color: var(--info);" onclick="apriImmagineDaRotazioni('${codice}')">🖼️ Mostra Immagine Turno</button>
+                            <div style="margin-bottom:6px;"><i class="fa-solid fa-play" style="color:var(--success); font-size:10px;"></i> Inizio: <strong style="color:var(--text-main);">${info.luogoInizio} (${info.inizio})</strong></div>
+                            <div><i class="fa-solid fa-stop" style="color:var(--danger); font-size:10px;"></i> Fine: <strong style="color:var(--text-main);">${info.luogoFine} (${info.fine})</strong></div>
+                            <button class="file-btn" style="padding: 10px; margin-top: 12px; font-size: 13px; width: 100%; box-sizing:border-box; background-color: var(--info);" onclick="apriImmagineDaRotazioni('${codice}')"><i class="fa-regular fa-image"></i> Mostra Immagine Turno</button>
                         </div>
                     `;
                 } else {
                     detailsHtml = `
-                        <div style="margin-top: 10px;">
-                            <button class="file-btn" style="padding: 8px 12px; font-size: 14px; width: 100%; box-sizing:border-box; background-color: var(--info);" onclick="apriImmagineDaRotazioni('${codice}')">🖼️ Mostra Immagine Turno</button>
+                        <div style="margin-top: 12px;">
+                            <button class="file-btn" style="padding: 10px; font-size: 13px; width: 100%; box-sizing:border-box; background-color: var(--info);" onclick="apriImmagineDaRotazioni('${codice}')"><i class="fa-regular fa-image"></i> Mostra Immagine Turno</button>
                         </div>
                     `;
                 }
-                boxRisultato.innerHTML = `<strong>Trovati il giorno ${giorno} a fare ${codice}:</strong><ul style="margin-bottom:10px;"><li>` + trovati.join("</li><li>") + "</li></ul>" + detailsHtml;
+                boxRisultato.innerHTML = `<div style="font-weight:700; color:var(--primary); margin-bottom:12px;">Trovati il giorno ${giorno} a fare ${codice}:</div><ul style="margin-bottom:15px;"><li>` + trovati.join("</li><li>") + "</li></ul>" + detailsHtml;
             } else {
-                boxRisultato.innerHTML = "Nessuno trovato con questo turno in questa data.";
+                boxRisultato.innerHTML = "<i class='fa-solid fa-user-slash' style='color:var(--text-muted);'></i> Nessuno fa questo turno nel giorno indicato.";
             }
         }
 
@@ -884,8 +956,10 @@
             const faseDesiderata = document.getElementById('select-fase-cambio').value;
             const boxRisultato = document.getElementById('risultato-cambi');
 
+            boxRisultato.style.display = 'block';
+
             if (!giorno) {
-                boxRisultato.innerHTML = "Inserisci il giorno del mese.";
+                boxRisultato.innerHTML = "<i class='fa-solid fa-triangle-exclamation' style='color:var(--warning);'></i> Inserisci il giorno del mese.";
                 return;
             }
 
@@ -897,7 +971,7 @@
                 if (analisi.fase === faseDesiderata) {
                     if (faseDesiderata === "Riposo") {
                         if (analisi.tipoRiposo !== "Vuoto") {
-                            risultatiHtml.push(`<strong>${dipendente.nome}</strong> - <span style="color:var(--danger);">[Riposo ${analisi.tipoRiposo}]</span>`);
+                            risultatiHtml.push(`<strong>${dipendente.nome}</strong> <span style="float:right; color:var(--danger); font-size:12px; font-weight:700;">[Riposo ${analisi.tipoRiposo}]</span>`);
                         }
                     } else {
                         let turnoCod = dipendente.turni[indiceGiorno];
@@ -907,27 +981,30 @@
                             let infoExtra = "";
                             if (globalShiftData && globalShiftData[turnoCod]) {
                                 let info = globalShiftData[turnoCod];
-                                infoExtra = `<br>Inizio: <strong>${info.luogoInizio} (${info.inizio})</strong><br>Fine: <strong>${info.luogoFine} (${info.fine})</strong>`;
+                                infoExtra = `<div style="margin-top:6px; font-size:12px;"><i class="fa-solid fa-play" style="color:var(--success); font-size:10px;"></i> In: <strong style="color:var(--text-main);">${info.luogoInizio} (${info.inizio})</strong> <span style="margin:0 4px; color:var(--border-color);">|</span> <i class="fa-solid fa-stop" style="color:var(--danger); font-size:10px;"></i> Out: <strong style="color:var(--text-main);">${info.luogoFine} (${info.fine})</strong></div>`;
                             }
                             
                             let detailsHtml = `
                                 <div class="turn-details-box">
-                                    <strong style="color:var(--primary); font-size:14px;">Turno: ${turnoCod}</strong>${infoExtra}
-                                    <br><button class="file-btn" style="padding: 8px 12px; margin-top: 8px; font-size: 14px; width: 100%; box-sizing:border-box; background-color: var(--info);" onclick="apriImmagineDaRotazioni('${turnoCod}')">🖼️ Mostra Immagine Turno</button>
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <strong style="color:var(--primary); font-size:14px;"><i class="fa-solid fa-clock"></i> Turno: ${turnoCod}</strong>
+                                        <button class="btn" style="padding: 6px 10px; margin: 0; font-size: 11px; width: auto; background-color: var(--info); box-shadow:none;" onclick="apriImmagineDaRotazioni('${turnoCod}')"><i class="fa-regular fa-image"></i> Img</button>
+                                    </div>
+                                    ${infoExtra}
                                 </div>
                             `;
-                            risultatiHtml.push(`<strong>${dipendente.nome}</strong> (Giorno lav. ${analisi.giornoEsatto}) ${detailsHtml}`);
+                            risultatiHtml.push(`<strong>${dipendente.nome}</strong> <span style="color:var(--text-muted); font-size:12px;">(Giorno lav. ${analisi.giornoEsatto})</span> ${detailsHtml}`);
                         } else {
-                            risultatiHtml.push(`<strong>${dipendente.nome}</strong> (Giorno lav. ${analisi.giornoEsatto}) - [Turno: ${turnoCod}]`);
+                            risultatiHtml.push(`<strong>${dipendente.nome}</strong> <span style="color:var(--text-muted); font-size:12px;">(Giorno lav. ${analisi.giornoEsatto})</span> - <span style="color:var(--warning); font-weight:700;">[${turnoCod}]</span>`);
                         }
                     }
                 }
             });
 
             if (risultatiHtml.length > 0) {
-                boxRisultato.innerHTML = `<div style="margin-bottom:10px;"><strong>Colleghi di ${faseDesiderata} il giorno ${giorno}:</strong></div><ul><li style='margin-bottom:15px;'>` + risultatiHtml.join("</li><li style='margin-bottom:15px;'>") + "</li></ul>";
+                boxRisultato.innerHTML = `<div style="margin-bottom:12px; font-weight:700; color:var(--success);">Colleghi in fase "Di ${faseDesiderata}" il giorno ${giorno}:</div><ul style="padding-left:0; list-style:none; margin:0;"><li style='margin-bottom:15px; border-bottom:1px solid var(--border-color); padding-bottom:10px;'>` + risultatiHtml.join("</li><li style='margin-bottom:15px; border-bottom:1px solid var(--border-color); padding-bottom:10px;'>") + "</li></ul>";
             } else {
-                boxRisultato.innerHTML = "Nessun collega trovato in questa fase per il giorno indicato.";
+                boxRisultato.innerHTML = "<i class='fa-solid fa-user-slash' style='color:var(--text-muted);'></i> Nessun collega trovato in questa fase per il giorno indicato.";
             }
         }
 
@@ -971,7 +1048,7 @@
         }
 
         function apriRicercaFutura(baseName, rotName, jsonData) {
-            document.getElementById('future-modal-title').innerText = "Mesi Successivi: " + rotName;
+            document.getElementById('future-modal-title').innerHTML = `<i class="fa-solid fa-crystal-ball"></i> ${rotName}`;
             
             let parts = baseName.split('_'); 
             let meseStr = parts[1];
@@ -998,6 +1075,7 @@
 
             document.getElementById('future-search-modal').style.display = 'flex';
             document.getElementById('risultato-futuro').innerHTML = "";
+            document.getElementById('risultato-futuro').style.display = 'none';
         }
 
         function eseguiRicercaFutura() {
@@ -1005,8 +1083,10 @@
             const faseDesiderata = document.getElementById('select-fase-futura').value;
             const boxRisultato = document.getElementById('risultato-futuro');
 
+            boxRisultato.style.display = 'block';
+
             if (!dateStr) {
-                boxRisultato.innerHTML = "Seleziona la data futura prima di cercare.";
+                boxRisultato.innerHTML = "<i class='fa-solid fa-triangle-exclamation' style='color:var(--warning);'></i> Seleziona una data.";
                 return;
             }
 
@@ -1046,18 +1126,18 @@
 
                 if (faseCalcolata === faseDesiderata) {
                     if (faseCalcolata === "Riposo") {
-                        trovati.push(`<strong>${p.nome}</strong> - <span style="color:var(--danger);">[Riposo ${infoExtra}]</span>`);
+                        trovati.push(`<strong>${p.nome}</strong> <span style="float:right; color:var(--danger); font-size:12px; font-weight:700;">[Riposo ${infoExtra}]</span>`);
                     } else {
-                        trovati.push(`<strong>${p.nome}</strong> (Giorno lav. ${giornoLav})`);
+                        trovati.push(`<strong>${p.nome}</strong> <span style="color:var(--text-muted); font-size:12px; margin-left:6px;">(Giorno lav. ${giornoLav})</span>`);
                     }
                 }
             });
 
             if (trovati.length > 0) {
-                let msg = `Colleghi in fase di <strong>${faseDesiderata}</strong> il ${formattaData(dateStr)}:`;
-                boxRisultato.innerHTML = `<div style="margin-bottom:10px;">${msg}</div><ul style="padding-left:20px; margin:0;"><li>` + trovati.join("</li><li style='margin-top:8px;'>") + "</li></ul>";
+                let msg = `Colleghi in fase di <strong style="color:var(--success); text-transform:uppercase;">${faseDesiderata}</strong> il ${formattaData(dateStr)}:`;
+                boxRisultato.innerHTML = `<div style="margin-bottom:12px;">${msg}</div><ul style="padding-left:0; list-style:none; margin:0;"><li style='margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:8px;'>` + trovati.join("</li><li style='margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:8px;'>") + "</li></ul>";
             } else {
-                boxRisultato.innerHTML = "Nessun collega trovato in questa fase per la data indicata.";
+                boxRisultato.innerHTML = "<i class='fa-solid fa-user-slash' style='color:var(--text-muted);'></i> Nessun collega in questa fase per la data indicata.";
             }
         }
 
@@ -1152,11 +1232,11 @@
             const sezioniRicerca = document.getElementById('modal-search-sections');
             const title = document.getElementById('modal-title');
             
-            title.innerText = "Ricerca Globale";
+            title.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> Ricerca Globale`;
             modal.style.display = 'flex';
             sezioniRicerca.style.display = 'none';
-            statusEl.style.display = 'block';
-            statusEl.innerHTML = "Caricamento in corso... (L'apertura dell'Excel richiede qualche istante)";
+            statusEl.style.display = 'flex';
+            statusEl.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px; color: var(--primary);"></i><span>Apertura e scansione documento Excel... <br><span style="font-size:12px;">(L'operazione richiede qualche secondo)</span></span>`;
             
             document.getElementById('risultato-turno').innerHTML = "";
             document.getElementById('risultato-cambi').innerHTML = "";
@@ -1295,11 +1375,11 @@
                     statusEl.style.display = 'none';
                     sezioniRicerca.style.display = 'block';
                 } else {
-                    statusEl.innerHTML = "<span style='color:var(--danger);'>Errore: Struttura del calendario non trovata in nessuna scheda.</span>";
+                    statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="font-size:24px; color:var(--danger);"></i><span style="color:var(--danger); font-weight:700;">Errore:</span> Struttura del calendario non trovata in nessuna scheda.`;
                 }
 
             } catch (error) {
-                statusEl.innerHTML = `<span style='color:var(--danger);'>Errore:</span> ${error.message}`;
+                statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="font-size:24px; color:var(--danger);"></i><span style="color:var(--danger); font-weight:700;">Errore:</span> ${error.message}`;
             }
         }
 
@@ -1365,10 +1445,10 @@
             window.currentUtentePdf = u;
             const omo = u.progressivo ? ` ${u.progressivo}` : '';
             const htmlData = `
-                <div style="margin-bottom:8px;"><strong>Nome:</strong> ${u.nome || '-'}</div>
-                <div style="margin-bottom:8px;"><strong>Cognome:</strong> ${u.cognome || '-'}${omo}</div>
-                <div style="margin-bottom:8px;"><strong>Matricola:</strong> ${u.matricola || '-'}</div>
-                <div style="margin-bottom:8px;"><strong>Rotazione:</strong> ${ROTAZIONI_MAP[u.rotazione_richiesta] || u.rotazione_richiesta || '-'}</div>
+                <div style="margin-bottom:12px; border-bottom:1px solid var(--border-color); padding-bottom:8px;"><strong><i class="fa-solid fa-user"></i> Nome:</strong> ${u.nome || '-'}</div>
+                <div style="margin-bottom:12px; border-bottom:1px solid var(--border-color); padding-bottom:8px;"><strong><i class="fa-regular fa-user"></i> Cognome:</strong> ${u.cognome || '-'}${omo}</div>
+                <div style="margin-bottom:12px; border-bottom:1px solid var(--border-color); padding-bottom:8px;"><strong><i class="fa-regular fa-id-badge"></i> Matricola:</strong> <span style="font-family:monospace; font-size:15px; color:var(--primary); font-weight:700;">${u.matricola || '-'}</span></div>
+                <div style="margin-bottom:4px;"><strong><i class="fa-solid fa-folder-tree"></i> Rotazione:</strong> <span style="color:var(--success); font-weight:700;">${ROTAZIONI_MAP[u.rotazione_richiesta] || u.rotazione_richiesta || '-'}</span></div>
             `;
             document.getElementById('dettaglio-utente-body').innerHTML = htmlData;
             document.getElementById('modal-dettaglio-utente').style.display = 'flex';
@@ -1448,9 +1528,9 @@
                     
                     if (currentUserDoc.abilitato_rotazioni === true) {
                         authSect.style.display = 'none'; contSect.style.display = 'flex';
-                        document.getElementById('btn-miei-dati').style.display = 'inline-block';
+                        document.getElementById('btn-miei-dati').style.display = 'flex';
                         if (isAdmin || isCollab) {
-                            document.getElementById('btn-gestione-accessi').style.display = 'inline-block';
+                            document.getElementById('btn-gestione-accessi').style.display = 'flex';
                             window.aggiornaBadgeRichieste();
                         }
                         window.initPanzoom(); window.caricaDatiTurniSilenzioso(); window.caricaRotazioni();
@@ -1489,7 +1569,7 @@
             document.getElementById('div-mansione-edit').style.display = isDisp ? 'block' : 'none';
             
             document.getElementById('edit-error-msg').innerText = '';
-            document.getElementById('btn-salva-dati').innerText = "Salva Modifiche";
+            document.getElementById('btn-salva-dati').innerHTML = "<i class='fa-solid fa-floppy-disk'></i> Salva Modifiche";
             document.getElementById('btn-salva-dati').disabled = false;
             document.getElementById('modal-miei-dati').style.display = 'flex';
         };
@@ -1505,15 +1585,15 @@
             const err = document.getElementById('edit-error-msg');
             const btn = document.getElementById('btn-salva-dati');
             
-            if (!n || !c || !m) { err.innerText = "Nome, Cognome e Matricola sono obbligatori."; return; }
-            if (!rot) { err.innerText = "Seleziona la tua rotazione di appartenenza."; return; }
+            if (!n || !c || !m) { err.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Nome, Cognome e Matricola sono obbligatori."; return; }
+            if (!rot) { err.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Seleziona la tua rotazione di appartenenza."; return; }
             if (rot.startsWith('disp_')) {
-                if (!dRip) { err.innerText = "Inserisci la data del riposo singolo."; return; }
-                if (!man) { err.innerText = "Seleziona la tua mansione."; return; }
+                if (!dRip) { err.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Inserisci la data del riposo singolo."; return; }
+                if (!man) { err.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Seleziona la tua mansione."; return; }
             }
             
-            err.innerText = "";
-            btn.innerText = "⏳ Salvataggio..."; 
+            err.innerHTML = "";
+            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Salvataggio..."; 
             btn.disabled = true;
             
             try {
@@ -1532,9 +1612,8 @@
                 alert("Dati aggiornati con successo! Ricordati di ricaricare la pagina per visualizzare le tabelle generate.");
                 chiudiModal('modal-miei-dati');
             } catch(e) { 
-                err.innerText = "Errore durante il salvataggio. Riprova."; 
-                err.style.color = "var(--danger)"; 
-                btn.innerText = "Salva Modifiche";
+                err.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Errore durante il salvataggio. Riprova."; 
+                btn.innerHTML = "<i class='fa-solid fa-floppy-disk'></i> Salva Modifiche";
                 btn.disabled = false;
             }
         };
@@ -1551,17 +1630,17 @@
             const err = document.getElementById('req-error-msg');
             const btn = document.getElementById('btn-invia-req');
             
-            if (!n || !c || !m) { err.innerText = "Nome, Cognome e Matricola sono obbligatori."; return; }
-            if (!rot) { err.innerText = "Seleziona la tua rotazione di appartenenza."; return; }
+            if (!n || !c || !m) { err.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Nome, Cognome e Matricola sono obbligatori."; return; }
+            if (!rot) { err.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Seleziona la tua rotazione di appartenenza."; return; }
             if (rot.startsWith('disp_')) {
-                if (!dRip) { err.innerText = "Inserisci la data di un tuo riposo singolo."; return; }
-                if (!man) { err.innerText = "Seleziona la tua mansione."; return; }
+                if (!dRip) { err.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Inserisci la data di un tuo riposo singolo."; return; }
+                if (!man) { err.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Seleziona la tua mansione."; return; }
             }
-            if (!cons) { err.innerText = "Devi accettare di condividere i dati per continuare."; return; }
+            if (!cons) { err.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Devi accettare di condividere i dati per continuare."; return; }
             if (!currentUserId) return;
             
-            err.innerText = ""; 
-            btn.innerText = "⏳ Invio in corso..."; 
+            err.innerHTML = ""; 
+            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Invio in corso..."; 
             btn.disabled = true;
             
             try {
@@ -1573,18 +1652,17 @@
                 await updateDoc(doc(db, "utenti", currentUserId), p);
                 location.reload();
             } catch(e) { 
-                err.innerText = "Errore durante l'invio. Riprova."; 
-                err.style.color = "var(--danger)"; 
-                btn.innerText = "Invia Richiesta";
+                err.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Errore durante l'invio. Riprova."; 
+                btn.innerHTML = "<i class='fa-solid fa-paper-plane'></i> Invia Richiesta";
                 btn.disabled = false;
             }
         };
 
         window.apriGestioneAccessiModal = async () => {
             document.getElementById('modal-gestione-accessi').style.display = 'flex';
-            if (isAdmin) document.getElementById('btn-collab-admin').style.display = 'inline-block';
+            if (isAdmin) document.getElementById('btn-collab-admin').style.display = 'flex';
             const cont = document.getElementById('lista-utenti-abilitati');
-            cont.innerHTML = "<div style='text-align:center; padding:15px; font-size:14px;'>Caricamento...</div>";
+            cont.innerHTML = `<div class="status-message" style="border:none; background:transparent;"><i class="fa-solid fa-circle-notch fa-spin" style="color:var(--primary); font-size:24px;"></i> Caricamento...</div>`;
             const snap = await getDocs(collection(db, "utenti")); 
             
             window.utentiMap = {}; 
@@ -1623,21 +1701,21 @@
                 const checkC = (u.cognome || '').trim().toUpperCase();
                 const checkN = (u.nome || '').trim().toUpperCase();
                 const presente = checkC && checkN && (window.globalNomiRotazioni || []).some(n => n.includes(checkC) && n.includes(checkN));
-                const pallino = presente ? '<span title="Presente nei tabulati" style="font-size:11px; margin-left:4px;">🟢</span>' : '';
+                const pallino = presente ? '<i class="fa-solid fa-circle-check" style="color:var(--success); font-size:12px; margin-left:6px;" title="Presente nei tabulati"></i>' : '';
 
                 let btnBloccaHTML = (u.uid === ADMIN_UID) ? 
-                    `<span style="font-size:13px; color:var(--primary); font-weight:bold; margin-right:5px;">Admin</span>` : 
-                    `<button class="btn" style="width:auto; padding:6px 12px; background:var(--danger); margin:0;" onclick="revocaAccesso('${u.uid}')">Blocca</button>`;
+                    `<span style="font-size:12px; color:var(--info); font-weight:800; text-transform:uppercase; letter-spacing:0.5px; border:1px solid var(--info-border); background:var(--info-light); padding:4px 8px; border-radius:8px;">Admin</span>` : 
+                    `<button class="btn" style="width:auto; padding:8px 12px; font-size:13px; background:var(--danger); margin:0;" onclick="revocaAccesso('${u.uid}')"><i class="fa-solid fa-ban"></i> Blocca</button>`;
 
-                html += `<div class="utente-row" data-search="${checkC} ${checkN} ${u.matricola||''}" style="background:#f8f9fa; border:1px solid #ddd; padding:10px; margin-bottom:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                html += `<div class="utente-row" data-search="${checkC} ${checkN} ${u.matricola||''}">
                     <div>
-                        <strong style="font-size:14px; cursor:pointer; color:var(--primary); text-decoration:underline;" onclick="apriDettaglioUtente('${u.uid}')">${u.cognome||''} ${u.nome||''} ${u.progressivo||''}</strong> ${pallino}<br>
-                        <span style="font-size:12px; color:#666;">Matr: ${u.matricola||''} | ${rotNome}</span>
+                        <div style="font-weight:700; font-size:15px; cursor:pointer; color:var(--text-main); display:flex; align-items:center;" onclick="apriDettaglioUtente('${u.uid}')">${u.cognome||''} ${u.nome||''} ${u.progressivo||''} ${pallino}</div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:4px; font-weight:500;"><i class="fa-solid fa-id-badge"></i> Matr: ${u.matricola||''} <span style="margin:0 4px;">|</span> <i class="fa-solid fa-folder-tree"></i> ${rotNome}</div>
                     </div>
                     ${btnBloccaHTML}
                 </div>`;
             });
-            cont.innerHTML = html || "<div style='text-align:center; font-size:14px; color:#666;'>Nessun utente trovato nella tua area.</div>";
+            cont.innerHTML = html || `<div class="status-message" style="border:none; background:transparent;"><i class="fa-solid fa-user-slash" style="color:var(--text-muted); font-size:24px;"></i> Nessun utente trovato nella tua area.</div>`;
             
             let searchInput = document.getElementById('search-utenti-abilitati');
             if (searchInput) searchInput.value = '';
@@ -1654,7 +1732,7 @@
             chiudiModal('modal-gestione-accessi'); 
             document.getElementById('modal-gestione-richieste').style.display = 'flex';
             const cont = document.getElementById('lista-richieste'); 
-            cont.innerHTML = "<div style='text-align:center; padding:15px; font-size:14px;'>Ricerca richieste...</div>";
+            cont.innerHTML = `<div class="status-message" style="border:none; background:transparent;"><i class="fa-solid fa-circle-notch fa-spin" style="color:var(--info); font-size:24px;"></i> Ricerca richieste...</div>`;
             
             const snap = await getDocs(collection(db, "utenti")); 
             let groupedRequests = {};
@@ -1677,7 +1755,7 @@
             });
 
             if (count === 0) {
-                cont.innerHTML = "<div style='text-align:center; font-size:14px; color:#666;'>Nessuna richiesta in sospeso per la tua area.</div>";
+                cont.innerHTML = `<div class="status-message" style="border:none; background:transparent;"><i class="fa-solid fa-check-double" style="color:var(--success); font-size:32px;"></i> Nessuna richiesta in sospeso.</div>`;
                 return;
             }
 
@@ -1685,25 +1763,25 @@
             for (let k in groupedRequests) {
                 let rotNome = ROTAZIONI_MAP[k] || k;
                 let reqs = groupedRequests[k];
-                html += `<details style="margin-bottom:10px; border:1px solid #ddd; border-radius:8px; background:#fff;" open>
-                    <summary style="padding:12px; font-weight:bold; cursor:pointer; background:#e9ecef; border-radius:8px; color:var(--primary); outline:none; display:flex; justify-content:space-between; align-items:center;">
-                        <span>📁 ${rotNome}</span>
-                        <span style="background:var(--danger); color:#fff; border-radius:10px; padding:2px 8px; font-size:12px;">${reqs.length}</span>
+                html += `<details style="margin-bottom:16px; border:1px solid var(--border-color); border-radius:var(--radius-md); background:var(--surface);" open>
+                    <summary style="padding:16px; font-weight:700; cursor:pointer; background:var(--surface-hover); border-radius:var(--radius-md); color:var(--text-main); outline:none; display:flex; justify-content:space-between; align-items:center;">
+                        <span><i class="fa-regular fa-folder-open" style="color:var(--info); margin-right:8px;"></i> ${rotNome}</span>
+                        <span style="background:var(--danger); color:#fff; border-radius:12px; padding:2px 10px; font-size:12px; box-shadow:0 2px 4px rgba(217, 48, 37, 0.3);">${reqs.length}</span>
                     </summary>
-                    <div style="padding:10px; border-top:1px solid #eee;">`;
+                    <div style="padding:16px; border-top:1px solid var(--border-color);">`;
                 
                 reqs.forEach(u => {
                     const checkC = (u.cognome || '').trim().toUpperCase();
                     const checkN = (u.nome || '').trim().toUpperCase();
                     const presente = checkC && checkN && (window.globalNomiRotazioni || []).some(n => n.includes(checkC) && n.includes(checkN));
-                    const pallino = presente ? '<span title="Presente nei tabulati" style="font-size:11px; margin-left:4px;">🟢</span>' : '';
+                    const pallino = presente ? '<i class="fa-solid fa-circle-check" style="color:var(--success); font-size:12px; margin-left:6px;" title="Presente nei tabulati"></i>' : '';
 
-                    html += `<div style="background:#fff3cd; border:1px solid #ffeeba; padding:10px; margin-bottom:8px; border-radius:8px;">
-                        <strong style="font-size:14px; color:#856404; cursor:pointer; text-decoration:underline;" onclick="apriDettaglioUtente('${u.uid}')">${u.cognome||''} ${u.nome||''} ${u.progressivo||''}</strong> ${pallino}<br>
-                        <span style="font-size:12px; color:#666;">Matr: ${u.matricola||''}</span>
-                        <div style="display:flex; gap:10px; margin-top:10px;">
-                            <button class="btn" style="background:var(--success); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${u.uid}', true, this)">✅ Consenti</button>
-                            <button class="btn" style="background:var(--danger); padding:8px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${u.uid}', false, this)">❌ Rifiuta</button>
+                    html += `<div style="background:var(--warning-light); border:1px dashed var(--warning-border); padding:16px; margin-bottom:12px; border-radius:12px;">
+                        <div style="font-weight:800; font-size:15px; color:var(--warning); cursor:pointer; display:flex; align-items:center;" onclick="apriDettaglioUtente('${u.uid}')">${u.cognome||''} ${u.nome||''} ${u.progressivo||''} ${pallino}</div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:4px; font-weight:600;"><i class="fa-solid fa-id-badge"></i> Matr: ${u.matricola||''}</div>
+                        <div style="display:flex; gap:10px; margin-top:16px;">
+                            <button class="btn" style="background:var(--success); padding:10px; font-size:13px; margin:0; box-shadow:none;" onclick="gestisciRichiesta('${u.uid}', true, this)"><i class="fa-solid fa-check"></i> Consenti</button>
+                            <button class="btn-outline" style="color:var(--danger); border-color:var(--danger); padding:10px; font-size:13px; margin:0;" onclick="gestisciRichiesta('${u.uid}', false, this)"><i class="fa-solid fa-xmark"></i> Rifiuta</button>
                         </div>
                     </div>`;
                 });
@@ -1715,7 +1793,7 @@
         window.gestisciRichiesta = async (uid, ok, btnElem) => {
             try {
                 if (btnElem) {
-                    btnElem.innerText = "⏳...";
+                    btnElem.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i>";
                     btnElem.disabled = true;
                 }
                 
@@ -1735,21 +1813,22 @@
         window.apriGestioneCollaboratori = async () => {
             if(!isAdmin) return;
             chiudiModal('modal-gestione-accessi'); document.getElementById('modal-gestione-collaboratori').style.display = 'flex';
-            const cont = document.getElementById('lista-collaboratori'); cont.innerHTML = "<div style='text-align:center; padding:15px; font-size:14px;'>Caricamento...</div>";
+            const cont = document.getElementById('lista-collaboratori'); 
+            cont.innerHTML = `<div class="status-message" style="border:none; background:transparent;"><i class="fa-solid fa-circle-notch fa-spin" style="color:#9c27b0; font-size:24px;"></i> Caricamento...</div>`;
             const snap = await getDocs(collection(db, "utenti")); let html = "";
             snap.forEach(d => {
                 const u = d.data();
                 if (u.ruolo === 'collaborator') {
-                    html += `<div style="background:#e2e3e5; border:1px solid #d6d8db; padding:10px; margin-bottom:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                    html += `<div class="utente-row" style="border-left: 4px solid #9c27b0;">
                         <div>
-                            <strong style="font-size:14px; color:#383d41;">${u.cognome||''} ${u.nome||''}</strong><br>
-                            <span style="font-size:12px; color:#666;">Permessi: ${(u.permessi_gestione||[]).length} aree</span>
+                            <strong style="font-size:15px; color:var(--text-main);">${u.cognome||''} ${u.nome||''}</strong><br>
+                            <span style="font-size:12px; color:var(--text-muted); font-weight:600;"><i class="fa-solid fa-key"></i> Permessi: ${(u.permessi_gestione||[]).length} aree</span>
                         </div>
-                        <button class="btn" style="width:auto; padding:6px 12px; background:#6f42c1; margin:0;" onclick='apriPermessiCollab("${d.id}", "${u.nome}", ${JSON.stringify(u.permessi_gestione||[])})'>⚙️ Modifica</button>
+                        <button class="btn" style="width:auto; padding:8px 12px; background:#9c27b0; margin:0; box-shadow:none;" onclick='apriPermessiCollab("${d.id}", "${u.nome}", ${JSON.stringify(u.permessi_gestione||[])})'><i class="fa-solid fa-pen-to-square"></i> Modifica</button>
                     </div>`;
                 }
             });
-            cont.innerHTML = html || "<div style='text-align:center; font-size:14px; color:#666;'>Nessun collaboratore trovato. Assegna il ruolo dalla Home Page.</div>";
+            cont.innerHTML = html || `<div class="status-message" style="border:none; background:transparent;"><i class="fa-solid fa-user-slash" style="color:var(--text-muted); font-size:24px;"></i> Nessun collaboratore trovato. Assegna il ruolo dalla Home Page.</div>`;
         };
 
         window.apriPermessiCollab = (uid, nome, perms) => {
@@ -1758,8 +1837,8 @@
             document.getElementById('uid-collab-edit').value = uid;
             const cont = document.getElementById('lista-checkbox-rotazioni'); let html = "";
             for(let k in ROTAZIONI_MAP) {
-                html += `<label style="display:block; margin-bottom:10px; font-size:14px; cursor:pointer;">
-                    <input type="checkbox" class="collab-perm-check" value="${k}" ${perms.includes(k)?"checked":""} style="transform: scale(1.2); margin-right: 8px;"> 
+                html += `<label class="checkbox-label" style="background:var(--surface); border-color:var(--border-color); margin-bottom:8px;">
+                    <input type="checkbox" class="collab-perm-check" value="${k}" ${perms.includes(k)?"checked":""} style="accent-color:#9c27b0;"> 
                     ${ROTAZIONI_MAP[k]}
                 </label>`;
             }
@@ -1768,12 +1847,18 @@
 
         window.salvaPermessiCollab = async () => {
             const uid = document.getElementById('uid-collab-edit').value;
+            const btn = document.querySelector('#modal-permessi-collaboratore .btn');
+            if(btn) { btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i>"; btn.disabled = true; }
+            
             const nP = Array.from(document.querySelectorAll('.collab-perm-check:checked')).map(c => c.value);
             try {
                 await updateDoc(doc(db, "utenti", uid), { permessi_gestione: nP });
                 alert("Permessi aggiornati con successo.");
                 chiudiModal('modal-permessi-collaboratore'); window.apriGestioneCollaboratori();
-            } catch(e) { alert("Errore nel salvataggio dei permessi."); }
+            } catch(e) { 
+                alert("Errore nel salvataggio dei permessi."); 
+                if(btn) { btn.innerHTML = "<i class='fa-solid fa-floppy-disk'></i> Salva Permessi"; btn.disabled = false; }
+            }
         };
     </script>
 </body>
