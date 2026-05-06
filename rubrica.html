@@ -2,41 +2,191 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Utility - Rubrica Colleghi</title>
-    <meta name="theme-color" content="#0056b3">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        const PAGE_RELOAD_KEY = 'reloaded_' + window.location.pathname;
+
+        if (!sessionStorage.getItem(PAGE_RELOAD_KEY)) {
+            sessionStorage.setItem(PAGE_RELOAD_KEY, 'true');
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(regs => {
+                    regs.forEach(reg => reg.update());
+                });
+            }
+            const url = new URL(window.location.href);
+            url.searchParams.set('nocache', new Date().getTime());
+            window.location.replace(url.toString());
+        } else {
+            const APP_VERSION = "1.2"; 
+            if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
+                if ('caches' in window) {
+                    caches.keys().then((names) => {
+                        names.forEach(name => caches.delete(name));
+                    });
+                }
+                localStorage.setItem('app_version_cache', APP_VERSION);
+                window.location.reload(true);
+            }
+        }
+
+        // --- GESTIONE TEMA DA PREFERENZE ---
+        (function applicaTema() {
+            try {
+                let prefStr = localStorage.getItem('preferenze_layout_haze');
+                if (prefStr) {
+                    let prefs = JSON.parse(prefStr);
+                    let theme = prefs.theme || 'system';
+                    if (theme !== 'system') {
+                        document.documentElement.setAttribute('data-theme', theme);
+                    } else {
+                        document.documentElement.removeAttribute('data-theme');
+                    }
+                } else {
+                    const oldTheme = localStorage.getItem('theme');
+                    if (oldTheme && oldTheme !== 'system') document.documentElement.setAttribute('data-theme', oldTheme);
+                }
+            } catch(e) {}
+        })();
+    </script>
+    <script src="global.js"></script>
 
     <style>
-        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #dc3545; }
-        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
+        /* --- CORE DESIGN SYSTEM --- */
+        :root { 
+            --primary: #0066cc; 
+            --primary-hover: #0052a3;
+            --primary-glow: rgba(0, 102, 204, 0.2);
+            --bg-color: #f0f2f5; 
+            --surface: #ffffff;
+            --surface-hover: #f8f9fa;
+            --text-main: #1a1a1a; 
+            --text-muted: #5f6368;
+            --border-color: #e0e0e0;
+            --success: #0f9d58; 
+            --danger: #d93025;
+            --danger-light: #fce8e6;
+            --danger-border: #fad2cf;
+            --warning: #f2a600;
+            --warning-light: #fff8e1;
+            --warning-border: #ffecb3;
+            --info: #0088ff;
+            --info-light: #e6f3ff;
+            --info-border: #b3dfff;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
 
-        /* MENU LATERALE UNIFICATO */
-        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
-        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 5999; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 6000; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        /* --- TEMA SCURO FORZATO (DA MENU) E DI SISTEMA --- */
+        :root[data-theme="dark"],
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --primary: #4da3ff;
+                --primary-hover: #73b9ff;
+                --primary-glow: rgba(77, 163, 255, 0.25);
+                --bg-color: #0f1115;
+                --surface: #1a1d24;
+                --surface-hover: #232730;
+                --text-main: #e8eaed;
+                --text-muted: #9aa0a6;
+                --border-color: #2f333d;
+                --success: #34a853;
+                --danger: #ea4335;
+                --danger-light: rgba(234, 67, 53, 0.15);
+                --danger-border: rgba(234, 67, 53, 0.3);
+                --warning: #ffb74d;
+                --warning-light: rgba(255, 152, 0, 0.15);
+                --warning-border: rgba(255, 152, 0, 0.3);
+                --info: #33aaff;
+                --info-light: rgba(51, 170, 255, 0.15);
+                --info-border: rgba(51, 170, 255, 0.3);
+                --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
+                --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
+                --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
+            }
+        }
+
+        /* Copia di sicurezza per supporto browser mobile */
+        :root[data-theme="dark"] {
+            --primary: #4da3ff; --primary-hover: #73b9ff; --primary-glow: rgba(77, 163, 255, 0.25); --bg-color: #0f1115; --surface: #1a1d24; --surface-hover: #232730; --text-main: #e8eaed; --text-muted: #9aa0a6; --border-color: #2f333d; --success: #34a853; --danger: #ea4335; --danger-light: rgba(234, 67, 53, 0.15); --danger-border: rgba(234, 67, 53, 0.3); --warning: #ffb74d; --warning-light: rgba(255, 152, 0, 0.15); --warning-border: rgba(255, 152, 0, 0.3); --info: #33aaff; --info-light: rgba(51, 170, 255, 0.15); --info-border: rgba(51, 170, 255, 0.3); --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3); --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4); --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            margin: 0; padding: 20px; 
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh;
+        }
+
+        /* HEADER & SIDEBAR */
+        .header { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .hamburger-btn { background: none; border: none; font-size: 24px; color: var(--text-main); cursor: pointer; padding: 10px; border-radius: 50%; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
+        .hamburger-btn:active { background: var(--surface-hover); }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
+        
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 5999; animation: fadeIn 0.3s ease; }
+        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-lg); z-index: 6000; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; overflow-y: auto;}
         .sidebar.open { left: 0; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
-        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; text-transform: none; }
-        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 28px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; }
+        .sidebar-header h3 { margin:0; font-weight: 700; display: flex; align-items: center; gap: 10px;}
+        .sidebar-link { padding: 16px 24px; text-decoration: none; color: var(--text-main); font-size: 15px; font-weight: 500; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; transition: all 0.2s; }
+        .sidebar-link i { width: 28px; text-align: left; font-size: 18px; color: var(--text-muted); transition: color 0.2s;}
+        .sidebar-link:active, .sidebar-link:hover { background-color: var(--surface-hover); color: var(--primary); padding-left: 28px; }
+        .sidebar-link:active i, .sidebar-link:hover i { color: var(--primary); }
 
-        .view-container { width: 100%; max-width: 400px; display: none; flex-direction: column; gap: 15px; text-align: center; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left; }
-        .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; transition: opacity 0.2s; margin-top: 10px; }
-        .btn-action:active { opacity: 0.8; }
-        .btn-danger-outline { background: transparent; color: var(--danger); border: 2px solid var(--danger); padding: 10px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; }
-        #search-bar { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; }
-        .contact-item { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid var(--primary); }
-        .contact-info { text-align: left; }
-        .contact-name { font-weight: bold; font-size: 16px; color: var(--primary); margin-bottom: 2px; text-transform: capitalize; }
-        .contact-detail { font-size: 13px; color: #666; margin-bottom: 2px; }
-        .contact-phone { font-size: 14px; color: var(--text-color); font-weight: 500; }
-        .contact-actions { display: flex; gap: 10px; }
-        .action-icon { background: #e9ecef; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px; color: var(--text-color); }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px); }
-        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; max-height: 90vh; overflow-y: auto;}
-        .input-field { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit; background-color: white;}
+        /* VISTE E CONTENITORI */
+        .view-container { width: 100%; max-width: 440px; display: none; flex-direction: column; gap: 16px; text-align: center; }
+        .card-panel { background: var(--surface); padding: 32px 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--border-color); text-align: center; }
+
+        /* PULSANTI E INPUT */
+        .btn-action { background-color: var(--success); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; transition: all 0.2s; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(15,157,88,0.2); }
+        .btn-action:hover { transform: translateY(-2px); filter: brightness(1.05); }
+        .btn-action:active { transform: translateY(1px); box-shadow: none; }
+        
+        .btn-danger-outline { background: transparent; color: var(--danger); border: 2px solid var(--danger); padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 20px; transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;}
+        .btn-danger-outline:active { background: var(--danger-light); transform: scale(0.98); }
+
+        .input-field { width: 100%; padding: 14px; margin-bottom: 16px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 15px; background-color: var(--surface); color: var(--text-main); font-family: inherit; transition: all 0.2s;}
+        .input-field:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-glow); }
+        .input-field::placeholder { color: var(--text-muted); opacity: 0.7; }
+        
+        .status-message { text-align: center; color: var(--text-muted); font-size: 15px; font-weight: 500; padding: 30px 20px; background: var(--surface-hover); border-radius: var(--radius-md); border: 1px dashed var(--border-color); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+        /* ELEMENTI RUBRICA */
+        .contact-item { background: var(--surface); padding: 16px; border-radius: var(--radius-md); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); border-left: 5px solid var(--primary); border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); transition: transform 0.2s; animation: slideInUp 0.3s ease both; text-align: left;}
+        .contact-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .contact-info { text-align: left; flex: 1; }
+        .contact-name { font-weight: 700; font-size: 16px; color: var(--text-main); margin-bottom: 4px; text-transform: capitalize; }
+        .contact-detail { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; }
+        .contact-phone { font-size: 15px; color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 6px;}
+        
+        .contact-actions { display: flex; gap: 10px; margin-left: 10px;}
+        .action-icon { background: var(--surface-hover); border: 1px solid var(--border-color); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 18px; color: var(--text-main); transition: all 0.2s; box-shadow: var(--shadow-sm);}
+        .action-icon:active { background: var(--primary-glow); color: var(--primary); border-color: var(--primary); transform: scale(0.95); }
+        
+        .wa-icon { color: #25D366; font-size: 20px;}
+        .phone-icon { color: var(--primary); }
+
+        /* MODALE */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 7000; padding: 20px; box-sizing: border-box; animation: fadeIn 0.3s ease; }
+        .modal-content { background-color: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 440px; text-align: left; box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative;}
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -44,88 +194,108 @@
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
-            <h3 style="margin:0; color:white;">Menu</h3>
-            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+            <h3><i class="fa-solid fa-layer-group"></i> Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
-        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
-        <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
-        <a href="rotazioni.html" class="sidebar-link">👥 Rotazioni (test)</a>
-        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
-        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
-        <a href="rubrica.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">📞 Rubrica Colleghi</a>
-        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
-        <a href="orari.html" class="sidebar-link">🕒 Orari Navigazione</a>
-        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
-        <a href="link.html" class="sidebar-link">🔗 Link</a>
-        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
-        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
-        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
-        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+        
+        <a href="index.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Home Page</a>
+        <a href="calendario.html?oggi=true" class="sidebar-link"><i class="fa-solid fa-bullseye"></i> Oggi</a>
+        <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
+        <a href="rotazioni.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
+        <a href="turni.html" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
+        <a href="barcadvisor.html" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
+        <a href="rubrica.html" class="sidebar-link" style="background-color: var(--primary-glow); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary);"><i class="fa-solid fa-address-book" style="color: var(--primary);"></i> Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link"><i class="fa-solid fa-umbrella-beach"></i> Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link"><i class="fa-regular fa-clock"></i> Orari Navigazione</a>
+        <a href="https://m.chebateo.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-water"></i> CheBateo</a>
+        <a href="documenti.html" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Documenti</a>
+        <a href="link.html" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
+        <a href="contatti.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i> Contatti</a>
+        <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
+        <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
+        <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
+        <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
     </div>
 
     <div class="header">
-        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
-        <h2>📖 Rubrica</h2>
-        <div style="width: 50px;"></div>
+        <button class="hamburger-btn" onclick="apriMenuLaterale()"><i class="fa-solid fa-bars"></i></button>
+        <h2><i class="fa-solid fa-address-book"></i> Rubrica</h2>
+        <div style="width: 44px;"></div>
     </div>
 
     <div id="view-no-auth" class="view-container">
-        <div class="card" style="text-align: center;">
-            <h3 style="color: var(--danger);">Accesso Richiesto</h3>
-            <p style="color: #666; font-size: 15px; line-height: 1.5;">La rubrica è un'area protetta riservata ai colleghi. Per accedere devi effettuare il login tramite il Cloud nella Home page.</p>
-            <button class="btn-action" style="background-color: var(--primary);" onclick="window.location.href='index.html'">Torna alla Home</button>
+        <div class="card-panel">
+            <i class="fa-solid fa-lock" style="font-size: 48px; color: var(--text-muted); margin-bottom: 16px;"></i>
+            <h3 style="color: var(--danger); margin-top: 0; font-weight: 800;">Accesso Richiesto</h3>
+            <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 24px;">La rubrica è un'area protetta riservata ai colleghi. Per accedere devi effettuare il login tramite il Cloud nella Home page.</p>
+            <button class="btn-action" style="background-color: var(--primary); margin: 0 auto;" onclick="window.location.href='index.html'"><i class="fa-solid fa-house"></i> Torna alla Home</button>
         </div>
     </div>
 
     <div id="view-opt-in" class="view-container">
-        <div class="card" style="text-align: center;">
-            <h3 style="color: var(--primary); margin-top: 0;">🤝 Condividi per accedere</h3>
-            <p style="color: #666; font-size: 15px; line-height: 1.5;">Questa rubrica contiene i numeri di telefono dei colleghi che hanno deciso di condividerli. <br><br><b>Solo chi condivide il proprio numero può visualizzare quello degli altri.</b> Vuoi unirti?</p>
-            <div id="strike-warning" style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; font-size: 12px; margin-top: 15px; text-align: left;">
+        <div class="card-panel">
+            <i class="fa-solid fa-handshake-simple" style="font-size: 48px; color: var(--primary); margin-bottom: 16px;"></i>
+            <h3 style="color: var(--primary); margin-top: 0; font-weight: 800;">Condividi per accedere</h3>
+            <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 16px;">Questa rubrica contiene i numeri di telefono dei colleghi che hanno deciso di condividerli. <br><br><b>Solo chi condivide il proprio numero può visualizzare quello degli altri.</b> Vuoi unirti?</p>
+            
+            <div id="strike-warning" style="background: var(--warning-light); color: var(--warning); padding: 12px; border-radius: 10px; border: 1px dashed var(--warning-border); font-size: 13px; margin-bottom: 24px; text-align: left;">
                 ⚠️ <b>Regola Anti-Furbetti:</b> Se revochi ripetutamente la condivisione del numero il sistema ti bloccherà permanentemente l'accesso alla rubrica.
             </div>
-            <button class="btn-action" onclick="avviaCondivisione()">Condividi il tuo numero</button>
+            
+            <button class="btn-action" onclick="avviaCondivisione()"><i class="fa-solid fa-share-nodes"></i> Condividi il tuo numero</button>
         </div>
     </div>
 
     <div id="view-directory" class="view-container">
-        <input type="text" id="search-bar" placeholder="🔍 Cerca..." oninput="filtraRubrica()">
-        <div style="font-size: 13px; color: #6c757d; margin-top: -2px; margin-bottom: 12px; margin-left: 4px; font-weight: bold; text-align: left; width: 100%;">
-            <span id="contatore-contatti">0</span> contatti
+        <div style="position: relative; width: 100%;">
+            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 16px; color: var(--text-muted);"></i>
+            <input type="text" id="search-bar" class="input-field" style="padding-left: 45px; margin-bottom: 10px;" placeholder="Cerca collega..." oninput="filtraRubrica()">
         </div>
+        
+        <div style="font-size: 13px; color: var(--text-muted); margin-top: -2px; margin-bottom: 12px; font-weight: 700; text-align: left; width: 100%; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-users"></i> <span id="contatore-contatti">0</span> contatti in rubrica
+        </div>
+        
         <div id="contacts-list" style="width: 100%;"></div>
-        <button class="btn-danger-outline" onclick="revocaCondivisione()">Smetti di condividere</button>
+        
+        <button class="btn-danger-outline" onclick="revocaCondivisione()"><i class="fa-solid fa-user-slash"></i> Smetti di condividere</button>
     </div>
 
     <div id="view-blocked" class="view-container">
-        <div class="card" style="text-align: center;">
-            <h3 style="color: var(--danger); margin-top: 0;">🚫 Accesso Bloccato</h3>
-            <p style="color: #666; font-size: 15px; line-height: 1.5;">
+        <div class="card-panel" style="background: var(--danger-light); border-color: var(--danger-border);">
+            <i class="fa-solid fa-ban" style="font-size: 48px; color: var(--danger); margin-bottom: 16px;"></i>
+            <h3 style="color: var(--danger); margin-top: 0; font-weight: 800;">Accesso Bloccato</h3>
+            <p style="color: var(--text-main); font-size: 15px; margin-bottom: 24px;">
                 Hai rimosso il tuo numero dalla rubrica per 3 volte consecutive.<br><br>
                 Per proteggere la community da comportamenti scorretti, il tuo accesso alla funzione rubrica è stato bloccato definitivamente.
             </p>
-            <button class="btn-action" style="background-color: #6c757d;" onclick="window.location.href='index.html'">Torna alla Home</button>
+            <button class="btn-action" style="background-color: var(--danger); margin: 0 auto;" onclick="window.location.href='index.html'"><i class="fa-solid fa-house"></i> Torna alla Home</button>
         </div>
     </div>
 
     <div id="view-loading" class="view-container" style="display: flex;">
-        <p style="color: #666;">Verifica autorizzazioni in corso...</p>
+        <div class="status-message">
+            <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px; color: var(--primary);"></i>
+            Verifica autorizzazioni in corso...
+        </div>
     </div>
 
     <div id="profileModal" class="modal-overlay">
         <div class="modal-content">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('profileModal').style.display='none'">&times;</span>
-            <h3 style="margin-top: 5px; color: #32325d; text-align: center;">Completa il Profilo</h3>
-            <p style="font-size: 13px; color: #666; text-align: center; margin-bottom: 20px;">Per entrare in rubrica abbiamo bisogno dei tuoi dati completi.</p>
+            <i class="fa-solid fa-xmark" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="document.getElementById('profileModal').style.display='none'"></i>
+            <h3 style="margin-top: 0; margin-bottom: 8px; color: var(--primary); text-align: center; font-weight: 800;"><i class="fa-solid fa-id-card"></i> Completa il Profilo</h3>
+            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Per entrare in rubrica abbiamo bisogno dei tuoi dati completi.</p>
             
-            <input type="text" id="regNome" class="input-field" placeholder="Nome">
-            <input type="text" id="regCognome" class="input-field" placeholder="Cognome">
-            <input type="text" id="regProgressivo" class="input-field" placeholder="Numero es. 02, 03 ecc. (Facoltativo)">
+            <input type="text" id="regNome" class="input-field" placeholder="Nome *">
+            <input type="text" id="regCognome" class="input-field" placeholder="Cognome *">
+            <input type="text" id="regProgressivo" class="input-field" placeholder="Numero omonimia es. 02, 03 (Facoltativo)">
             <input type="text" id="regSoprannome" class="input-field" placeholder="Soprannome (Facoltativo)">
             
             <select id="regMansione" class="input-field">
-                <option value="">-- Seleziona Mansione --</option>
+                <option value="">-- Seleziona Mansione * --</option>
                 <option value="Marinaio">Marinaio</option>
                 <option value="Preposto al comando">Preposto al comando</option>
                 <option value="Comandante">Comandante</option>
@@ -134,10 +304,10 @@
                 <option value="Direttore di macchina">Direttore di macchina</option>
             </select>
 
-            <input type="text" id="regMatricola" class="input-field" placeholder="Matricola">
-            <input type="tel" id="regTelefono" class="input-field" placeholder="Numero di Telefono">
+            <input type="text" id="regMatricola" class="input-field" placeholder="Matricola *">
+            <input type="tel" id="regTelefono" class="input-field" placeholder="Numero di Telefono *">
             
-            <button id="btnSalva" class="btn-action" onclick="salvaECondividi()">Salva e Accedi</button>
+            <button id="btnSalva" class="btn-action" onclick="salvaECondividi()"><i class="fa-solid fa-check"></i> Salva e Accedi</button>
         </div>
     </div>
 
@@ -272,7 +442,7 @@
             // Il controllo ora blocca se manca la matricola o qualsiasi altro dato
             if (!n || !c || !m || !ms || !t) return alert("Dati obbligatori mancanti! Assicurati di inserire Nome, Cognome, Matricola, Mansione e Telefono.");
             
-            document.getElementById('btnSalva').innerText = "Salvataggio...";
+            document.getElementById('btnSalva').innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Salvataggio...";
             try { await setDoc(doc(db, "utenti", currentUser.uid), { nome: n, cognome: c, soprannome: s, progressivo: p, mansione: ms, matricola: m, telefono: t }, { merge: true }); } catch(e){}
             salvaCondivisione(n, c, ms, m, t, s, p);
         };
@@ -304,7 +474,7 @@
 
         async function caricaRubricaGenerale() {
             const listDiv = document.getElementById('contacts-list');
-            listDiv.innerHTML = "<p style='color:#666;'>Caricamento...</p>";
+            listDiv.innerHTML = "<div class='status-message'><i class='fa-solid fa-circle-notch fa-spin' style='font-size: 24px; color: var(--primary);'></i> Caricamento rubrica...</div>";
             try {
                 const querySnapshot = await getDocs(collection(db, "rubrica"));
                 listaContatti = [];
@@ -319,7 +489,7 @@
                 disegnaContatti(listaContatti);
             } catch (error) { 
                 console.error("Errore Rubrica:", error); 
-                listDiv.innerHTML = "<p>Errore durante la lettura dei contatti.</p>"; 
+                listDiv.innerHTML = "<div class='status-message' style='color:var(--danger);'>Errore durante la lettura dei contatti.</div>"; 
             }
         }
 
@@ -332,10 +502,11 @@
             }
 
             listDiv.innerHTML = "";
-            if (arrayContatti.length === 0) return listDiv.innerHTML = "<p>Nessun contatto trovato.</p>";
+            if (arrayContatti.length === 0) return listDiv.innerHTML = "<div class='status-message'><i class='fa-solid fa-users-slash' style='font-size: 32px; color: var(--text-muted);'></i> Nessun contatto trovato.</div>";
             
-            arrayContatti.forEach(c => {
+            arrayContatti.forEach((c, index) => {
                 const item = document.createElement('div'); item.className = "contact-item";
+                item.style.animationDelay = `${index * 0.02}s`;
                 const progLabel = c.progressivo ? ` (${c.progressivo})` : "";
                 
                 const safeNome = String(c.nome || "");
@@ -343,25 +514,23 @@
                 const nomeCap = safeNome.charAt(0).toUpperCase() + safeNome.slice(1).toLowerCase();
                 const cognomeCap = safeCognome.charAt(0).toUpperCase() + safeCognome.slice(1).toLowerCase();
                 
-                const soprannomeLabel = c.soprannome ? ` <span style="font-style:italic; font-size:14px; color:#888;">"${c.soprannome}"</span>` : "";
+                const soprannomeLabel = c.soprannome ? ` <span style="font-style:italic; font-size:13px; color:var(--text-muted);">"${c.soprannome}"</span>` : "";
                 
                 const safeTelefono = String(c.telefono || "");
                 const numDisplay = safeTelefono || "N/D";
                 const numClean = safeTelefono.replace(/\s+/g, '');
-
-                const waIcon = `<svg viewBox="0 0 24 24" width="22" height="22" fill="#25D366"><path d="M12.031 0C5.385 0 .018 5.366.018 12.012c0 2.125.553 4.197 1.603 6.012L.05 24l6.115-1.604c1.745.965 3.738 1.474 5.866 1.474 6.646 0 12.013-5.366 12.013-12.012S18.677 0 12.031 0zm-.018 21.84c-1.796 0-3.553-.483-5.093-1.396l-.365-.216-3.791.994.996-3.697-.238-.377a9.98 9.98 0 0 1-1.528-5.337C1.994 6.452 6.444 2.016 12.013 2.016c2.705 0 5.247 1.053 7.158 2.966 1.91 1.912 2.964 4.456 2.964 7.165 0 5.564-4.45 10.003-10.012 10.003l-.11-.31zm5.503-7.534c-.302-.151-1.785-.881-2.062-.981-.277-.101-.479-.151-.68.151-.202.302-.781.981-.957 1.182-.176.202-.353.226-.655.075-.302-.151-1.275-.47-2.428-1.503-.896-.803-1.501-1.794-1.677-2.096-.176-.302-.019-.465.132-.616.136-.136.302-.353.453-.53.151-.176.202-.302.302-.504.101-.202.05-.378-.025-.53-.075-.151-.68-1.64-.932-2.245-.245-.59-.495-.51-.68-.52-.176-.01-.378-.01-.58-.01-.202 0-.53.076-.807.378-.277.302-1.058 1.034-1.058 2.52 0 1.487 1.083 2.924 1.234 3.125.151.202 2.132 3.255 5.163 4.561 2.222.956 2.87.805 3.373.68.591-.148 1.785-.73 2.037-1.435.252-.705.252-1.31.176-1.435-.075-.126-.277-.202-.58-.353z"/></svg>`;
 
                 const actionStyle = numClean ? '' : 'display:none;';
 
                 item.innerHTML = `
                     <div class="contact-info">
                         <div class="contact-name">${cognomeCap} ${nomeCap}${progLabel}${soprannomeLabel}</div>
-                        <div class="contact-detail">${c.mansione || 'N/D'} | Mat: ${c.matricola || 'N/D'}</div>
-                        <div class="contact-phone">${numDisplay}</div>
+                        <div class="contact-detail"><i class="fa-solid fa-user-tag" style="width:16px;"></i> ${c.mansione || 'N/D'} &nbsp;|&nbsp; <i class="fa-regular fa-id-badge" style="width:14px;"></i> Mat: ${c.matricola || 'N/D'}</div>
+                        <div class="contact-phone"><i class="fa-solid fa-mobile-screen"></i> ${numDisplay}</div>
                     </div>
                     <div class="contact-actions" style="${actionStyle}">
-                        <a href="tel:${numClean}" class="action-icon">📞</a>
-                        <a href="https://wa.me/39${numClean}" target="_blank" class="action-icon" style="background:transparent;">${waIcon}</a>
+                        <a href="tel:${numClean}" class="action-icon phone-icon"><i class="fa-solid fa-phone"></i></a>
+                        <a href="https://wa.me/39${numClean}" target="_blank" class="action-icon wa-icon"><i class="fa-brands fa-whatsapp"></i></a>
                     </div>
                 `;
                 listDiv.appendChild(item);
