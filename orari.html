@@ -2,29 +2,132 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Utility - Orari</title>
-    <style>
-        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; }
-        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
-        
-        /* MENU LATERALE UNIFICATO */
-        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
-        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 5999; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 6000; transition: left 0.3s ease; display: flex; flex-direction: column; }
-        .sidebar.open { left: 0; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
-        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; text-transform: none; }
-        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
 
-        #content-area { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
-        .folder-btn, .file-btn { background-color: var(--primary); color: white; border: none; padding: 15px; font-size: 16px; border-radius: 10px; cursor: pointer; text-decoration: none; text-align: center; flex: 1; font-weight: 500; }
-        .file-row { display: flex; gap: 10px; width: 100%; }
-        .download-btn { background-color: white; border: 2px solid var(--primary); color: var(--primary); padding: 10px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 45px; font-size: 20px; }
-        .back-btn { background-color: #6c757d; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; width: 100%; }
-        .status-message { color: #666; text-align: center; margin-top: 20px; }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        const PAGE_RELOAD_KEY = 'reloaded_' + window.location.pathname;
+
+        if (!sessionStorage.getItem(PAGE_RELOAD_KEY)) {
+            sessionStorage.setItem(PAGE_RELOAD_KEY, 'true');
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(regs => {
+                    regs.forEach(reg => reg.update());
+                });
+            }
+            const url = new URL(window.location.href);
+            url.searchParams.set('nocache', new Date().getTime());
+            window.location.replace(url.toString());
+        } else {
+            const APP_VERSION = "1.2"; 
+            if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
+                if ('caches' in window) {
+                    caches.keys().then((names) => {
+                        names.forEach(name => caches.delete(name));
+                    });
+                }
+                localStorage.setItem('app_version_cache', APP_VERSION);
+                window.location.reload(true);
+            }
+        }
+    </script>
+    <script src="global.js"></script>
+
+    <style>
+        /* --- CORE DESIGN SYSTEM --- */
+        :root { 
+            --primary: #0066cc; 
+            --primary-hover: #0052a3;
+            --primary-glow: rgba(0, 102, 204, 0.2);
+            --bg-color: #f0f2f5; 
+            --surface: #ffffff;
+            --surface-hover: #f8f9fa;
+            --text-main: #1a1a1a; 
+            --text-muted: #5f6368;
+            --border-color: #e0e0e0;
+            --success: #0f9d58; 
+            --danger: #d93025;
+            --danger-light: #fce8e6;
+            --danger-border: #fad2cf;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* TEMA SCURO - Default di Sistema */
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --primary: #4da3ff;
+                --primary-hover: #73b9ff;
+                --primary-glow: rgba(77, 163, 255, 0.25);
+                --bg-color: #0f1115;
+                --surface: #1a1d24;
+                --surface-hover: #232730;
+                --text-main: #e8eaed;
+                --text-muted: #9aa0a6;
+                --border-color: #2f333d;
+                --success: #34a853;
+                --danger: #ea4335;
+                --danger-light: rgba(234, 67, 53, 0.15);
+                --danger-border: rgba(234, 67, 53, 0.3);
+            }
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            margin: 0; padding: 20px; 
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh;
+        }
+        
+        /* HEADER */
+        .header { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .hamburger-btn { background: none; border: none; font-size: 24px; color: var(--text-main); cursor: pointer; padding: 10px; border-radius: 50%; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
+        .hamburger-btn:active { background: var(--surface-hover); }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
+        
+        /* SIDEBAR */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 5999; animation: fadeIn 0.3s ease; }
+        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-lg); z-index: 6000; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; overflow-y: auto;}
+        .sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 28px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; }
+        .sidebar-header h3 { margin:0; font-weight: 700; display: flex; align-items: center; gap: 10px;}
+        .sidebar-link { padding: 16px 24px; text-decoration: none; color: var(--text-main); font-size: 15px; font-weight: 500; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; transition: all 0.2s; }
+        .sidebar-link i { width: 28px; text-align: left; font-size: 18px; color: var(--text-muted); transition: color 0.2s;}
+        .sidebar-link:active, .sidebar-link:hover { background-color: var(--surface-hover); color: var(--primary); padding-left: 28px; }
+        .sidebar-link:active i, .sidebar-link:hover i { color: var(--primary); }
+
+        #content-area { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 14px; }
+        
+        /* PULSANTI E LISTA */
+        .folder-btn { background-color: var(--surface); color: var(--primary); border: 1px solid var(--border-color); padding: 20px; font-size: 16px; border-radius: var(--radius-md); cursor: pointer; text-decoration: none; text-align: left; font-weight: 700; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-sm); transition: all 0.2s; animation: slideInUp 0.3s ease both; }
+        .folder-btn:active { background-color: var(--surface-hover); transform: scale(0.98); }
+
+        .file-row { display: flex; gap: 12px; width: 100%; animation: slideInUp 0.4s ease both; }
+        .file-btn { background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); padding: 16px; font-size: 15px; border-radius: 14px; cursor: pointer; text-decoration: none; text-align: left; flex: 1; font-weight: 600; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow-sm); transition: all 0.2s; }
+        .file-btn:active { background-color: var(--surface-hover); transform: scale(0.98); }
+        .download-btn { background-color: var(--primary); color: white; border: none; padding: 14px; border-radius: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 54px; font-size: 18px; box-shadow: 0 4px 10px rgba(0, 102, 204, 0.3); transition: all 0.2s; }
+        .download-btn:active { transform: scale(0.95); }
+
+        .back-btn { background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px; cursor: pointer; margin-bottom: 20px; width: 100%; font-weight: 600; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+        .back-btn:active { background-color: var(--surface-hover); }
+
+        .status-message { text-align: center; color: var(--text-muted); font-size: 15px; font-weight: 500; padding: 40px 20px; background: var(--surface-hover); border-radius: var(--radius-md); border: 1px dashed var(--border-color); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -32,37 +135,46 @@
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
-            <h3 style="margin:0; color:white;">Menu</h3>
-            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+            <h3><i class="fa-solid fa-layer-group"></i> Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
-        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
-        <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
-        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
-        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
-        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
-        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
-        <a href="orari.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">🕒 Orari Navigazione</a>
-        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
-        <a href="link.html" class="sidebar-link">🔗 Link</a>
-        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
-        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
-        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
-        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+        
+        <a href="index.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Home Page</a>
+        <a href="calendario.html?oggi=true" class="sidebar-link"><i class="fa-solid fa-bullseye"></i> Oggi</a>
+        <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
+        <a href="rotazioni.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
+        <a href="turni.html" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
+        <a href="barcadvisor.html" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
+        <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link"><i class="fa-solid fa-umbrella-beach"></i> Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link" style="background-color: var(--primary-glow); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary);"><i class="fa-regular fa-clock" style="color: var(--primary);"></i> Orari Navigazione</a>
+        <a href="https://m.chebateo.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-water"></i> CheBateo</a>
+        <a href="documenti.html" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Documenti</a>
+        <a href="link.html" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
+        <a href="contatti.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i> Contatti</a>
+        <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
+        <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
+        <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
+        <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
     </div>
 
     <div class="header">
-        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
-        <h2>🕒 Orari</h2>
-        <div style="width: 50px;"></div>
+        <button class="hamburger-btn" onclick="apriMenuLaterale()"><i class="fa-solid fa-bars"></i></button>
+        <h2><i class="fa-regular fa-clock"></i> Orari</h2>
+        <div style="width: 44px;"></div>
     </div>
 
     <div id="content-area">
-        <div class="status-message">Caricamento indice file...</div>
+        <div class="status-message">
+            <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px; color: var(--primary);"></i>
+            Caricamento indice file...
+        </div>
     </div>
 
     <script>
-        // Funzioni per l'apertura e la chiusura del menù laterale
         function apriMenuLaterale() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; }
         function chiudiMenuLaterale() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; }
 
@@ -98,23 +210,24 @@
 
                 numCartelle = dirs.length;
                 if (numCartelle === 0) {
-                    area.innerHTML = "<div class='status-message'>Nessuna cartella orari trovata nell'archivio.</div>";
+                    area.innerHTML = `<div class='status-message'><i class="fa-regular fa-folder-open" style="font-size:32px; color:var(--text-muted);"></i> Nessuna cartella orari trovata nell'archivio.</div>`;
                 } else if (numCartelle === 1) {
                     caricaFiles(dirs[0]);
                 } else {
                     area.innerHTML = "";
                     dirs.sort((a,b) => b.localeCompare(a)); // Ordina dalla più recente
-                    dirs.forEach(d => {
+                    dirs.forEach((d, index) => {
                         const btn = document.createElement('button');
                         btn.className = "folder-btn";
+                        btn.style.animationDelay = `${index * 0.1}s`;
                         let label = d.replace("orari_", "").split("-").join("/");
-                        btn.innerText = "Orari dal " + label;
+                        btn.innerHTML = `<i class="fa-solid fa-folder" style="font-size: 20px;"></i> Orari dal ${label}`;
                         btn.onclick = () => caricaFiles(d);
                         area.appendChild(btn);
                     });
                 }
             } catch (e) {
-                area.innerHTML = "<div class='status-message'>Errore: mappa_file.json non trovata.<br>Vai in Admin e clicca 'Forza Creazione Mappa'.</div>";
+                area.innerHTML = `<div class='status-message' style="color:var(--danger); border-color:var(--danger-border); background:var(--danger-light);"><i class="fa-solid fa-triangle-exclamation" style="font-size:28px;"></i> Errore: mappa file non trovata.<br>Vai in Admin e clicca 'Forza Creazione Mappa'.</div>`;
             }
         }
 
@@ -127,8 +240,18 @@
             area.innerHTML = "";
             if (numCartelle > 1) {
                 const b = document.createElement('button');
-                b.className = "back-btn"; b.innerText = "← Torna alle cartelle";
-                b.onclick = init; area.appendChild(b);
+                b.className = "back-btn"; 
+                b.innerHTML = "<i class='fa-solid fa-arrow-left'></i> Torna alle cartelle";
+                b.onclick = init; 
+                area.appendChild(b);
+            }
+
+            if (pdfs.length === 0) {
+                const msg = document.createElement('div');
+                msg.className = "status-message";
+                msg.innerHTML = `<i class="fa-regular fa-folder-open" style="font-size:32px; color:var(--text-muted);"></i> Questa cartella è vuota.`;
+                area.appendChild(msg);
+                return;
             }
 
             pdfs.sort((a, b) => {
@@ -136,31 +259,39 @@
                 return a.localeCompare(b, undefined, {numeric: true});
             });
 
-            pdfs.forEach(nomeOrig => {
+            pdfs.forEach((nomeOrig, index) => {
                 let nomeVis = nomeOrig.replace(/\.pdf$/i, "").replace(/_/g, " ");
-                if (nomeOrig.includes("completo")) {
-                    nomeVis = "📥 PDF Orari Completo";
+                let isCompleto = nomeOrig.includes("completo");
+                
+                if (isCompleto) {
+                    nomeVis = "PDF Orari Completo";
                 } else {
                     nomeVis = nomeVis.split(/\s+dal\s+/i)[0];
                     nomeVis = nomeVis.replace(/actv nav/i, "Orari").replace(/(\d+)b\b/gi, "$1/").trim();
                     nomeVis = nomeVis.charAt(0).toUpperCase() + nomeVis.slice(1);
                 }
                 
-                const row = document.createElement('div'); row.className = "file-row";
+                const row = document.createElement('div'); 
+                row.className = "file-row";
+                row.style.animationDelay = `${index * 0.05}s`;
+
                 const aOpen = document.createElement('a');
-                aOpen.className = "file-btn"; aOpen.innerText = nomeVis;
+                aOpen.className = "file-btn"; 
+                aOpen.innerHTML = `<i class="fa-solid ${isCompleto ? 'fa-file-pdf' : 'fa-clock'}" style="color: ${isCompleto ? 'var(--danger)' : 'var(--primary)'}; font-size: 20px;"></i> ${nomeVis}`;
                 aOpen.href = `${dir}/${nomeOrig}`;
                 aOpen.target = "_blank";
                 
-                const aDown = document.createElement('div');
-                aDown.className = "download-btn"; aDown.innerHTML = "⬇️";
+                const aDown = document.createElement('button');
+                aDown.className = "download-btn"; 
+                aDown.innerHTML = "<i class='fa-solid fa-download'></i>";
+                aDown.title = "Scarica Orario";
                 aDown.onclick = () => downloadForzato(`${dir}/${nomeOrig}`, nomeOrig);
                 
                 row.appendChild(aOpen); row.appendChild(aDown); area.appendChild(row);
             });
         }
+        
         window.onload = init;
     </script>
 </body>
 </html>
- 
