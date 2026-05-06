@@ -2,99 +2,179 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Utility - Archivio DDS</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/it.js"></script>
+    <script src="global.js"></script>
 
     <style>
-        /* --- STILI GLOBALI --- */
-        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --danger: #dc3545; --success: #28a745; --warning: #ffc107; }
-        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        /* --- CORE DESIGN SYSTEM --- */
+        :root { 
+            --primary: #0066cc; 
+            --primary-hover: #0052a3;
+            --primary-glow: rgba(0, 102, 204, 0.2);
+            --bg-color: #f0f2f5; 
+            --surface: #ffffff;
+            --surface-hover: #f8f9fa;
+            --text-main: #1a1a1a; 
+            --text-muted: #5f6368;
+            --border-color: #e0e0e0;
+            --success: #0f9d58; 
+            --danger: #d93025;
+            --danger-light: #fce8e6;
+            --danger-border: #fad2cf;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* TEMA SCURO - Default di Sistema */
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --primary: #4da3ff;
+                --primary-hover: #73b9ff;
+                --primary-glow: rgba(77, 163, 255, 0.25);
+                --bg-color: #0f1115;
+                --surface: #1a1d24;
+                --surface-hover: #232730;
+                --text-main: #e8eaed;
+                --text-muted: #9aa0a6;
+                --border-color: #2f333d;
+                --success: #34a853;
+                --danger: #ea4335;
+                --danger-light: rgba(234, 67, 53, 0.15);
+                --danger-border: rgba(234, 67, 53, 0.3);
+            }
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            margin: 0; padding: 20px; 
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh;
+        }
         
-        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
-        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
+        /* HEADER */
+        .header { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .hamburger-btn { background: none; border: none; font-size: 24px; color: var(--text-main); cursor: pointer; padding: 10px; border-radius: 50%; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
+        .hamburger-btn:active { background: var(--surface-hover); }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
         
-        /* MENU LATERALE */
-        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        /* SIDEBAR */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 5999; animation: fadeIn 0.3s ease; }
+        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-lg); z-index: 6000; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; overflow-y: auto;}
         .sidebar.open { left: 0; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
-        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; }
-        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 28px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; }
+        .sidebar-header h3 { margin:0; font-weight: 700; display: flex; align-items: center; gap: 10px;}
+        .sidebar-link { padding: 16px 24px; text-decoration: none; color: var(--text-main); font-size: 15px; font-weight: 500; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; transition: all 0.2s; }
+        .sidebar-link i { width: 28px; text-align: left; font-size: 18px; color: var(--text-muted); transition: color 0.2s;}
+        .sidebar-link:active, .sidebar-link:hover { background-color: var(--surface-hover); color: var(--primary); padding-left: 28px; }
+        .sidebar-link:active i, .sidebar-link:hover i { color: var(--primary); }
         
-        .content-area { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+        .content-area { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 20px; }
         
-        .dds-card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 10px; border-left: 5px solid var(--primary); }
-        .dds-title { font-weight: bold; font-size: 16px; color: var(--primary); }
-        .dds-date { font-size: 13px; color: #666; line-height: 1.4; }
-        .dds-reminder-badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; background-color: #eef2ff; color: var(--primary); align-self: flex-start; }
+        /* CARD DDS */
+        .dds-card { background: var(--surface); padding: 20px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 12px; border-left: 6px solid var(--primary); transition: transform 0.2s, box-shadow 0.2s; }
+        .dds-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .dds-title { font-weight: 700; font-size: 16px; color: var(--primary); display: flex; align-items: center; gap: 8px; line-height: 1.4; }
+        .dds-date { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; font-weight: 500;}
         
         .btn-group { display: flex; gap: 10px; margin-top: 5px; }
-        .btn-open { background-color: var(--primary); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; flex: 1; cursor: pointer; }
-        .btn-delete { background-color: white; color: var(--danger); border: 1px solid var(--danger); padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-open { background-color: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 600; font-size: 14px; flex: 1; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; transition: all 0.2s; }
+        .btn-open:active { transform: scale(0.97); }
+        .btn-delete { background-color: var(--surface); color: var(--danger); border: 1px solid var(--danger); padding: 12px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; transition: all 0.2s; }
+        .btn-delete:active { background-color: var(--danger-light); transform: scale(0.97); }
 
-        .btn-add-main { background-color: var(--success); color: white; border: none; padding: 14px; font-size: 15px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-add-main { background-color: var(--success); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; box-shadow: 0 4px 12px rgba(15,157,88,0.2); width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; transition: all 0.2s; }
+        .btn-add-main:hover { transform: translateY(-2px); filter: brightness(1.05); }
+        .btn-add-main:active { transform: translateY(1px); box-shadow: none; }
         
-        .backup-group { display: flex; gap: 10px; width: 100%; }
-        .btn-outline { background-color: white; color: var(--primary); border: 2px solid var(--primary); padding: 12px; font-size: 14px; font-weight: bold; border-radius: 10px; cursor: pointer; flex: 1; text-align: center; }
-        .btn-outline:active { background-color: var(--primary); color: white; }
+        .backup-group { display: flex; gap: 12px; width: 100%; }
+        .btn-outline { background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); padding: 14px; font-size: 14px; font-weight: 600; border-radius: 12px; cursor: pointer; flex: 1; text-align: center; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: var(--shadow-sm); transition: all 0.2s; }
+        .btn-outline:active { background-color: var(--surface-hover); transform: scale(0.97); }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 3000; padding: 15px; box-sizing: border-box; }
-        .modal-content { background-color: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+        /* MODALE */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 7000; padding: 20px; box-sizing: border-box; animation: fadeIn 0.3s ease; }
+        .modal-content { background-color: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 380px; text-align: left; box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative;}
         
-        .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
-        .input-group label { font-size: 14px; font-weight: bold; color: #555; }
-        .input-field, .input-group input[type="text"], .input-group input[type="file"], .input-group input[type="time"] { padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 15px; width: 100%; box-sizing: border-box; font-family: inherit; }
+        .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .input-group label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .input-field, .input-group input[type="text"], .input-group input[type="file"], .input-group input[type="time"] { padding: 14px; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: 15px; width: 100%; box-sizing: border-box; font-family: inherit; background-color: var(--surface); color: var(--text-main); transition: all 0.2s; }
+        .input-field:focus, .input-group input[type="text"]:focus, .input-group input[type="time"]:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-glow); }
         
-        .checkbox-group { display: flex; flex-direction: column; gap: 10px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; }
-        .checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: normal; color: #333; cursor: pointer; }
-        .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; margin: 0; }
+        .checkbox-group { display: flex; flex-direction: column; gap: 12px; background: var(--surface-hover); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); }
+        .checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; color: var(--text-main); cursor: pointer; }
+        .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; margin: 0; accent-color: var(--primary); }
 
-        .btn-esegui { background-color: var(--success); color: white; border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; margin-bottom: 10px; }
-        .btn-chiudi { background-color: #6c757d; color: white; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; text-align: center; }
-        .empty-state { text-align: center; padding: 30px 10px; color: #888; font-size: 14px; }
+        .btn-esegui { background-color: var(--success); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: 12px; cursor: pointer; width: 100%; margin-top: 10px; margin-bottom: 12px; display: flex; justify-content: center; align-items: center; gap: 8px; transition: all 0.2s;}
+        .btn-esegui:active { transform: scale(0.98); }
+        
+        .btn-chiudi { background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color); padding: 14px; font-size: 15px; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; text-align: center; transition: all 0.2s;}
+        .btn-chiudi:active { background-color: var(--surface-hover); }
+        
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 15px; font-weight: 500; background: var(--surface-hover); border-radius: var(--radius-md); border: 1px dashed var(--border-color); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
-        <h2>Archivio DDS</h2>
-        <div style="width: 50px;"></div>
+        <button class="hamburger-btn" onclick="apriMenuLaterale()"><i class="fa-solid fa-bars"></i></button>
+        <h2><i class="fa-solid fa-box-archive"></i> Archivio DDS</h2>
+        <div style="width: 44px;"></div>
     </div>
 
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
-            <h3 style="margin:0; color:white;">Menu</h3>
-            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+            <h3><i class="fa-solid fa-layer-group"></i> Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
-        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
-        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
-        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
-        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
-        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
-        <a href="orari.html" class="sidebar-link">🕒 Orari</a>
-        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
-        <a href="link.html" class="sidebar-link">🔗 Link</a>
-        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
-        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
-        <a href="dds.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">📂 Archivio DDS</a>
-        <a href="promemoria.html" class="sidebar-link">🔔 Promemoria</a>
-        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+        
+        <a href="index.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Home Page</a>
+        <a href="calendario.html?oggi=true" class="sidebar-link"><i class="fa-solid fa-bullseye"></i> Oggi</a>
+        <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
+        <a href="rotazioni.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
+        <a href="turni.html" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
+        <a href="barcadvisor.html" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
+        <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link"><i class="fa-solid fa-umbrella-beach"></i> Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link"><i class="fa-regular fa-clock"></i> Orari Navigazione</a>
+        <a href="https://m.chebateo.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-water"></i> CheBateo</a>
+        <a href="documenti.html" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Documenti</a>
+        <a href="link.html" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
+        <a href="contatti.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i> Contatti</a>
+        <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link" style="background-color: var(--primary-glow); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary);"><i class="fa-solid fa-box-archive" style="color: var(--primary);"></i> Archivio DDS</a>
+        <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
+        <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
+        <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
     </div>
 
     <div class="content-area">
-        <button class="btn-add-main" style="margin-bottom: 5px;" onclick="apriModaleAggiungi()">➕ Carica Nuova DDS (PDF)</button>
+        <button class="btn-add-main" onclick="apriModaleAggiungi()"><i class="fa-solid fa-file-circle-plus"></i> Carica Nuova DDS</button>
         
         <div class="backup-group">
-            <button class="btn-outline" onclick="esportaDDS()">⬇️ Esporta</button>
-            <button class="btn-outline" onclick="document.getElementById('importa-file').click()">⬆️ Importa</button>
+            <button class="btn-outline" onclick="esportaDDS()"><i class="fa-solid fa-download"></i> Esporta</button>
+            <button class="btn-outline" onclick="document.getElementById('importa-file').click()"><i class="fa-solid fa-upload"></i> Importa</button>
             <input type="file" id="importa-file" style="display: none;" accept=".json" onchange="importaDDS(event)">
         </div>
 
@@ -103,25 +183,29 @@
 
     <div id="modal-aggiungi" class="modal">
         <div class="modal-content">
-            <h3 style="margin-top: 0; margin-bottom: 20px; color: var(--primary); text-align: center;">Nuova DDS</h3>
+            <i class="fa-solid fa-xmark" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModaleAggiungi()"></i>
+            <h3 style="margin-top: 0; margin-bottom: 24px; color: var(--text-main); text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; font-weight: 800;"><i class="fa-solid fa-folder-plus" style="color:var(--primary);"></i> Nuova DDS</h3>
             
             <div class="input-group">
-                <label>Titolo</label>
-                <input type="text" id="dds-titolo" placeholder="Inserisci il titolo...">
+                <label>TITOLO</label>
+                <input type="text" id="dds-titolo" placeholder="Inserisci il titolo della DDS...">
             </div>
 
             <div class="input-group">
-                <label>Giorni di validità (tocca per sceglierli)</label>
-                <input type="text" id="dds-date-picker" placeholder="Seleziona le date..." readonly>
+                <label>GIORNI DI VALIDITÀ (Tocca per scegliere)</label>
+                <div style="position: relative;">
+                    <i class="fa-regular fa-calendar" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                    <input type="text" id="dds-date-picker" placeholder="Seleziona le date..." style="padding-left: 40px; background-color: var(--surface);" readonly>
+                </div>
             </div>
 
             <div class="input-group">
-                <label>File PDF</label>
-                <input type="file" id="dds-file" accept="application/pdf">
+                <label>FILE PDF</label>
+                <input type="file" id="dds-file" accept="application/pdf" style="padding: 10px; background: var(--surface-hover);">
             </div>
 
             <div class="input-group">
-                <label>Avvisi sul Calendario (all'avvio):</label>
+                <label>AVVISI SUL CALENDARIO (All'avvio):</label>
                 <div class="checkbox-group">
                     <label class="checkbox-label"><input type="checkbox" value="day_before" class="rem-checkbox"> Il giorno prima</label>
                     <label class="checkbox-label"><input type="checkbox" value="first_day" class="rem-checkbox"> Il primo giorno</label>
@@ -129,20 +213,20 @@
                 </div>
             </div>
 
-            <div class="input-group" id="dds-time-picker-group" style="display: none; background: #eef2f5; padding: 15px; border-radius: 8px; border: 1px solid #d1d9e0;">
-                <label style="color: var(--primary);">🔔 Orario Notifica Push App</label>
-                <input type="time" id="dds-orario" style="background: white; border: 2px solid #d1d9e0; border-radius: 8px; padding: 10px; font-size: 15px; width: 100%; box-sizing: border-box; font-family: inherit;">
-                <div style="font-size: 11px; color: #666; margin-top: 5px;">Seleziona un orario per ricevere una notifica push nei giorni di validità.</div>
+            <div class="input-group" id="dds-time-picker-group" style="display: none; background: var(--surface-hover); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                <label style="color: var(--primary);"><i class="fa-solid fa-bell"></i> ORARIO NOTIFICA PUSH APP</label>
+                <input type="time" id="dds-orario" style="background: var(--surface); border: 2px solid var(--border-color); border-radius: 10px; padding: 12px; font-size: 15px; width: 100%; box-sizing: border-box; font-family: inherit; color: var(--text-main);">
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px; font-weight: 500;">Seleziona un orario per ricevere una notifica push nei giorni di validità.</div>
             </div>
 
-            <div class="input-group" style="background: #eef2ff; padding: 15px; border-radius: 8px; border: 1px dashed var(--primary);">
-                <label class="checkbox-label" style="font-weight: bold; color: var(--primary);">
-                    <input type="checkbox" id="banner-attiva"> ⚠️ Mostra banner in Home Page
+            <div class="input-group" style="background: var(--danger-light); padding: 16px; border-radius: var(--radius-md); border: 1px dashed var(--danger-border);">
+                <label class="checkbox-label" style="font-weight: 700; color: var(--danger);">
+                    <input type="checkbox" id="banner-attiva" style="accent-color: var(--danger);"> Mostra banner in Home Page
                 </label>
-                <div style="font-size: 11px; color: #888; margin-top: 5px;">Se attivo, vedrai un avviso rosso nella Home Page per tutta la durata dei giorni validi.</div>
+                <div style="font-size: 12px; color: var(--text-main); margin-top: 8px;">Se attivo, vedrai un avviso rosso nella Home Page per tutta la durata dei giorni validi.</div>
             </div>
 
-            <button id="btn-salva-dds" class="btn-esegui" onclick="salvaDDS()">💾 Salva DDS</button>
+            <button id="btn-salva-dds" class="btn-esegui" onclick="salvaDDS()"><i class="fa-solid fa-floppy-disk"></i> Salva DDS</button>
             <button class="btn-chiudi" onclick="chiudiModaleAggiungi()">Annulla</button>
         </div>
     </div>
@@ -178,7 +262,6 @@
             document.getElementById('banner-attiva').checked = false;
             document.getElementById('dds-orario').value = '';
 
-            // Logica per rilevare App Nativa
             if (window.Capacitor && window.Capacitor.isNativePlatform()) {
                 document.getElementById('dds-time-picker-group').style.display = 'flex';
             } else {
@@ -195,21 +278,21 @@
                     conjunction: ", ",
                     onReady: function(selectedDates, dateStr, instance) {
                         const btnContainer = document.createElement("div");
-                        btnContainer.style.padding = "10px";
-                        btnContainer.style.borderTop = "1px solid #eee";
-                        btnContainer.style.backgroundColor = "#fff";
+                        btnContainer.style.padding = "12px";
+                        btnContainer.style.borderTop = "1px solid var(--border-color)";
+                        btnContainer.style.backgroundColor = "var(--surface)";
                         
                         const btn = document.createElement("button");
-                        btn.innerHTML = "Fatto ✔️";
+                        btn.innerHTML = "<i class='fa-solid fa-check'></i> Fatto";
                         btn.style.backgroundColor = "var(--primary)";
                         btn.style.color = "white";
                         btn.style.border = "none";
-                        btn.style.padding = "10px";
-                        btn.style.borderRadius = "8px";
+                        btn.style.padding = "12px";
+                        btn.style.borderRadius = "10px";
                         btn.style.fontWeight = "bold";
                         btn.style.cursor = "pointer";
                         btn.style.width = "100%";
-                        btn.style.fontSize = "16px";
+                        btn.style.fontSize = "15px";
                         
                         btn.onclick = function() {
                             instance.close();
@@ -245,7 +328,7 @@
             }
 
             const file = fileInput.files[0];
-            btn.innerText = "⏳ Salvataggio..."; btn.disabled = true;
+            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Salvataggio..."; btn.disabled = true;
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -278,7 +361,7 @@
                     alert("✅ DDS salvata con successo!");
                     window.chiudiModaleAggiungi();
                     caricaListaDDS();
-                    btn.innerText = "💾 Salva DDS"; btn.disabled = false;
+                    btn.innerHTML = "<i class='fa-solid fa-floppy-disk'></i> Salva DDS"; btn.disabled = false;
                 };
             };
             reader.readAsDataURL(file);
@@ -295,15 +378,15 @@
                 let ddsArray = reqGetAll.result.filter(dds => !dds.isPromemoria);
                 ddsArray.sort((a, b) => new Date(b.dateValidita[0]) - new Date(a.dateValidita[0]));
 
-                if (ddsArray.length === 0) { listContainer.innerHTML = '<div class="empty-state">Nessuna DDS archiviata.</div>'; return; }
+                if (ddsArray.length === 0) { listContainer.innerHTML = '<div class="empty-state"><i class="fa-solid fa-folder-open" style="font-size:32px; color:var(--border-color); display:block; margin-bottom:10px;"></i> Nessuna DDS archiviata.</div>'; return; }
 
                 ddsArray.forEach(dds => {
                     const card = document.createElement('div'); card.className = 'dds-card';
-                    card.innerHTML = `<div class="dds-title">${dds.titolo}</div>
-                        <div class="dds-date">Validità: ${dds.dateValidita.length} giorni</div>
+                    card.innerHTML = `<div class="dds-title"><i class="fa-solid fa-file-pdf" style="color:var(--danger);"></i> ${dds.titolo}</div>
+                        <div class="dds-date"><i class="fa-regular fa-calendar-check"></i> Validità: ${dds.dateValidita.length} giorni</div>
                         <div class="btn-group">
-                            <button class="btn-open" onclick="apriPDF(${dds.id})">📄 Apri PDF</button>
-                            <button class="btn-delete" onclick="eliminaDDS(${dds.id})">🗑️ Elimina</button>
+                            <button class="btn-open" onclick="apriPDF(${dds.id})"><i class="fa-solid fa-eye"></i> Apri PDF</button>
+                            <button class="btn-delete" onclick="eliminaDDS(${dds.id})"><i class="fa-solid fa-trash-can"></i> Elimina</button>
                         </div>`;
                     listContainer.appendChild(card);
                 });
@@ -320,7 +403,7 @@
             };
         };
 
-        window.eliminaDDS = (id) => { if (confirm("Eliminare questa DDS?")) { localDb.transaction(storeName, "readwrite").objectStore(storeName).delete(id).onsuccess = caricaListaDDS; } };
+        window.eliminaDDS = (id) => { if (confirm("Sei sicuro di voler eliminare questa DDS?")) { localDb.transaction(storeName, "readwrite").objectStore(storeName).delete(id).onsuccess = caricaListaDDS; } };
 
         window.esportaDDS = () => {
             localDb.transaction(storeName, "readonly").objectStore(storeName).getAll().onsuccess = function(e) {
@@ -338,7 +421,7 @@
                 const data = JSON.parse(e.target.result);
                 const tx = localDb.transaction(storeName, "readwrite");
                 data.forEach(item => { delete item.id; tx.objectStore(storeName).add(item); });
-                tx.oncomplete = () => { alert("Importato!"); caricaListaDDS(); };
+                tx.oncomplete = () => { alert("Backup importato con successo!"); caricaListaDDS(); };
             };
             reader.readAsText(file);
         };
