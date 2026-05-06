@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Utility - Rotazioni</title>
     
+    <script>
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) { document.documentElement.setAttribute('data-theme', savedTheme); }
+    </script>
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0066cc">
     
@@ -21,6 +26,7 @@
     <style>
         /* --- CORE DESIGN SYSTEM --- */
         :root { 
+            /* Variabili Tema Chiaro */
             --primary: #0066cc; 
             --primary-hover: #0052a3;
             --primary-glow: rgba(0, 102, 204, 0.2);
@@ -40,15 +46,24 @@
             --info: #0088ff;
             --info-light: #e6f3ff;
             --info-border: #b3dfff;
+
+            /* Colori Celle Tabella - Tema Chiaro */
+            --bg-al: #e8f5e9; --text-al: #2e7d32; --border-al: #c8e6c9;
+            --bg-ri: #f1f8e9; --text-ri: #558b2f; --border-ri: #dcedc8;
+            --bg-disp: #fff8e1; --text-disp: #f57f17; --border-disp: #ffecb3;
+            --bg-espe: #f3e5f5; --text-espe: #6a1b9a; --border-espe: #e1bee7;
+            --bg-fer: #e0f7fa; --text-fer: #00838f; --border-fer: #b2ebf2;
+
+            /* Ombre e Raggi */
             --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
             --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
             --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
             --radius-md: 14px;
             --radius-lg: 20px;
-            --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* TEMA SCURO - Default di Sistema */
+        /* --- TEMA SCURO FORZATO (DA MENU) E DI SISTEMA --- */
+        :root[data-theme="dark"],
         @media (prefers-color-scheme: dark) {
             :root:not([data-theme="light"]) {
                 --primary: #4da3ff;
@@ -70,7 +85,24 @@
                 --info: #33aaff;
                 --info-light: rgba(51, 170, 255, 0.15);
                 --info-border: rgba(51, 170, 255, 0.3);
+
+                /* Override Colori Celle Tabella - Tema Scuro */
+                --bg-al: rgba(46, 125, 50, 0.2); --text-al: #81c784; --border-al: rgba(46, 125, 50, 0.4);
+                --bg-ri: rgba(85, 139, 47, 0.2); --text-ri: #aed581; --border-ri: rgba(85, 139, 47, 0.4);
+                --bg-disp: rgba(245, 127, 23, 0.2); --text-disp: #ffd54f; --border-disp: rgba(245, 127, 23, 0.4);
+                --bg-espe: rgba(106, 27, 154, 0.2); --text-espe: #ce93d8; --border-espe: rgba(106, 27, 154, 0.4);
+                --bg-fer: rgba(0, 131, 143, 0.2); --text-fer: #4dd0e1; --border-fer: rgba(0, 131, 143, 0.4);
             }
+        }
+
+        /* Per supportare la virgola non valida in CSS puro per il raggruppamento media query + attributo, sdoppiamo le definizioni per sicurezza */
+        :root[data-theme="dark"] {
+            --primary: #4da3ff; --primary-hover: #73b9ff; --primary-glow: rgba(77, 163, 255, 0.25); --bg-color: #0f1115; --surface: #1a1d24; --surface-hover: #232730; --text-main: #e8eaed; --text-muted: #9aa0a6; --border-color: #2f333d; --success: #34a853; --danger: #ea4335; --danger-light: rgba(234, 67, 53, 0.15); --danger-border: rgba(234, 67, 53, 0.3); --warning: #ffb74d; --warning-light: rgba(255, 152, 0, 0.15); --warning-border: rgba(255, 152, 0, 0.3); --info: #33aaff; --info-light: rgba(51, 170, 255, 0.15); --info-border: rgba(51, 170, 255, 0.3);
+            --bg-al: rgba(46, 125, 50, 0.25); --text-al: #81c784; --border-al: rgba(46, 125, 50, 0.5);
+            --bg-ri: rgba(85, 139, 47, 0.25); --text-ri: #aed581; --border-ri: rgba(85, 139, 47, 0.5);
+            --bg-disp: rgba(245, 127, 23, 0.25); --text-disp: #ffd54f; --border-disp: rgba(245, 127, 23, 0.5);
+            --bg-espe: rgba(106, 27, 154, 0.25); --text-espe: #ce93d8; --border-espe: rgba(106, 27, 154, 0.5);
+            --bg-fer: rgba(0, 131, 143, 0.25); --text-fer: #4dd0e1; --border-fer: rgba(0, 131, 143, 0.5);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -118,7 +150,7 @@
         #input-codice-turno::placeholder { text-transform: none; font-size: 15px; letter-spacing: normal; font-weight: normal; }
         
         /* BOTTONI */
-        .btn { background-color: var(--primary); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; transition: all 0.2s; margin-bottom: 12px; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,102,204,0.2); }
+        .btn { background-color: var(--primary); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; transition: all 0.2s; margin-bottom: 12px; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 12px var(--primary-glow); }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
         .btn:active:not(:disabled) { transform: translateY(1px); box-shadow: none; }
         .btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.05); }
@@ -164,7 +196,7 @@
         /* Box dettaglio turno */
         .turn-details-box { margin-top: 10px; font-size: 13px; color: var(--text-muted); background: var(--surface-hover); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); line-height: 1.5;}
 
-        /* --- STILI TABELLA HTML (JSON) --- */
+        /* --- STILI TABELLA HTML E COLORI DINAMICI (JSON) --- */
         .table-responsive { width: 100%; max-height: 75vh; overflow: auto; -webkit-overflow-scrolling: touch; margin-top: 16px; border: 1px solid var(--border-color); border-radius: 12px; position: relative; background: var(--surface); box-shadow: var(--shadow-sm); }
         .rotazioni-table { border-collapse: separate; border-spacing: 0; width: max-content; background: var(--surface); font-size: 13px; text-align: center; }
         .rotazioni-table th, .rotazioni-table td { border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); padding: 12px 10px; white-space: nowrap; color: var(--text-main); }
@@ -174,11 +206,12 @@
         .rotazioni-table td:first-child { background-color: var(--surface-hover); font-weight: 700; text-align: left; border-right: 2px solid var(--border-color); color: var(--primary); font-size: 12px; z-index: 3; }
         .rotazioni-table th:first-child { z-index: 4; border-right: 2px solid var(--primary-hover); }
 
-        .cell-al { background-color: #e8f5e9; color: #2e7d32; font-weight: 700; border: 1px solid #c8e6c9;}
-        .cell-ri { background-color: #f1f8e9; color: #558b2f; border: 1px solid #dcedc8;}
-        .cell-disp { background-color: #fff8e1; color: #f57f17; font-weight: 700; border: 1px solid #ffecb3;}
-        .cell-espe { background-color: #f3e5f5; color: #6a1b9a; font-weight: 700; border: 1px solid #e1bee7;}
-        .cell-fer { background-color: #e0f7fa; color: #00838f; font-size: 11px; font-weight: 800; border: 1px solid #b2ebf2;}
+        /* Utilizzo Variabili Dinamiche Chiaro/Scuro per le Celle */
+        .cell-al { background-color: var(--bg-al); color: var(--text-al); font-weight: 700; border: 1px solid var(--border-al);}
+        .cell-ri { background-color: var(--bg-ri); color: var(--text-ri); border: 1px solid var(--border-ri);}
+        .cell-disp { background-color: var(--bg-disp); color: var(--text-disp); font-weight: 700; border: 1px solid var(--border-disp);}
+        .cell-espe { background-color: var(--bg-espe); color: var(--text-espe); font-weight: 700; border: 1px solid var(--border-espe);}
+        .cell-fer { background-color: var(--bg-fer); color: var(--text-fer); font-size: 11px; font-weight: 800; border: 1px solid var(--border-fer);}
 
         /* LISTE UTENTI E ADMIN */
         .utente-row { background: var(--surface-hover); border: 1px solid var(--border-color); padding: 16px; margin-bottom: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s; box-shadow: var(--shadow-sm);}
