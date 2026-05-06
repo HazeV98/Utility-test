@@ -2,8 +2,13 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Utility - Documenti</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script>
         const PAGE_RELOAD_KEY = 'reloaded_' + window.location.pathname;
@@ -31,35 +36,115 @@
             }
         }
     </script>
+    <script src="global.js"></script>
 
     <style>
-        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #dc3545;}
-        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
+        /* --- CORE DESIGN SYSTEM --- */
+        :root { 
+            --primary: #0066cc; 
+            --primary-hover: #0052a3;
+            --primary-glow: rgba(0, 102, 204, 0.2);
+            --bg-color: #f0f2f5; 
+            --surface: #ffffff;
+            --surface-hover: #f8f9fa;
+            --text-main: #1a1a1a; 
+            --text-muted: #5f6368;
+            --border-color: #e0e0e0;
+            --success: #0f9d58; 
+            --danger: #d93025;
+            --danger-light: #fce8e6;
+            --danger-border: #fad2cf;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* TEMA SCURO - Default di Sistema */
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --primary: #4da3ff;
+                --primary-hover: #73b9ff;
+                --primary-glow: rgba(77, 163, 255, 0.25);
+                --bg-color: #0f1115;
+                --surface: #1a1d24;
+                --surface-hover: #232730;
+                --text-main: #e8eaed;
+                --text-muted: #9aa0a6;
+                --border-color: #2f333d;
+                --success: #34a853;
+                --danger: #ea4335;
+                --danger-light: rgba(234, 67, 53, 0.15);
+                --danger-border: rgba(234, 67, 53, 0.3);
+            }
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            margin: 0; padding: 20px; 
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh;
+        }
         
-        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
-        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 5999; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 6000; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        /* HEADER */
+        .header { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .hamburger-btn { background: none; border: none; font-size: 24px; color: var(--text-main); cursor: pointer; padding: 10px; border-radius: 50%; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
+        .hamburger-btn:active { background: var(--surface-hover); }
+        h2 { margin: 0; color: var(--primary); font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
+        
+        /* SIDEBAR */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 5999; animation: fadeIn 0.3s ease; }
+        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-lg); z-index: 6000; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; overflow-y: auto;}
         .sidebar.open { left: 0; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
-        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; text-transform: none; }
-        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 28px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; }
+        .sidebar-header h3 { margin:0; font-weight: 700; display: flex; align-items: center; gap: 10px;}
+        .sidebar-link { padding: 16px 24px; text-decoration: none; color: var(--text-main); font-size: 15px; font-weight: 500; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; transition: all 0.2s; }
+        .sidebar-link i { width: 28px; text-align: left; font-size: 18px; color: var(--text-muted); transition: color 0.2s;}
+        .sidebar-link:active, .sidebar-link:hover { background-color: var(--surface-hover); color: var(--primary); padding-left: 28px; }
+        .sidebar-link:active i, .sidebar-link:hover i { color: var(--primary); }
 
-        .view-container { width: 100%; max-width: 400px; display: none; flex-direction: column; gap: 15px; text-align: center; }
-        .btn-action { background-color: var(--success); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; transition: opacity 0.2s; margin-top: 10px; }
-        .btn-outline { background-color: transparent; border: 2px solid var(--primary); color: var(--primary); padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .input-field { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #e9ecef; border-radius: 8px; box-sizing: border-box; font-size: 14px; background-color: white; }
-        .status-message { text-align: center; color: #666; font-size: 16px; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        /* VISTE E CONTENITORI */
+        .view-container { width: 100%; max-width: 440px; display: none; flex-direction: column; gap: 16px; text-align: center; }
+        
+        /* PULSANTI */
+        .btn-action { background-color: var(--success); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; transition: all 0.2s; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(15,157,88,0.2); }
+        .btn-action:hover { transform: translateY(-2px); filter: brightness(1.05); }
+        .btn-action:active { transform: translateY(1px); box-shadow: none; }
+        
+        .btn-outline { background-color: var(--surface); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; box-shadow: var(--shadow-sm); }
+        .btn-outline:active { background-color: var(--surface-hover); transform: scale(0.97); }
 
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 7000; padding: 20px; backdrop-filter: blur(3px); }
-        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; max-height: 85vh; overflow-y: auto; }
-        .user-list-item { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e9ecef; }
-        .user-banned { background: #fff5f5; border-color: #ffc9c9; }
+        .input-field { width: 100%; padding: 14px; margin-bottom: 16px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 15px; background-color: var(--surface); color: var(--text-main); font-family: inherit; transition: all 0.2s;}
+        .input-field:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-glow); }
+        .input-field::placeholder { color: var(--text-muted); opacity: 0.7; }
+        
+        .status-message { text-align: center; color: var(--text-muted); font-size: 15px; font-weight: 500; padding: 30px 20px; background: var(--surface-hover); border-radius: var(--radius-md); border: 1px dashed var(--border-color); display: flex; flex-direction: column; align-items: center; gap: 10px; }
 
-        .file-btn { background-color: var(--primary); color: white; border: none; padding: 15px; font-size: 16px; border-radius: 10px; cursor: pointer; text-decoration: none; text-align: center; flex: 1; font-weight: 500; }
-        .file-row { display: flex; gap: 10px; width: 100%; }
-        .download-btn { background-color: white; border: 2px solid var(--primary); color: var(--primary); padding: 10px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 45px; font-size: 20px; }
+        /* LISTA FILE */
+        .file-row { display: flex; gap: 12px; width: 100%; animation: slideInUp 0.4s ease both; }
+        .file-btn { background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); padding: 16px; font-size: 15px; border-radius: 14px; cursor: pointer; text-decoration: none; text-align: left; flex: 1; font-weight: 600; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow-sm); transition: all 0.2s; }
+        .file-btn:active { background-color: var(--surface-hover); transform: scale(0.98); }
+        .download-btn { background-color: var(--primary); color: white; border: none; padding: 14px; border-radius: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 54px; font-size: 18px; box-shadow: 0 4px 10px rgba(0, 102, 204, 0.3); transition: all 0.2s; }
+        .download-btn:active { transform: scale(0.95); }
+
+        /* MODALE GESTIONE */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 7000; padding: 20px; box-sizing: border-box; animation: fadeIn 0.3s ease; }
+        .modal-content { background-color: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 440px; text-align: left; box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative;}
+        
+        .user-list-item { display: flex; justify-content: space-between; align-items: center; background: var(--surface-hover); padding: 16px; border-radius: 12px; margin-bottom: 12px; border: 1px solid var(--border-color); transition: transform 0.2s; box-shadow: var(--shadow-sm);}
+        .user-banned { background: var(--danger-light); border-color: var(--danger-border); }
+
+        /* CARD PANELS */
+        .card-panel { background: var(--surface); padding: 32px 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--border-color); text-align: center; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -67,89 +152,106 @@
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
-            <h3 style="margin:0; color:white;">Menu</h3>
-            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+            <h3><i class="fa-solid fa-layer-group"></i> Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
-        <a href="bacheca_utility.html" class="sidebar-link">📢 Bacheca Avvisi</a>
-        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
-        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
-        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
-        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
-        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
-        <a href="orari.html" class="sidebar-link">🕒 Orari Navigazione</a>
-        <a href="documenti.html" class="sidebar-link" style="background-color: #f4f7f6; color: var(--primary); font-weight: bold;">📄 Documenti</a>
-        <a href="link.html" class="sidebar-link">🔗 Link</a>
-        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
-        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
-        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
-        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+        
+        <a href="index.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Home Page</a>
+        <a href="calendario.html?oggi=true" class="sidebar-link"><i class="fa-solid fa-bullseye"></i> Oggi</a>
+        <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
+        <a href="rotazioni.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
+        <a href="turni.html" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
+        <a href="barcadvisor.html" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
+        <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link"><i class="fa-solid fa-umbrella-beach"></i> Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link"><i class="fa-regular fa-clock"></i> Orari Navigazione</a>
+        <a href="https://m.chebateo.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-water"></i> CheBateo</a>
+        <a href="documenti.html" class="sidebar-link" style="background-color: var(--primary-glow); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary);"><i class="fa-solid fa-file-lines" style="color: var(--primary);"></i> Documenti</a>
+        <a href="link.html" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
+        <a href="contatti.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i> Contatti</a>
+        <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
+        <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
+        <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
+        <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
+        <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
     </div>
 
     <div class="header">
-        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
-        <h2>📄 Documenti</h2>
-        <div style="width: 50px;"></div>
+        <button class="hamburger-btn" onclick="apriMenuLaterale()"><i class="fa-solid fa-bars"></i></button>
+        <h2><i class="fa-solid fa-file-lines"></i> Documenti</h2>
+        <div style="width: 44px;"></div>
     </div>
 
     <div id="view-loading" class="view-container" style="display: flex;">
-        <div class="status-message">Verifica autorizzazioni...</div>
+        <div class="status-message">
+            <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px; color: var(--primary);"></i>
+            Verifica autorizzazioni...
+        </div>
     </div>
 
     <div id="view-denied" class="view-container" style="align-items: center; justify-content: center; height: 50vh;">
-        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center;">
-            <h3 style="color: var(--danger); margin-top: 0;">Accesso Negato</h3>
-            <p style="color: #666; font-size: 14px;">Effettua il login nella Home Page per accedere ai documenti.</p>
-            <button class="btn-action" style="background: var(--primary); width: auto; padding: 10px 20px;" onclick="window.location.href='index.html'">Torna alla Home</button>
+        <div class="card-panel">
+            <i class="fa-solid fa-lock" style="font-size: 48px; color: var(--text-muted); margin-bottom: 16px;"></i>
+            <h3 style="color: var(--text-main); margin-top: 0; font-weight: 800;">Accesso Negato</h3>
+            <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 24px;">Effettua il login nella Home Page per accedere ai documenti.</p>
+            <button class="btn-action" style="background: var(--primary); margin: 0 auto;" onclick="window.location.href='index.html'"><i class="fa-solid fa-house"></i> Torna alla Home</button>
         </div>
     </div>
 
     <div id="view-banned" class="view-container" style="align-items: center; justify-content: center; height: 50vh;">
-        <div style="background: #fff5f5; padding: 30px; border-radius: 12px; border: 2px solid #ffc9c9; text-align: center;">
-            <h3 style="color: var(--danger); margin-top: 0;">🚫 Accesso Revocato</h3>
-            <p style="color: #666; font-size: 14px;">Sei stato escluso da questa pagina da un Amministratore.</p>
-            <button class="btn-action" style="background: var(--danger); width: auto; padding: 10px 20px;" onclick="window.location.href='index.html'">Torna alla Home</button>
+        <div class="card-panel" style="background: var(--danger-light); border-color: var(--danger-border);">
+            <i class="fa-solid fa-ban" style="font-size: 48px; color: var(--danger); margin-bottom: 16px;"></i>
+            <h3 style="color: var(--danger); margin-top: 0; font-weight: 800;">Accesso Revocato</h3>
+            <p style="color: var(--text-main); font-size: 15px; margin-bottom: 24px;">Sei stato escluso da questa pagina da un Amministratore.</p>
+            <button class="btn-action" style="background: var(--danger); margin: 0 auto;" onclick="window.location.href='index.html'"><i class="fa-solid fa-house"></i> Torna alla Home</button>
         </div>
     </div>
 
     <div id="view-profile-required" class="view-container">
-        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: left;">
-            <h3 style="margin-top: 0; color: var(--primary); text-align: center;">Completa il Profilo</h3>
-            <p style="font-size: 13px; color: #555; margin-bottom: 20px; text-align: center;">Inserisci i tuoi dati reali per accedere all'archivio documenti.</p>
-            <label style="font-size: 12px; font-weight: bold; color: #666;">Nome *</label>
+        <div class="card-panel" style="text-align: left;">
+            <h3 style="margin-top: 0; color: var(--primary); text-align: center; font-weight: 800; display:flex; justify-content:center; align-items:center; gap:8px;"><i class="fa-solid fa-id-card"></i> Completa il Profilo</h3>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px; text-align: center;">Inserisci i tuoi dati reali per accedere all'archivio documenti.</p>
+            
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; display:block;">NOME *</label>
             <input type="text" id="req-nome" class="input-field" placeholder="Il tuo nome">
-            <label style="font-size: 12px; font-weight: bold; color: #666;">Cognome *</label>
+            
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; display:block;">COGNOME *</label>
             <input type="text" id="req-cognome" class="input-field" placeholder="Il tuo cognome">
-            <label style="font-size: 12px; font-weight: bold; color: #666;">Matricola *</label>
+            
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; display:block;">MATRICOLA *</label>
             <input type="text" id="req-matricola" class="input-field" placeholder="La tua matricola">
-            <label style="font-size: 12px; font-weight: bold; color: #666;">Numero Omonimia (Facoltativo)</label>
+            
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; display:block;">NUMERO OMONIMIA (FACOLTATIVO)</label>
             <input type="text" id="req-prog" class="input-field" placeholder="Es. 02, 03...">
-            <button id="btn-save-profile" class="btn-action" onclick="salvaProfiloObbligatorio()">Salva e Accedi</button>
+            
+            <button id="btn-save-profile" class="btn-action" onclick="salvaProfiloObbligatorio()"><i class="fa-solid fa-check"></i> Salva e Accedi</button>
         </div>
     </div>
 
     <div id="view-main" class="view-container">
-        <button id="btn-admin-gestione" class="btn-action" style="background: #32325d; display: none; margin-top: 0; margin-bottom: 10px;" onclick="apriGestioneAccessi()">🛠️ Gestione Accessi Documenti</button>
-        <div id="content-area" style="display: flex; flex-direction: column; gap: 12px;"></div>
+        <button id="btn-admin-gestione" class="btn-action" style="background: #32325d; display: none; margin-top: 0; margin-bottom: 10px;" onclick="apriGestioneAccessi()"><i class="fa-solid fa-users-gear"></i> Gestione Accessi</button>
+        <div id="content-area" style="display: flex; flex-direction: column; gap: 14px;"></div>
     </div>
 
     <div id="modal-gestione" class="modal-overlay" onclick="chiudiSeSfondoModale(event, 'modal-gestione')">
-        <div class="modal-content" style="max-width: 400px;">
-            <span style="position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #525f7f;" onclick="document.getElementById('modal-gestione').style.display='none'">&times;</span>
-            <h3 style="margin-top: 5px; margin-bottom: 15px; color: #32325d;">Utenti Autorizzati</h3>
+        <div class="modal-content">
+            <i class="fa-solid fa-xmark" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="document.getElementById('modal-gestione').style.display='none'"></i>
+            <h3 style="margin-top: 0; margin-bottom: 20px; color: var(--text-main); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-shield-halved" style="color:var(--primary);"></i> Utenti Autorizzati</h3>
             
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <div style="background: var(--primary); color: white; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; flex: 1; text-align: center;">
-                    Totali: <span id="badge-totali">0</span>
+            <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                <div style="background: var(--surface-hover); border: 1px solid var(--border-color); color: var(--text-main); padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 600; flex: 1; text-align: center; box-shadow: var(--shadow-sm);">
+                    Totali: <span id="badge-totali" style="font-size:16px; color:var(--primary); display:block; margin-top:4px;">0</span>
                 </div>
-                <div style="background: var(--success); color: white; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; flex: 1; text-align: center;">
-                    Oggi: <span id="badge-oggi">0</span>
+                <div style="background: rgba(15,157,88,0.1); border: 1px solid rgba(15,157,88,0.2); color: var(--success); padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 600; flex: 1; text-align: center; box-shadow: var(--shadow-sm);">
+                    Oggi: <span id="badge-oggi" style="font-size:16px; display:block; margin-top:4px;">0</span>
                 </div>
             </div>
 
-            <p style="font-size: 12px; color: #666;">Gestisci gli accessi ai documenti.</p>
+            <p style="font-size: 13px; color: var(--text-muted); font-weight: 500; margin-bottom: 15px;">Gestisci gli accessi alla sezione documenti.</p>
 
-            <div id="lista-utenti-accessi" style="margin-top: 15px; max-height: 60vh; overflow-y: auto;"></div>
+            <div id="lista-utenti-accessi" style="max-height: 55vh; overflow-y: auto; padding-right: 5px;"></div>
         </div>
     </div>
 
@@ -183,7 +285,7 @@
         onAuthStateChanged(auth, async (user) => {
             nascondiTutto();
             if (!user) { document.getElementById('view-denied').style.display = 'flex'; return; }
-            if (user.uid === ADMIN_UID) document.getElementById('btn-admin-gestione').style.display = 'block';
+            if (user.uid === ADMIN_UID) document.getElementById('btn-admin-gestione').style.display = 'flex';
             document.getElementById('view-loading').style.display = 'flex';
 
             try {
@@ -216,7 +318,7 @@
                     document.getElementById('req-cognome').value = data.cognome || localDati.cognome || "";
                     document.getElementById('req-matricola').value = data.matricola || localDati.matricola || "";
                     document.getElementById('req-prog').value = data.progressivo || localDati.progressivo || "";
-                    document.getElementById('view-profile-required').style.display = 'block';
+                    document.getElementById('view-profile-required').style.display = 'flex';
                     return;
                 }
 
@@ -243,7 +345,7 @@
 
             if (!nome || !cognome || !matricola) { alert("Compila i campi obbligatori (*)."); return; }
             const btn = document.getElementById('btn-save-profile');
-            btn.innerText = "⏳..."; btn.disabled = true;
+            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Salvataggio..."; btn.disabled = true;
 
             const oggiStr = new Date().toISOString().split('T')[0];
             const profileData = { 
@@ -264,7 +366,7 @@
                 const rubricaSnap = await getDoc(rubricaRef);
                 if (rubricaSnap.exists()) await setDoc(rubricaRef, profileData, { merge: true });
                 location.reload();
-            } catch (e) { alert("Errore salvataggio."); btn.innerText = "Salva"; btn.disabled = false; }
+            } catch (e) { alert("Errore salvataggio."); btn.innerHTML = "<i class='fa-solid fa-check'></i> Salva e Accedi"; btn.disabled = false; }
         };
 
         window.apriGestioneAccessi = async () => {
@@ -274,7 +376,7 @@
             const badgeOggi = document.getElementById('badge-oggi');
             const oggiStr = new Date().toISOString().split('T')[0];
 
-            container.innerHTML = `<div class="status-message">Caricamento utenti...</div>`;
+            container.innerHTML = `<div class="status-message"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px; color:var(--primary);"></i> Caricamento utenti...</div>`;
             badgeTotali.innerText = "0";
             badgeOggi.innerText = "0";
             
@@ -284,40 +386,53 @@
                 let numeroTotali = 0;
                 let numeroOggi = 0;
 
+                // Sort users alphabetically
+                let usersList = [];
                 snap.forEach(d => {
                     const u = d.data();
                     if (u.documenti_access === true) {
-                        numeroTotali++;
-                        if (u.last_documenti_access === oggiStr) {
-                            numeroOggi++;
-                        }
-
-                        const isBanned = u.documenti_banned === true;
-                        const omo = u.progressivo ? ` ${u.progressivo}` : '';
-                        const fullName = `${u.cognome || ''} ${u.nome || ''}${omo}`.trim() || 'Utente Sconosciuto';
-                        const matr = u.matricola ? `(Matr. ${u.matricola})` : '';
-
-                        const dotOggi = (u.last_documenti_access === oggiStr) ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:5px;" title="Accesso effettuato oggi"></span>` : '';
-
-                        html += `<div class="user-list-item ${isBanned ? 'user-banned' : ''}">
-                            <div>
-                                <div style="font-weight:bold; font-size:14px; color: #32325d;">${fullName}${dotOggi}</div>
-                                <div style="font-size: 11px; color: #666;">${matr}</div>
-                            </div>
-                            <button class="btn-outline" style="color:${isBanned?'var(--success)':'var(--danger)'}; border-color:${isBanned?'var(--success)':'var(--danger)'};" 
-                            onclick="toggleBan('${d.id}', ${!isBanned})">${isBanned?'Sblocca':'Blocca'}</button>
-                        </div>`;
+                        u.id = d.id;
+                        usersList.push(u);
                     }
+                });
+
+                usersList.sort((a, b) => {
+                    let nomeA = (a.cognome || '').toUpperCase() + (a.nome || '').toUpperCase();
+                    let nomeB = (b.cognome || '').toUpperCase() + (b.nome || '').toUpperCase();
+                    return nomeA.localeCompare(nomeB);
+                });
+
+                usersList.forEach(u => {
+                    numeroTotali++;
+                    if (u.last_documenti_access === oggiStr) {
+                        numeroOggi++;
+                    }
+
+                    const isBanned = u.documenti_banned === true;
+                    const omo = u.progressivo ? ` ${u.progressivo}` : '';
+                    const fullName = `${u.cognome || ''} ${u.nome || ''}${omo}`.trim() || 'Utente Sconosciuto';
+                    const matr = u.matricola ? `Matr. ${u.matricola}` : 'N/D';
+
+                    const dotOggi = (u.last_documenti_access === oggiStr) ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:8px; box-shadow: 0 0 5px rgba(15,157,88,0.5);" title="Accesso effettuato oggi"></span>` : '';
+
+                    html += `<div class="user-list-item ${isBanned ? 'user-banned' : ''}">
+                        <div>
+                            <div style="font-weight:700; font-size:14px; color: var(--text-main); display:flex; align-items:center;">${fullName}${dotOggi}</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top:4px;"><i class="fa-regular fa-id-badge"></i> ${matr}</div>
+                        </div>
+                        <button class="btn-outline" style="color:${isBanned?'var(--success)':'var(--danger)'}; border-color:${isBanned?'var(--success)':'var(--danger)'}; padding: 8px 12px; font-size: 13px;" 
+                        onclick="toggleBan('${u.id}', ${!isBanned})">${isBanned?'<i class="fa-solid fa-unlock"></i> Sblocca':'<i class="fa-solid fa-ban"></i> Blocca'}</button>
+                    </div>`;
                 });
                 
                 if (html === "") {
-                    container.innerHTML = `<div class="status-message">Nessun accesso registrato.</div>`;
+                    container.innerHTML = `<div class="status-message"><i class="fa-solid fa-users-slash" style="font-size:24px; color:var(--text-muted);"></i> Nessun accesso registrato.</div>`;
                 } else {
                     container.innerHTML = html;
                     badgeTotali.innerText = numeroTotali;
                     badgeOggi.innerText = numeroOggi;
                 }
-            } catch(e) { container.innerHTML = `<div class="status-message" style="color:red;">Errore.</div>`; }
+            } catch(e) { container.innerHTML = `<div class="status-message" style="color:var(--danger);"><i class="fa-solid fa-triangle-exclamation" style="font-size:24px;"></i> Errore caricamento.</div>`; }
         };
 
         window.toggleBan = async (uid, status) => {
@@ -341,7 +456,7 @@
 
         async function initDocumentiApp() {
             const area = document.getElementById('content-area');
-            area.innerHTML = '<div class="status-message">Caricamento documenti...</div>';
+            area.innerHTML = `<div class="status-message"><i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px; color: var(--primary);"></i> Caricamento documenti...</div>`;
             
             try {
                 const resMappa = await fetch('mappa_file.json?t=' + new Date().getTime());
@@ -354,30 +469,50 @@
 
                 area.innerHTML = "";
                 if (files.length === 0) {
-                    area.innerHTML = `<div class="status-message">Nessun documento presente in archivio.</div>`;
+                    area.innerHTML = `<div class="status-message"><i class="fa-regular fa-folder-open" style="font-size:32px; color:var(--text-muted);"></i> Nessun documento presente in archivio.</div>`;
                     return;
                 }
 
                 files.sort((a, b) => a.localeCompare(b));
 
-                files.forEach(nomeOriginale => {
+                files.forEach((nomeOriginale, index) => {
                     let nomeVis = nomeOriginale.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
                     nomeVis = nomeVis.charAt(0).toUpperCase() + nomeVis.slice(1);
+                    
+                    let iconaFile = "fa-solid fa-file-lines";
+                    let coloreIcona = "var(--primary)";
+                    
+                    if (nomeOriginale.toLowerCase().endsWith('.pdf')) {
+                        iconaFile = "fa-solid fa-file-pdf";
+                        coloreIcona = "var(--danger)";
+                    } else if (nomeOriginale.toLowerCase().endsWith('.doc') || nomeOriginale.toLowerCase().endsWith('.docx')) {
+                        iconaFile = "fa-solid fa-file-word";
+                        coloreIcona = "#2b579a";
+                    } else if (nomeOriginale.toLowerCase().endsWith('.xls') || nomeOriginale.toLowerCase().endsWith('.xlsx')) {
+                        iconaFile = "fa-solid fa-file-excel";
+                        coloreIcona = "var(--success)";
+                    }
 
-                    const row = document.createElement('div'); row.className = "file-row";
+                    const row = document.createElement('div'); 
+                    row.className = "file-row";
+                    row.style.animationDelay = `${index * 0.05}s`;
+                    
                     const aOpen = document.createElement('a');
-                    aOpen.className = "file-btn"; aOpen.innerText = nomeVis;
+                    aOpen.className = "file-btn"; 
+                    aOpen.innerHTML = `<i class="${iconaFile}" style="color: ${coloreIcona}; font-size: 20px;"></i> ${nomeVis}`;
                     aOpen.href = `${CARTELLA_DOCS}/${nomeOriginale}`;
                     aOpen.target = "_blank";
 
-                    const aDown = document.createElement('div');
-                    aDown.className = "download-btn"; aDown.innerHTML = "⬇️";
+                    const aDown = document.createElement('button');
+                    aDown.className = "download-btn"; 
+                    aDown.innerHTML = "<i class='fa-solid fa-download'></i>";
+                    aDown.title = "Scarica Documento";
                     aDown.onclick = () => window.downloadForzato(`${CARTELLA_DOCS}/${nomeOriginale}`, nomeOriginale);
 
                     row.appendChild(aOpen); row.appendChild(aDown); area.appendChild(row);
                 });
             } catch (e) { 
-                area.innerHTML = `<div class="status-message">Mappa file non trovata. Attendi un aggiornamento o contatta l'amministratore.</div>`; 
+                area.innerHTML = `<div class="status-message" style="color:var(--danger); border-color:var(--danger-border); background:var(--danger-light);"><i class="fa-solid fa-triangle-exclamation" style="font-size:28px;"></i> Mappa file non trovata. Attendi un aggiornamento o contatta l'amministratore.</div>`; 
             }
         }
     </script>
