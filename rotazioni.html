@@ -81,7 +81,35 @@
         }
 
         /* --- TEMA SCURO FORZATO (DA MENU) E DI SISTEMA --- */
-        :root[data-theme="dark"],
+        :root[data-theme="dark"] {
+            --primary: #4da3ff;
+            --primary-hover: #73b9ff;
+            --primary-glow: rgba(77, 163, 255, 0.25);
+            --bg-color: #0f1115;
+            --surface: #1a1d24;
+            --surface-hover: #232730;
+            --text-main: #e8eaed;
+            --text-muted: #9aa0a6;
+            --border-color: #2f333d;
+            --success: #34a853;
+            --danger: #ea4335;
+            --danger-light: rgba(234, 67, 53, 0.15);
+            --danger-border: rgba(234, 67, 53, 0.3);
+            --warning: #ffb74d;
+            --warning-light: rgba(255, 152, 0, 0.15);
+            --warning-border: rgba(255, 152, 0, 0.3);
+            --info: #33aaff;
+            --info-light: rgba(51, 170, 255, 0.15);
+            --info-border: rgba(51, 170, 255, 0.3);
+
+            /* Override Colori Celle Tabella - Tema Scuro */
+            --bg-al: rgba(46, 125, 50, 0.2); --text-al: #81c784; --border-al: rgba(46, 125, 50, 0.4);
+            --bg-ri: rgba(85, 139, 47, 0.2); --text-ri: #aed581; --border-ri: rgba(85, 139, 47, 0.4);
+            --bg-disp: rgba(245, 127, 23, 0.2); --text-disp: #ffd54f; --border-disp: rgba(245, 127, 23, 0.4);
+            --bg-espe: rgba(106, 27, 154, 0.2); --text-espe: #ce93d8; --border-espe: rgba(106, 27, 154, 0.4);
+            --bg-fer: rgba(0, 131, 143, 0.2); --text-fer: #4dd0e1; --border-fer: rgba(0, 131, 143, 0.4);
+        }
+
         @media (prefers-color-scheme: dark) {
             :root:not([data-theme="light"]) {
                 --primary: #4da3ff;

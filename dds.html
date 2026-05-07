@@ -62,14 +62,33 @@
         }
 
                 /* --- TEMA SCURO FORZATO (DA MENU) E DI SISTEMA --- */
-        :root[data-theme="dark"],
+        :root[data-theme="dark"] {
+            --primary: #4da3ff;
+            --primary-hover: #73b9ff;
+            --primary-glow: rgba(77, 163, 255, 0.25);
+            --bg-color: #0f1115;
+            --surface: #1a1d24;
+            --surface-hover: #232730;
+            --text-main: #e8eaed;
+            --text-muted: #9aa0a6;
+            --border-color: #2f333d;
+            --success: #34a853;
+            --danger: #ea4335;
+            --danger-light: rgba(234, 67, 53, 0.15);
+            --danger-border: rgba(234, 67, 53, 0.3);
+            /* Aggiunte le ombreggiature per il tema scuro */
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
+        }
+
         @media (prefers-color-scheme: dark) {
             :root:not([data-theme="light"]) {
                 --primary: #4da3ff;
                 --primary-hover: #73b9ff;
                 --primary-glow: rgba(77, 163, 255, 0.25);
                 --bg-color: #0f1115;
-                --surface: #1a1d24;
+                --surface: #1e1d24;
                 --surface-hover: #232730;
                 --text-main: #e8eaed;
                 --text-muted: #9aa0a6;
