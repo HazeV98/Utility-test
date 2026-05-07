@@ -68,6 +68,17 @@
             --primary: #8295e8;
             --text-muted: #a0a0a0;
         }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #121212;
+                --text: #e0e0e0;
+                --surface: #1e1e1e;
+                --border-color: #333333;
+                --primary: #8295e8;
+                --text-muted: #a0a0a0;
+            }
+        }
         
         body { 
             font-family: 'Inter', Roboto, Helvetica, Arial, sans-serif; 
