@@ -270,6 +270,9 @@
         .accordion-item.apple { border-left: 4px solid #000; }
         .accordion-item.android { border-left: 4px solid var(--success); }
         .accordion-item.calendar { border-left: 4px solid #5e72e4; }
+        .accordion-item.stats { border-left: 4px solid #fb6340; }
+        .accordion-item.rotations { border-left: 4px solid #8965e0; }
+        .accordion-item.barcadvisor { border-left: 4px solid #11cdef; }
     </style>
 </head>
 <body>
@@ -414,7 +417,45 @@
                 </div>
             </div>
         </div>
+        <div class="accordion-item rotations animate-pop">
+            <button class="accordion-header" onclick="toggleAccordion(this)">
+                <div class="accordion-title">
+                    <i class="fa-solid fa-users"></i>
+                    Rotazioni
+                </div>
+                <i class="fa-solid fa-chevron-down accordion-icon"></i>
+            </button>
+            <div class="accordion-content">
+                <div class="accordion-body">
+                    <p>Visualizza le rotazioni di tutti i colleghi in una tabella chiara e organizzata. Puoi vedere chi lavora quando e pianificare meglio i tuoi cambi turno.</p>
+                    <ul class="step-list" style="margin-top: 10px;">
+                        <li><strong>Visualizzazione Tabella:</strong> Una tabella scorrevole mostra le rotazioni per mese, con colori diversi per ogni tipo di turno (riposi, lavoro, ferie, ecc.).</li>
+                        <li><strong>Ricerca per Mese:</strong> Seleziona il mese che ti interessa per vedere le rotazioni future o passate.</li>
+                        <li><strong>Confronto Facile:</strong> Confronta facilmente la tua rotazione con quella dei colleghi per organizzare scambi.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
 
+        <div class="accordion-item barcadvisor animate-pop">
+            <button class="accordion-header" onclick="toggleAccordion(this)">
+                <div class="accordion-title">
+                    <i class="fa-solid fa-ship"></i>
+                    BarcAdvisor
+                </div>
+                <i class="fa-solid fa-chevron-down accordion-icon"></i>
+            </button>
+            <div class="accordion-content">
+                <div class="accordion-body">
+                    <p>Strumento di consulenza per la navigazione e la gestione delle imbarcazioni. Fornisce informazioni utili sui mezzi di trasporto marittimo e terrestre.</p>
+                    <ul class="step-list" style="margin-top: 10px;">
+                        <li><strong>Consulta Mezzi:</strong> Visualizza informazioni dettagliate su navi, traghetti e mezzi di trasporto disponibili.</li>
+                        <li><strong>Orari e Rotte:</strong> Controlla orari, rotte e disponibilità dei servizi di trasporto.</li>
+                        <li><strong>Pianificazione Viaggi:</strong> Pianifica i tuoi spostamenti utilizzando i mezzi di trasporto aziendali.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
         <div class="accordion-item documents animate-pop">
             <button class="accordion-header" onclick="toggleAccordion(this)">
                 <div class="accordion-title">
