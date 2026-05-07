@@ -23,14 +23,10 @@
                     } else {
                         document.documentElement.removeAttribute('data-theme');
                     }
-                } else {
-                    const oldTheme = localStorage.getItem('theme');
-                    if (oldTheme && oldTheme !== 'system') document.documentElement.setAttribute('data-theme', oldTheme);
                 }
             } catch(e) {}
         })();
     </script>
-    <script src="global.js"></script>
 
     <style>
         /* --- CORE DESIGN SYSTEM --- */
