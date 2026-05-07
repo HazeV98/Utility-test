@@ -2,82 +2,236 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Utility - Guida all'uso</title>
 
-    <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
-    <script src="global.js"></script>
-    
-    <style>
-        /* --- STILI GLOBALI UNIFICATI --- */
-        :root { --primary: #0056b3; --bg-color: #f4f7f6; --text-color: #333; --success: #28a745; --danger: #f5365c; }
-        body { font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; line-height: 1.6; }
-        
-        /* HEADER */
-        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .hamburger-btn { background: none; border: none; font-size: 30px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; }
-        h2 { margin: 0; color: var(--primary); font-size: 24px; text-align: center; }
-        
-        /* MENU LATERALE */
-        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: left 0.3s ease; display: flex; flex-direction: column; }
-        .sidebar.open { left: 0; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--primary); color: white; }
-        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 18px; border-bottom: 1px solid #eee; display: block; }
-        .sidebar-link:active, .sidebar-link:hover { background-color: #f4f7f6; color: var(--primary); font-weight: bold; }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        /* AREA CONTENUTI SPECIFICA PER LA GUIDA */
-        .content-area { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
-        
-        .guide-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .guide-card h3 { margin-top: 0; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px; font-size: 20px; display: flex; align-items: center; gap: 8px; }
-        
+    <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+
+    <script>
+        // --- GESTIONE TEMA DA PREFERENZE ---
+        (function applicaTema() {
+            try {
+                let prefStr = localStorage.getItem('preferenze_layout_haze');
+                if (prefStr) {
+                    let prefs = JSON.parse(prefStr);
+                    let theme = prefs.theme || 'system';
+                    if (theme !== 'system') {
+                        document.documentElement.setAttribute('data-theme', theme);
+                    } else {
+                        document.documentElement.removeAttribute('data-theme');
+                    }
+                } else {
+                    const oldTheme = localStorage.getItem('theme');
+                    if (oldTheme && oldTheme !== 'system') document.documentElement.setAttribute('data-theme', oldTheme);
+                }
+            } catch(e) {}
+        })();
+    </script>
+
+    <style>
+        /* --- STILI GLOBALI UNIFICATI CON DARK MODE "PRO" --- */
+        :root {
+            --primary: #0066cc;
+            --primary-hover: #0052a3;
+            --primary-glow: rgba(0, 102, 204, 0.2);
+            --bg-color: #f0f2f5;
+            --surface: #ffffff;
+            --surface-hover: #f8f9fa;
+            --text-main: #1a1a1a;
+            --text-muted: #5f6368;
+            --border-color: #e0e0e0;
+            --success: #0f9d58;
+            --danger: #d93025;
+            --danger-light: #fce8e6;
+            --danger-border: #fad2cf;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --transition-speed: 0.3s;
+        }
+
+        /* TEMA SCURO - Override Esplicito */
+        :root[data-theme="dark"] {
+            --primary: #4da3ff;
+            --primary-hover: #73b9ff;
+            --primary-glow: rgba(77, 163, 255, 0.25);
+            --bg-color: #0f1115;
+            --surface: #1a1d24;
+            --surface-hover: #232730;
+            --text-main: #e8eaed;
+            --text-muted: #9aa0a6;
+            --border-color: #2f333d;
+            --success: #34a853;
+            --danger: #ea4335;
+            --danger-light: rgba(234, 67, 53, 0.15);
+            --danger-border: rgba(234, 67, 53, 0.3);
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
+        }
+
+        /* TEMA SCURO - Default di Sistema (Se non c'è forzatura Light) */
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --primary: #4da3ff;
+                --primary-hover: #73b9ff;
+                --primary-glow: rgba(77, 163, 255, 0.25);
+                --bg-color: #0f1115;
+                --surface: #1a1d24;
+                --surface-hover: #232730;
+                --text-main: #e8eaed;
+                --text-muted: #9aa0a6;
+                --border-color: #2f333d;
+                --success: #34a853;
+                --danger: #ea4335;
+            --danger-light: rgba(234, 67, 53, 0.15);
+            --danger-border: rgba(234, 67, 53, 0.3);
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
+        }
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ANIMAZIONI BASE */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-pop { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        /* HEADER */
+        .header { width: 100%; max-width: 420px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+        .hamburger-btn { background: none; border: none; font-size: 26px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; transition: transform 0.2s; display: flex; align-items: center;}
+        .hamburger-btn:active { transform: scale(0.9); }
+        h2 { margin: 0; color: var(--text-main); font-size: 24px; font-weight: 700; text-align: center; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px;}
+        h2 i { color: var(--primary); }
+
+        /* MENU LATERALE */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 5999; animation: fadeIn 0.3s ease; }
+        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-lg); z-index: 6000; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; overflow-y: auto;}
+        .sidebar.open { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 28px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; }
+        .sidebar-header h3 { margin:0; font-weight: 700; display: flex; align-items: center; gap: 10px;}
+        .sidebar-link { padding: 16px 24px; text-decoration: none; color: var(--text-main); font-size: 15px; font-weight: 500; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; transition: all 0.2s; }
+        .sidebar-link i { width: 28px; text-align: left; font-size: 18px; color: var(--text-muted); transition: color 0.2s;}
+        .sidebar-link:active, .sidebar-link:hover { background-color: var(--surface-hover); color: var(--primary); padding-left: 28px; }
+        .sidebar-link:active i, .sidebar-link:hover i { color: var(--primary); }
+        .sidebar-link.active-link { background-color: var(--primary-glow); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary); padding-left: 20px;}
+        .sidebar-link.active-link i { color: var(--primary); }
+
+        /* CONTENUTI SPECIFICI GUIDA */
+        .content-area { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
+
+        .guide-card {
+            background: var(--surface);
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        .guide-card h3 {
+            margin-top: 0;
+            color: var(--primary);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 12px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+        }
+
         .guide-card.apple-card { border-left: 5px solid #000; }
         .guide-card.android-card { border-left: 5px solid var(--success); }
         .guide-card.calendar-card { border-left: 5px solid #5e72e4; }
 
-        .guide-text { font-size: 15px; color: #555; margin-bottom: 15px; }
-        .guide-text strong { color: #333; }
-        
-        .step-list { padding-left: 20px; margin: 0; color: #555; }
-        .step-list li { margin-bottom: 10px; }
+        .guide-text { font-size: 15px; color: var(--text-main); margin-bottom: 15px; line-height: 1.6; }
+        .guide-text strong { color: var(--text-main); font-weight: 600; }
 
-        .highlight-box { background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; border: 1px solid #ffeeba; font-size: 14px; margin-top: 15px; }
+        .step-list { padding-left: 20px; margin: 0; color: var(--text-main); }
+        .step-list li { margin-bottom: 10px; line-height: 1.5; }
+
+        .highlight-box {
+            background-color: var(--surface-hover);
+            color: var(--text-main);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            font-size: 14px;
+            margin-top: 15px;
+            animation: fadeInUp 0.4s ease;
+        }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
-        <h2>Manuale d'uso</h2>
-        <div style="width: 50px;"></div>
-    </div>
-
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
-            <h3 style="margin:0; color:white;">Menu</h3>
-            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
+            <h3><i class="fa-solid fa-layer-group"></i> Menu</h3>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <a href="index.html" class="sidebar-link">🏠 Home Page</a>
-        <a href="calendario.html" class="sidebar-link">📅 Calendario</a>
-        <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
-        <a href="turni.html" class="sidebar-link">🔄 Turni</a>
-        <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
-        <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
-        <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
-        <a href="orari.html" class="sidebar-link">🕒 Orari</a>
-        <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
-        <a href="link.html" class="sidebar-link">🔗 Link</a>
-        <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
-        <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
-        <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
-        <a href="guida.html" class="sidebar-link">📖 Guida</a>
+
+        <a href="index.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Home Page</a>
+        <a href="calendario.html?oggi=true" class="sidebar-link"><i class="fa-solid fa-bullseye"></i> Oggi</a>
+        <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
+        <a href="rotazioni.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
+        <a href="turni.html" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
+        <a href="barcadvisor.html" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
+        <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link"><i class="fa-solid fa-umbrella-beach"></i> Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link"><i class="fa-regular fa-clock"></i> Orari Navigazione</a>
+        <a href="https://m.chebateo.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-water"></i> CheBateo</a>
+        <a href="documenti.html" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Documenti</a>
+        <a href="link.html" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
+        <a href="contatti.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i> Contatti</a>
+        <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
+        <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
+        <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
+        <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
+        <a href="guida.html" class="sidebar-link active-link"><i class="fa-solid fa-book"></i> Guida</a>
+
+        <a href="admin.html" class="sidebar-link" id="menu-admin" style="display:none; color: var(--danger); font-weight: bold;"><i class="fa-solid fa-lock" style="color: var(--danger);"></i> Admin</a>
+    </div>
+
+    <div class="header">
+        <button class="hamburger-btn" onclick="apriMenuLaterale()"><i class="fa-solid fa-bars"></i></button>
+        <h2><i class="fa-solid fa-book"></i> Guida</h2>
+        <div style="width: 50px;"></div>
     </div>
 
     <div class="content-area">
 
-        <div class="guide-card apple-card">
+        <div class="guide-card apple-card animate-pop">
             <h3>🍏 Come installare su iPhone</h3>
             <div class="guide-text">Per avere l'icona dell'app direttamente sulla schermata principale del tuo telefono, segui questi semplici passaggi. <br><strong>ATTENZIONE: DEVI USARE SAFARI</strong> (non usare Chrome o Google).</div>
             <ol class="step-list">
@@ -89,7 +243,7 @@
             <div class="highlight-box">Fatto! Ora troverai l'icona "Utility" insieme alle altre app del telefono. Aprili sempre da lì e funzionerà anche senza internet!</div>
         </div>
 
-        <div class="guide-card android-card">
+        <div class="guide-card android-card animate-pop">
             <h3>🤖 Come installare su Android</h3>
             <div class="guide-text">Su telefoni Android (Samsung, Xiaomi, Oppo, ecc.) è facilissimo. Usa l'app <strong>Google Chrome</strong>.</div>
             <ol class="step-list">
@@ -99,7 +253,7 @@
             </ol>
         </div>
 
-        <div class="guide-card calendar-card">
+        <div class="guide-card calendar-card animate-pop">
             <h3>📅 Calendario Turni</h3>
             
             <p><strong>Configurazione iniziale:</strong><br>
@@ -135,12 +289,12 @@
             </p>
         </div>
         
-        <div class="guide-card">
+        <div class="guide-card animate-pop">
             <h3>📊 Statistiche Calendario</h3>
             <div class="guide-text">Questa pagina legge automaticamente il tuo calendario. Inserisci una data d'inizio e una di fine: l'app conterà da sola quanti riposi, quante ferie, quanti giorni di malattia e quante ore totali di straordinario hai fatto in quel periodo</div>
         </div>
 
-        <div class="guide-card">
+        <div class="guide-card animate-pop">
             <h3>🔄 Turni, Orari e Documenti</h3>
             <div class="guide-text">In queste pagine trovi i file PDF aziendali divisi per cartelle.
             <ul class="step-list" style="margin-top: 10px;">
@@ -152,7 +306,7 @@
             </div>
         </div>
 
-        <div class="guide-card">
+        <div class="guide-card animate-pop">
             <h3>🔄 Bacheca Turni</h3>
             <div class="guide-text">Gestisci i tuoi cambi turno con i colleghi in modo intelligente.
             <ul class="step-list">
@@ -163,7 +317,7 @@
             </div>
         </div>
 
-        <div class="guide-card">
+        <div class="guide-card animate-pop">
             <h3>🌴 Rotazione Ferie</h3>
             <div class="guide-text">Vedi le ferie dei colleghi e proponi scambi per i periodi di ferie.
             <ul class="step-list">
@@ -174,7 +328,7 @@
             </div>
         </div>
 
-        <div class="guide-card">
+        <div class="guide-card animate-pop">
             <h3>📞 Rubrica Colleghi</h3>
             <div class="guide-text">Tutti i contatti telefonici dei colleghi in un unico posto.
             <ul class="step-list">
@@ -185,7 +339,7 @@
             </div>
         </div>
 
-        <div class="guide-card">
+        <div class="guide-card animate-pop">
             <h3>🔗 Link e 📇 Contatti</h3>
             <div class="guide-text">Qui troverai una rubrica con tutti i numeri utili, le mail e i siti web.
             <ul class="step-list" style="margin-top: 10px;">
@@ -196,7 +350,7 @@
         </div>
 
 
-        <div class="guide-card">
+        <div class="guide-card animate-pop">
             <h3>📂 Archivio DDS</h3>
             <div class="guide-text">Una nuova sezione creata per gestire le Disposizioni di Servizio, puoi caricare il pdf o un immagine e segnando la data di validità puoi impostare degli avvisi.
             <ul class="step-list" style="margin-top: 10px;">
@@ -207,7 +361,7 @@
             </div>
         </div>
 
-        <div class="guide-card">
+        <div class="guide-card animate-pop">
             <h3>🍝 Contatore Buoni Pasto</h3>
             <div class="guide-text">Gestisci i tuoi buoni in maniera manuale o automatica.
             <ul class="step-list" style="margin-top: 10px;">
