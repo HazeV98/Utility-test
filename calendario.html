@@ -32,7 +32,14 @@
                 }
             } catch(e) {}
         })();
+    </script>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
         // --- SISTEMA DI PULIZIA CACHE E AGGIORNAMENTO FORZATO ---
         const PAGE_RELOAD_KEY = 'reloaded_' + window.location.pathname;
 
@@ -67,7 +74,6 @@
         }
     </script>
 
-
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
     <script src="global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
@@ -78,99 +84,44 @@
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 
     <style>
-        /* --- CORE DESIGN SYSTEM --- */
         :root { 
-            --primary: #0066cc; 
-            --primary-hover: #0052a3;
-            --primary-glow: rgba(0, 102, 204, 0.2);
-            --bg-color: #f0f2f5; 
+            --riposo: #1e8449; --disp: #feb236; --turno: #5e72e4; 
+            --bg: #f7f9fe; --text: #32325d;
             --surface: #ffffff;
-            --surface-hover: #f8f9fa;
-            --text-main: #1a1a1a; 
-            --text-muted: #5f6368;
-            --border-color: #e0e0e0;
-            --success: #0f9d58; 
-            --danger: #d93025;
-            --danger-light: #fce8e6;
-            --danger-border: #fad2cf;
-            --warning: #f2a600;
-            --warning-light: #fff8e1;
-            --warning-border: #ffecb3;
-            --info: #0088ff;
-            --info-light: #e6f3ff;
-            --info-border: #b3dfff;
-            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
-            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
-            --radius-md: 14px;
-            --radius-lg: 20px;
-            --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            
-            /* Variabili Calendario Specifiche mantenute per compatibilità logica */
-            --riposo: #1e8449; 
-            --disp: #feb236; 
-            --turno: #5e72e4; 
+            --border-color: #e9ecef;
+            --primary: #5e72e4;
+            --text-muted: #525f7f;
         }
 
-        /* --- TEMA SCURO FORZATO (DA MENU) E DI SISTEMA --- */
-        :root[data-theme="dark"],
-        @media (prefers-color-scheme: dark) {
-            :root:not([data-theme="light"]) {
-                --primary: #4da3ff;
-                --primary-hover: #73b9ff;
-                --primary-glow: rgba(77, 163, 255, 0.25);
-                --bg-color: #0f1115;
-                --surface: #1a1d24;
-                --surface-hover: #232730;
-                --text-main: #e8eaed;
-                --text-muted: #9aa0a6;
-                --border-color: #2f333d;
-                --success: #34a853;
-                --danger: #ea4335;
-                --danger-light: rgba(234, 67, 53, 0.15);
-                --danger-border: rgba(234, 67, 53, 0.3);
-                --warning: #ffb74d;
-                --warning-light: rgba(255, 152, 0, 0.15);
-                --warning-border: rgba(255, 152, 0, 0.3);
-                --info: #33aaff;
-                --info-light: rgba(51, 170, 255, 0.15);
-                --info-border: rgba(51, 170, 255, 0.3);
-                --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
-                --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
-                --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
-            }
-        }
-
-        /* Copia di sicurezza per supporto browser mobile */
-        :root[data-theme="dark"] {
-            --primary: #4da3ff; --primary-hover: #73b9ff; --primary-glow: rgba(77, 163, 255, 0.25); --bg-color: #0f1115; --surface: #1a1d24; --surface-hover: #232730; --text-main: #e8eaed; --text-muted: #9aa0a6; --border-color: #2f333d; --success: #34a853; --danger: #ea4335; --danger-light: rgba(234, 67, 53, 0.15); --danger-border: rgba(234, 67, 53, 0.3); --warning: #ffb74d; --warning-light: rgba(255, 152, 0, 0.15); --warning-border: rgba(255, 152, 0, 0.3); --info: #33aaff; --info-light: rgba(51, 170, 255, 0.15); --info-border: rgba(51, 170, 255, 0.3); --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3); --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4); --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
+        [data-theme="dark"] {
+            --bg: #121212;
+            --text: #e0e0e0;
+            --surface: #1e1e1e;
+            --border-color: #333333;
+            --primary: #8295e8;
+            --text-muted: #a0a0a0;
         }
         
         body { 
-            font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            margin: 0; background: var(--bg-color); color: var(--text-main);
+            font-family: 'Inter', Roboto, Helvetica, Arial, sans-serif; 
+            margin: 0; background: var(--bg); color: var(--text);
             padding-bottom: env(safe-area-inset-bottom); overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
-            transition: background-color var(--transition), color var(--transition);
         }
 
         #topBar { 
             padding: calc(20px + env(safe-area-inset-top)) 20px 15px 20px; 
             display: flex; justify-content: space-between; 
-            align-items: center; background: var(--surface); box-shadow: var(--shadow-sm);
+            align-items: center; background: var(--surface); box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             position: sticky; top: 0; z-index: 100;
-            transition: background-color var(--transition);
         }
 
-        #calendar { background: var(--surface); padding: 2px; border-radius: var(--radius-md); margin: 10px; box-shadow: var(--shadow-md); transition: background-color var(--transition); }
+        #calendar { background: var(--surface); padding: 2px; border-radius: 15px; margin: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 
-        .fc .fc-toolbar-title { font-size: 1.2em !important; text-transform: capitalize; color: var(--text-main); }
+        .fc .fc-toolbar-title { font-size: 1.2em !important; text-transform: capitalize; color: var(--text); }
         .fc .fc-button { padding: 5px 10px !important; font-size: 0.9em !important; }
-        .fc .fc-btnSalto-button { background-color: var(--surface) !important; border-color: var(--border-color) !important; color: var(--text-main) !important; box-shadow: var(--shadow-sm) !important; }
+        .fc .fc-btnSalto-button { background-color: var(--surface) !important; border-color: var(--border-color) !important; color: var(--text) !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important; }
         .fc .fc-daygrid-day-frame { min-height: 80px !important; cursor: pointer; }
-        .fc th { color: var(--text-muted); border-color: var(--border-color) !important; }
-        .fc td { border-color: var(--border-color) !important; }
-        .fc .fc-daygrid-day-number { color: var(--text-main); }
         
         .fc-event { 
             border: none !important; padding: 6px 4px !important; 
@@ -179,30 +130,30 @@
             text-align: center; cursor: pointer !important;
         }
 
-        .bg-riposo { background-color: var(--riposo) !important; color: #fff !important; }
+        .bg-riposo { background-color: var(--riposo) !important; }
         .bg-disp { background-color: var(--disp) !important; color: #fff !important; }
         .bg-turno { background-color: var(--turno) !important; color: #fff !important; }
-        .bg-modificato { background-color: var(--danger) !important; color: #fff !important; }
-        .bg-ferie { background-color: var(--success) !important; color: white !important; font-size: 0.75em !important; padding: 2px !important; margin-bottom: 4px !important; }
+        .bg-modificato { background-color: #f5365c !important; color: #fff !important; }
+        .bg-ferie { background-color: #20c997 !important; color: white !important; font-size: 0.75em !important; padding: 2px !important; margin-bottom: 4px !important; }
 
         .disclaimer-banner {
-            margin: 15px 10px; padding: 15px; background-color: var(--warning-light);
-            border: 1px solid var(--warning-border); border-radius: var(--radius-md); color: var(--warning);
+            margin: 15px 10px; padding: 15px; background-color: rgba(255, 193, 7, 0.15);
+            border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 12px; color: #856404;
             font-size: 13px; text-align: center; line-height: 1.4;
         }
+        [data-theme="dark"] .disclaimer-banner { color: #ffd861; }
 
         #welcomeModal, #stepModal, #editModal, #altroModal, #resetModal, #backupModal, #imageModal, #jumpModal, #icsModal, #multiEditModal, #cambioBibbiaModal, #pdfTipo2Modal, #coloriRotazioneModal, #ferieModal, #pdfSyncModal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); }
-        .modal-content { background: var(--surface); margin: 15% auto; padding: 25px; width: 85%; max-width: 400px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); text-align: center; max-height: 80vh; overflow-y: auto; color: var(--text-main); }
+        .modal-content { background: var(--surface); color: var(--text); margin: 15% auto; padding: 25px; width: 85%; max-width: 400px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; max-height: 80vh; overflow-y: auto; }
 
-        select, input[type="text"], input[type="date"], input[type="number"], textarea { width: 100%; box-sizing: border-box; margin: 15px 0; padding: 15px; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px; background: var(--surface); color: var(--text-main); -webkit-appearance: none; font-family: inherit; }
-        .btn { padding: 16px; border: none; border-radius: var(--radius-md); color: white; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; font-size: 15px; transition: opacity var(--transition); }
-        .btn:active { opacity: 0.8; }
+        select, input[type="text"], input[type="date"], input[type="number"] { width: 100%; box-sizing: border-box; margin: 15px 0; padding: 15px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 16px; background: var(--bg); color: var(--text); -webkit-appearance: none; font-family: 'Inter', sans-serif; }
+        .btn { padding: 16px; border: none; border-radius: 14px; color: white; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; font-size: 15px; font-family: 'Inter', sans-serif; }
         .btn-reset { padding: 12px 15px; width: auto; font-size: 14px; }
         .instruction-text { font-size: 15px; line-height: 1.6; color: var(--text-muted); margin-bottom: 10px; }
-        .deposito-tag { font-size: 10px; background: var(--info-light); color: var(--info); padding: 4px 8px; border-radius: 5px; font-weight: bold; }
+        .deposito-tag { font-size: 10px; background: rgba(94, 114, 228, 0.1); color: var(--turno); padding: 4px 8px; border-radius: 5px; font-weight: bold; }
 
-        .color-circle { width: 40px; height: 40px; border-radius: 50%; display: inline-block; margin: 6px; cursor: pointer; box-shadow: var(--shadow-sm); transition: transform 0.2s, border 0.2s; }
-        .color-circle.selected { border: 3px solid var(--text-main); transform: scale(1.15); box-shadow: var(--shadow-md); }
+        .color-circle { width: 40px; height: 40px; border-radius: 50%; display: inline-block; margin: 6px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s, border 0.2s; }
+        .color-circle.selected { border: 3px solid var(--text); transform: scale(1.15); box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
         .color-yellow { background: #f1c40f; }
         .color-orange { background: #fd7e14; }
         .color-red { background: #f5365c; }
@@ -220,20 +171,21 @@
         }
 
         /* --- STILI MENU LATERALE SINISTRO --- */
-        .hamburger-btn { background: none; border: none; font-size: 28px; color: var(--text-main); cursor: pointer; padding: 0; margin-right: 15px; }
-        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; backdrop-filter: blur(3px); }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-lg); z-index: 2001; transition: left 0.3s ease; display: flex; flex-direction: column; }
+        .hamburger-btn { background: none; border: none; font-size: 24px; color: var(--text); cursor: pointer; padding: 0; margin-right: 15px; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: var(--surface); box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: left 0.3s ease; display: flex; flex-direction: column; }
         .sidebar.open { left: 0; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--turno); color: white; }
-        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text-main); font-size: 18px; border-bottom: 1px solid var(--border-color); display: block; }
-        .sidebar-link:active, .sidebar-link:hover { background-color: var(--surface-hover); color: var(--turno); font-weight: bold; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: calc(20px + env(safe-area-inset-top)) 20px 20px 20px; background-color: var(--turno); color: white; }
+        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text); font-size: 16px; border-bottom: 1px solid var(--border-color); display: block; font-weight: 500; }
+        .sidebar-link:active, .sidebar-link:hover { background-color: rgba(0,0,0,0.02); color: var(--turno); font-weight: bold; }
+        [data-theme="dark"] .sidebar-link:active, [data-theme="dark"] .sidebar-link:hover { background-color: rgba(255,255,255,0.05); }
 
         /* --- STILI MENU LATERALE DESTRO (AZIONI) --- */
         .right-sidebar { position: fixed; top: 0; right: -280px; width: 250px; height: 100%; background-color: var(--surface); box-shadow: -2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: right 0.3s ease; display: flex; flex-direction: column; }
         .right-sidebar.open { right: 0; }
         
-        /* Adattamenti specifici per scuri nei modali */
-        .mod-box { background: var(--surface-hover); border: 1px solid var(--border-color); border-radius: var(--radius-md); }
+        .custom-file-upload { display: inline-block; padding: 15px; cursor: pointer; background: var(--bg); border: 2px dashed var(--border-color); border-radius: 12px; color: var(--text); font-weight: bold; width: 100%; box-sizing: border-box; text-align: center; margin-top: 15px; }
+        .fc-day-today { background-color: rgba(94, 114, 228, 0.05) !important; }
     </style>
 </head>
 <body>
@@ -245,89 +197,89 @@
         <h3 style="margin:0; color:white;">Menu</h3>
         <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
     </div>
-    <a href="index.html" class="sidebar-link">🏠 Home Page</a>
-    <a href="calendario.html" class="sidebar-link" style="background-color: var(--surface-hover); color: var(--turno); font-weight: bold;">📅 Calendario</a>
-    <a href="dati_calendario.html" class="sidebar-link">📊 Statistiche Calendario</a>
-    <a href="turni.html" class="sidebar-link">🔄 Turni</a>
-    <a href="bacheca_turni.html" class="sidebar-link">🔄 Bacheca Turni</a>
-    <a href="rubrica.html" class="sidebar-link">📞 Rubrica Colleghi</a>
-    <a href="rotazione_ferie.html" class="sidebar-link">🌴 Rotazione Ferie</a>
-    <a href="orari.html" class="sidebar-link">🕒 Orari</a>
-    <a href="documenti.html" class="sidebar-link">📄 Documenti</a>
-    <a href="link.html" class="sidebar-link">🔗 Link</a>
-    <a href="contatti.html" class="sidebar-link">📇 Contatti</a>
-    <a href="buoni.html" class="sidebar-link">🍝 Buoni Pasto</a>
-    <a href="dds.html" class="sidebar-link">📂 Archivio DDS</a>
-    <a href="guida.html" class="sidebar-link">📖 Guida</a>
+    <a href="index.html" class="sidebar-link"><i class="fa-solid fa-house fa-fw"></i> Home Page</a>
+    <a href="calendario.html" class="sidebar-link" style="background-color: rgba(94, 114, 228, 0.1); color: var(--turno); font-weight: bold;"><i class="fa-solid fa-calendar-days fa-fw"></i> Calendario</a>
+    <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-pie fa-fw"></i> Statistiche Calendario</a>
+    <a href="turni.html" class="sidebar-link"><i class="fa-solid fa-rotate fa-fw"></i> Turni</a>
+    <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-clipboard-list fa-fw"></i> Bacheca Turni</a>
+    <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book fa-fw"></i> Rubrica Colleghi</a>
+    <a href="rotazione_ferie.html" class="sidebar-link"><i class="fa-solid fa-umbrella-beach fa-fw"></i> Rotazione Ferie</a>
+    <a href="orari.html" class="sidebar-link"><i class="fa-regular fa-clock fa-fw"></i> Orari</a>
+    <a href="documenti.html" class="sidebar-link"><i class="fa-solid fa-file-pdf fa-fw"></i> Documenti</a>
+    <a href="link.html" class="sidebar-link"><i class="fa-solid fa-link fa-fw"></i> Link</a>
+    <a href="contatti.html" class="sidebar-link"><i class="fa-solid fa-id-card fa-fw"></i> Contatti</a>
+    <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils fa-fw"></i> Buoni Pasto</a>
+    <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-folder-open fa-fw"></i> Archivio DDS</a>
+    <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book-open fa-fw"></i> Guida</a>
 </div>
 
 <div id="right-sidebar" class="right-sidebar">
-    <div class="sidebar-header" style="background-color: var(--text-main);">
-        <h3 style="margin:0; color:var(--surface);">Azioni</h3>
-        <button style="background:none; border:none; color:var(--surface); font-size:24px; cursor:pointer;" onclick="chiudiMenuDestro()">✕</button>
+    <div class="sidebar-header" style="background-color: var(--primary);">
+        <h3 style="margin:0; color:white;">Azioni</h3>
+        <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuDestro()">✕</button>
     </div>
     <div style="padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto;">
         
-        <div class="mod-box" style="padding: 15px; margin-bottom: 10px;">
-            <h4 style="margin: 0 0 10px 0; color: var(--text-main); font-size: 15px;">👥 Profili (Bibbie)</h4>
+        <div style="background: var(--bg); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border-color);">
+            <h4 style="margin: 0 0 10px 0; color: var(--text); font-size: 15px;"><i class="fa-solid fa-users"></i> Profili (Bibbie)</h4>
             <div id="lista-profili-dinamica" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
                 </div>
-            <button class="btn btn-reset" style="background: var(--text-main); color: var(--surface); margin:0; width:100%; font-weight: bold;" onclick="avviaNuovoProfilo()">
-                ➕ Aggiungi Profilo
+            <button class="btn btn-reset" style="background: var(--primary); color: white; margin:0; width:100%; font-weight: bold;" onclick="avviaNuovoProfilo()">
+                <i class="fa-solid fa-plus"></i> Aggiungi Profilo
             </button>
         </div>
-        <button class="btn btn-reset" style="background: var(--success); margin:0; width:100%;" onclick="apriMultiEdit()">✏️ Modifica Multipla</button>
-        <button class="btn btn-reset" style="background: var(--info); margin:0; width:100%;" onclick="apriColoriRotazione()">🎨 Colori Rotazione</button>
+        <button class="btn btn-reset" style="background: #2dce89; margin:0; width:100%;" onclick="apriMultiEdit()"><i class="fa-solid fa-pen-to-square"></i> Modifica Multipla</button>
+        <button class="btn btn-reset" style="background: #11cdef; margin:0; width:100%;" onclick="apriColoriRotazione()"><i class="fa-solid fa-palette"></i> Colori Rotazione</button>
         <hr style="width: 100%; border: 0; border-top: 1px solid var(--border-color);">
         
-        <button class="btn btn-reset" style="background: var(--turno); margin:0; width:100%;" onclick="scaricaPDF()">📄 Esporta PDF (Tipo 1)</button>
-        <button class="btn btn-reset" style="background: var(--turno); margin:0; width:100%;" onclick="apriPdfTipo2Modal()">📄 Esporta PDF (Tipo 2)</button>
+        <button class="btn btn-reset" style="background: #5e72e4; margin:0; width:100%;" onclick="scaricaPDF()"><i class="fa-solid fa-file-pdf"></i> Esporta PDF (Tipo 1)</button>
+        <button class="btn btn-reset" style="background: #5e72e4; margin:0; width:100%;" onclick="apriPdfTipo2Modal()"><i class="fa-solid fa-file-pdf"></i> Esporta PDF (Tipo 2)</button>
         
-        <button class="btn btn-reset" style="background: var(--turno); margin:0; width:100%;" onclick="apriIcsModal()">📅 Esporta ICS</button>
+        <button class="btn btn-reset" style="background: #5e72e4; margin:0; width:100%;" onclick="apriIcsModal()"><i class="fa-solid fa-calendar-arrow-down"></i> Esporta ICS</button>
         <hr style="width: 100%; border: 0; border-top: 1px solid var(--border-color);">
         
-        <button class="btn btn-reset" style="background: var(--success); margin:0; width:100%;" onclick="apriFerieModal()">🌴 Ferie Programmate</button>
+        <button class="btn btn-reset" style="background: #20c997; margin:0; width:100%;" onclick="apriFerieModal()"><i class="fa-solid fa-umbrella-beach"></i> Ferie Programmate</button>
         
         <input type="file" id="pdfBibbiaInput" style="display:none" accept=".pdf" onchange="elaboraPdfBibbia(event)">
-        <button class="btn btn-reset" style="background: #e83e8c; margin:0; width:100%;" onclick="document.getElementById('pdfBibbiaInput').click()">📄 Importa Bibbia</button>
+        <button class="btn btn-reset" style="background: #e83e8c; margin:0; width:100%;" onclick="document.getElementById('pdfBibbiaInput').click()"><i class="fa-solid fa-file-import"></i> Importa Bibbia</button>
 
-        <button class="btn btn-reset" style="background: var(--warning); color: #fff; margin:0; width:100%;" onclick="apriCambioBibbia()">🔄 Cambio Bibbia</button>
-        <button class="btn btn-reset" style="background: var(--text-muted); margin:0; width:100%;" onclick="apriBackup()">💾 Backup Dati</button>
-        <button class="btn btn-reset" style="background: var(--danger); margin:0; width:100%;" onclick="apriReset()">🗑️ Reset Totale</button>
+        <button class="btn btn-reset" style="background: #f1c40f; color: #32325d; margin:0; width:100%;" onclick="apriCambioBibbia()"><i class="fa-solid fa-rotate"></i> Cambio Bibbia</button>
+        <button class="btn btn-reset" style="background: #adb5bd; margin:0; width:100%;" onclick="apriBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup Dati</button>
+        <button class="btn btn-reset" style="background: #f5365c; margin:0; width:100%;" onclick="apriReset()"><i class="fa-solid fa-trash-can"></i> Reset Totale</button>
     </div>
 </div>
 
 <div id="topBar">
     <div style="display: flex; align-items: center;">
-        <button class="hamburger-btn" onclick="apriMenuLaterale()">☰</button>
+        <button class="hamburger-btn" onclick="apriMenuLaterale()"><i class="fa-solid fa-bars"></i></button>
         <div>
-            <h2 style="margin:0; font-size: 18px; color: var(--text-main);">Gestione Turni</h2>
+            <h2 style="margin:0; font-size: 18px;">Gestione Turni</h2>
             <span id="activeDepotLabel" class="deposito-tag">In attesa...</span>
         </div>
     </div>
-    <button class="hamburger-btn" style="margin-right: 0;" onclick="apriMenuDestro()">⋮</button>
+    <button class="hamburger-btn" style="margin-right: 0;" onclick="apriMenuDestro()"><i class="fa-solid fa-ellipsis-vertical"></i></button>
 </div>
 
 <div id="pdfSyncModal">
     <div class="modal-content" style="max-height: 85vh; display: flex; flex-direction: column;">
-        <h3 style="color: #e83e8c; margin-top: 0;">📄 Sincronizzazione PDF</h3>
+        <h3 style="color: #e83e8c; margin-top: 0;"><i class="fa-solid fa-file-pdf"></i> Sincronizzazione PDF</h3>
         <p class="instruction-text" style="font-size: 14px;">Seleziona i turni da aggiornare rispetto al calendario attuale:</p>
         
-        <div id="pdfSyncList" style="text-align: left; overflow-y: auto; flex: 1; border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; margin-bottom: 15px; background: var(--surface-hover);">
+        <div id="pdfSyncList" style="text-align: left; overflow-y: auto; flex: 1; border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; margin-bottom: 15px;">
             </div>
         
-        <button class="btn" style="background: var(--success); margin-top: auto;" onclick="applicaModifichePdf()">Applica Modifiche</button>
-        <button class="btn" style="background: var(--surface-hover); color: var(--text-muted); margin-top: 10px;" onclick="chiudiPdfSyncModal()">Annulla</button>
+        <button class="btn" style="background: #2dce89; margin-top: auto;" onclick="applicaModifichePdf()">Applica Modifiche</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 10px;" onclick="chiudiPdfSyncModal()">Annulla</button>
     </div>
 </div>
 
 <div id="ferieModal">
     <div class="modal-content" style="padding: 20px;">
-        <h3 style="color: var(--success); margin-top: 0;">🌴 Ferie Programmate</h3>
+        <h3 style="color: #20c997; margin-top: 0;"><i class="fa-solid fa-umbrella-beach"></i> Ferie Programmate</h3>
         
-        <div style="display: flex; margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 1px solid var(--success);">
-            <button id="btnTabFerieBase" style="flex:1; padding:10px; border:none; background:var(--success); color:white; font-weight:bold; cursor:pointer;" onclick="switchFerieTab('base')">Impostazioni Base</button>
-            <button id="btnTabFerieScambio" style="flex:1; padding:10px; border:none; background:var(--surface); color:var(--success); font-weight:bold; cursor:pointer;" onclick="switchFerieTab('scambio')">Scambio Ferie</button>
+        <div style="display: flex; margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 1px solid #20c997;">
+            <button id="btnTabFerieBase" style="flex:1; padding:10px; border:none; background:#20c997; color:white; font-weight:bold; cursor:pointer; font-family:'Inter';" onclick="switchFerieTab('base')">Impostazioni Base</button>
+            <button id="btnTabFerieScambio" style="flex:1; padding:10px; border:none; background:var(--surface); color:#20c997; font-weight:bold; cursor:pointer; font-family:'Inter';" onclick="switchFerieTab('scambio')">Scambio Ferie</button>
         </div>
 
         <div id="ferieBaseSection" style="display: block;">
@@ -366,21 +318,21 @@
             </div>
         </div>
 
-        <button class="btn" style="background: var(--success); margin-top: 10px;" onclick="salvaFerie()">Salva Configurazioni</button>
-        <button class="btn" style="background: var(--danger); margin-top: 10px;" onclick="resetFerie()">Reset Dati Ferie</button>
-        <button class="btn" style="background: var(--surface-hover); color: var(--text-muted); margin-top: 10px;" onclick="chiudiFerieModal()">Chiudi</button>
+        <button class="btn" style="background: #20c997; margin-top: 10px;" onclick="salvaFerie()">Salva Configurazioni</button>
+        <button class="btn" style="background: #f5365c; margin-top: 10px;" onclick="resetFerie()">Reset Dati Ferie</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 10px;" onclick="chiudiFerieModal()">Chiudi</button>
     </div>
 </div>
 
 <div id="coloriRotazioneModal">
     <div class="modal-content" style="padding: 20px;">
-        <h3 style="color: var(--info); margin-top: 0;">🎨 Colori Rotazione</h3>
+        <h3 style="color: #11cdef; margin-top: 0;"><i class="fa-solid fa-palette"></i> Colori Rotazione</h3>
         <p class="instruction-text" style="font-size: 14px; margin-bottom: 20px;">Assegna un colore per ogni giorno lavorativo della tua rotazione (dal 1° al 6° dopo il riposo).</p>
         
         <div style="margin-bottom: 12px; text-align: left; padding-bottom: 10px; border-bottom: 2px dashed var(--border-color);">
             <div style="font-weight: bold; color: var(--riposo); font-size: 14px; margin-bottom: 5px;">Giorno di Riposo (RI / AL):</div>
             <div class="day-riposo" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
-                <div class="color-circle" style="background: var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text-main);" data-color="" onclick="selezionaColoreRotazione('riposo', '', this)">✕</div>
+                <div class="color-circle" style="background: var(--bg); border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text);" data-color="" onclick="selezionaColoreRotazione('riposo', '', this)"><i class="fa-solid fa-xmark"></i></div>
                 <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione('riposo', '#f1c40f', this)"></div>
                 <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione('riposo', '#fd7e14', this)"></div>
                 <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione('riposo', '#f5365c', this)"></div>
@@ -395,7 +347,7 @@
         <div style="margin-bottom: 12px; text-align: left;">
             <div style="font-weight: bold; color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">1° Giorno:</div>
             <div class="day-1" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
-                <div class="color-circle" style="background: var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text-main);" data-color="" onclick="selezionaColoreRotazione(1, '', this)">✕</div>
+                <div class="color-circle" style="background: var(--bg); border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text);" data-color="" onclick="selezionaColoreRotazione(1, '', this)"><i class="fa-solid fa-xmark"></i></div>
                 <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(1, '#f1c40f', this)"></div>
                 <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(1, '#fd7e14', this)"></div>
                 <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(1, '#f5365c', this)"></div>
@@ -410,7 +362,7 @@
         <div style="margin-bottom: 12px; text-align: left;">
             <div style="font-weight: bold; color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">2° Giorno:</div>
             <div class="day-2" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
-                <div class="color-circle" style="background: var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text-main);" data-color="" onclick="selezionaColoreRotazione(2, '', this)">✕</div>
+                <div class="color-circle" style="background: var(--bg); border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text);" data-color="" onclick="selezionaColoreRotazione(2, '', this)"><i class="fa-solid fa-xmark"></i></div>
                 <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(2, '#f1c40f', this)"></div>
                 <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(2, '#fd7e14', this)"></div>
                 <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(2, '#f5365c', this)"></div>
@@ -425,7 +377,7 @@
         <div style="margin-bottom: 12px; text-align: left;">
             <div style="font-weight: bold; color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">3° Giorno:</div>
             <div class="day-3" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
-                <div class="color-circle" style="background: var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text-main);" data-color="" onclick="selezionaColoreRotazione(3, '', this)">✕</div>
+                <div class="color-circle" style="background: var(--bg); border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text);" data-color="" onclick="selezionaColoreRotazione(3, '', this)"><i class="fa-solid fa-xmark"></i></div>
                 <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(3, '#f1c40f', this)"></div>
                 <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(3, '#fd7e14', this)"></div>
                 <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(3, '#f5365c', this)"></div>
@@ -440,7 +392,7 @@
         <div style="margin-bottom: 12px; text-align: left;">
             <div style="font-weight: bold; color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">4° Giorno:</div>
             <div class="day-4" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
-                <div class="color-circle" style="background: var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text-main);" data-color="" onclick="selezionaColoreRotazione(4, '', this)">✕</div>
+                <div class="color-circle" style="background: var(--bg); border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text);" data-color="" onclick="selezionaColoreRotazione(4, '', this)"><i class="fa-solid fa-xmark"></i></div>
                 <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(4, '#f1c40f', this)"></div>
                 <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(4, '#fd7e14', this)"></div>
                 <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(4, '#f5365c', this)"></div>
@@ -455,7 +407,7 @@
         <div style="margin-bottom: 12px; text-align: left;">
             <div style="font-weight: bold; color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">5° Giorno:</div>
             <div class="day-5" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
-                <div class="color-circle" style="background: var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text-main);" data-color="" onclick="selezionaColoreRotazione(5, '', this)">✕</div>
+                <div class="color-circle" style="background: var(--bg); border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text);" data-color="" onclick="selezionaColoreRotazione(5, '', this)"><i class="fa-solid fa-xmark"></i></div>
                 <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(5, '#f1c40f', this)"></div>
                 <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(5, '#fd7e14', this)"></div>
                 <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(5, '#f5365c', this)"></div>
@@ -470,7 +422,7 @@
         <div style="margin-bottom: 12px; text-align: left;">
             <div style="font-weight: bold; color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">6° Giorno:</div>
             <div class="day-6" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
-                <div class="color-circle" style="background: var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text-main);" data-color="" onclick="selezionaColoreRotazione(6, '', this)">✕</div>
+                <div class="color-circle" style="background: var(--bg); border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text);" data-color="" onclick="selezionaColoreRotazione(6, '', this)"><i class="fa-solid fa-xmark"></i></div>
                 <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(6, '#f1c40f', this)"></div>
                 <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(6, '#fd7e14', this)"></div>
                 <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(6, '#f5365c', this)"></div>
@@ -482,14 +434,14 @@
             </div>
         </div>
         
-        <button class="btn" style="background: var(--info); margin-top: 15px;" onclick="salvaColoriRotazione()">Salva Modifiche</button>
-        <button class="btn" style="background: var(--surface-hover); color: var(--text-muted); margin-top: 10px;" onclick="chiudiColoriRotazione()">Annulla</button>
+        <button class="btn" style="background: #11cdef; margin-top: 15px;" onclick="salvaColoriRotazione()">Salva Modifiche</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 10px;" onclick="chiudiColoriRotazione()">Annulla</button>
     </div>
 </div>
 
 <div id="pdfTipo2Modal">
     <div class="modal-content">
-        <h3 style="color: var(--turno); margin-top: 0;">Esporta PDF (Tipo 2)</h3>
+        <h3 style="color: #5e72e4; margin-top: 0;"><i class="fa-solid fa-file-pdf"></i> Esporta PDF (Tipo 2)</h3>
         <p class="instruction-text" style="font-size: 14px;">Seleziona mese e anno per esportare la lista dei turni.</p>
         
         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
@@ -507,17 +459,17 @@
                 <option value="11">Novembre</option>
                 <option value="12">Dicembre</option>
             </select>
-            <input type="number" id="pdfTipo2Anno" style="flex: 1; margin: 0; padding: 15px; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px;">
+            <input type="number" id="pdfTipo2Anno" style="flex: 1; margin: 0; padding: 15px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 16px;">
         </div>
         
-        <button class="btn" style="background: var(--turno);" onclick="generaPdfTipo2()">📄 Scarica PDF</button>
-        <button class="btn" style="background: var(--surface-hover); color: var(--text-muted); margin-top: 15px;" onclick="chiudiPdfTipo2Modal()">Annulla</button>
+        <button class="btn" style="background: #5e72e4;" onclick="generaPdfTipo2()"><i class="fa-solid fa-download"></i> Scarica PDF</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiPdfTipo2Modal()">Annulla</button>
     </div>
 </div>
 
 <div id="multiEditModal">
     <div class="modal-content">
-        <h3 style="color: var(--success); margin-top: 0;">Modifica Multipla</h3>
+        <h3 style="color: #2dce89; margin-top: 0;"><i class="fa-solid fa-pen-to-square"></i> Modifica Multipla</h3>
         <p class="instruction-text" style="font-size: 14px;">Applica lo stesso turno a più giorni consecutivi (es. FERIE).</p>
         
         <label style="font-size: 14px; color: var(--text-muted); text-align: left; display: block; margin-top: 10px; font-weight:bold;">Da (Inizio):</label>
@@ -530,60 +482,60 @@
         <input type="text" id="multiTurno" placeholder="Es. FER, KMAL..." oninput="this.value = this.value.toUpperCase();">
         
         <label style="display: flex; align-items: center; font-size: 14px; color: var(--text-muted); margin-top: 15px; font-weight: bold; cursor: pointer; text-align: left;">
-            <input type="checkbox" id="checkEscludiRiposi" style="width: 20px; height: 20px; margin-right: 10px; accent-color: var(--success);" checked>
+            <input type="checkbox" id="checkEscludiRiposi" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #2dce89;" checked>
             Escludi i Riposi (RI / AL)
         </label>
         
-        <button class="btn" style="background: var(--success); margin-top: 20px;" onclick="salvaModificaMultipla()">Salva Modifiche</button>
-        <button class="btn" style="background: var(--surface-hover); color: var(--text-muted); margin-top: 15px;" onclick="chiudiMultiEdit()">Annulla</button>
+        <button class="btn" style="background: #2dce89; margin-top: 20px;" onclick="salvaModificaMultipla()">Salva Modifiche</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiMultiEdit()">Annulla</button>
     </div>
 </div>
 
 <div id="cambioBibbiaModal">
     <div class="modal-content">
-        <h3 style="color: var(--warning); margin-top: 0;">Cambio Bibbia</h3>
+        <h3 style="color: #f1c40f; margin-top: 0;"><i class="fa-solid fa-rotate"></i> Cambio Bibbia</h3>
         <p class="instruction-text">Vuoi configurare una nuova rotazione? <b>I tuoi turni manuali, straordinari, colori e note verranno mantenuti.</b> Verrà ripristinata solo la rotazione calcolata automaticamente.</p>
-        <button class="btn" style="background: var(--warning); color: #fff;" onclick="confermaCambioBibbia()">Sì, configura nuova ruota</button>
-        <button class="btn" style="background: var(--surface-hover); color: var(--text-muted); margin-top: 15px;" onclick="chiudiCambioBibbia()">Annulla</button>
+        <button class="btn" style="background: #f1c40f; color: #32325d;" onclick="confermaCambioBibbia()">Sì, configura nuova ruota</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiCambioBibbia()">Annulla</button>
     </div>
 </div>
 
 <div id="resetModal">
     <div class="modal-content">
-        <h3 style="color: var(--danger); margin-top: 0;">Attenzione!</h3>
+        <h3 style="color: #f5365c; margin-top: 0;"><i class="fa-solid fa-triangle-exclamation"></i> Attenzione!</h3>
         <p class="instruction-text">Vuoi cancellare DEFINITIVAMENTE tutti i dati e i turni salvati?</p>
-        <button class="btn" style="background: var(--danger);" onclick="confermaReset()">Sì, cancella tutto</button>
-        <button class="btn" style="background: var(--surface-hover); color: var(--text-muted); margin-top: 15px;" onclick="chiudiReset()">Annulla</button>
+        <button class="btn" style="background: #f5365c;" onclick="confermaReset()">Sì, cancella tutto</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiReset()">Annulla</button>
     </div>
 </div>
 
 <div id="backupModal">
     <div class="modal-content">
-        <h3 style="color: var(--turno); margin-top: 0;">Backup Dati</h3>
+        <h3 style="color: var(--turno); margin-top: 0;"><i class="fa-solid fa-floppy-disk"></i> Backup Dati</h3>
         <p class="instruction-text" style="font-size: 14px;">Gestisci i tuoi dati tramite file per non perdere i tuoi turni.</p>
         <input type="file" id="fileInput" style="display:none" accept=".json" onchange="importaDatiDaFile(event)">
         <button class="btn" style="background: var(--turno);" onclick="esportaDatiSuFile()">Scarica Backup (Esporta)</button>
         <button class="btn" style="background: var(--riposo);" onclick="document.getElementById('fileInput').click()">Carica Backup (Importa)</button>
-        <button class="btn" style="background: var(--surface-hover); color: var(--text-muted); margin-top: 15px;" onclick="chiudiBackup()">Chiudi</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiBackup()">Chiudi</button>
     </div>
 </div>
 
 <div id="icsModal">
     <div class="modal-content">
-        <h3 style="color: var(--turno); margin-top: 0;">Esporta in ICS</h3>
+        <h3 style="color: #5e72e4; margin-top: 0;"><i class="fa-solid fa-calendar-arrow-down"></i> Esporta in ICS</h3>
         <p class="instruction-text" style="font-size: 14px;">Seleziona il periodo da esportare.</p>
         <label style="font-size: 14px; color: var(--text-muted); text-align: left; display: block; margin-top: 10px;">Da:</label>
         <input type="date" id="icsStartDate">
         <label style="font-size: 14px; color: var(--text-muted); text-align: left; display: block; margin-top: 10px;">A:</label>
         <input type="date" id="icsEndDate">
-        <button class="btn" style="background: var(--turno);" onclick="esportaICS()">Scarica .ics</button>
-        <button class="btn" style="background: var(--surface-hover); color: var(--text-muted); margin-top: 15px;" onclick="chiudiIcsModal()">Chiudi</button>
+        <button class="btn" style="background: #5e72e4;" onclick="esportaICS()">Scarica .ics</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiIcsModal()">Chiudi</button>
     </div>
 </div>
 
 <div id="jumpModal">
     <div class="modal-content">
-        <h3 style="color: var(--turno); margin-top: 0;">Vai alla data</h3>
+        <h3 style="color: var(--turno); margin-top: 0;"><i class="fa-solid fa-magnifying-glass"></i> Vai alla data</h3>
         <div style="display: flex; gap: 10px;">
             <select id="jumpMonth" style="flex: 1;">
                 <option value="01">Gennaio</option>
@@ -602,7 +554,7 @@
             <select id="jumpYear" style="flex: 1;"></select>
         </div>
         <button class="btn" style="background: var(--turno);" onclick="eseguiSalto()">Vai</button>
-        <button class="btn" style="background: var(--surface-hover); color: var(--text-muted); margin-top: 15px;" onclick="chiudiJumpModal()">Annulla</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiJumpModal()">Annulla</button>
     </div>
 </div>
 
@@ -639,7 +591,7 @@
                 <option value="tc_rot_17tr">T.C. Rotazione Linea 17 Tronc.</option>
             </optgroup>
         </select>
-        <button id="btnConfRot" class="btn" style="background: var(--text-muted);" onclick="confermaRotazione()" disabled>Prosegui</button>
+        <button id="btnConfRot" class="btn" style="background: var(--border-color); color: var(--text-muted);" onclick="confermaRotazione()" disabled>Prosegui</button>
         <button id="btnSaltaSetup" class="btn" style="background: transparent; color: var(--text-muted); border: 2px solid var(--border-color); margin-top: 10px;" onclick="saltaConfigurazione()">Salta per ora (Usa i Menu)</button>
     </div>
 </div>
@@ -653,8 +605,8 @@
         <div id="stepButtons">
             <button id="btnConfirmDate" class="btn" style="background: var(--riposo); display:none;" onclick="procediConfigurazione()">Sì, conferma data</button>
             <button id="btnConfirmFinal" class="btn" style="background: var(--riposo); display:none;" onclick="attivaRotazioneFinale()">Conferma e Attiva</button>
-            <button id="btnBackStep" class="btn" style="background: var(--text-muted); display:none;" onclick="tornaAllaRotazione()">Indietro (Cambia Rotazione)</button>
-            <button id="btnCloseStep" class="btn" style="background: var(--surface-hover); color: var(--text-muted); margin-top: 15px;" onclick="chiudiStep()">Chiudi</button>
+            <button id="btnBackStep" class="btn" style="background: var(--border-color); color: var(--text-muted); display:none;" onclick="tornaAllaRotazione()">Indietro (Cambia Rotazione)</button>
+            <button id="btnCloseStep" class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiStep()">Chiudi</button>
         </div>
     </div>
 </div>
@@ -663,66 +615,66 @@
     <div class="modal-content">
         <h3 id="modalDate" style="margin-top:0;">Data</h3>
         
-        <div id="avvisoVariantiArea" style="display: none; background-color: var(--warning-light); border: 1px solid var(--warning-border); border-radius: 10px; color: var(--warning); padding: 12px; margin-bottom: 15px; font-size: 14px; font-weight: bold; line-height: 1.4; text-align: left;"></div>
+        <div id="avvisoVariantiArea" style="display: none; background-color: rgba(255, 193, 7, 0.15); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 10px; color: #856404; padding: 12px; margin-bottom: 15px; font-size: 14px; font-weight: bold; line-height: 1.4; text-align: left;"></div>
         
-        <div id="infoTurniArea" style="font-size:0.9em; margin-bottom:15px; padding:10px; background:var(--surface-hover); border-radius:10px; text-align:left; color:var(--text-muted); display:none;"></div>
+        <div id="infoTurniArea" style="font-size:0.9em; margin-bottom:15px; padding:10px; background:var(--bg); border: 1px solid var(--border-color); border-radius:10px; text-align:left; color:var(--text-muted); display:none;"></div>
         
-        <button id="btnVisualizzaTurno" class="btn" style="background: var(--success); margin-bottom: 15px; display: none;" onclick="apriImmagineTurno()">Mostra Immagine Turno</button>
+        <button id="btnVisualizzaTurno" class="btn" style="background: #2dce89; margin-bottom: 15px; display: none;" onclick="apriImmagineTurno()"><i class="fa-regular fa-image"></i> Mostra Immagine Turno</button>
         
         <input type="text" id="singleTurnoSelect" placeholder="Inserisci il turno" oninput="this.value = this.value.toUpperCase(); abilitaSalvataggio();" onkeydown="if(event.key === 'Enter') salvaCambioSingolo();">
         
-        <button id="btnSalvaCambio" class="btn" style="background: var(--text-main)" onclick="salvaCambioSingolo()" disabled>Salva Cambio</button>
-        <button class="btn" style="background: var(--text-muted);" onclick="resetGiornoSingolo()">Ripristina Originale</button>
-        <button class="btn" style="background: var(--info);" onclick="apriAltroModal()">Altro (Note, Nebbia, Straord, Buoni, Sospesi...)</button>
-        <button class="btn" style="background: var(--surface-hover); color: var(--text-muted); margin-top: 15px;" onclick="chiudiEdit()">Chiudi</button>
+        <button id="btnSalvaCambio" class="btn" style="background: var(--text); color: var(--surface);" onclick="salvaCambioSingolo()" disabled>Salva Cambio</button>
+        <button class="btn" style="background: var(--border-color); color: var(--text);" onclick="resetGiornoSingolo()"><i class="fa-solid fa-rotate-left"></i> Ripristina Originale</button>
+        <button class="btn" style="background: #11cdef;" onclick="apriAltroModal()"><i class="fa-solid fa-ellipsis"></i> Altro (Note, Nebbia, Straord...)</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiEdit()">Chiudi</button>
     </div>
 </div>
 
 <div id="altroModal" onclick="chiudiAltroSeSfondo(event)">
     <div class="modal-content">
-        <h3 style="margin-top:0; color: var(--text-main);">Altre Opzioni</h3>
+        <h3 style="margin-top:0; color: var(--text);"><i class="fa-solid fa-ellipsis"></i> Altre Opzioni</h3>
         
-        <div class="mod-box" style="padding: 15px; margin-bottom: 15px; text-align: left;">
+        <div style="background: var(--bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: left; border: 2px solid var(--border-color);">
             
             <label style="display: flex; align-items: center; font-size: 15px; color: var(--text-muted); margin-bottom: 10px; font-weight: bold; cursor: pointer;">
-                <input type="checkbox" id="checkSospesoRiposoAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: var(--danger);">
+                <input type="checkbox" id="checkSospesoRiposoAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #f5365c;">
                 Sospeso Riposo
             </label>
 
             <label style="display: flex; align-items: center; font-size: 15px; color: var(--text-muted); margin-bottom: 10px; font-weight: bold; cursor: pointer;">
-                <input type="checkbox" id="checkNebbiaAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: var(--turno);">
-                🌫️ Indennità Nebbia
+                <input type="checkbox" id="checkNebbiaAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #5e72e4;">
+                <i class="fa-solid fa-smog fa-fw" style="margin-right: 5px;"></i> Indennità Nebbia
             </label>
             
             <label style="display: flex; align-items: center; font-size: 15px; color: var(--text-muted); margin-bottom: 10px; font-weight: bold; cursor: pointer;">
                 <input type="checkbox" id="checkBuonoPastoAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #f1c40f;">
-                🍝 Buono Pasto Utilizzato
+                <i class="fa-solid fa-utensils fa-fw" style="margin-right: 5px;"></i> Buono Pasto Utilizzato
             </label>
 
             <label style="display: flex; align-items: center; font-size: 15px; color: var(--text-muted); font-weight: bold; cursor: pointer;">
-                <input type="checkbox" id="checkStraordinarioAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: var(--turno);" onchange="toggleStraordinarioAltro()">
-                ⏱️ Straordinario
+                <input type="checkbox" id="checkStraordinarioAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #5e72e4;" onchange="toggleStraordinarioAltro()">
+                <i class="fa-solid fa-stopwatch fa-fw" style="margin-right: 5px;"></i> Straordinario
             </label>
             
             <div id="straordinarioInputsAltro" style="display: none; margin-top: 10px; flex-direction: row; gap: 10px;">
-                <input type="number" id="oreStraordAltro" placeholder="Ore" min="0" style="flex: 1; padding: 12px; margin: 0; border: 2px solid var(--border-color); border-radius: 10px; font-size: 15px; background: var(--surface); color: var(--text-main);">
-                <input type="number" id="minutiStraordAltro" placeholder="Minuti" min="0" max="59" style="flex: 1; padding: 12px; margin: 0; border: 2px solid var(--border-color); border-radius: 10px; font-size: 15px; background: var(--surface); color: var(--text-main);">
+                <input type="number" id="oreStraordAltro" placeholder="Ore" min="0" style="flex: 1; padding: 12px; margin: 0; border: 2px solid var(--border-color); border-radius: 10px; font-size: 15px;">
+                <input type="number" id="minutiStraordAltro" placeholder="Minuti" min="0" max="59" style="flex: 1; padding: 12px; margin: 0; border: 2px solid var(--border-color); border-radius: 10px; font-size: 15px;">
             </div>
 
             <label style="display: flex; align-items: center; font-size: 15px; color: var(--text-muted); margin-top: 15px; font-weight: bold; cursor: pointer;">
-                <input type="checkbox" id="checkPermessoSPAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: var(--danger);" onchange="togglePermessoSPAltro()">
-                💸 Permesso Senza Paga
+                <input type="checkbox" id="checkPermessoSPAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #f5365c;" onchange="togglePermessoSPAltro()">
+                <i class="fa-solid fa-money-bill-wave fa-fw" style="margin-right: 5px;"></i> Permesso Senza Paga
             </label>
             
             <div id="permessoSPInputsAltro" style="display: none; margin-top: 10px; flex-direction: row; gap: 10px;">
-                <input type="number" id="orePermessoSPAltro" placeholder="Ore" min="0" style="flex: 1; padding: 12px; margin: 0; border: 2px solid var(--border-color); border-radius: 10px; font-size: 15px; background: var(--surface); color: var(--text-main);">
-                <input type="number" id="minutiPermessoSPAltro" placeholder="Minuti" min="0" max="59" style="flex: 1; padding: 12px; margin: 0; border: 2px solid var(--border-color); border-radius: 10px; font-size: 15px; background: var(--surface); color: var(--text-main);">
+                <input type="number" id="orePermessoSPAltro" placeholder="Ore" min="0" style="flex: 1; padding: 12px; margin: 0; border: 2px solid var(--border-color); border-radius: 10px; font-size: 15px;">
+                <input type="number" id="minutiPermessoSPAltro" placeholder="Minuti" min="0" max="59" style="flex: 1; padding: 12px; margin: 0; border: 2px solid var(--border-color); border-radius: 10px; font-size: 15px;">
             </div>
 
             <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
             
-            <label style="display: block; font-size: 15px; color: var(--text-muted); margin-bottom: 8px; font-weight: bold;">📝 Note:</label>
-            <textarea id="notaAltro" placeholder="Scrivi una nota per questo giorno..." style="width: 100%; box-sizing: border-box; padding: 10px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 70px; background: var(--surface); color: var(--text-main);"></textarea>
+            <label style="display: block; font-size: 15px; color: var(--text-muted); margin-bottom: 8px; font-weight: bold;"><i class="fa-solid fa-clipboard fa-fw"></i> Note:</label>
+            <textarea id="notaAltro" placeholder="Scrivi una nota per questo giorno..." style="width: 100%; box-sizing: border-box; padding: 10px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif; resize: vertical; min-height: 70px; background: var(--bg); color: var(--text);"></textarea>
         </div>
 
         <div style="text-align: left; margin-bottom: 10px; color: var(--text-muted); font-weight: bold; font-size: 15px;">Colore Sfondo:</div>
@@ -736,10 +688,10 @@
             <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreAltro('#11cdef', this)"></div>
             <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreAltro('#2dce89', this)"></div>
         </div>
-        <button class="btn" style="background: var(--border-color); color: var(--text-main); margin-top: 0; padding: 10px; font-size: 14px;" onclick="selezionaColoreAltro('', null)">Rimuovi Colore</button>
+        <button class="btn" style="background: var(--border-color); color: var(--text); margin-top: 0; padding: 10px; font-size: 14px;" onclick="selezionaColoreAltro('', null)"><i class="fa-solid fa-eraser"></i> Rimuovi Colore</button>
 
-        <button class="btn" style="background: var(--text-main); margin-top: 20px;" onclick="salvaAltro()">Salva</button>
-        <button class="btn" style="background: var(--surface-hover); color: var(--text-muted); margin-top: 10px;" onclick="chiudiAltroModal()">Annulla</button>
+        <button class="btn" style="background: var(--text); color: var(--surface); margin-top: 20px;" onclick="salvaAltro()">Salva</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 10px;" onclick="chiudiAltroModal()">Annulla</button>
     </div>
 </div>
 
@@ -751,14 +703,14 @@
             ⚠️ Controllare sempre i turni ufficiali e la presenza di eventuali varianti ai turni.
         </div>
     </div>
-    <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: var(--info); color: white; border: none; padding: 12px 24px; border-radius: 20px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 10001;">📥 Scarica</button>
+    <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #11cdef; color: white; border: none; padding: 12px 24px; border-radius: 20px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 10001;"><i class="fa-solid fa-download"></i> Scarica</button>
 </div>
 
 <div id="calendar"></div>
 
 <div id="empty-state-calendario" style="display: none; padding: 40px 20px; text-align: center; margin: 20px;">
     <div style="font-size: 60px; margin-bottom: 20px; opacity: 0.8;">📅</div>
-    <h3 style="color: var(--text-main); margin-top: 0; font-size: 22px;">Nessun turno attivo</h3>
+    <h3 style="color: var(--text); margin-top: 0; font-size: 22px;">Nessun turno attivo</h3>
     <p style="color: var(--text-muted); font-size: 16px; line-height: 1.6; max-width: 400px; margin: 0 auto 20px auto;">
         Usa il menu in alto a destra <b>(⋮)</b> per: <br>
         • Gestire i Profili (Bibbie)<br>
@@ -768,7 +720,7 @@
 </div>
 
 <div class="disclaimer-banner">
-    ⚠️ Questo è uno strumento non ufficiale che può presentare errori. L'ordine dei turni cambia periodicamente, I turni a lungo termine vanno quindi considerati indicativi.
+    <i class="fa-solid fa-triangle-exclamation"></i> Questo è uno strumento non ufficiale che può presentare errori. L'ordine dei turni cambia periodicamente, I turni a lungo termine vanno quindi considerati indicativi.
 </div>
 
 <script>
@@ -815,7 +767,6 @@
         let estScambio = document.getElementById('ferieEstiveScambio');
         let invScambio = document.getElementById('ferieInvernaliScambio');
 
-        // Popolamento select se vuote
         if(estSelect.options.length <= 1) {
             ROT_FERIE_EST.forEach((f, i) => {
                 estSelect.innerHTML += `<option value="${i}">${f.n}</option>`;
@@ -837,7 +788,6 @@
 
         document.getElementById('ferieScambioAnno').addEventListener('change', (e) => aggiornaScambiUI(e.target.value));
         
-        // Imposta tab iniziale
         switchFerieTab('base');
         document.getElementById('ferieModal').style.display = 'block';
     }
@@ -846,17 +796,17 @@
         if(tab === 'base') {
             document.getElementById('ferieBaseSection').style.display = 'block';
             document.getElementById('ferieScambioSection').style.display = 'none';
-            document.getElementById('btnTabFerieBase').style.background = 'var(--success)';
+            document.getElementById('btnTabFerieBase').style.background = '#20c997';
             document.getElementById('btnTabFerieBase').style.color = 'white';
             document.getElementById('btnTabFerieScambio').style.background = 'var(--surface)';
-            document.getElementById('btnTabFerieScambio').style.color = 'var(--success)';
+            document.getElementById('btnTabFerieScambio').style.color = '#20c997';
         } else {
             document.getElementById('ferieBaseSection').style.display = 'none';
             document.getElementById('ferieScambioSection').style.display = 'block';
-            document.getElementById('btnTabFerieScambio').style.background = 'var(--success)';
+            document.getElementById('btnTabFerieScambio').style.background = '#20c997';
             document.getElementById('btnTabFerieScambio').style.color = 'white';
             document.getElementById('btnTabFerieBase').style.background = 'var(--surface)';
-            document.getElementById('btnTabFerieBase').style.color = 'var(--success)';
+            document.getElementById('btnTabFerieBase').style.color = '#20c997';
         }
     }
 
@@ -927,7 +877,6 @@
         let year = parseInt(dStr.split('-')[0]);
         let r = [];
 
-        // Check Estiva
         let iEst = state.ferie.baseEstiva;
         if (iEst !== -1 && iEst !== null && iEst !== undefined && ROT_FERIE_EST.length > 0) {
             let idxEst = (iEst + (year - state.ferie.baseAnno)) % ROT_FERIE_EST.length;
@@ -940,7 +889,6 @@
             if(pEst && isDateInRange(dStr, pEst.s, pEst.e, year)) r.push("FEP");
         }
 
-        // Check Invernale
         let iInv = state.ferie.baseInvernale;
         if (iInv !== -1 && iInv !== null && iInv !== undefined && ROT_FERIE_INV.length > 0) {
             let idxInv = (iInv + (year - state.ferie.baseAnno)) % ROT_FERIE_INV.length;
@@ -957,7 +905,6 @@
         return uniqueR.length > 0 ? uniqueR.join(" + ") : null;
     }
 
-    // --- FUNZIONI SINCRONIZZAZIONE PDF BIBBIA ---
     async function elaboraPdfBibbia(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -1035,7 +982,7 @@
                 if (parseInt(dAnno) !== anno || parseInt(dMese) !== mese) continue;
 
                 let turnoEsistenteObj = turniAttuali.find(e => e.start === dStr && !e.title.includes('FERIE') && e.title !== 'FEP');
-                let turnoEsistentePulito = turnoEsistenteObj ? turnoEsistenteObj.title.replace(/ 🌫️| ⏱️| 📝|\(Sospeso\)| 🍝| 💸/g, '').trim().toUpperCase() : "";
+                let turnoEsistentePulito = turnoEsistenteObj ? turnoEsistenteObj.title.replace(/<i[^>]*><\/i>/g, '').replace(/\(Sospeso\)/g, '').trim().toUpperCase() : "";
                 
                 if (turnoEsistentePulito !== turnoLetto) {
                     window.pendingPdfChanges.push({
@@ -1054,18 +1001,17 @@
                 return;
             }
             
-            // Popola modale di conferma
             let listHtml = "";
             window.pendingPdfChanges.forEach((change, idx) => {
                 listHtml += `
                     <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid var(--border-color); cursor: pointer;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <input type="checkbox" id="pdfSyncCheck_${idx}" checked style="width: 20px; height: 20px; margin: 0; accent-color: #e83e8c;">
-                            <span style="font-size: 15px; color: var(--text-main); font-weight: bold; text-transform: capitalize;">${change.giornoTesto}</span>
+                            <span style="font-size: 15px; color: var(--text); font-weight: bold; text-transform: capitalize;">${change.giornoTesto}</span>
                         </div>
                         <div style="font-size: 14px; color: var(--text-muted); text-align: right;">
-                            <span style="text-decoration: line-through; color: var(--border-color); margin-right: 5px;">${change.oldShift}</span> 
-                            <span style="font-weight: bold; color: var(--turno);">➔ ${change.newShift}</span>
+                            <span style="text-decoration: line-through; color: #adb5bd; margin-right: 5px;">${change.oldShift}</span> 
+                            <span style="font-weight: bold; color: #5e72e4;">➔ ${change.newShift}</span>
                         </div>
                     </label>
                 `;
@@ -1103,7 +1049,6 @@
         salvaERicarica();
     }
 
-    // --- FUNZIONI COLORI ROTAZIONE ---
     let tempColoriRotazione = {};
 
     function apriColoriRotazione() {
@@ -1201,7 +1146,6 @@
         salvaERicarica();
     }
 
-    // --- FUNZIONI PDF TIPO 2 ---
     function apriPdfTipo2Modal() {
         chiudiMenuDestro();
         let currDate = new Date();
@@ -1248,7 +1192,7 @@
             let giornoNome = giorniSettimana[dObj.getDay()];
             let ev = turni.find(t => t.start === dStr && !t.title.includes('FERIE') && t.title !== 'FEP');
             
-            let titolo = ev ? ev.title.replace(/ 🌫️| ⏱️| 📝|\(Sospeso\)| 🍝| 💸/g, '').trim() : "";
+            let titolo = ev ? ev.title.replace(/<i[^>]*><\/i>/g, '').replace(/\(Sospeso\)/g, '').trim() : "";
             let codiceBase = titolo.toUpperCase();
 
             let locMonta = "", dalle = "", alle = "", note = "";
@@ -1313,7 +1257,6 @@
         html2pdf().set(opt).from(wrapper).save();
     }
 
-    // --- LOGICA CAMBIO BIBBIA ---
     function apriCambioBibbia() {
         chiudiMenuDestro();
         document.getElementById('cambioBibbiaModal').style.display = 'block';
@@ -1338,9 +1281,8 @@
         salvaERicarica(boost);
     }
 
-    // --- CORE ---
     const VERSIONE_TURNI = "1.0.1"; 
-    let VERSIONE_FERIE = "1.0.0"; // Aggiornata dinamicamente da JSON
+    let VERSIONE_FERIE = "1.0.0"; 
     const DATA_INIZIO_NUOVI_TURNI = "2026-03-28"; 
     
     const AVVISO_VARIANTI = true;
@@ -1402,7 +1344,6 @@
     let tempColoreAltro = "";
     let variantiData = {};
 
-    // --- MOTORE MULTI-PROFILO E SALTO CONFIGURAZIONE ---
     function saltaConfigurazione() {
         document.getElementById('welcomeModal').style.display = 'none';
         state.setupSkipped = true;
@@ -1603,9 +1544,9 @@
             let p = state.profiliSalvati[id];
             let isAttivo = (id === state.profiloAttivoId);
             
-            let bg = isAttivo ? 'var(--turno)' : 'transparent';
-            let color = isAttivo ? 'white' : 'var(--text-main)';
-            let icona = isAttivo ? '🟢' : '⚪';
+            let bg = isAttivo ? 'var(--turno)' : 'var(--bg)';
+            let color = isAttivo ? 'white' : 'var(--text)';
+            let icona = isAttivo ? '<i class="fa-solid fa-circle-dot"></i>' : '<i class="fa-regular fa-circle"></i>';
             let border = isAttivo ? '2px solid var(--turno)' : '1px solid var(--border-color)';
             
             html += `
@@ -1613,10 +1554,10 @@
                 <button class="btn btn-reset" style="background: transparent; color: ${color}; border: none; border-radius: 0; text-align: left; margin: 0; padding: 12px 15px; width: 100%; font-weight: bold; font-size: 16px; display: block;" onclick="cambiaProfilo('${id}')">
                     ${icona} ${p.nome}
                 </button>
-                <div style="display: flex; border-top: 1px solid rgba(0,0,0,0.05); background: ${isAttivo ? 'rgba(255,255,255,0.1)' : 'var(--surface)'};">
-                    <button class="btn btn-reset" style="background: transparent; color: ${isAttivo ? 'white' : 'var(--text-muted)'}; border: none; border-radius: 0; border-right: 1px solid rgba(0,0,0,0.05); margin: 0; padding: 8px; flex: 1; font-size: 13px;" onclick="rinominaProfilo('${id}')">✏️ Rinomina</button>
+                <div style="display: flex; border-top: 1px solid rgba(0,0,0,0.05); background: ${isAttivo ? 'rgba(255,255,255,0.1)' : 'transparent'};">
+                    <button class="btn btn-reset" style="background: transparent; color: ${isAttivo ? 'white' : 'var(--text-muted)'}; border: none; border-radius: 0; border-right: 1px solid rgba(0,0,0,0.05); margin: 0; padding: 8px; flex: 1; font-size: 13px;" onclick="rinominaProfilo('${id}')"><i class="fa-solid fa-pen"></i> Rinomina</button>
                     ${numProfili > 1 ? `
-                    <button class="btn btn-reset" style="background: transparent; color: ${isAttivo ? '#ffc9c9' : 'var(--danger)'}; border: none; border-radius: 0; margin: 0; padding: 8px; flex: 1; font-size: 13px;" onclick="eliminaProfilo('${id}')">🗑️ Elimina</button>
+                    <button class="btn btn-reset" style="background: transparent; color: ${isAttivo ? '#ffc9c9' : '#f5365c'}; border: none; border-radius: 0; margin: 0; padding: 8px; flex: 1; font-size: 13px;" onclick="eliminaProfilo('${id}')"><i class="fa-solid fa-trash-can"></i> Elimina</button>
                     ` : `<div style="flex:1;"></div>`}
                 </div>
             </div>`;
@@ -1636,9 +1577,6 @@
         return dataObj.getDate() + ' ' + mese.charAt(0).toUpperCase() + mese.slice(1); 
     }
     
-    // ----------------------------------------------------
-    // MOTORE DI SALVATAGGIO CLOUD AGGIORNATO (ANTI-RACE CONDITION)
-    // ----------------------------------------------------
     function salvaLocal(timestampManuale = null) { 
         state.lastUpdate = timestampManuale || new Date().getTime();
         
@@ -1686,7 +1624,7 @@
             location.reload();
         }
     }
-    // ----------------------------------------------------
+
 
     function estraiDataDaNome(nome) { 
         const match = nome.match(/\d{4}-\d{2}-\d{2}/); 
@@ -1980,7 +1918,7 @@
             }
         } else {
             aggiornaUI(); 
-            controllaEmptyState();
+            controllaEmptyState(); 
             inizializzaCalendario(); 
             checkGuida();
             
@@ -2083,7 +2021,7 @@
             let turniCalc = calcolaTurni();
             let turnoCorrenteObj = turniCalc.find(e => e.start === date && !e.title.includes('FERIE') && e.title !== 'FEP');
             let nomeTurnoCompleto = turnoCorrenteObj ? turnoCorrenteObj.title : "Nessun turno";
-            let nomeTurnoPulito = nomeTurnoCompleto.replace(/ 🌫️| ⏱️| 📝|\(Sospeso\)| 🍝| 💸/g, '').trim();
+            let nomeTurnoPulito = nomeTurnoCompleto.replace(/<i[^>]*><\/i>/g, '').replace(/\(Sospeso\)/g, '').trim();
             let codiceBase = nomeTurnoPulito.toUpperCase();
             
             document.getElementById('singleTurnoSelect').style.display = 'block';
@@ -2117,7 +2055,7 @@
                 
                 const validDDS = ddsList.filter(item => item.dateValidita && item.dateValidita.includes(date));
                 validDDS.forEach(item => { 
-                    htmlInfo += `<br><span style="color: var(--danger); font-weight: bold;">ℹ️: "${item.titolo}"</span>`; 
+                    htmlInfo += `<br><span style="color: #d63384; font-weight: bold;"><i class="fa-solid fa-circle-info"></i> "${item.titolo}"</span>`; 
                 });
             } catch (e) { 
                 console.error("Errore lettura DDS per modal", e); 
@@ -2128,12 +2066,12 @@
                 delete state.variazioni[date];
                 let turniSenzaVariazioni = calcolaTurni();
                 let turnoOrigObj = turniSenzaVariazioni.find(e => e.start === date && !e.title.includes('FERIE') && e.title !== 'FEP');
-                let origPulito = turnoOrigObj ? turnoOrigObj.title.replace(/ 🌫️| ⏱️| 📝|\(Sospeso\)| 🍝| 💸/g, '').trim() : "Nessun turno";
+                let origPulito = turnoOrigObj ? turnoOrigObj.title.replace(/<i[^>]*><\/i>/g, '').replace(/\(Sospeso\)/g, '').trim() : "Nessun turno";
                 htmlInfo += `<br><span style="font-size: 0.9em; color: var(--text-muted);"><b>Turno originale:</b> ${origPulito}</span>`;
                 state.variazioni[date] = tempVar;
                 
                 if (localStorage.getItem('auth_rotazioni')) {
-                    let turnoAttualePulito = tempVar.replace(/ 🌫️| ⏱️| 📝|\(Sospeso\)| 🍝| 💸/g, '').trim().toUpperCase();
+                    let turnoAttualePulito = tempVar.replace(/<i[^>]*><\/i>/g, '').replace(/\(Sospeso\)/g, '').trim().toUpperCase();
                     let parts = date.split('-'); 
                     let anno = parts[0]; 
                     let meseIdx = parseInt(parts[1], 10) - 1; 
@@ -2142,7 +2080,7 @@
                     let meseNome = mesiNomi[meseIdx]; 
                     let urlRotazioni = `rotazioni/rotazioni_${meseNome}_${anno}.json?v=${new Date().getTime()}`;
                     
-                    htmlInfo += `<div id="proprietario-turno-container" style="font-size: 0.9em; color: var(--turno); margin-top: 5px;"><i>Ricerca titolare in corso...</i></div>`;
+                    htmlInfo += `<div id="proprietario-turno-container" style="font-size: 0.9em; color: var(--turno); margin-top: 5px;"><i class="fa-solid fa-spinner fa-spin"></i> <i>Ricerca titolare in corso...</i></div>`;
                     
                     fetch(urlRotazioni).then(res => { 
                         if (!res.ok) throw new Error("File non trovato"); 
@@ -2186,9 +2124,9 @@
                             let container = document.getElementById('proprietario-turno-container');
                             if (container) {
                                 if (trovati.length > 0) {
-                                    container.innerHTML = `<b>👥:</b> ${trovati.join(", ")}`;
+                                    container.innerHTML = `<i class="fa-solid fa-users"></i> <b>:</b> ${trovati.join(", ")}`;
                                 } else {
-                                    container.innerHTML = ``;
+                                    container.innerHTML = ``; 
                                 }
                             }
                         }).catch(e => { 
@@ -2222,11 +2160,11 @@
             if (state.nebbia[date] || state.straordinario[date] || state.sospesoRiposo[date] || state.note[date] || state.buonoPasto[date] || state.permessoSP[date]) {
                 htmlInfo += `<hr style="margin:10px 0; border:0; border-top:1px solid var(--border-color);">`;
                 if (state.sospesoRiposo[date]) htmlInfo += `<div style="margin-bottom: 5px;"><b>Riposo:</b> Sospeso</div>`;
-                if (state.nebbia[date]) htmlInfo += `<div style="margin-bottom: 5px;">🌫️ <b>Indennità Nebbia:</b> Presente</div>`;
-                if (state.buonoPasto[date]) htmlInfo += `<div style="margin-bottom: 5px;">🍝 <b>Buono Pasto:</b> Utilizzato</div>`;
-                if (state.straordinario[date]) htmlInfo += `<div style="margin-bottom: 5px;">⏱️ <b>Straordinario:</b> ${state.straordinario[date].ore}h ${state.straordinario[date].minuti}m</div>`;
-                if (state.permessoSP[date]) htmlInfo += `<div style="margin-bottom: 5px;">💸 <b>Perm. Senza Paga:</b> ${state.permessoSP[date].ore}h ${state.permessoSP[date].minuti}m</div>`;
-                if (state.note[date]) htmlInfo += `<div style="margin-top: 5px; white-space: pre-wrap;">📝 <b>Note:</b><br>${state.note[date]}</div>`;
+                if (state.nebbia[date]) htmlInfo += `<div style="margin-bottom: 5px;"><i class="fa-solid fa-smog fa-fw"></i> <b>Indennità Nebbia:</b> Presente</div>`;
+                if (state.buonoPasto[date]) htmlInfo += `<div style="margin-bottom: 5px;"><i class="fa-solid fa-utensils fa-fw"></i> <b>Buono Pasto:</b> Utilizzato</div>`;
+                if (state.straordinario[date]) htmlInfo += `<div style="margin-bottom: 5px;"><i class="fa-solid fa-stopwatch fa-fw"></i> <b>Straordinario:</b> ${state.straordinario[date].ore}h ${state.straordinario[date].minuti}m</div>`;
+                if (state.permessoSP[date]) htmlInfo += `<div style="margin-bottom: 5px;"><i class="fa-solid fa-money-bill-wave fa-fw"></i> <b>Perm. Senza Paga:</b> ${state.permessoSP[date].ore}h ${state.permessoSP[date].minuti}m</div>`;
+                if (state.note[date]) htmlInfo += `<div style="margin-top: 5px; white-space: pre-wrap;"><i class="fa-solid fa-clipboard fa-fw"></i> <b>Note:</b><br>${state.note[date]}</div>`;
             }
             
             infoArea.innerHTML = htmlInfo; 
@@ -2456,7 +2394,7 @@
             
             document.getElementById('stepActionArea').innerHTML = `
                 <button class="btn" style="background: var(--turno);" onclick="impostaTcPattern('doppio')">Turni Doppi (es. Turno, Turno)</button>
-                <button class="btn" style="background: var(--disp); color: white; margin-top: 10px;" onclick="impostaTcPattern('disp')">${altText}</button>
+                <button class="btn" style="background: var(--disp); color: #fff; margin-top: 10px;" onclick="impostaTcPattern('disp')">${altText}</button>
             `;
             document.getElementById('btnConfirmDate').style.display = "none"; 
             document.getElementById('btnCloseStep').style.display = "block";
@@ -2650,7 +2588,6 @@
             let curr = stringToNum(dStr); 
             processati.add(dStr);
             
-            // Ferie Programmate
             let ferieAssegnate = getFerieGiorno(dStr); 
             if (ferieAssegnate) { 
                 evs.push({ title: ferieAssegnate, start: dStr, allDay: true, className: 'bg-ferie', myOrder: 1 }); 
@@ -2681,12 +2618,12 @@
             let tColor = (customColor === '#f1c40f') ? '#32325d' : '#ffffff';
             let titleAddon = ""; 
             
-            if (state.nebbia[dStr]) titleAddon += " 🌫️"; 
-            if (state.straordinario[dStr]) titleAddon += " ⏱️"; 
-            if (state.buonoPasto[dStr]) titleAddon += " 🍝"; 
+            if (state.nebbia[dStr]) titleAddon += " <i class='fa-solid fa-smog'></i>"; 
+            if (state.straordinario[dStr]) titleAddon += " <i class='fa-solid fa-stopwatch'></i>"; 
+            if (state.buonoPasto[dStr]) titleAddon += " <i class='fa-solid fa-utensils'></i>"; 
             if (state.sospesoRiposo[dStr]) titleAddon += " (Sospeso)"; 
-            if (state.permessoSP[dStr]) titleAddon += " 💸"; 
-            if (state.note[dStr]) titleAddon += " 📝";
+            if (state.permessoSP[dStr]) titleAddon += " <i class='fa-solid fa-money-bill-wave'></i>"; 
+            if (state.note[dStr]) titleAddon += " <i class='fa-solid fa-clipboard'></i>";
             
             if (state.variazioni[dStr]) {
                 let ev = { title: state.variazioni[dStr] + titleAddon, start: dStr, allDay: true, myOrder: 2 };
@@ -2860,12 +2797,12 @@
                 
                 let tColor = (customColor === '#f1c40f') ? '#32325d' : '#ffffff';
                 let titleAddon = ""; 
-                if (state.nebbia[dStr]) titleAddon += " 🌫️"; 
-                if (state.straordinario[dStr]) titleAddon += " ⏱️"; 
-                if (state.buonoPasto[dStr]) titleAddon += " 🍝"; 
+                if (state.nebbia[dStr]) titleAddon += " <i class='fa-solid fa-smog'></i>"; 
+                if (state.straordinario[dStr]) titleAddon += " <i class='fa-solid fa-stopwatch'></i>"; 
+                if (state.buonoPasto[dStr]) titleAddon += " <i class='fa-solid fa-utensils'></i>"; 
                 if (state.sospesoRiposo[dStr]) titleAddon += " (Sospeso)"; 
-                if (state.permessoSP[dStr]) titleAddon += " 💸"; 
-                if (state.note[dStr]) titleAddon += " 📝";
+                if (state.permessoSP[dStr]) titleAddon += " <i class='fa-solid fa-money-bill-wave'></i>"; 
+                if (state.note[dStr]) titleAddon += " <i class='fa-solid fa-clipboard'></i>";
                 
                 let titleTxt = state.variazioni[dStr] ? state.variazioni[dStr] : "NOTA"; 
                 let ev = { title: titleTxt + titleAddon, start: dStr, allDay: true, myOrder: 2 };
@@ -3040,7 +2977,7 @@
             const nextParts = nextDateStr.split('-'); 
             const icsNextDate = nextParts[0] + nextParts[1] + nextParts[2];
             
-            let pulitoTitle = t.title.replace(/ 🌫️| ⏱️| 📝|\(Sospeso\)| 🍝| 💸/g, '').trim(); 
+            let pulitoTitle = t.title.replace(/<i[^>]*><\/i>/g, '').replace(/\(Sospeso\)/g, '').trim(); 
             const uid = t.start + "-" + pulitoTitle.replace(/\s+/g, '') + "@myturniapp"; 
             const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + "Z";
             
@@ -3091,7 +3028,7 @@
         chiudiIcsModal();
     }
 
-        function inizializzaCalendario() { 
+    function inizializzaCalendario() { 
         calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { 
             initialView: 'dayGridMonth', 
             locale: 'it', 
@@ -3101,6 +3038,9 @@
             buttonText: { today: 'Oggi' }, 
             customButtons: { btnSalto: { text: '🔍', click: apriJumpModal } }, 
             headerToolbar: { left: 'prev,next', center: 'title', right: 'btnSalto today' }, 
+            eventContent: function(arg) {
+                return { html: arg.event.title };
+            },
             dateClick: (i) => gestisciInterazione(i.dateStr),
             eventClick: (info) => gestisciInterazione(info.event.startStr),
             events: (i, success) => success(calcolaTurni())
