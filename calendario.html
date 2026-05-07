@@ -39,40 +39,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <script>
-        // --- SISTEMA DI PULIZIA CACHE E AGGIORNAMENTO FORZATO ---
-        const PAGE_RELOAD_KEY = 'reloaded_' + window.location.pathname;
-
-        if (!sessionStorage.getItem(PAGE_RELOAD_KEY)) {
-            sessionStorage.setItem(PAGE_RELOAD_KEY, 'true');
-            
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(regs => {
-                    regs.forEach(reg => reg.update());
-                });
-            }
-
-            const url = new URL(window.location.href);
-            url.searchParams.set('nocache', new Date().getTime());
-            window.location.replace(url.toString());
-        } else {
-            const APP_VERSION = "1.2"; 
-            if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
-                if ('caches' in window) {
-                    caches.keys().then((names) => {
-                        names.forEach(name => caches.delete(name));
-                    });
-                }
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then((registrations) => {
-                        registrations.forEach(registration => registration.unregister());
-                    });
-                }
-                localStorage.setItem('app_version_cache', APP_VERSION);
-                window.location.reload(true);
-            }
-        }
-    </script>
+    
 
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
     <script src="global.js"></script>

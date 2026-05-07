@@ -11,28 +11,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script>
-        const PAGE_RELOAD_KEY = 'reloaded_' + window.location.pathname;
-        if (!sessionStorage.getItem(PAGE_RELOAD_KEY)) {
-            sessionStorage.setItem(PAGE_RELOAD_KEY, 'true');
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(regs => { regs.forEach(reg => reg.update()); });
-            }
-            const url = new URL(window.location.href);
-            url.searchParams.set('nocache', new Date().getTime());
-            window.location.replace(url.toString());
-        } else {
-            const APP_VERSION = "2.5"; 
-            if (localStorage.getItem('app_version_cache') !== APP_VERSION) {
-                if ('caches' in window) { caches.keys().then((names) => { names.forEach(name => caches.delete(name)); }); }
-                if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then((registrations) => { registrations.forEach(registration => registration.unregister()); }); }
-                localStorage.setItem('app_version_cache', APP_VERSION);
-                window.location.reload(true);
-            }
-        }
-    </script>
-    <script src="global.js"></script>
-
-    <script>
         // Gestione importazione dati turni
         const urlParams = new URLSearchParams(window.location.search);
         const datiImportati = urlParams.get('dati');
