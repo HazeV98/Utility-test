@@ -925,7 +925,11 @@
                         aggiornaGraficaPermessi(true);
                         try {
                             const messaging = getMessaging(app);
-                            const token = await getToken(messaging, { vapidKey: "BLex63nSSs-uyUZUIRzWPOQyznfTkHC8ZtNnInGArryQnYddSfIHjAH1IwfoopM9otZ4jl2NGL5vM4xtLHkqwyI" });
+                            const swRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+                            const token = await getToken(messaging, { 
+                                vapidKey: "BLex63nSSs-uyUZUIRzWPOQyznfTkHC8ZtNnInGArryQnYddSfIHjAH1IwfoopM9otZ4jl2NGL5vM4xtLHkqwyI",
+                                serviceWorkerRegistration: swRegistration
+                            });
                             if (token && auth.currentUser) {
                                 await setDoc(doc(db, "utenti", auth.currentUser.uid), {
                                     fcm_token: token,
@@ -970,7 +974,11 @@
 
                         try {
                             const messaging = getMessaging(app);
-                            const token = await getToken(messaging, { vapidKey: "BLex63nSSs-uyUZUIRzWPOQyznfTkHC8ZtNnInGArryQnYddSfIHjAH1IwfoopM9otZ4jl2NGL5vM4xtLHkqwyI" });
+                            const swRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+                            const token = await getToken(messaging, { 
+                                vapidKey: "BLex63nSSs-uyUZUIRzWPOQyznfTkHC8ZtNnInGArryQnYddSfIHjAH1IwfoopM9otZ4jl2NGL5vM4xtLHkqwyI",
+                                serviceWorkerRegistration: swRegistration
+                            });
                             if (token && auth.currentUser) {
                                 await setDoc(doc(db, "utenti", auth.currentUser.uid), {
                                     fcm_token: token,
