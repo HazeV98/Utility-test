@@ -316,7 +316,10 @@
             document.getElementById('banner-attiva').checked = false;
             document.getElementById('prom-orario').value = ''; 
             
-            if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+            const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
+            const isWeb = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
+            
+            if (isNative || isWeb) {
                 document.getElementById('time-picker-group').style.display = 'flex';
             } else {
                 document.getElementById('time-picker-group').style.display = 'none';
@@ -404,8 +407,10 @@
 
                         const bannerAttivo = document.getElementById('banner-attiva').checked;
                         const orarioPush = document.getElementById('prom-orario').value;
+                        const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
+                        const isWeb = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
 
-                        if (bannerAttivo || (orarioPush && window.Capacitor && window.Capacitor.isNativePlatform())) {
+                        if (bannerAttivo || (orarioPush && (isNative || isWeb))) {
                             const noteRef = doc(collection(db, "utenti", auth.currentUser.uid, "notifiche_programmate"));
                             let payloadProgrammata = {
                                 titolo: "🔔 " + titolo,
