@@ -264,7 +264,7 @@
         }
         .app-list .app-icon { 
             width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 20px; 
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: var(--shadow-sm); overflow: hidden; 
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: var(--shadow-sm); overflow: hidden; position: relative;
         }
         .app-list .app-label { font-size: calc(var(--label-size) + 2px); color: #1a1a1a; font-weight: 700; margin: 0; text-shadow: none; flex: 1; text-align: left; }
 
@@ -319,6 +319,27 @@
         input[type="range"] { width: 100%; margin: 10px 0; accent-color: var(--primary); }
 
         .badge-rotazioni { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(217,48,37,0.4); border: 2px solid var(--bg-color); z-index: 10; pointer-events: none;}
+
+        .badge-notif { 
+            position: absolute; 
+            top: -6px; 
+            right: -6px; 
+            background: var(--danger); 
+            color: white; 
+            border-radius: 50%; 
+            font-size: 11px; 
+            font-weight: 800; 
+            min-width: 22px; 
+            height: 22px; 
+            padding: 0 5px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: 0 4px 8px rgba(217,48,37,0.4); 
+            border: 2px solid var(--surface); 
+            z-index: 20; 
+            pointer-events: none; 
+        }
 
         .banner-alert { padding: 14px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 20px; width: 100%; max-width: 440px; cursor: pointer; box-shadow: var(--shadow-sm); display:flex; align-items:center; justify-content:center; gap:10px; transition: transform 0.2s;}
         .banner-alert:active { transform: scale(0.98); }
@@ -433,6 +454,7 @@
                 <h4 style="margin: 0 0 10px 0; color: var(--text-main); text-align: center; font-weight: 700;"><i class="fa-solid fa-bell" style="color: var(--primary);"></i> Preferenze Notifiche App</h4>
                 <p id="notif-status-text" style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 15px; font-weight: 500;">Controllo stato in corso...</p>
                 <button id="btn-attiva-notifiche" class="btn-modal" style="background: var(--primary); color: white; margin-top: 0; display: none; width: 100%;" onclick="window.gestisciNotificheNative()"><i class="fa-solid fa-toggle-on"></i> Abilita Notifiche</button>
+                <button id="btn-disattiva-notifiche" class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 10px; display: none; width: 100%;" onclick="window.disattivaNotifiche()"><i class="fa-solid fa-bell-slash"></i> Disattiva Notifiche</button>
 
                 <div id="notif-preferences-section" style="display: none; margin-top: 15px; text-align: left; font-size: 14px;">
                     <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
@@ -713,7 +735,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
-        import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-messaging.js";
+        import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-messaging.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", storageBucket: "utility-haze.firebasestorage.app", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
         const app = initializeApp(firebaseConfig); 
@@ -795,9 +817,10 @@
                 });
                 const btnRot = document.getElementById('btn-rotazioni');
                 if (btnRot) {
+                    let iconDiv = btnRot.querySelector('.app-icon');
                     let b = btnRot.querySelector('.badge-notif');
                     if (b) b.remove();
-                    if (count > 0) btnRot.insertAdjacentHTML('beforeend', `<div class="badge-notif">${count}</div>`);
+                    if (count > 0 && iconDiv) iconDiv.insertAdjacentHTML('beforeend', `<div class="badge-notif">${count}</div>`);
                 }
             } catch(e) {}
         };
@@ -825,9 +848,10 @@
                     }
                     const btn = document.getElementById('btn-promemoria');
                     if (btn) {
+                        let iconDiv = btn.querySelector('.app-icon');
                         let b = btn.querySelector('.badge-notif');
                         if (b) b.remove();
-                        btn.insertAdjacentHTML('beforeend', `<div class="badge-notif" style="background:#17a2b8; border-color:var(--bg-color);">${activeCount}</div>`);
+                        if (iconDiv) iconDiv.insertAdjacentHTML('beforeend', `<div class="badge-notif" style="background:#17a2b8; border-color:var(--surface); box-shadow: 0 4px 8px rgba(23,162,184,0.4);">${activeCount}</div>`);
                     }
                 }
             } catch(e) { console.error("Errore check promemoria:", e); }
@@ -866,11 +890,13 @@
                         statusText.innerHTML = "<i class='fa-solid fa-circle-check'></i> Notifiche app attive";
                         statusText.style.color = "var(--success)";
                         btn.style.display = 'none';
+                        document.getElementById('btn-disattiva-notifiche').style.display = 'flex';
                         prefSection.style.display = 'block';
                     } else {
                         statusText.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Notifiche bloccate o non attive";
                         statusText.style.color = "#856404";
                         btn.style.display = 'block';
+                        document.getElementById('btn-disattiva-notifiche').style.display = 'none';
                         prefSection.style.display = 'none';
                     }
                 };
@@ -939,6 +965,7 @@
                         statusText.innerHTML = "<i class='fa-solid fa-circle-check'></i> Notifiche app attive";
                         statusText.style.color = "var(--success)";
                         document.getElementById('btn-attiva-notifiche').style.display = 'none';
+                        document.getElementById('btn-disattiva-notifiche').style.display = 'flex';
                         document.getElementById('notif-preferences-section').style.display = 'block';
 
                         try {
@@ -962,6 +989,41 @@
                     statusText.innerHTML = "<i class='fa-solid fa-xmark'></i> Errore durante la richiesta.";
                     statusText.style.color = "var(--danger)";
                 }
+            }
+        };
+
+        window.disattivaNotifiche = async () => {
+            if (!confirm("Vuoi disattivare le notifiche e scollegare questo dispositivo?")) return;
+            
+            const statusText = document.getElementById('notif-status-text');
+            statusText.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Disattivazione in corso...";
+            
+            try {
+                if (auth.currentUser) {
+                    await setDoc(doc(db, "utenti", auth.currentUser.uid), {
+                        fcm_token: null,
+                        device_type: null
+                    }, { merge: true });
+                }
+
+                const isWeb = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
+                if (isWeb) {
+                    try {
+                        const messaging = getMessaging(app);
+                        await deleteToken(messaging);
+                    } catch (e) { console.warn("Service worker non presente, elimino solo su DB", e); }
+                }
+
+                statusText.innerHTML = "<i class='fa-solid fa-bell-slash'></i> Notifiche disattivate";
+                statusText.style.color = "var(--text-muted)";
+                document.getElementById('btn-disattiva-notifiche').style.display = 'none';
+                document.getElementById('btn-attiva-notifiche').style.display = 'flex';
+                document.getElementById('notif-preferences-section').style.display = 'none';
+                
+            } catch (error) {
+                console.error("Errore:", error);
+                statusText.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Errore durante la disattivazione";
+                statusText.style.color = "var(--danger)";
             }
         };
 
