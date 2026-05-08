@@ -416,7 +416,7 @@
             </div>
 
             <div id="banner-promemoria-alert" class="banner-alert banner-blue" style="display: none;" onclick="window.location.href='promemoria.html'">
-                <i class="fa-solid fa-stopwatch fa-beat"></i> Hai dei promemoria in sospeso!
+                <i class="fa-solid fa-stopwatch fa-beat"></i> Hai dei promemoria per oggi!
             </div>
 
             <div id="app-container" class="app-grid"></div>
@@ -494,7 +494,7 @@
 
             <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Tipo Icone:</label>
             <select id="set-icontype" class="input-field" style="cursor:pointer;">
-                <option value="minimal">Minimal (FontAwesome)</option>
+                <option value="minimal">Minimal</option>
                 <option value="emoji">Classiche (Emoji)</option>
             </select>
 
@@ -713,9 +713,13 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+        import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-messaging.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", storageBucket: "utility-haze.firebasestorage.app", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
-        const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const provider = new GoogleAuthProvider();
+        const app = initializeApp(firebaseConfig); 
+        const auth = getAuth(app); 
+        const db = getFirestore(app); 
+        const provider = new GoogleAuthProvider();
         const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2"; 
         const COLLABORATORE_UIDS = ["INSERISCI_QUI_UID_1", "INSERISCI_QUI_UID_2"]; 
         
@@ -830,9 +834,10 @@
         };
 
         window.inizializzaNotificheSeNativa = async (userData) => {
-            if (window.Capacitor && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins.PushNotifications) {
-                const PushNotifications = window.Capacitor.Plugins.PushNotifications;
-                
+            const isNative = window.Capacitor && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins.PushNotifications;
+            const isWeb = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
+
+            if (isNative || isWeb) {
                 document.getElementById('native-notifications-center').style.display = 'block';
                 
                 const statusText = document.getElementById('notif-status-text');
@@ -863,43 +868,100 @@
                         btn.style.display = 'none';
                         prefSection.style.display = 'block';
                     } else {
-                        statusText.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Notifiche bloccate da Android";
+                        statusText.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Notifiche bloccate o non attive";
                         statusText.style.color = "#856404";
                         btn.style.display = 'block';
                         prefSection.style.display = 'none';
                     }
                 };
 
-                PushNotifications.addListener('registration', async (token) => {
-                    if (auth.currentUser) {
-                        await setDoc(doc(db, "utenti", auth.currentUser.uid), {
-                            fcm_token: token.value,
-                            device_type: 'android_app'
-                        }, { merge: true });
+                if (isNative) {
+                    const PushNotifications = window.Capacitor.Plugins.PushNotifications;
+                    PushNotifications.addListener('registration', async (token) => {
+                        if (auth.currentUser) {
+                            await setDoc(doc(db, "utenti", auth.currentUser.uid), {
+                                fcm_token: token.value,
+                                device_type: 'android_app'
+                            }, { merge: true });
+                            aggiornaGraficaPermessi(true);
+                        }
+                    });
+
+                    let permStatus = await PushNotifications.checkPermissions();
+                    if (permStatus.receive === 'prompt') { permStatus = await PushNotifications.requestPermissions(); }
+
+                    if (permStatus.receive === 'granted') {
+                        PushNotifications.register();
                         aggiornaGraficaPermessi(true);
+                    } else { aggiornaGraficaPermessi(false); }
+                } else if (isWeb) {
+                    if (Notification.permission === 'granted') {
+                        aggiornaGraficaPermessi(true);
+                        try {
+                            const messaging = getMessaging(app);
+                            const token = await getToken(messaging, { vapidKey: "BLex63nSSs-uyUZUIRzWPOQyznfTkHC8ZtNnInGArryQnYddSfIHjAH1IwfoopM9otZ4jl2NGL5vM4xtLHkqwyI" });
+                            if (token && auth.currentUser) {
+                                await setDoc(doc(db, "utenti", auth.currentUser.uid), {
+                                    fcm_token: token,
+                                    device_type: 'pwa_web'
+                                }, { merge: true });
+                            }
+                        } catch (e) { 
+                            console.warn("Nessun token web ottenuto (forse manca il service worker):", e); 
+                        }
+                    } else {
+                        aggiornaGraficaPermessi(false);
                     }
-                });
-
-                let permStatus = await PushNotifications.checkPermissions();
-                if (permStatus.receive === 'prompt') { permStatus = await PushNotifications.requestPermissions(); }
-
-                if (permStatus.receive === 'granted') {
-                    PushNotifications.register();
-                    aggiornaGraficaPermessi(true);
-                } else { aggiornaGraficaPermessi(false); }
+                }
             }
         };
 
         window.gestisciNotificheNative = async () => {
-            const PushNotifications = window.Capacitor.Plugins.PushNotifications;
-            document.getElementById('notif-status-text').innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Richiesta permesso in corso...";
+            const isNative = window.Capacitor && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins.PushNotifications;
+            const isWeb = 'Notification' in window;
+            const statusText = document.getElementById('notif-status-text');
             
-            let permStatus = await PushNotifications.requestPermissions();
-            if (permStatus.receive === 'granted') {
-                await PushNotifications.register();
-            } else {
-                document.getElementById('notif-status-text').innerHTML = "<i class='fa-solid fa-xmark'></i> Devi attivarle dalle Impostazioni del telefono.";
-                document.getElementById('notif-status-text').style.color = "var(--danger)";
+            statusText.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Richiesta permesso in corso...";
+
+            if (isNative) {
+                const PushNotifications = window.Capacitor.Plugins.PushNotifications;
+                let permStatus = await PushNotifications.requestPermissions();
+                if (permStatus.receive === 'granted') {
+                    await PushNotifications.register();
+                } else {
+                    statusText.innerHTML = "<i class='fa-solid fa-xmark'></i> Devi attivarle dalle Impostazioni del telefono.";
+                    statusText.style.color = "var(--danger)";
+                }
+            } else if (isWeb) {
+                try {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        statusText.innerHTML = "<i class='fa-solid fa-circle-check'></i> Notifiche app attive";
+                        statusText.style.color = "var(--success)";
+                        document.getElementById('btn-attiva-notifiche').style.display = 'none';
+                        document.getElementById('notif-preferences-section').style.display = 'block';
+
+                        try {
+                            const messaging = getMessaging(app);
+                            const token = await getToken(messaging, { vapidKey: "BLex63nSSs-uyUZUIRzWPOQyznfTkHC8ZtNnInGArryQnYddSfIHjAH1IwfoopM9otZ4jl2NGL5vM4xtLHkqwyI" });
+                            if (token && auth.currentUser) {
+                                await setDoc(doc(db, "utenti", auth.currentUser.uid), {
+                                    fcm_token: token,
+                                    device_type: 'pwa_web'
+                                }, { merge: true });
+                            }
+                        } catch (e) {
+                            console.error("Errore recupero token FCM Web:", e);
+                        }
+                    } else {
+                        statusText.innerHTML = "<i class='fa-solid fa-xmark'></i> Devi attivarle dalle Impostazioni del browser.";
+                        statusText.style.color = "var(--danger)";
+                    }
+                } catch (error) {
+                    console.error("Errore richiesta notifiche web:", error);
+                    statusText.innerHTML = "<i class='fa-solid fa-xmark'></i> Errore durante la richiesta.";
+                    statusText.style.color = "var(--danger)";
+                }
             }
         };
 
