@@ -357,6 +357,7 @@
         <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
         <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
         <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
+        <a href="report.html" class="sidebar-link"><i class="fa-solid fa-headset"></i> Segnalazioni</a>
         <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
         
         <a href="admin.html" class="sidebar-link" id="menu-admin" style="display:none; color: var(--danger); font-weight: bold;"><i class="fa-solid fa-lock" style="color: var(--danger);"></i> Admin</a>
@@ -420,6 +421,10 @@
             <div id="banner-promemoria-alert" class="banner-alert banner-blue" style="display: none;" onclick="window.location.href='promemoria.html'">
                 <i class="fa-solid fa-stopwatch fa-beat"></i> Hai dei promemoria per oggi!
             </div>
+            
+            <div id="banner-segnalazioni-alert" class="banner-alert" style="display: none; background: #e6f3ff; color: #0066cc; border: 1px solid #b3dfff;" onclick="window.location.href='report.html'">
+                <i class="fa-solid fa-headset fa-bounce"></i> <span id="testo-segnalazione-banner"></span>
+            </div>
 
             <div id="app-container" class="app-grid"></div>
             <button id="btn-salva-layout" class="btn-action" style="display: none; background: #ff9800; color: white; margin-top: 30px; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4); width:100%; max-width:440px;" onclick="LayoutEngine.toggleEditMode()"><i class="fa-solid fa-check"></i> Fatto (Salva Layout)</button>
@@ -448,6 +453,9 @@
                     </label>
                     <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; color: var(--text-main); font-weight: 500;">
                         <input type="checkbox" id="pref-notif-utility" style="width:18px; height:18px; accent-color:var(--primary);" onchange="window.salvaPreferenzeNotifiche()"> Annunci Bacheca Utility
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; color: var(--text-main); font-weight: 500;">
+                        <input type="checkbox" id="pref-notif-segnalazioni" style="width:18px; height:18px; accent-color:var(--primary);" onchange="window.salvaPreferenzeNotifiche()"> Notifiche Segnalazioni / Supporto
                     </label>
 
                     <label id="label-notif-rotazioni" style="display: none; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; color: var(--primary); font-weight: 700;">
@@ -745,14 +753,14 @@
             rubrica: "fa-solid fa-address-book", ferie: "fa-solid fa-umbrella-beach", orari: "fa-regular fa-clock",
             documenti: "fa-solid fa-file-lines", link: "fa-solid fa-link", contatti: "fa-solid fa-id-card",
             buoni: "fa-solid fa-utensils", promemoria: "fa-solid fa-stopwatch", dds: "fa-solid fa-box-archive",
-            impostazioni: "fa-solid fa-gear", guida: "fa-solid fa-book", admin: "fa-solid fa-lock", accessi: "fa-solid fa-users-gear"
+            report: "fa-solid fa-headset", impostazioni: "fa-solid fa-gear", guida: "fa-solid fa-book", admin: "fa-solid fa-lock", accessi: "fa-solid fa-users-gear"
         };
 
         const EMOJI_MAP = {
             oggi: "🎯", calendario: "📅", statistiche: "📊", rotazioni: "👥", turni: "🔄",
             bachecaturni: "🤝", rubrica: "📒", ferie: "⛱️", orari: "🕒", documenti: "📄",
             link: "🔗", contatti: "🪪", buoni: "🍽️", promemoria: "⏱️", dds: "🗃️",
-            impostazioni: "⚙️", guida: "📖", admin: "🔒", accessi: "👨‍💻"
+            report: "🎧", impostazioni: "⚙️", guida: "📖", admin: "🔒", accessi: "👨‍💻"
         };
 
         const DEFAULT_APPS = [
@@ -773,6 +781,7 @@
             { id: "buoni", label: "Buoni\nPasto", href: "buoni.html", defaultColor: "#d63384" },
             { id: "promemoria", label: "Promemoria", href: "promemoria.html", defaultColor: "#0dcaf0" },
             { id: "dds", label: "Archivio\nDDS", href: "dds.html", defaultColor: "#5856d6" },
+            { id: "report", label: "Segnalazioni", href: "report.html", defaultColor: "#0088ff" },
             { id: "impostazioni", label: "Impostazioni", onclick: "window.apriModal('settingsModal')", defaultColor: "#8e8e93" },
             { id: "spriss", label: "Spriss", image: "icone_app/iconspriss.png", href: "https://spriss.avmspa.it/" },
             { id: "guida", label: "Guida", href: "guida.html", defaultColor: "#34c759" },
@@ -833,6 +842,44 @@
             } catch(e) { console.error("Errore check promemoria:", e); }
         };
 
+        window.controllaSegnalazioni = async () => {
+            if (!auth.currentUser) return;
+            try {
+                let count = 0;
+                let messaggioBanner = "";
+                
+                if (globalIsAdmin) {
+                    const q = query(collection(db, "segnalazioni"), where("stato", "==", "in_attesa"), where("letta_da_admin", "==", false));
+                    const snap = await getDocs(q);
+                    count = snap.size;
+                    if (count > 0) {
+                        messaggioBanner = count === 1 ? "Hai 1 nuova segnalazione in attesa!" : `Hai ${count} nuove segnalazioni in attesa!`;
+                    }
+                } else {
+                    const q = query(collection(db, "segnalazioni"), where("mittente_uid", "==", auth.currentUser.uid), where("stato", "==", "risposto"), where("letta_da_utente", "==", false));
+                    const snap = await getDocs(q);
+                    count = snap.size;
+                    if (count > 0) {
+                        messaggioBanner = count === 1 ? "L'Admin ha risposto alla tua segnalazione!" : `L'Admin ha risposto a ${count} tue segnalazioni!`;
+                    }
+                }
+
+                if (count > 0) {
+                    const banner = document.getElementById('banner-segnalazioni-alert');
+                    if (banner) {
+                        document.getElementById('testo-segnalazione-banner').innerText = messaggioBanner;
+                        banner.style.display = 'flex';
+                    }
+                    const btn = document.getElementById('btn-report');
+                    if (btn) {
+                        let b = btn.querySelector('.badge-notif');
+                        if (b) b.remove();
+                        btn.insertAdjacentHTML('beforeend', `<div class="badge-notif" style="background:var(--danger);">${count}</div>`);
+                    }
+                }
+            } catch(e) { console.error("Errore check segnalazioni:", e); }
+        };
+
         window.inizializzaNotificheSeNativa = async (userData) => {
             const isNative = window.Capacitor && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins.PushNotifications;
             const isWeb = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
@@ -854,6 +901,7 @@
                     document.getElementById('pref-notif-dds').checked = !!userData.preferenze_notifiche.dds;
                     document.getElementById('pref-notif-utility').checked = !!userData.preferenze_notifiche.bacheca_utility;
                     document.getElementById('pref-notif-rotazioni').checked = !!userData.preferenze_notifiche.richieste_rotazioni;
+                    document.getElementById('pref-notif-segnalazioni').checked = !!userData.preferenze_notifiche.segnalazioni;
 
                     if (Array.isArray(userData.preferenze_notifiche.mansioni_turni)) {
                         document.querySelectorAll('.pref-mansione').forEach(cb => {
@@ -1021,6 +1069,7 @@
                 dds: document.getElementById('pref-notif-dds').checked,
                 bacheca_utility: document.getElementById('pref-notif-utility').checked,
                 richieste_rotazioni: document.getElementById('pref-notif-rotazioni').checked,
+                segnalazioni: document.getElementById('pref-notif-segnalazioni').checked,
                 mansioni_turni: mansioniSelezionate
             };
 
@@ -1191,6 +1240,7 @@
                 setTimeout(() => {
                     if(window.controllaRichiesteSospese) window.controllaRichiesteSospese();
                     if(window.controllaPromemoria) window.controllaPromemoria();
+                    if(window.controllaSegnalazioni) window.controllaSegnalazioni();
                 }, 200);
             },
             handleImageUpload: function(event, modalType) {
