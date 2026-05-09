@@ -8,7 +8,6 @@
     <script>
         (function applicaTema() {
             try {
-                // Legge la preferenza di Index (HazeV 1.3+)
                 let prefStr = localStorage.getItem('preferenze_layout_haze');
                 if (prefStr) {
                     let prefs = JSON.parse(prefStr);
@@ -19,7 +18,6 @@
                         document.documentElement.removeAttribute('data-theme');
                     }
                 } else {
-                    // Fallback se usa ancora la vecchia chiave
                     const oldTheme = localStorage.getItem('theme');
                     if (oldTheme && oldTheme !== 'system') document.documentElement.setAttribute('data-theme', oldTheme);
                 }
@@ -61,7 +59,7 @@
             --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-                /* --- TEMA SCURO FORZATO (DA MENU) E DI SISTEMA --- */
+        /* --- TEMA SCURO FORZATO (DA MENU) E DI SISTEMA --- */
         :root[data-theme="dark"] {
             --primary: #4da3ff;
             --primary-hover: #73b9ff;
@@ -76,7 +74,6 @@
             --danger: #ea4335;
             --danger-light: rgba(234, 67, 53, 0.15);
             --danger-border: rgba(234, 67, 53, 0.3);
-            /* Aggiunte le ombreggiature per il tema scuro */
             --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
             --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
             --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
@@ -97,7 +94,6 @@
                 --danger: #ea4335;
                 --danger-light: rgba(234, 67, 53, 0.15);
                 --danger-border: rgba(234, 67, 53, 0.3);
-                /* Aggiunte le ombreggiature per il tema scuro */
                 --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
                 --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
                 --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
@@ -108,7 +104,6 @@
         :root[data-theme="dark"] {
             --primary: #4da3ff; --primary-hover: #73b9ff; --primary-glow: rgba(77, 163, 255, 0.25); --bg-color: #0f1115; --surface: #1a1d24; --surface-hover: #232730; --text-main: #e8eaed; --text-muted: #9aa0a6; --border-color: #2f333d; --success: #34a853; --danger: #ea4335; --danger-light: rgba(234, 67, 53, 0.15); --danger-border: rgba(234, 67, 53, 0.3); --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3); --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4); --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
         }
-
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -169,6 +164,9 @@
         .input-field, .input-group input[type="text"], .input-group input[type="file"], .input-group input[type="time"] { padding: 14px; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: 15px; width: 100%; box-sizing: border-box; font-family: inherit; background-color: var(--surface); color: var(--text-main); transition: all 0.2s; }
         .input-field:focus, .input-group input[type="text"]:focus, .input-group input[type="time"]:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-glow); }
         
+        /* Classe per il fix calendario Flatpickr */
+        .input-with-icon { padding-left: 42px !important; background-color: var(--surface) !important; }
+
         .checkbox-group { display: flex; flex-direction: column; gap: 12px; background: var(--surface-hover); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); }
         .checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; color: var(--text-main); cursor: pointer; }
         .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; margin: 0; accent-color: var(--primary); }
@@ -246,8 +244,8 @@
             <div class="input-group">
                 <label>GIORNI DI VALIDITÀ (Tocca per scegliere)</label>
                 <div style="position: relative;">
-                    <i class="fa-regular fa-calendar" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
-                    <input type="text" id="dds-date-picker" placeholder="Seleziona le date..." style="padding-left: 40px; background-color: var(--surface);" readonly>
+                    <i class="fa-regular fa-calendar" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); z-index: 5;"></i>
+                    <input type="text" id="dds-date-picker" class="input-with-icon" placeholder="Seleziona le date..." readonly>
                 </div>
             </div>
 
@@ -314,7 +312,11 @@
             document.getElementById('banner-attiva').checked = false;
             document.getElementById('dds-orario').value = '';
 
-            if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+            // LOGICA AGGIORNATA PER MOSTRARE L'INPUT ANCHE SU WEB
+            const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
+            const isWeb = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
+            
+            if (isNative || isWeb) {
                 document.getElementById('dds-time-picker-group').style.display = 'flex';
             } else {
                 document.getElementById('dds-time-picker-group').style.display = 'none';
@@ -391,8 +393,12 @@
                 reqAdd.onsuccess = async function() {
                     const bannerAttiva = document.getElementById('banner-attiva').checked;
                     const orarioPush = document.getElementById('dds-orario').value;
+                    
+                    // AGGIORNATO ANCHE QUI PER PERMETTERE IL SALVATAGGIO DA WEB
+                    const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
+                    const isWeb = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
 
-                    if (auth.currentUser && (bannerAttiva || (orarioPush && window.Capacitor && window.Capacitor.isNativePlatform()))) {
+                    if (auth.currentUser && (bannerAttiva || (orarioPush && (isNative || isWeb)))) {
                         try {
                             const noteRef = doc(collection(db, "utenti", auth.currentUser.uid, "notifiche_programmate"));
                             let payloadProgrammata = {
