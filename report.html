@@ -113,7 +113,7 @@
         
         .report-card { background: var(--surface); padding: 20px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 12px; border-left: 6px solid var(--info); transition: transform 0.2s, box-shadow 0.2s; animation: slideInUp 0.3s ease both; position: relative;}
         .report-card.risposto { border-left-color: var(--success); }
-        .report-sender { font-weight: 700; font-size: 14px; color: var(--text-main); display: flex; align-items: center; gap: 6px; }
+        .report-sender { font-weight: 800; font-size: 16px; color: var(--info); display: flex; align-items: center; gap: 6px; }
         .report-date { font-size: 12px; color: var(--text-muted); }
         .report-body { font-size: 14px; color: var(--text-main); background: var(--surface-hover); padding: 14px; border-radius: 10px; line-height: 1.5; white-space: pre-wrap;}
         .report-link { font-size: 13px; color: var(--info); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; margin-top: 5px; font-weight: 500;}
@@ -287,7 +287,6 @@
                 });
             }, (error) => {
                 console.error("Errore query:", error);
-                // Se l'errore dice che manca l'indice, Firestore fornisce un link nel log del browser
                 if (error.code === 'failed-precondition') {
                     alert("Errore: Manca l'indice di Firestore. Controlla la console del browser per il link di creazione.");
                 }
@@ -304,17 +303,27 @@
             if (!isAdmin && data.stato === 'risposto' && !data.letta_da_utente) dot = '<span class="unread-dot"></span>';
 
             let infoUtente = "";
+            let headerName = isAdmin ? (data.mittente_nome || 'Utente Sconosciuto') : 'Tua Segnalazione';
+
             if (isAdmin) {
-                let wa = "";
-                if (data.mittente_telefono) {
+                let waIcon = "";
+                let phoneInfo = "";
+                
+                if (data.mittente_telefono && data.mittente_telefono.trim() !== "") {
                     let num = data.mittente_telefono.replace(/\D/g, '');
-                    if (!num.startsWith('39')) num = '39' + num;
-                    wa = `<a href="https://wa.me/${num}" target="_blank" style="color:#25D366; margin-left:10px;"><i class="fa-brands fa-whatsapp"></i></a>`;
+                    if (num.length > 0) {
+                        if (!num.startsWith('39')) num = '39' + num;
+                        // Icona WhatsApp grande (26px) con allineamento verticale corretto
+                        waIcon = `<a href="https://wa.me/${num}" target="_blank" style="color:#25D366; margin-left:12px; font-size:26px; vertical-align:middle; text-decoration:none; transition:transform 0.2s; display:inline-block;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Contatta su WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>`;
+                    }
+                    phoneInfo = `<br><span style="color:var(--text-main); line-height: 26px;"><i class="fa-solid fa-phone" style="font-size:12px; width:16px;"></i> <b>Telefono:</b> ${data.mittente_telefono}</span> ${waIcon}`;
                 }
+
                 infoUtente = `
-                <div style="font-size:12px; background:var(--surface-hover); padding:10px; border-radius:8px; margin-bottom:10px; border:1px dashed var(--border-color);">
-                    <b>${data.mittente_nome}</b> (Matr: ${data.mittente_matricola})<br>
-                    ${data.mittente_email} ${wa}
+                <div style="font-size:13px; background:var(--surface-hover); padding:12px; border-radius:10px; margin-bottom:12px; border:1px dashed var(--border-color); color: var(--text-muted); line-height: 1.6;">
+                    <span style="color:var(--text-main);"><i class="fa-solid fa-hashtag" style="font-size:12px; width:16px;"></i> <b>Matricola:</b> ${data.mittente_matricola || 'N/D'}</span><br>
+                    <span style="color:var(--text-main);"><i class="fa-solid fa-envelope" style="font-size:12px; width:16px;"></i> <b>Email:</b> ${data.mittente_email || 'N/D'}</span>
+                    ${phoneInfo}
                 </div>`;
             }
 
@@ -327,8 +336,8 @@
 
             card.innerHTML = `
                 ${statusBadge}
-                <div class="report-sender"><i class="fa-solid fa-circle-user"></i> ${isAdmin ? 'Mittente' : 'Tua Segnalazione'} ${dot}</div>
-                <div class="report-date">${new Date(data.timestamp_creazione).toLocaleString()}</div>
+                <div class="report-sender"><i class="fa-solid fa-circle-user"></i> ${headerName} ${dot}</div>
+                <div class="report-date" style="margin-bottom: ${isAdmin ? '12px' : '0'};">${new Date(data.timestamp_creazione).toLocaleString()}</div>
                 ${infoUtente}
                 <div class="report-body">${data.messaggio}</div>
                 ${data.link_allegato ? `<a href="${data.link_allegato}" target="_blank" class="report-link"><i class="fa-solid fa-link"></i> Link Utente</a>` : ''}
