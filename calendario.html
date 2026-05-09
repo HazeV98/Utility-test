@@ -163,7 +163,16 @@
         .right-sidebar.open { right: 0; }
         
         .custom-file-upload { display: inline-block; padding: 15px; cursor: pointer; background: var(--bg); border: 2px dashed var(--border-color); border-radius: 12px; color: var(--text); font-weight: bold; width: 100%; box-sizing: border-box; text-align: center; margin-top: 15px; }
-        .fc-day-today { background-color: rgba(94, 114, 228, 0.05) !important; }
+        .fc-day-today {
+            background-color: rgba(94, 114, 228, 0.08) !important;
+            border: 2px solid var(--primary) !important;
+            border-radius: 14px;
+        }
+        .fc-day-today .fc-daygrid-day-number {
+            color: var(--primary) !important;
+            font-weight: 700 !important;
+        }
+        [data-theme="dark"] .fc-day-today .fc-daygrid-day-number { color: var(--primary) !important; font-weight: bold !important; }
     </style>
 </head>
 <body>
