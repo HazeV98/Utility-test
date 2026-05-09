@@ -264,7 +264,7 @@
         }
         .app-list .app-icon { 
             width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 20px; 
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: var(--shadow-sm); overflow: hidden; position: relative;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: var(--shadow-sm); overflow: hidden; 
         }
         .app-list .app-label { font-size: calc(var(--label-size) + 2px); color: #1a1a1a; font-weight: 700; margin: 0; text-shadow: none; flex: 1; text-align: left; }
 
@@ -320,26 +320,7 @@
 
         .badge-rotazioni { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(217,48,37,0.4); border: 2px solid var(--bg-color); z-index: 10; pointer-events: none;}
 
-        .badge-notif { 
-            position: absolute; 
-            top: -6px; 
-            right: -6px; 
-            background: var(--danger); 
-            color: white; 
-            border-radius: 50%; 
-            font-size: 11px; 
-            font-weight: 800; 
-            min-width: 22px; 
-            height: 22px; 
-            padding: 0 5px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            box-shadow: 0 4px 8px rgba(217,48,37,0.4); 
-            border: 2px solid var(--surface); 
-            z-index: 20; 
-            pointer-events: none; 
-        }
+        .badge-notif { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; min-width: 22px; height: 22px; padding: 0 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(217,48,37,0.4); border: 2px solid var(--surface); z-index: 20; pointer-events: none; }
 
         .banner-alert { padding: 14px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 20px; width: 100%; max-width: 440px; cursor: pointer; box-shadow: var(--shadow-sm); display:flex; align-items:center; justify-content:center; gap:10px; transition: transform 0.2s;}
         .banner-alert:active { transform: scale(0.98); }
@@ -738,10 +719,7 @@
         import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-messaging.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", storageBucket: "utility-haze.firebasestorage.app", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
-        const app = initializeApp(firebaseConfig); 
-        const auth = getAuth(app); 
-        const db = getFirestore(app); 
-        const provider = new GoogleAuthProvider();
+        const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const provider = new GoogleAuthProvider();
         const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2"; 
         const COLLABORATORE_UIDS = ["INSERISCI_QUI_UID_1", "INSERISCI_QUI_UID_2"]; 
         
@@ -817,10 +795,9 @@
                 });
                 const btnRot = document.getElementById('btn-rotazioni');
                 if (btnRot) {
-                    let iconDiv = btnRot.querySelector('.app-icon');
                     let b = btnRot.querySelector('.badge-notif');
                     if (b) b.remove();
-                    if (count > 0 && iconDiv) iconDiv.insertAdjacentHTML('beforeend', `<div class="badge-notif">${count}</div>`);
+                    if (count > 0) btnRot.insertAdjacentHTML('beforeend', `<div class="badge-notif">${count}</div>`);
                 }
             } catch(e) {}
         };
@@ -848,10 +825,9 @@
                     }
                     const btn = document.getElementById('btn-promemoria');
                     if (btn) {
-                        let iconDiv = btn.querySelector('.app-icon');
                         let b = btn.querySelector('.badge-notif');
                         if (b) b.remove();
-                        if (iconDiv) iconDiv.insertAdjacentHTML('beforeend', `<div class="badge-notif" style="background:#17a2b8; border-color:var(--surface); box-shadow: 0 4px 8px rgba(23,162,184,0.4);">${activeCount}</div>`);
+                        btn.insertAdjacentHTML('beforeend', `<div class="badge-notif" style="background:#17a2b8; border-color:var(--bg-color);">${activeCount}</div>`);
                     }
                 }
             } catch(e) { console.error("Errore check promemoria:", e); }
@@ -866,6 +842,7 @@
                 
                 const statusText = document.getElementById('notif-status-text');
                 const btn = document.getElementById('btn-attiva-notifiche');
+                const btnDisattiva = document.getElementById('btn-disattiva-notifiche');
                 const prefSection = document.getElementById('notif-preferences-section');
 
                 if (userData && (userData.ruolo === 'admin' || userData.ruolo === 'collaborator' || globalIsAdmin || globalIsCollab)) {
@@ -890,13 +867,13 @@
                         statusText.innerHTML = "<i class='fa-solid fa-circle-check'></i> Notifiche app attive";
                         statusText.style.color = "var(--success)";
                         btn.style.display = 'none';
-                        document.getElementById('btn-disattiva-notifiche').style.display = 'flex';
+                        if (btnDisattiva) btnDisattiva.style.display = 'flex';
                         prefSection.style.display = 'block';
                     } else {
                         statusText.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Notifiche bloccate o non attive";
                         statusText.style.color = "#856404";
                         btn.style.display = 'block';
-                        document.getElementById('btn-disattiva-notifiche').style.display = 'none';
+                        if (btnDisattiva) btnDisattiva.style.display = 'none';
                         prefSection.style.display = 'none';
                     }
                 };
@@ -937,7 +914,7 @@
                                 }, { merge: true });
                             }
                         } catch (e) { 
-                            console.warn("Nessun token web ottenuto (forse manca il service worker):", e); 
+                            console.warn("Nessun token web ottenuto:", e); 
                         }
                     } else {
                         aggiornaGraficaPermessi(false);
@@ -950,6 +927,7 @@
             const isNative = window.Capacitor && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins.PushNotifications;
             const isWeb = 'Notification' in window;
             const statusText = document.getElementById('notif-status-text');
+            const btnDisattiva = document.getElementById('btn-disattiva-notifiche');
             
             statusText.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Richiesta permesso in corso...";
 
@@ -969,7 +947,7 @@
                         statusText.innerHTML = "<i class='fa-solid fa-circle-check'></i> Notifiche app attive";
                         statusText.style.color = "var(--success)";
                         document.getElementById('btn-attiva-notifiche').style.display = 'none';
-                        document.getElementById('btn-disattiva-notifiche').style.display = 'flex';
+                        if (btnDisattiva) btnDisattiva.style.display = 'flex';
                         document.getElementById('notif-preferences-section').style.display = 'block';
 
                         try {
