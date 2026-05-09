@@ -86,41 +86,33 @@
         body { 
             font-family: 'Inter', -apple-system, sans-serif;
             background-color: var(--bg-color); color: var(--text-main); 
-            margin: 0; padding: 20px; 
+            margin: 0; 
+            padding: calc(20px + env(safe-area-inset-top)) 20px 20px 20px; 
             display: flex; flex-direction: column; align-items: center; 
             min-height: 100vh;
         }
         
-        /* HEADER */
         .header { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .hamburger-btn { background: none; border: none; font-size: 24px; color: var(--text-main); cursor: pointer; padding: 10px; border-radius: 50%; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
-        .hamburger-btn:active { background: var(--surface-hover); }
+        .hamburger-btn { background: none; border: none; font-size: 24px; color: var(--text-main); cursor: pointer; padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         h2 { margin: 0; color: var(--info); font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
         
-        /* SIDEBAR */
         .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 5999; animation: fadeIn 0.3s ease; }
         .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-lg); z-index: 6000; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; overflow-y: auto;}
         .sidebar.open { left: 0; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 28px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: calc(28px + env(safe-area-inset-top)) 24px 28px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; }
         .sidebar-header h3 { margin:0; font-weight: 700; display: flex; align-items: center; gap: 10px;}
         .sidebar-link { padding: 16px 24px; text-decoration: none; color: var(--text-main); font-size: 15px; font-weight: 500; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; transition: all 0.2s; }
-        .sidebar-link i { width: 28px; text-align: left; font-size: 18px; color: var(--text-muted); transition: color 0.2s;}
+        .sidebar-link i { width: 28px; text-align: left; font-size: 18px; color: var(--text-muted); }
         .sidebar-link:active, .sidebar-link:hover { background-color: var(--surface-hover); color: var(--primary); padding-left: 28px; }
-        .sidebar-link:active i, .sidebar-link:hover i { color: var(--primary); }
         
         .content-area { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 16px; }
 
         .btn-add-main { background-color: var(--info); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; box-shadow: 0 4px 12px rgba(0, 136, 255, 0.3); width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; transition: all 0.2s; }
-        .btn-add-main:hover { transform: translateY(-2px); filter: brightness(1.05); }
-        .btn-add-main:active { transform: translateY(1px); box-shadow: none; }
-
         .btn-cronologia-admin { display: none; background-color: var(--surface); color: var(--text-main); border: 2px solid var(--border-color); padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; justify-content: center; align-items: center; gap: 10px; transition: all 0.2s; margin-bottom: 5px; }
         .btn-cronologia-admin.active { background-color: var(--info-light); border-color: var(--info); color: var(--info); }
         
-        /* CARD SEGNALAZIONI */
         .report-card { background: var(--surface); padding: 20px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 12px; border-left: 6px solid var(--info); transition: transform 0.2s, box-shadow 0.2s; animation: slideInUp 0.3s ease both; position: relative;}
         .report-card.risposto { border-left-color: var(--success); }
-        .report-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .report-sender { font-weight: 700; font-size: 14px; color: var(--text-main); display: flex; align-items: center; gap: 6px; }
         .report-date { font-size: 12px; color: var(--text-muted); }
         .report-body { font-size: 14px; color: var(--text-main); background: var(--surface-hover); padding: 14px; border-radius: 10px; line-height: 1.5; white-space: pre-wrap;}
@@ -131,31 +123,24 @@
         .admin-reply-text { font-size: 14px; color: var(--text-main); font-style: italic; white-space: pre-wrap;}
 
         .btn-group { display: flex; gap: 10px; margin-top: 5px; }
-        .btn-delete { background-color: var(--surface); color: var(--danger); border: 1px solid var(--danger); padding: 10px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; flex: 1; transition: all 0.2s; }
-        .btn-delete:active { background-color: var(--danger-light); transform: scale(0.97); }
-        .btn-reply { background-color: var(--success); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; flex: 1; transition: all 0.2s; }
-        .btn-reply:active { transform: scale(0.97); filter: brightness(1.1); }
+        .btn-delete { background-color: var(--surface); color: var(--danger); border: 1px solid var(--danger); padding: 10px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; flex: 1; }
+        .btn-reply { background-color: var(--success); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; flex: 1; }
 
         .status-badge { position: absolute; top: 16px; right: 16px; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
         .status-attesa { background: var(--warning-light); color: var(--warning); }
         .status-risolto { background: rgba(15, 157, 88, 0.15); color: var(--success); }
         .unread-dot { width: 10px; height: 10px; background: var(--danger); border-radius: 50%; display: inline-block; margin-left: 5px; box-shadow: 0 0 5px var(--danger); }
 
-        /* MODALI */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 7000; padding: 20px; box-sizing: border-box; animation: fadeIn 0.3s ease; }
         .modal-content { background-color: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 380px; text-align: left; box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative;}
         
         .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
         .input-group label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
-        .input-field, .input-group input[type="text"], .input-group input[type="url"], .input-group textarea { padding: 14px; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: 15px; width: 100%; box-sizing: border-box; font-family: inherit; background-color: var(--surface); color: var(--text-main); transition: all 0.2s; }
-        .input-field:focus, .input-group input[type="text"]:focus, .input-group input[type="url"]:focus, .input-group textarea:focus { border-color: var(--info); outline: none; box-shadow: 0 0 0 4px var(--info-light); }
+        .input-field, .input-group textarea, .input-group input[type="text"], .input-group input[type="url"] { padding: 14px; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: 15px; width: 100%; box-sizing: border-box; font-family: inherit; background-color: var(--surface); color: var(--text-main); transition: all 0.2s; }
+        .input-field:focus, .input-group textarea:focus { border-color: var(--info); outline: none; box-shadow: 0 0 0 4px var(--info-light); }
         
-        .btn-esegui { background-color: var(--info); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: 12px; cursor: pointer; width: 100%; margin-top: 10px; margin-bottom: 12px; display: flex; justify-content: center; align-items: center; gap: 8px; transition: all 0.2s; }
-        .btn-esegui:active { transform: scale(0.98); }
-        .btn-esegui.success { background-color: var(--success); }
-        
-        .btn-chiudi { background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color); padding: 14px; font-size: 15px; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; text-align: center; transition: all 0.2s;}
-        .btn-chiudi:active { background-color: var(--surface-hover); }
+        .btn-esegui { background-color: var(--info); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: 12px; cursor: pointer; width: 100%; margin-top: 10px; margin-bottom: 12px; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-chiudi { background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color); padding: 14px; font-size: 15px; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; text-align: center; }
         
         .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 15px; font-weight: 500; background: var(--surface-hover); border-radius: var(--radius-md); border: 1px dashed var(--border-color); margin-top: 10px; }
 
@@ -175,25 +160,13 @@
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <h3><i class="fa-solid fa-layer-group"></i> Menu</h3>
-            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        
         <a href="index.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Home Page</a>
         <a href="calendario.html?oggi=true" class="sidebar-link"><i class="fa-solid fa-bullseye"></i> Oggi</a>
         <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
-        <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
-        <a href="rotazioni.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
         <a href="turni.html" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
-        <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
-        <a href="barcadvisor.html" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
-        <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
-        <a href="rotazione_ferie.html" class="sidebar-link"><i class="fa-solid fa-umbrella-beach"></i> Rotazione Ferie</a>
-        <a href="orari.html" class="sidebar-link"><i class="fa-regular fa-clock"></i> Orari Navigazione</a>
-        <a href="documenti.html" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Documenti</a>
-        <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
-        <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
         <a href="report.html" class="sidebar-link" style="background-color: var(--primary-glow); color: var(--info); font-weight: 700; border-left: 4px solid var(--info);"><i class="fa-solid fa-headset" style="color: var(--info);"></i> Segnalazioni</a>
-        <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
     </div>
 
     <div class="content-area">
@@ -201,49 +174,38 @@
         <button id="btn-cronologia-admin" class="btn-cronologia-admin" onclick="toggleVistaAdmin()">
             <i class="fa-solid fa-clock-rotate-left"></i> Mostra Cronologia Risposte
         </button>
-        
-        <div id="reports-list">
-            </div>
+        <div id="reports-list"></div>
     </div>
 
     <div id="modal-nuova" class="modal">
         <div class="modal-content">
-            <i class="fa-solid fa-xmark" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModaleNuova()"></i>
-            <h3 style="margin-top: 0; margin-bottom: 24px; color: var(--text-main); text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; font-weight: 800;"><i class="fa-solid fa-paper-plane" style="color:var(--info);"></i> Invia Segnalazione</h3>
-            
+            <h3 style="margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px; text-align:center;"><i class="fa-solid fa-paper-plane" style="color:var(--info);"></i> Invia Segnalazione</h3>
             <div class="input-group">
                 <label>MESSAGGIO / PROBLEMA</label>
-                <textarea id="rep-messaggio" rows="4" placeholder="Descrivi il problema o la tua richiesta al admin..."></textarea>
+                <textarea id="rep-messaggio" rows="4" placeholder="Descrivi il problema..."></textarea>
             </div>
-
             <div class="input-group">
                 <label>LINK ALLEGATO (FACOLTATIVO)</label>
-                <input type="url" id="rep-link" placeholder="Es. https://...">
+                <input type="url" id="rep-link" placeholder="https://...">
             </div>
-
-            <button id="btn-salva-rep" class="btn-esegui" onclick="inviaSegnalazione()"><i class="fa-solid fa-paper-plane"></i> Invia ora</button>
+            <button id="btn-salva-rep" class="btn-esegui" onclick="inviaSegnalazione()">Invia ora</button>
             <button class="btn-chiudi" onclick="chiudiModaleNuova()">Annulla</button>
         </div>
     </div>
 
     <div id="modal-risposta" class="modal">
         <div class="modal-content">
-            <i class="fa-solid fa-xmark" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModaleRisposta()"></i>
-            <h3 style="margin-top: 0; margin-bottom: 24px; color: var(--text-main); text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; font-weight: 800;"><i class="fa-solid fa-reply" style="color:var(--success);"></i> Rispondi a Segnalazione</h3>
-            
+            <h3 style="margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px; text-align:center;"><i class="fa-solid fa-reply" style="color:var(--success);"></i> Rispondi</h3>
             <input type="hidden" id="admin-rep-id">
-            
             <div class="input-group">
                 <label>RISPOSTA</label>
-                <textarea id="admin-rep-messaggio" rows="4" placeholder="Scrivi la risposta per l'utente..."></textarea>
+                <textarea id="admin-rep-messaggio" rows="4" placeholder="Scrivi la risposta..."></textarea>
             </div>
-
             <div class="input-group">
                 <label>LINK ALLEGATO (FACOLTATIVO)</label>
-                <input type="url" id="admin-rep-link" placeholder="Es. https://...">
+                <input type="url" id="admin-rep-link" placeholder="https://...">
             </div>
-
-            <button id="btn-invia-risposta" class="btn-esegui success" onclick="inviaRispostaAdmin()"><i class="fa-solid fa-check"></i> Invia Risposta</button>
+            <button id="btn-invia-risposta" class="btn-esegui" style="background:var(--success);" onclick="inviaRispostaAdmin()">Invia Risposta</button>
             <button class="btn-chiudi" onclick="chiudiModaleRisposta()">Annulla</button>
         </div>
     </div>
@@ -261,69 +223,46 @@
         const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2";
         let isAdmin = false;
         let vistaCronologia = false;
-        let currentUserData = null;
+        let currentUid = null;
         let unsubscribeReports = null;
 
-        // UI Base
         window.apriMenuLaterale = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display = 'block'; };
         window.chiudiMenuLaterale = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display = 'none'; };
-        
-        window.apriModaleNuova = () => {
-            document.getElementById('rep-messaggio').value = ''; document.getElementById('rep-link').value = '';
-            document.getElementById('modal-nuova').style.display = 'flex';
-        };
+        window.apriModaleNuova = () => { document.getElementById('modal-nuova').style.display = 'flex'; };
         window.chiudiModaleNuova = () => document.getElementById('modal-nuova').style.display = 'none';
-
-        window.apriModaleRisposta = (id) => {
-            document.getElementById('admin-rep-id').value = id;
-            document.getElementById('admin-rep-messaggio').value = ''; document.getElementById('admin-rep-link').value = '';
-            document.getElementById('modal-risposta').style.display = 'flex';
-        };
+        window.apriModaleRisposta = (id) => { document.getElementById('admin-rep-id').value = id; document.getElementById('modal-risposta').style.display = 'flex'; };
         window.chiudiModaleRisposta = () => document.getElementById('modal-risposta').style.display = 'none';
 
         window.toggleVistaAdmin = () => {
             vistaCronologia = !vistaCronologia;
-            const btn = document.getElementById('btn-cronologia-admin');
-            if(vistaCronologia) {
-                btn.innerHTML = '<i class="fa-solid fa-list-ul"></i> Torna a Segnalazioni in Attesa';
-                btn.classList.add('active');
-            } else {
-                btn.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> Mostra Cronologia Risposte';
-                btn.classList.remove('active');
-            }
+            document.getElementById('btn-cronologia-admin').classList.toggle('active', vistaCronologia);
+            document.getElementById('btn-cronologia-admin').innerHTML = vistaCronologia ? '<i class="fa-solid fa-list-ul"></i> Torna a Segnalazioni in Attesa' : '<i class="fa-solid fa-clock-rotate-left"></i> Mostra Cronologia Risposte';
             ascoltaSegnalazioni();
         };
 
-        // Inizializzazione Auth
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                currentUserData = user;
+                currentUid = user.uid;
                 isAdmin = (user.uid === ADMIN_UID);
-                if (isAdmin) {
-                    document.getElementById('btn-cronologia-admin').style.display = 'flex';
-                }
+                if (isAdmin) document.getElementById('btn-cronologia-admin').style.display = 'flex';
                 ascoltaSegnalazioni();
-            } else {
-                window.location.href = "index.html";
-            }
+            } else { window.location.href = "index.html"; }
         });
 
-        // Fetch & Ascolto in Realtime
         function ascoltaSegnalazioni() {
-            if (!currentUserData) return;
+            if (!currentUid) return;
             if (unsubscribeReports) unsubscribeReports();
 
             const colRef = collection(db, "segnalazioni");
             let q;
 
+            // Logica Query differenziata
             if (isAdmin) {
-                if (vistaCronologia) {
-                    q = query(colRef, where("stato", "==", "risposto"), orderBy("timestamp_creazione", "desc"));
-                } else {
-                    q = query(colRef, where("stato", "==", "in_attesa"), orderBy("timestamp_creazione", "desc"));
-                }
+                const statoTarget = vistaCronologia ? "risposto" : "in_attesa";
+                q = query(colRef, where("stato", "==", statoTarget), orderBy("timestamp_creazione", "desc"));
             } else {
-                q = query(colRef, where("mittente_uid", "==", currentUserData.uid), orderBy("timestamp_creazione", "desc"));
+                // Utente vede SOLO le sue (inviate e ricevute)
+                q = query(colRef, where("mittente_uid", "==", currentUid), orderBy("timestamp_creazione", "desc"));
             }
 
             unsubscribeReports = onSnapshot(q, (snapshot) => {
@@ -331,190 +270,126 @@
                 listContainer.innerHTML = '';
 
                 if (snapshot.empty) {
-                    listContainer.innerHTML = `<div class="empty-state"><i class="fa-solid fa-clipboard-check" style="font-size:32px; color:var(--border-color); display:block; margin-bottom:10px;"></i> Nessuna segnalazione presente.</div>`;
+                    listContainer.innerHTML = `<div class="empty-state">Nessuna segnalazione trovata.</div>`;
                     return;
                 }
 
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
-                    const id = docSnap.id;
-                    creaCardSegnalazione(id, data, listContainer);
-
-                    // LOGICA DI "LETTURA" PER I BANNER DI INDEX.HTML
+                    creaCard(docSnap.id, data, listContainer);
+                    
+                    // Reset banner notifiche
                     if (isAdmin && !vistaCronologia && data.letta_da_admin === false) {
-                        updateDoc(doc(db, "segnalazioni", id), { letta_da_admin: true }).catch(e => console.log(e));
+                        updateDoc(doc(db, "segnalazioni", docSnap.id), { letta_da_admin: true });
                     } else if (!isAdmin && data.stato === "risposto" && data.letta_da_utente === false) {
-                        updateDoc(doc(db, "segnalazioni", id), { letta_da_utente: true }).catch(e => console.log(e));
+                        updateDoc(doc(db, "segnalazioni", docSnap.id), { letta_da_utente: true });
                     }
                 });
             }, (error) => {
-                console.error("Errore fetch segnalazioni:", error);
+                console.error("Errore query:", error);
+                // Se l'errore dice che manca l'indice, Firestore fornisce un link nel log del browser
+                if (error.code === 'failed-precondition') {
+                    alert("Errore: Manca l'indice di Firestore. Controlla la console del browser per il link di creazione.");
+                }
             });
         }
 
-        function creaCardSegnalazione(id, data, container) {
-            const dataCreazione = new Date(data.timestamp_creazione).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' });
-            
+        function creaCard(id, data, container) {
             const card = document.createElement('div');
             card.className = `report-card ${data.stato === 'risposto' ? 'risposto' : ''}`;
             
-            // Badge & Dot status
-            let badgeHtml = '';
-            let unreadDotHtml = '';
+            let statusBadge = data.stato === 'risposto' ? '<div class="status-badge status-risolto">Risolto</div>' : '<div class="status-badge status-attesa">In Attesa</div>';
+            let dot = "";
+            if (isAdmin && !vistaCronologia && !data.letta_da_admin) dot = '<span class="unread-dot"></span>';
+            if (!isAdmin && data.stato === 'risposto' && !data.letta_da_utente) dot = '<span class="unread-dot"></span>';
 
-            if (data.stato === 'in_attesa') {
-                badgeHtml = `<div class="status-badge status-attesa">In Attesa</div>`;
-                if (isAdmin && data.letta_da_admin === false) unreadDotHtml = `<span class="unread-dot"></span>`;
-            } else {
-                badgeHtml = `<div class="status-badge status-risolto">Risposto</div>`;
-                if (!isAdmin && data.letta_da_utente === false) unreadDotHtml = `<span class="unread-dot"></span>`;
-            }
-
-            // Dati anagrafici utente visibili solo all'admin
-            let adminDatiHtml = '';
+            let infoUtente = "";
             if (isAdmin) {
-                let waIcon = '';
+                let wa = "";
                 if (data.mittente_telefono) {
-                    // Pulisce il numero da spazi o trattini, aggiunge 39 se non c'è e formatta il link wa.me
-                    let cleanPhone = data.mittente_telefono.replace(/\D/g, '');
-                    if (cleanPhone.length > 0 && !cleanPhone.startsWith('39')) cleanPhone = '39' + cleanPhone;
-                    waIcon = `<a href="https://wa.me/${cleanPhone}" target="_blank" style="color: #25D366; font-size: 16px; margin-left: 8px; text-decoration: none;" title="Apri in WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>`;
+                    let num = data.mittente_telefono.replace(/\D/g, '');
+                    if (!num.startsWith('39')) num = '39' + num;
+                    wa = `<a href="https://wa.me/${num}" target="_blank" style="color:#25D366; margin-left:10px;"><i class="fa-brands fa-whatsapp"></i></a>`;
                 }
-
-                adminDatiHtml = `
-                <div style="background: var(--surface-hover); padding: 12px; border-radius: 10px; margin-bottom: 12px; font-size: 13px; border: 1px dashed var(--border-color);">
-                    <div style="color: var(--info); font-weight: 700; margin-bottom: 8px; font-size: 12px; text-transform: uppercase;"><i class="fa-solid fa-address-card"></i> Dati Mittente</div>
-                    <div style="display: flex; flex-direction: column; gap: 5px;">
-                        <div><span style="color: var(--text-muted);">Utente:</span> <b>${data.mittente_nome || 'N/D'}</b></div>
-                        <div><span style="color: var(--text-muted);">Matricola:</span> <b>${data.mittente_matricola || 'N/D'}</b></div>
-                        <div><span style="color: var(--text-muted);">Email:</span> <b>${data.mittente_email || 'N/D'}</b></div>
-                        ${data.mittente_telefono ? `<div><span style="color: var(--text-muted);">Telefono:</span> <b>${data.mittente_telefono}</b> ${waIcon}</div>` : ''}
-                    </div>
+                infoUtente = `
+                <div style="font-size:12px; background:var(--surface-hover); padding:10px; border-radius:8px; margin-bottom:10px; border:1px dashed var(--border-color);">
+                    <b>${data.mittente_nome}</b> (Matr: ${data.mittente_matricola})<br>
+                    ${data.mittente_email} ${wa}
                 </div>`;
             }
 
-            // Link utente
-            let linkHtml = data.link_allegato ? `<a href="${data.link_allegato}" target="_blank" class="report-link"><i class="fa-solid fa-link"></i> Link Utente</a>` : '';
-            
-            // Risposta admin
-            let rispostaHtml = '';
-            if (data.stato === 'risposto' && data.risposta_admin) {
-                let linkRispostaHtml = data.link_risposta ? `<a href="${data.link_risposta}" target="_blank" class="report-link" style="color:var(--success);"><i class="fa-solid fa-link"></i> Link Admin</a>` : '';
-                rispostaHtml = `
+            let rispostaHtml = data.risposta_admin ? `
                 <div class="admin-reply-box">
                     <div class="admin-reply-title"><i class="fa-solid fa-reply"></i> Risposta Admin</div>
                     <div class="admin-reply-text">${data.risposta_admin}</div>
-                    ${linkRispostaHtml}
-                </div>`;
-            }
-
-            // Bottoni
-            let bottoniHtml = `<div class="btn-group">`;
-            if (isAdmin && data.stato === 'in_attesa') {
-                bottoniHtml += `<button class="btn-reply" onclick="apriModaleRisposta('${id}')"><i class="fa-solid fa-reply"></i> Rispondi</button>`;
-            }
-            if (!isAdmin || (isAdmin && data.stato === 'in_attesa' && vistaCronologia)) { 
-                bottoniHtml += `<button class="btn-delete" onclick="eliminaSegnalazione('${id}')"><i class="fa-solid fa-trash-can"></i> Elimina</button>`;
-            }
-            bottoniHtml += `</div>`;
+                    ${data.link_risposta ? `<a href="${data.link_risposta}" target="_blank" class="report-link"><i class="fa-solid fa-link"></i> Link Allegato</a>` : ''}
+                </div>` : '';
 
             card.innerHTML = `
-                ${badgeHtml}
-                <div class="report-header">
-                    <div class="report-sender"><i class="fa-solid fa-user"></i> ${isAdmin ? data.mittente_nome : 'Tu'} ${unreadDotHtml}</div>
-                </div>
-                <div class="report-date" style="margin-bottom: ${isAdmin ? '12px' : '0'};">${dataCreazione}</div>
-                ${adminDatiHtml}
+                ${statusBadge}
+                <div class="report-sender"><i class="fa-solid fa-circle-user"></i> ${isAdmin ? 'Mittente' : 'Tua Segnalazione'} ${dot}</div>
+                <div class="report-date">${new Date(data.timestamp_creazione).toLocaleString()}</div>
+                ${infoUtente}
                 <div class="report-body">${data.messaggio}</div>
-                ${linkHtml}
+                ${data.link_allegato ? `<a href="${data.link_allegato}" target="_blank" class="report-link"><i class="fa-solid fa-link"></i> Link Utente</a>` : ''}
                 ${rispostaHtml}
-                ${bottoniHtml}
+                <div class="btn-group">
+                    ${isAdmin && data.stato === 'in_attesa' ? `<button class="btn-reply" onclick="apriModaleRisposta('${id}')">Rispondi</button>` : ''}
+                    <button class="btn-delete" onclick="eliminaSegnalazione('${id}')"><i class="fa-solid fa-trash"></i> Elimina</button>
+                </div>
             `;
             container.appendChild(card);
         }
 
         window.inviaSegnalazione = async () => {
             const btn = document.getElementById('btn-salva-rep');
-            const testo = document.getElementById('rep-messaggio').value.trim();
+            const msg = document.getElementById('rep-messaggio').value.trim();
             const link = document.getElementById('rep-link').value.trim();
+            if (!msg) return;
 
-            if (!testo) return alert("Inserisci un messaggio prima di inviare.");
-
-            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Recupero dati e invio..."; btn.disabled = true;
-
+            btn.disabled = true;
             try {
-                // Recupera in automatico i dati dal profilo utente su Firebase
-                let uNome = currentUserData.email || "Utente";
-                let uMatricola = "N/D";
-                let uTelefono = "";
-                let uEmail = currentUserData.email || "N/D";
-
-                try {
-                    const userDoc = await getDoc(doc(db, "utenti", currentUserData.uid));
-                    if (userDoc.exists()) {
-                        const ud = userDoc.data();
-                        if (ud.nome && ud.cognome) uNome = `${ud.nome} ${ud.cognome}`;
-                        if (ud.matricola) uMatricola = ud.matricola;
-                        if (ud.telefono) uTelefono = ud.telefono;
-                        if (ud.email) uEmail = ud.email;
-                    }
-                } catch(e) { console.warn("Impossibile recuperare dettagli utente completi", e); }
-
-                // Salva la segnalazione con i dati "fotografati" al momento dell'invio
+                const uDoc = await getDoc(doc(db, "utenti", currentUid));
+                const ud = uDoc.data() || {};
                 await addDoc(collection(db, "segnalazioni"), {
-                    mittente_uid: currentUserData.uid,
-                    mittente_nome: uNome,
-                    mittente_matricola: uMatricola,
-                    mittente_telefono: uTelefono,
-                    mittente_email: uEmail,
-                    messaggio: testo,
+                    mittente_uid: currentUid,
+                    mittente_nome: ud.nome ? `${ud.nome} ${ud.cognome}` : auth.currentUser.email,
+                    mittente_matricola: ud.matricola || "N/D",
+                    mittente_email: auth.currentUser.email,
+                    mittente_telefono: ud.telefono || null,
+                    messaggio: msg,
                     link_allegato: link || null,
                     timestamp_creazione: Date.now(),
                     stato: "in_attesa",
                     letta_da_admin: false,
-                    letta_da_utente: true 
+                    letta_da_utente: true
                 });
                 chiudiModaleNuova();
-            } catch (error) {
-                console.error("Errore:", error);
-                alert("Errore durante l'invio.");
-            }
-            btn.innerHTML = "<i class='fa-solid fa-paper-plane'></i> Invia ora"; btn.disabled = false;
+            } catch(e) { console.error(e); }
+            btn.disabled = false;
         };
 
         window.inviaRispostaAdmin = async () => {
             const id = document.getElementById('admin-rep-id').value;
-            const btn = document.getElementById('btn-invia-risposta');
-            const testo = document.getElementById('admin-rep-messaggio').value.trim();
+            const msg = document.getElementById('admin-rep-messaggio').value.trim();
             const link = document.getElementById('admin-rep-link').value.trim();
-
-            if (!testo) return alert("Inserisci una risposta.");
-
-            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Invio..."; btn.disabled = true;
+            if (!msg) return;
 
             try {
                 await updateDoc(doc(db, "segnalazioni", id), {
                     stato: "risposto",
-                    risposta_admin: testo,
+                    risposta_admin: msg,
                     link_risposta: link || null,
-                    timestamp_risposta: Date.now(),
-                    letta_da_utente: false // Triggera il banner all'utente su index
+                    letta_da_utente: false,
+                    timestamp_risposta: Date.now()
                 });
                 chiudiModaleRisposta();
-            } catch (error) {
-                console.error("Errore:", error);
-                alert("Errore durante l'invio della risposta.");
-            }
-            btn.innerHTML = "<i class='fa-solid fa-check'></i> Invia Risposta"; btn.disabled = false;
+            } catch(e) { console.error(e); }
         };
 
         window.eliminaSegnalazione = async (id) => {
-            if (confirm("Vuoi davvero eliminare questa segnalazione?")) {
-                try {
-                    await deleteDoc(doc(db, "segnalazioni", id));
-                } catch (error) {
-                    alert("Errore durante l'eliminazione.");
-                }
+            if (confirm("Vuoi eliminare questa segnalazione?")) {
+                await deleteDoc(doc(db, "segnalazioni", id));
             }
         };
     </script>
