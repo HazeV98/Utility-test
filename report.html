@@ -251,7 +251,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDoc, onSnapshot, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
         const app = initializeApp(firebaseConfig);
@@ -370,6 +370,29 @@
                 if (!isAdmin && data.letta_da_utente === false) unreadDotHtml = `<span class="unread-dot"></span>`;
             }
 
+            // Dati anagrafici utente visibili solo all'admin
+            let adminDatiHtml = '';
+            if (isAdmin) {
+                let waIcon = '';
+                if (data.mittente_telefono) {
+                    // Pulisce il numero da spazi o trattini, aggiunge 39 se non c'è e formatta il link wa.me
+                    let cleanPhone = data.mittente_telefono.replace(/\D/g, '');
+                    if (cleanPhone.length > 0 && !cleanPhone.startsWith('39')) cleanPhone = '39' + cleanPhone;
+                    waIcon = `<a href="https://wa.me/${cleanPhone}" target="_blank" style="color: #25D366; font-size: 16px; margin-left: 8px; text-decoration: none;" title="Apri in WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>`;
+                }
+
+                adminDatiHtml = `
+                <div style="background: var(--surface-hover); padding: 12px; border-radius: 10px; margin-bottom: 12px; font-size: 13px; border: 1px dashed var(--border-color);">
+                    <div style="color: var(--info); font-weight: 700; margin-bottom: 8px; font-size: 12px; text-transform: uppercase;"><i class="fa-solid fa-address-card"></i> Dati Mittente</div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <div><span style="color: var(--text-muted);">Utente:</span> <b>${data.mittente_nome || 'N/D'}</b></div>
+                        <div><span style="color: var(--text-muted);">Matricola:</span> <b>${data.mittente_matricola || 'N/D'}</b></div>
+                        <div><span style="color: var(--text-muted);">Email:</span> <b>${data.mittente_email || 'N/D'}</b></div>
+                        ${data.mittente_telefono ? `<div><span style="color: var(--text-muted);">Telefono:</span> <b>${data.mittente_telefono}</b> ${waIcon}</div>` : ''}
+                    </div>
+                </div>`;
+            }
+
             // Link utente
             let linkHtml = data.link_allegato ? `<a href="${data.link_allegato}" target="_blank" class="report-link"><i class="fa-solid fa-link"></i> Link Utente</a>` : '';
             
@@ -400,7 +423,8 @@
                 <div class="report-header">
                     <div class="report-sender"><i class="fa-solid fa-user"></i> ${isAdmin ? data.mittente_nome : 'Tu'} ${unreadDotHtml}</div>
                 </div>
-                <div class="report-date">${dataCreazione}</div>
+                <div class="report-date" style="margin-bottom: ${isAdmin ? '12px' : '0'};">${dataCreazione}</div>
+                ${adminDatiHtml}
                 <div class="report-body">${data.messaggio}</div>
                 ${linkHtml}
                 ${rispostaHtml}
@@ -416,12 +440,33 @@
 
             if (!testo) return alert("Inserisci un messaggio prima di inviare.");
 
-            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Invio..."; btn.disabled = true;
+            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Recupero dati e invio..."; btn.disabled = true;
 
             try {
+                // Recupera in automatico i dati dal profilo utente su Firebase
+                let uNome = currentUserData.email || "Utente";
+                let uMatricola = "N/D";
+                let uTelefono = "";
+                let uEmail = currentUserData.email || "N/D";
+
+                try {
+                    const userDoc = await getDoc(doc(db, "utenti", currentUserData.uid));
+                    if (userDoc.exists()) {
+                        const ud = userDoc.data();
+                        if (ud.nome && ud.cognome) uNome = `${ud.nome} ${ud.cognome}`;
+                        if (ud.matricola) uMatricola = ud.matricola;
+                        if (ud.telefono) uTelefono = ud.telefono;
+                        if (ud.email) uEmail = ud.email;
+                    }
+                } catch(e) { console.warn("Impossibile recuperare dettagli utente completi", e); }
+
+                // Salva la segnalazione con i dati "fotografati" al momento dell'invio
                 await addDoc(collection(db, "segnalazioni"), {
                     mittente_uid: currentUserData.uid,
-                    mittente_nome: currentUserData.email || "Utente",
+                    mittente_nome: uNome,
+                    mittente_matricola: uMatricola,
+                    mittente_telefono: uTelefono,
+                    mittente_email: uEmail,
                     messaggio: testo,
                     link_allegato: link || null,
                     timestamp_creazione: Date.now(),
