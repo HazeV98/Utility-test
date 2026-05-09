@@ -455,7 +455,7 @@
                         <input type="checkbox" id="pref-notif-utility" style="width:18px; height:18px; accent-color:var(--primary);" onchange="window.salvaPreferenzeNotifiche()"> Annunci Bacheca Utility
                     </label>
                     <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; color: var(--text-main); font-weight: 500;">
-                        <input type="checkbox" id="pref-notif-segnalazioni" style="width:18px; height:18px; accent-color:var(--primary);" onchange="window.salvaPreferenzeNotifiche()"> Notifiche Segnalazioni / Supporto
+                        <input type="checkbox" id="pref-notif-segnalazioni" style="width:18px; height:18px; accent-color:var(--primary);" onchange="window.salvaPreferenzeNotifiche()"> Notifiche Segnalazioni
                     </label>
 
                     <label id="label-notif-rotazioni" style="display: none; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; color: var(--primary); font-weight: 700;">
@@ -613,6 +613,9 @@
 
             <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">SOPRANNOME (FACOLTATIVO)</label>
             <input type="text" id="profileSoprannome" class="input-field" placeholder="Es. Il Capitano">
+
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">TELEFONO</label>
+            <input type="tel" id="profileTelefono" class="input-field" placeholder="Es. 3331234567">
 
             <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">MANSIONE</label>
             <select id="profileMansione" class="input-field" style="cursor:pointer;">
@@ -1466,6 +1469,7 @@
                 <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-hashtag" style="color:var(--primary); width:16px;"></i> <strong>Matricola:</strong> ${u.matricola || '-'}</div>
                 <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-tag" style="color:var(--primary); width:16px;"></i> <strong>Omonimia:</strong> ${u.progressivo || '-'}</div>
                 <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-envelope" style="color:var(--primary); width:16px;"></i> <strong>Email:</strong> ${u.email || 'Non registrata'}</div>
+                <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-phone" style="color:var(--primary); width:16px;"></i> <strong>Telefono:</strong> ${u.telefono || 'Non registrato'}</div>
                 <div style="margin-bottom:5px; font-size:12px; color:var(--text-muted); word-break: break-all; margin-top:20px; border-top:1px solid var(--border-color); padding-top:10px;"><i class="fa-solid fa-fingerprint"></i> <strong>ID Account:</strong> ${u.uid || '-'}</div>`;
             const btnCollab = document.getElementById('btn-rendi-collab');
             if (isCollab) { btnCollab.innerHTML = "<i class='fa-solid fa-user-minus'></i> Revoca Collaboratore"; btnCollab.style.background = "transparent"; btnCollab.style.color = "var(--danger)"; btnCollab.style.border = "2px solid var(--danger)"; btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'user'); }
@@ -1536,7 +1540,8 @@
                 progressivo: document.getElementById('profileProgressivo').value.trim(), 
                 matricola: document.getElementById('profileMatricola').value.trim(), 
                 mansione: document.getElementById('profileMansione').value,
-                soprannome: document.getElementById('profileSoprannome').value.trim()
+                soprannome: document.getElementById('profileSoprannome').value.trim(),
+                telefono: document.getElementById('profileTelefono').value.trim()
             };
 
             if (!p.nome || !p.cognome || !p.matricola) {
@@ -1584,6 +1589,7 @@
                     document.getElementById('profileMatricola').value = data.matricola || ''; 
                     document.getElementById('profileProgressivo').value = data.progressivo || '';
                     document.getElementById('profileSoprannome').value = data.soprannome || '';
+                    document.getElementById('profileTelefono').value = data.telefono || '';
                     document.getElementById('profileMansione').value = data.mansione || '';
                     
                 } catch(e) { vLoad.style.display = 'none'; }
