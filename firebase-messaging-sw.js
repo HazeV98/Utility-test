@@ -15,14 +15,13 @@ firebase.initializeApp({
 // Avvia il servizio di messaggistica in background
 const messaging = firebase.messaging();
 
-// Opzionale: gestisce la ricezione dei messaggi quando l'app è in background
+// Firebase gestisce automaticamente la visualizzazione a schermo quando rileva 
+// il campo "notification" nel payload. Usiamo onBackgroundMessage solo per il debug.
 messaging.onBackgroundMessage((payload) => {
-  console.log("Messaggio ricevuto in background: ", payload);
-  const notificationTitle = payload.notification.title || "Nuova Notifica Utility";
-  const notificationOptions = {
-    body: payload.notification.body,
-    icon: "/icon-512.png" // Assicurati che l'icona esista in questa posizione
-  };
-
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  console.log("Messaggio ricevuto in background elaborato automaticamente da Firebase: ", payload);
+  
+  // Il codice sottostante è stato rimosso per evitare doppioni:
+  // const notificationTitle = payload.notification.title;
+  // const notificationOptions = { body: payload.notification.body, icon: "/icon-512.png" };
+  // self.registration.showNotification(notificationTitle, notificationOptions);
 });
