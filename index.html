@@ -23,48 +23,6 @@
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     
-    <script>
-        const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/HazeV98/Utility/main/version.json";
-
-        async function controllaAggiornamentiAPK() {
-            if (!window.Capacitor || !window.Capacitor.isNativePlatform() || !window.Capacitor.Plugins.App) {
-                return;
-            }
-
-            try {
-                const appInfo = await window.Capacitor.Plugins.App.getInfo();
-                const versioneInstallata = appInfo.version; 
-
-                const response = await fetch(UPDATE_CHECK_URL + "?t=" + new Date().getTime());
-                const data = await response.json();
-
-                if (data.latest_version && data.latest_version !== versioneInstallata) {
-                    mostraPopupAggiornamento(data);
-                }
-            } catch (error) {
-                console.error("Errore nel controllo aggiornamenti APK:", error);
-            }
-        }
-
-        function mostraPopupAggiornamento(data) {
-            const modale = document.createElement('div');
-            modale.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99999; display:flex; justify-content:center; align-items:center; padding:20px; box-sizing:border-box; backdrop-filter:blur(5px); animation: fadeIn 0.3s ease;";
-            
-            modale.innerHTML = `
-                <div style="background:var(--surface); padding:30px; border-radius:24px; text-align:center; max-width:360px; width:100%; box-shadow: 0 20px 40px rgba(0,0,0,0.4); font-family: 'Inter', sans-serif;">
-                    <h2 style="color:var(--primary); margin-top:0; display:flex; align-items:center; justify-content:center; gap:10px;"><i class="fa-solid fa-rocket"></i> Nuovo Aggiornamento!</h2>
-                    <p style="font-size:15px; color:var(--text-main); font-weight: 500;">È disponibile la versione <b>${data.latest_version}</b>.</p>
-                    <p style="font-size:14px; color:var(--text-muted); background:var(--bg-color); padding:16px; border-radius:12px; text-align: left; line-height: 1.6; border: 1px solid var(--border-color);">${data.note_aggiornamento}</p>
-                    <a href="${data.download_url}" style="display:flex; justify-content:center; align-items:center; gap:10px; background:var(--success); color:white; padding:16px; border-radius:14px; text-decoration:none; font-weight:700; margin-top:24px; font-size: 16px; box-shadow: 0 4px 12px rgba(15,157,88,0.3);"><i class="fa-solid fa-download"></i> Scarica e Aggiorna</a>
-                    <button onclick="this.parentElement.parentElement.remove()" style="margin-top:16px; background:none; border:none; color:var(--text-muted); font-size:14px; cursor:pointer; font-weight: 600; text-decoration: underline;">Più tardi</button>
-                </div>
-            `;
-            document.body.appendChild(modale);
-        }
-
-        window.addEventListener('DOMContentLoaded', controllaAggiornamentiAPK);
-    </script>
-    
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <meta name="theme-color" content="#0066cc">
@@ -327,6 +285,21 @@
         .banner-yellow { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
         .banner-red { background: var(--danger); color: white; }
         .banner-blue { background: #17a2b8; color: white; }
+
+        /* STILI ANTEPRIMA SETTIMANALE WIDGET */
+        .preview-barra {
+            display: flex; overflow-x: auto; gap: 10px; padding: 10px 0; width: 100%; margin-bottom: 20px;
+            -ms-overflow-style: none; scrollbar-width: none;
+        }
+        .preview-barra::-webkit-scrollbar { display: none; }
+        .preview-day {
+            flex: 0 0 calc(100% / 4.2); background: var(--surface); border-radius: 12px; padding: 10px;
+            text-align: center; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+            cursor: pointer; transition: transform 0.2s; user-select: none;
+        }
+        .preview-day:active { transform: scale(0.95); }
+        .preview-date { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 5px; text-transform: uppercase; }
+        .preview-turno { font-size: 15px; font-weight: 800; }
     </style>
 </head>
 <body>
@@ -426,10 +399,23 @@
                 <i class="fa-solid fa-headset fa-bounce"></i> <span id="testo-segnalazione-banner"></span>
             </div>
 
+            <div id="preview-settimana" class="preview-barra" style="display: none;"></div>
+
             <div id="app-container" class="app-grid"></div>
             <button id="btn-salva-layout" class="btn-action" style="display: none; background: #ff9800; color: white; margin-top: 30px; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4); width:100%; max-width:440px;" onclick="LayoutEngine.toggleEditMode()"><i class="fa-solid fa-check"></i> Fatto (Salva Layout)</button>
         </div>
     </div> 
+
+    <div id="imagePreviewModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
+        <div class="modal-content" style="padding: 10px; text-align: center; background: transparent; box-shadow: none; border: none; max-width: 95%;">
+            <div style="background: var(--surface); padding: 5px; border-radius: 15px; display: inline-block; position: relative;">
+                <button onclick="document.getElementById('imagePreviewModal').style.display='none'" style="position: absolute; top: -15px; right: -15px; background: var(--danger); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; box-shadow: var(--shadow-md); z-index: 10;">X</button>
+                <img id="imgTurnoPreview" src="" alt="Turno" style="max-width: 100%; max-height: 80vh; border-radius: 10px; display: none; margin: 0 auto;">
+                <div id="imgTurnoLoading" style="padding: 20px; color: var(--primary); font-weight: bold;"><i class="fa-solid fa-spinner fa-spin"></i> Cerco immagine...</div>
+                <p id="imgTurnoError" style="display: none; padding: 20px; font-weight: bold; color: var(--danger);">Immagine non disponibile.</p>
+            </div>
+        </div>
+    </div>
 
     <div id="settingsModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'settingsModal')">
         <div class="modal-content">
@@ -475,6 +461,11 @@
                     </div>
                 </div>
             </div>
+
+            <label style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 15px; background: var(--surface-hover); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); cursor: pointer;">
+                Widget Calendario (Anteprima)
+                <input type="checkbox" id="set-show-widget" style="width: 20px; height: 20px; accent-color: var(--primary);">
+            </label>
 
             <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Tema dell'App:</label>
             <select id="set-theme" class="input-field" style="cursor:pointer;">
@@ -791,6 +782,108 @@
             { id: "admin", label: "Admin", href: "admin.html", condition: "admin", defaultColor: "#ff3b30" },
             { id: "accessi", label: "Accessi", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#1c1c1e" }
         ];
+
+        // --- GESTIONE WIDGET ANTEPRIMA SETTIMANALE ---
+        window.caricaAnteprimaSettimanale = () => {
+            const contenitore = document.getElementById('preview-settimana');
+            if (!contenitore) return;
+
+            // Controllo preferenza Widget
+            if (window.LayoutEngine && window.LayoutEngine.prefs.showWidget === false) {
+                contenitore.style.display = 'none';
+                return;
+            }
+
+            const datiSalvati = localStorage.getItem('anteprima_turni');
+            if (!datiSalvati) return;
+
+            let turni = [];
+            try { turni = JSON.parse(datiSalvati); } catch(e) { return; }
+
+            if (turni.length === 0) return;
+
+            contenitore.style.display = 'flex';
+            contenitore.innerHTML = '';
+
+            const giorniSettimana = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+            const turniSettimana = turni.slice(0, 7);
+
+            turniSettimana.forEach(t => {
+                const dataObj = new Date(t.data);
+                const giornoNome = giorniSettimana[dataObj.getDay()];
+                const giornoNum = String(dataObj.getDate()).padStart(2, '0');
+                const meseNum = String(dataObj.getMonth() + 1).padStart(2, '0');
+                
+                let codiceTurno = t.turno || "??";
+                let coloreTurno = t.colore || "var(--primary)";
+                if(t.modificato) coloreTurno = "var(--danger)";
+
+                const btn = document.createElement('div');
+                btn.className = 'preview-day';
+                btn.innerHTML = `
+                    <div class="preview-date">${giornoNome} ${giornoNum}/${meseNum}</div>
+                    <div class="preview-turno" style="color: ${coloreTurno}">${codiceTurno}</div>
+                `;
+
+                const noImg = ["RI", "AL", "FER", "MAL", "PER", "L104", "KMAL"];
+                if(!noImg.includes(codiceTurno.toUpperCase()) && codiceTurno !== "??") {
+                    btn.onclick = () => window.apriSoloImmagineTurno(codiceTurno, t.data);
+                }
+
+                contenitore.appendChild(btn);
+            });
+        };
+
+        window.apriSoloImmagineTurno = (codiceTurno, dataISO) => {
+            const modal = document.getElementById('imagePreviewModal');
+            const imgEl = document.getElementById('imgTurnoPreview');
+            const loadEl = document.getElementById('imgTurnoLoading');
+            const errEl = document.getElementById('imgTurnoError');
+            
+            imgEl.style.display = 'none';
+            errEl.style.display = 'none';
+            loadEl.style.display = 'block';
+            modal.style.display = 'flex';
+
+            const dataParts = dataISO.split('-');
+            const mappaCache = localStorage.getItem('mappa_file_cache');
+            let pathTurni = `turni_${dataISO}`; 
+
+            if (mappaCache) {
+                try {
+                    const mappa = JSON.parse(mappaCache);
+                    // Gestisce sia "tree" (GitHub) che "albero" (precedente script di base)
+                    const cartelle = mappa.tree ? mappa.tree.filter(p => p.type==="tree" && p.path.startsWith("turni_")).map(p=>p.path) : (mappa.albero ? mappa.albero.filter(p => p.startsWith("turni_")) : []);
+                    cartelle.sort();
+                    const target = cartelle.find(p => p >= `turni_${dataISO}`) || cartelle[cartelle.length - 1];
+                    if(target) pathTurni = target.replace('/', '');
+                } catch(e) {}
+            }
+
+            const baseUrl = `https://raw.githubusercontent.com/HazeV98/Utility/main/${pathTurni}/${codiceTurno.toUpperCase()}`;
+            
+            const img = new Image();
+            img.onload = function() {
+                loadEl.style.display = 'none';
+                imgEl.src = this.src;
+                imgEl.style.display = 'block';
+            };
+            img.onerror = function() {
+                const imgPng = new Image();
+                imgPng.onload = function() {
+                    loadEl.style.display = 'none';
+                    imgEl.src = this.src;
+                    imgEl.style.display = 'block';
+                };
+                imgPng.onerror = function() {
+                    loadEl.style.display = 'none';
+                    errEl.style.display = 'block';
+                    setTimeout(() => { modal.style.display = 'none'; }, 1500);
+                };
+                imgPng.src = baseUrl + '.png';
+            };
+            img.src = baseUrl + '.jpg';
+        };
 
         window.controllaBacheca = async () => {
             if (!auth.currentUser) return;
@@ -1148,7 +1241,7 @@
         };
 
         window.LayoutEngine = {
-            prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#0066cc", view: "grid", iconStyle: "box", iconType: "minimal", fontSize: 14, theme: "system", apps: [] },
+            prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#0066cc", view: "grid", iconStyle: "box", iconType: "minimal", fontSize: 14, theme: "system", showWidget: true, apps: [] },
             isEditMode: false,
             sortableInstance: null,
             init: function(firebasePrefsStr) {
@@ -1169,6 +1262,7 @@
                 this.applicaGrafica();
                 this.popolaModaleImpostazioni();
                 this.render();
+                window.caricaAnteprimaSettimanale();
             },
             mergeWithDefaults: function() {
                 const defaultIds = DEFAULT_APPS.map(a => a.id);
@@ -1236,6 +1330,7 @@
                 document.getElementById('set-icontype').value = this.prefs.iconType || "minimal";
                 document.getElementById('set-labelsize').value = this.prefs.fontSize || 14;
                 document.getElementById('set-theme').value = this.prefs.theme || 'system';
+                document.getElementById('set-show-widget').checked = this.prefs.showWidget !== false;
             },
             render: function() {
                 const container = document.getElementById('app-container');
@@ -1407,7 +1502,9 @@
                 this.prefs.iconStyle = document.getElementById('set-iconstyle').value; this.prefs.fontSize = parseInt(document.getElementById('set-labelsize').value);
                 this.prefs.iconType = document.getElementById('set-icontype').value;
                 this.prefs.theme = document.getElementById('set-theme').value;
+                this.prefs.showWidget = document.getElementById('set-show-widget').checked;
                 this.applicaGrafica(); this.render(); window.chiudiModal('settingsModal'); this.sincronizzaConFirebase();
+                window.caricaAnteprimaSettimanale();
             },
             sincronizzaConFirebase: async function() {
                 const str = JSON.stringify(this.prefs); localStorage.setItem('preferenze_layout_haze', str);
