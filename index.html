@@ -726,7 +726,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
         import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-messaging.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", storageBucket: "utility-haze.firebasestorage.app", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
@@ -792,6 +792,70 @@
             { id: "accessi", label: "Accessi", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#1c1c1e" }
         ];
 
+        window.controllaBacheca = async () => {
+            if (!auth.currentUser) return;
+            try {
+                let ultimoAccesso = window.currentUserData?.ultimo_accesso_bacheca || localStorage.getItem('ultimo_accesso_bacheca') || 0;
+                ultimoAccesso = parseInt(ultimoAccesso);
+
+                const stateApp = JSON.parse(localStorage.getItem('myTurniApp')) || {};
+                const pid = stateApp.profiloAttivoId || 'default';
+                const profileObj = stateApp.profiliSalvati ? stateApp.profiliSalvati[pid] : stateApp;
+                const rotazioneUtente = profileObj ? profileObj.depositoAttivo : null;
+                
+                const formatterDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' });
+                const oggiStr = formatterDate.format(new Date());
+
+                const q = query(collection(db, "bacheca_utility"), orderBy("timestamp", "desc"));
+                const snap = await getDocs(q);
+
+                let avvisiNormali = 0;
+                let avvisiDDS = [];
+
+                snap.forEach(d => {
+                    let m = d.data();
+                    
+                    if (m.scadenza && m.scadenza < oggiStr) return; 
+                    
+                    if (!globalIsAdmin && !globalIsCollab && m.target && m.target !== "tutti") {
+                        if (!rotazioneUtente || !m.target.includes(rotazioneUtente)) return;
+                    }
+
+                    if (m.timestamp > ultimoAccesso) {
+                        if (m.tipo === "dds") {
+                            avvisiDDS.push(m.titolo_dds);
+                        } else {
+                            avvisiNormali++;
+                        }
+                    }
+                });
+
+                let totali = avvisiNormali + avvisiDDS.length;
+
+                if (totali > 0) {
+                    const badge = document.getElementById('badge-messaggi');
+                    if (badge) {
+                        badge.innerText = totali;
+                        badge.style.display = 'flex';
+                    }
+
+                    if (avvisiNormali > 0) {
+                        const bannerNormal = document.getElementById('banner-nuovo-messaggio');
+                        if (bannerNormal) bannerNormal.style.display = 'flex';
+                    }
+                    
+                    if (avvisiDDS.length > 0) {
+                        const bannerDDS = document.getElementById('banner-dds-alert');
+                        const textDDS = document.getElementById('titolo-dds-text');
+                        if (bannerDDS && textDDS) {
+                            textDDS.innerText = avvisiDDS[0] + (avvisiDDS.length > 1 ? ` (+${avvisiDDS.length - 1})` : '');
+                            bannerDDS.style.display = 'flex';
+                        }
+                    }
+                }
+            } catch(e) { console.error("Errore check bacheca:", e); }
+        };
+
         window.controllaRichiesteSospese = async () => {
             if (!globalIsAdmin && !globalIsCollab) return;
             try {
@@ -817,7 +881,9 @@
         window.controllaPromemoria = async () => {
             if (!auth.currentUser) return;
             try {
-                const oggiStr = new Date().toISOString().split('T')[0];
+                const formatterDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' });
+                const oggiStr = formatterDate.format(new Date());
+                
                 const q = query(collection(db, "utenti", auth.currentUser.uid, "promemoria_sync"), where("completato", "==", false));
                 const snap = await getDocs(q);
                 let activeCount = 0;
@@ -1244,6 +1310,7 @@
                     if(window.controllaRichiesteSospese) window.controllaRichiesteSospese();
                     if(window.controllaPromemoria) window.controllaPromemoria();
                     if(window.controllaSegnalazioni) window.controllaSegnalazioni();
+                    if(window.controllaBacheca) window.controllaBacheca();
                 }, 200);
             },
             handleImageUpload: function(event, modalType) {
@@ -1369,7 +1436,9 @@
             
             try {
                 const snap = await getDocs(collection(db, "utenti")); 
-                let tot = 0; let oggi = 0; const oggiStr = new Date().toISOString().split('T')[0];
+                let tot = 0; let oggi = 0; 
+                const formatterDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' });
+                const oggiStr = formatterDate.format(new Date());
                 
                 window.utentiArrayCache = [];
                 window.utentiMap = {};
@@ -1390,7 +1459,8 @@
         window.renderGestioneAccessi = () => {
             const container = document.getElementById('lista-utenti-accessi');
             const sortMode = document.getElementById('sort-utenti-app') ? document.getElementById('sort-utenti-app').value : 'recente';
-            const oggiStr = new Date().toISOString().split('T')[0];
+            const formatterDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' });
+            const oggiStr = formatterDate.format(new Date());
             
             let dataCopy = [...window.utentiArrayCache];
 
@@ -1575,7 +1645,8 @@
                     document.getElementById('profileEmail').value = user.email;
                     
                     const oggiLog = new Date();
-                    const oggiLogStr = oggiLog.toISOString().split('T')[0];
+                    const formatterDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' });
+                    const oggiLogStr = formatterDate.format(oggiLog);
                     if (data.last_app_access !== oggiLogStr || !data.email) { 
                         setDoc(doc(db, "utenti", user.uid), { last_app_access: oggiLogStr, last_access_full: oggiLog.toISOString(), email: user.email }, { merge: true }); 
                     }
