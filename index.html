@@ -22,6 +22,7 @@
 
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
@@ -121,8 +122,7 @@
             transform: translateX(-50%);
             width: 100%;
             max-width: 440px;
-            height: 100vh;
-            height: 100dvh;
+            height: 100%;
             margin: 0;
             padding: 0;
             z-index: 50;
@@ -137,7 +137,7 @@
             margin: 0;
             box-sizing: border-box;
             z-index: 100;
-            background: transparent;
+            background: linear-gradient(to bottom, var(--bg-color) 70%, transparent 100%);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -153,9 +153,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            
-            -webkit-mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(65px + env(safe-area-inset-top, 0px)), black calc(120px + env(safe-area-inset-top, 0px)), black 100%);
-            mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(65px + env(safe-area-inset-top, 0px)), black calc(120px + env(safe-area-inset-top, 0px)), black 100%);
             
             -ms-overflow-style: none;
             scrollbar-width: none;
@@ -300,6 +297,20 @@
         .preview-day:active { transform: scale(0.95); }
         .preview-date { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 5px; text-transform: uppercase; }
         .preview-turno { font-size: 15px; font-weight: 800; }
+
+        /* STILE IOS TOGGLE */
+        .ios-toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .ios-toggle input { display: none; }
+        .ios-toggle .toggle-track {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--border-color); transition: .3s; border-radius: 24px;
+        }
+        .ios-toggle .toggle-track:before {
+            position: absolute; content: ""; height: 20px; width: 20px; left: 2px; bottom: 2px;
+            background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .ios-toggle input:checked + .toggle-track { background-color: var(--success); }
+        .ios-toggle input:checked + .toggle-track:before { transform: translateX(20px); }
     </style>
 </head>
 <body>
@@ -406,15 +417,15 @@
         </div>
     </div> 
 
-    <div id="imagePreviewModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
-        <div class="modal-content" style="padding: 10px; text-align: center; background: transparent; box-shadow: none; border: none; max-width: 95%;">
-            <div style="background: var(--surface); padding: 5px; border-radius: 15px; display: inline-block; position: relative;">
-                <button onclick="document.getElementById('imagePreviewModal').style.display='none'" style="position: absolute; top: -15px; right: -15px; background: var(--danger); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; box-shadow: var(--shadow-md); z-index: 10;">X</button>
-                <img id="imgTurnoPreview" src="" alt="Turno" style="max-width: 100%; max-height: 80vh; border-radius: 10px; display: none; margin: 0 auto;">
-                <div id="imgTurnoLoading" style="padding: 20px; color: var(--primary); font-weight: bold;"><i class="fa-solid fa-spinner fa-spin"></i> Cerco immagine...</div>
-                <p id="imgTurnoError" style="display: none; padding: 20px; font-weight: bold; color: var(--danger);">Immagine non disponibile.</p>
+    <div id="imageModal" style="display:none; position:fixed; z-index: 10000; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); overflow: hidden;" onclick="if(event.target.id === 'imageModal' || event.target.id === 'imageFlexContainer') window.chiudiImageModal()">
+        <div style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; font-size: 35px; color: white; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10001;" onclick="window.chiudiImageModal()">&times;</div>
+        <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px; padding-bottom: 80px; position: relative;">
+            <img id="turnoImage" src="" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain; display:none;">
+            <div id="imageBanner" style="position: relative; z-index: 10001; margin-top: 15px; background: rgba(0,0,0,0.7); color: #fff; padding: 10px 20px; border-radius: 12px; font-size: 13px; text-align: center; max-width: 90%; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                ⚠️ Controllare sempre i turni ufficiali e la presenza di eventuali varianti ai turni.
             </div>
         </div>
+        <button onclick="window.scaricaImmagineTurno()" style="position: absolute; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #11cdef; color: white; border: none; padding: 12px 24px; border-radius: 20px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 10001;"><i class="fa-solid fa-download"></i> Scarica</button>
     </div>
 
     <div id="settingsModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'settingsModal')">
@@ -463,8 +474,11 @@
             </div>
 
             <label style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 15px; background: var(--surface-hover); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); cursor: pointer;">
-                Widget Calendario (Anteprima)
-                <input type="checkbox" id="set-show-widget" style="width: 20px; height: 20px; accent-color: var(--primary);">
+                Widget Calendario
+                <div class="ios-toggle">
+                    <input type="checkbox" id="set-show-widget">
+                    <div class="toggle-track"></div>
+                </div>
             </label>
 
             <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Tema dell'App:</label>
@@ -723,7 +737,6 @@
         const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", storageBucket: "utility-haze.firebasestorage.app", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
         const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const provider = new GoogleAuthProvider();
         const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2"; 
-        const COLLABORATORE_UIDS = ["INSERISCI_QUI_UID_1", "INSERISCI_QUI_UID_2"]; 
         
         let globalIsAdmin = false; let globalIsCollab = false;
         window.currentUserData = {}; 
@@ -801,6 +814,14 @@
             try { turni = JSON.parse(datiSalvati); } catch(e) { return; }
 
             if (turni.length === 0) return;
+            
+            // Priorità Variazioni Manuali e Colori Custom
+            let appState = JSON.parse(localStorage.getItem('myTurniApp')) || {};
+            let pid = appState.profiloAttivoId || "default";
+            let userProfile = appState.profiliSalvati ? appState.profiliSalvati[pid] : appState;
+            
+            let variazioni = userProfile.variazioni || {};
+            let coloriPersonali = userProfile.colori || {};
 
             contenitore.style.display = 'flex';
             contenitore.innerHTML = '';
@@ -816,7 +837,14 @@
                 
                 let codiceTurno = t.turno || "??";
                 let coloreTurno = t.colore || "var(--primary)";
-                if(t.modificato) coloreTurno = "var(--danger)";
+                
+                // Priorità assoluta ai cambi salvati manuali
+                if (variazioni[t.data]) {
+                    codiceTurno = variazioni[t.data];
+                    coloreTurno = coloriPersonali[t.data] || "var(--danger)"; // Applica colore custom, o rosso
+                } else if (t.modificato) {
+                    coloreTurno = "var(--danger)";
+                }
 
                 const btn = document.createElement('div');
                 btn.className = 'preview-day';
@@ -825,7 +853,7 @@
                     <div class="preview-turno" style="color: ${coloreTurno}">${codiceTurno}</div>
                 `;
 
-                const noImg = ["RI", "AL", "FER", "MAL", "PER", "L104", "KMAL"];
+                const noImg = ["RI", "RIPOSO", "AL", "FER", "MAL", "PER", "L104", "KMAL"];
                 if(!noImg.includes(codiceTurno.toUpperCase()) && codiceTurno !== "??") {
                     btn.onclick = () => window.apriSoloImmagineTurno(codiceTurno, t.data);
                 }
@@ -834,56 +862,182 @@
             });
         };
 
-        window.apriSoloImmagineTurno = (codiceTurno, dataISO) => {
-            const modal = document.getElementById('imagePreviewModal');
-            const imgEl = document.getElementById('imgTurnoPreview');
-            const loadEl = document.getElementById('imgTurnoLoading');
-            const errEl = document.getElementById('imgTurnoError');
+        // --- GESTIONE IMMAGINI PANZOOM DAL CALENDARIO ---
+        function stringToNum(s) { if(!s) return 0; let p = s.split('-'); return Math.floor(Date.UTC(p[0], p[1]-1, p[2]) / 86400000); }
+        function creaDataSicura(dataStr) { if(!dataStr) return new Date(); let p = dataStr.split('-'); return new Date(p[0], p[1] - 1, p[2], 12, 0, 0); }
+        
+        function trovaChiaveEsatta(db, codiceBase, dateStr) {
+            if (!db || !codiceBase) return codiceBase;
+            let codiciDaCercare = [codiceBase];
+            let matchB = codiceBase.match(/^([1-9])B(\d{2})$/);
+            if (matchB) {
+                let linea = matchB[1]; let finale = matchB[2];
+                let letteraPilota = (linea === '1' || linea === '2') ? 'C' : 'P';
+                let regex = new RegExp(`^${linea}[A-Z]${finale}$`);
+                let trovati = Object.keys(db).filter(k => regex.test(k));
+                if (trovati.length > 0) codiciDaCercare.push(...trovati);
+                else codiciDaCercare.push(`${linea}${letteraPilota}${finale}`);
+            } else {
+                let match50 = codiceBase.match(/^([A-Z0-9]+?)(\d{2})$/);
+                if (match50) {
+                    let pref = match50[1]; let num = parseInt(match50[2], 10);
+                    if (num >= 50) codiciDaCercare.push(pref + String(num - 50).padStart(2, '0'));
+                }
+            }
+            let targetDay = creaDataSicura(dateStr).getDay(); 
+            if(targetDay === 0) targetDay = 7;
+            const dayMap = { "LUN": 1, "MAR": 2, "MER": 3, "GIO": 4, "VEN": 5, "SAB": 6, "DOM": 7 };
+            for (let codCercato of codiciDaCercare) {
+                let keys = Object.keys(db).filter(k => k === codCercato || k.startsWith(codCercato + "_"));
+                let exactMatch = null; let genericMatch = null;
+                for (let k of keys) {
+                    if (k === codCercato) { genericMatch = k; continue; }
+                    let suffix = k.substring(codCercato.length + 1); 
+                    if (suffix.includes("-")) {
+                        let parts = suffix.split("-");
+                        if (parts.length === 2 && dayMap[parts[0]] && dayMap[parts[1]]) {
+                            let start = dayMap[parts[0]]; let end = dayMap[parts[1]];
+                            if (start <= end) { if (targetDay >= start && targetDay <= end) exactMatch = k; } 
+                            else { if (targetDay >= start || targetDay <= end) exactMatch = k; }
+                        }
+                    } else {
+                        if (dayMap[suffix] && dayMap[suffix] === targetDay) exactMatch = k;
+                    }
+                }
+                if (exactMatch) return exactMatch;
+                if (genericMatch) return genericMatch;
+            }
+            return codiceBase; 
+        }
+
+        window.currentImagePath = "";
+        window.imgBaseFallback = "";
+
+        window.apriSoloImmagineTurno = async (codiceTurnoBase, dataISO) => {
+            const modal = document.getElementById('imageModal');
+            const imgEl = document.getElementById('turnoImage');
+            const flexCont = document.getElementById('imageFlexContainer');
             
+            modal.style.display = 'block';
             imgEl.style.display = 'none';
-            errEl.style.display = 'none';
-            loadEl.style.display = 'block';
-            modal.style.display = 'flex';
 
-            const dataParts = dataISO.split('-');
-            const mappaCache = localStorage.getItem('mappa_file_cache');
-            let pathTurni = `turni_${dataISO}`; 
+            let loadContainer = document.getElementById('imgTurnoLoadingContainer');
+            if(!loadContainer) {
+                loadContainer = document.createElement('div');
+                loadContainer.id = 'imgTurnoLoadingContainer';
+                loadContainer.style.color = 'white';
+                loadContainer.style.fontSize = '18px';
+                loadContainer.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Cerco immagine...';
+                flexCont.insertBefore(loadContainer, imgEl);
+            }
+            loadContainer.style.display = 'block';
 
-            if (mappaCache) {
-                try {
-                    const mappa = JSON.parse(mappaCache);
-                    // Gestisce sia "tree" (GitHub) che "albero" (precedente script di base)
-                    const cartelle = mappa.tree ? mappa.tree.filter(p => p.type==="tree" && p.path.startsWith("turni_")).map(p=>p.path) : (mappa.albero ? mappa.albero.filter(p => p.startsWith("turni_")) : []);
-                    cartelle.sort();
-                    const target = cartelle.find(p => p >= `turni_${dataISO}`) || cartelle[cartelle.length - 1];
-                    if(target) pathTurni = target.replace('/', '');
-                } catch(e) {}
+            if (window.pzInstance) window.pzInstance.reset();
+
+            let pathTurni = `turni_${dataISO}`;
+            let dbCorrente = {};
+            
+            try {
+                const resMappa = await fetch("mappa_file.json?v=" + new Date().getTime());
+                const mappa = await resMappa.json();
+                const albero = mappa.tree ? mappa.tree.filter(p=>p.type==="tree").map(p=>p.path) : (mappa.albero || []);
+                
+                const turniFolders = albero.filter(f => f.startsWith('turni_')).sort();
+                const targetFolder = turniFolders.find(p => stringToNum(p.replace('turni_','')) >= stringToNum(dataISO)) || turniFolders[turniFolders.length - 1];
+                if(targetFolder) pathTurni = targetFolder.replace('/','');
+                
+                const infoFiles = albero.filter(f => f.startsWith('info_turni_')).sort();
+                let targetInfo = infoFiles[0];
+                for (let i = infoFiles.length - 1; i >= 0; i--) {
+                    let dStr = infoFiles[i].replace('info_turni_', '').replace('.json', '');
+                    if (stringToNum(dataISO) >= stringToNum(dStr)) {
+                        targetInfo = infoFiles[i];
+                        break;
+                    }
+                }
+
+                if (targetInfo) {
+                    const resInfo = await fetch(targetInfo + "?v=" + new Date().getTime());
+                    dbCorrente = await resInfo.json();
+                }
+            } catch(e) { console.error("Errore recupero mappa/info", e); }
+
+            let chiaveTrovata = trovaChiaveEsatta(dbCorrente, codiceTurnoBase, dataISO);
+            let baseUrlStr = `https://raw.githubusercontent.com/HazeV98/Utility/main/${pathTurni}/`;
+
+            if (chiaveTrovata !== codiceTurnoBase && dbCorrente[chiaveTrovata]) { 
+                window.currentImagePath = baseUrlStr + chiaveTrovata + '.jpg'; 
+                window.imgBaseFallback = baseUrlStr + codiceTurnoBase + '.jpg'; 
+            } else { 
+                window.currentImagePath = baseUrlStr + codiceTurnoBase + '.jpg'; 
+                window.imgBaseFallback = ""; 
             }
 
-            const baseUrl = `https://raw.githubusercontent.com/HazeV98/Utility/main/${pathTurni}/${codiceTurno.toUpperCase()}`;
-            
-            const img = new Image();
-            img.onload = function() {
-                loadEl.style.display = 'none';
-                imgEl.src = this.src;
+            imgEl.onerror = window.erroreImmagine;
+            imgEl.src = window.currentImagePath;
+            imgEl.onload = () => {
+                loadContainer.style.display = 'none';
                 imgEl.style.display = 'block';
             };
-            img.onerror = function() {
-                const imgPng = new Image();
-                imgPng.onload = function() {
-                    loadEl.style.display = 'none';
-                    imgEl.src = this.src;
-                    imgEl.style.display = 'block';
-                };
-                imgPng.onerror = function() {
-                    loadEl.style.display = 'none';
-                    errEl.style.display = 'block';
-                    setTimeout(() => { modal.style.display = 'none'; }, 1500);
-                };
-                imgPng.src = baseUrl + '.png';
-            };
-            img.src = baseUrl + '.jpg';
         };
+
+        window.erroreImmagine = () => {
+            let imgEl = document.getElementById('turnoImage');
+            let loadContainer = document.getElementById('imgTurnoLoadingContainer');
+            if (window.imgBaseFallback) {
+                window.currentImagePath = window.imgBaseFallback;
+                imgEl.src = window.imgBaseFallback;
+                window.imgBaseFallback = "";
+            } else {
+                imgEl.onerror = null;
+                if(loadContainer) loadContainer.style.display = 'none';
+                alert("L'immagine del turno non è stata trovata nel database.");
+                window.chiudiImageModal();
+            }
+        };
+
+        window.chiudiImageModal = () => {
+            document.getElementById('imageModal').style.display = 'none';
+            document.getElementById('turnoImage').removeAttribute('src');
+            if (window.pzInstance) window.pzInstance.reset();
+        };
+
+        window.scaricaImmagineTurno = () => {
+            if (!window.currentImagePath) return; 
+            const a = document.createElement('a'); 
+            a.href = window.currentImagePath; 
+            a.download = window.currentImagePath.split('/').pop(); 
+            document.body.appendChild(a); 
+            a.click(); 
+            document.body.removeChild(a); 
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof Panzoom !== 'undefined') {
+                const imgElem = document.getElementById('turnoImage');
+                if (imgElem) {
+                    window.pzInstance = Panzoom(imgElem, { maxScale: 5, minScale: 1 });
+                    document.getElementById('imageFlexContainer').addEventListener('wheel', window.pzInstance.zoomWithWheel);
+                    
+                    function eseguiZoomToggle(e) {
+                        if (!window.pzInstance) return;
+                        let currentScale = window.pzInstance.getScale();
+                        if (currentScale < 1.1) { window.pzInstance.zoom(1.75, { animate: true }); } 
+                        else { window.pzInstance.reset({ animate: true }); }
+                    }
+                    
+                    let lastTap = 0; let isPinching = false;
+                    imgElem.addEventListener('touchstart', function(e) { if (e.touches.length > 1) { isPinching = true; } });
+                    imgElem.addEventListener('touchend', function(e) {
+                        if (isPinching) { if (e.touches.length === 0) { setTimeout(() => isPinching = false, 300); } return; }
+                        let currentTime = new Date().getTime(); let tapLength = currentTime - lastTap;
+                        if (tapLength < 300 && tapLength > 0) { eseguiZoomToggle(e); if (e.cancelable) e.preventDefault(); }
+                        lastTap = currentTime;
+                    });
+                    imgElem.addEventListener('dblclick', function(e) { eseguiZoomToggle(e); });
+                }
+            }
+        });
 
         window.controllaBacheca = async () => {
             if (!auth.currentUser) return;
