@@ -3016,6 +3016,9 @@
     }
 
     function inizializzaCalendario() { 
+        let turniAttuali = calcolaTurni();
+        salvaAnteprimaPulita(turniAttuali);
+        
         calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { 
             initialView: 'dayGridMonth', 
             locale: 'it', 
@@ -3030,7 +3033,7 @@
             },
             dateClick: (i) => gestisciInterazione(i.dateStr),
             eventClick: (info) => gestisciInterazione(info.event.startStr),
-            events: (i, success) => success(calcolaTurni())
+            events: (i, success) => success(turniAttuali)
         });
         calendar.render();
     }
@@ -3166,6 +3169,7 @@ async function salvaAnteprimaPulita(eventiCalendario) {
                                 aggiornaUI();
                                 controllaEmptyState();
                                 if (typeof renderizzaProfiliUI === 'function') renderizzaProfiliUI();
+                                salvaAnteprimaPulita(calcolaTurni());
                             }
                         } else if (localTime > cloudTime) {
                             console.log("Dati locali più recenti, sincronizzo verso il cloud...");
