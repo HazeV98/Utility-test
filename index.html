@@ -122,7 +122,8 @@
             transform: translateX(-50%);
             width: 100%;
             max-width: 440px;
-            height: 100%;
+            height: 100vh;
+            height: 100dvh;
             margin: 0;
             padding: 0;
             z-index: 50;
@@ -148,7 +149,7 @@
             height: 100%;
             overflow-y: auto;
             overflow-x: hidden;
-            padding: calc(95px + env(safe-area-inset-top, 0px)) 20px 40px 20px;
+            padding: calc(95px + env(safe-area-inset-top, 0px)) 20px 100px 20px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -830,7 +831,10 @@
             const turniSettimana = turni.slice(0, 7);
 
             turniSettimana.forEach(t => {
-                const dataObj = new Date(t.data);
+                // FONDAMENTALE: parsing data locale per evitare fusi orari sbagliati
+                let p = t.data.split('-');
+                const dataObj = new Date(p[0], p[1] - 1, p[2], 12, 0, 0); // Mezzogiorno locale esatto
+                
                 const giornoNome = giorniSettimana[dataObj.getDay()];
                 const giornoNum = String(dataObj.getDate()).padStart(2, '0');
                 const meseNum = String(dataObj.getMonth() + 1).padStart(2, '0');
@@ -911,7 +915,6 @@
         }
 
         window.currentImagePath = "";
-        window.imgBaseFallback = "";
 
         window.apriSoloImmagineTurno = async (codiceTurnoBase, dataISO) => {
             const modal = document.getElementById('imageModal');
@@ -940,60 +943,58 @@
             try {
                 const resMappa = await fetch("mappa_file.json?v=" + new Date().getTime());
                 const mappa = await resMappa.json();
-                const albero = mappa.tree ? mappa.tree.filter(p=>p.type==="tree").map(p=>p.path) : (mappa.albero || []);
                 
-                const turniFolders = albero.filter(f => f.startsWith('turni_')).sort();
-                const targetFolder = turniFolders.find(p => stringToNum(p.replace('turni_','')) >= stringToNum(dataISO)) || turniFolders[turniFolders.length - 1];
-                if(targetFolder) pathTurni = targetFolder.replace('/','');
+                const cartelle = mappa.tree ? mappa.tree.filter(p => p.type==="tree" && p.path.startsWith("turni_")).map(p=>p.path) : (mappa.albero ? mappa.albero.filter(p => p.startsWith("turni_")) : []);
+                cartelle.sort();
+                const targetFolder = cartelle.find(p => p >= `turni_${dataISO}`) || cartelle[cartelle.length - 1];
+                if(targetFolder) pathTurni = targetFolder.replace('/', '');
                 
-                const infoFiles = albero.filter(f => f.startsWith('info_turni_')).sort();
+                const infoFiles = mappa.tree ? mappa.tree.filter(p => p.type==="blob" && p.path.startsWith("info_turni_")).map(p=>p.path) : (mappa.albero ? mappa.albero.filter(p => p.startsWith("info_turni_") && p.endsWith(".json")) : []);
+                infoFiles.sort();
                 let targetInfo = infoFiles[0];
                 for (let i = infoFiles.length - 1; i >= 0; i--) {
                     let dStr = infoFiles[i].replace('info_turni_', '').replace('.json', '');
-                    if (stringToNum(dataISO) >= stringToNum(dStr)) {
-                        targetInfo = infoFiles[i];
-                        break;
-                    }
+                    if (dataISO >= dStr) { targetInfo = infoFiles[i]; break; }
                 }
-
                 if (targetInfo) {
                     const resInfo = await fetch(targetInfo + "?v=" + new Date().getTime());
                     dbCorrente = await resInfo.json();
                 }
             } catch(e) { console.error("Errore recupero mappa/info", e); }
 
+            codiceTurnoBase = codiceTurnoBase.toUpperCase();
             let chiaveTrovata = trovaChiaveEsatta(dbCorrente, codiceTurnoBase, dataISO);
             let baseUrlStr = `https://raw.githubusercontent.com/HazeV98/Utility/main/${pathTurni}/`;
 
-            if (chiaveTrovata !== codiceTurnoBase && dbCorrente[chiaveTrovata]) { 
-                window.currentImagePath = baseUrlStr + chiaveTrovata + '.jpg'; 
-                window.imgBaseFallback = baseUrlStr + codiceTurnoBase + '.jpg'; 
-            } else { 
-                window.currentImagePath = baseUrlStr + codiceTurnoBase + '.jpg'; 
-                window.imgBaseFallback = ""; 
+            let urlsToTry = [
+                baseUrlStr + chiaveTrovata + '.jpg',
+                baseUrlStr + chiaveTrovata + '.png'
+            ];
+            if (chiaveTrovata !== codiceTurnoBase) {
+                urlsToTry.push(baseUrlStr + codiceTurnoBase + '.jpg');
+                urlsToTry.push(baseUrlStr + codiceTurnoBase + '.png');
             }
 
-            imgEl.onerror = window.erroreImmagine;
-            imgEl.src = window.currentImagePath;
-            imgEl.onload = () => {
-                loadContainer.style.display = 'none';
-                imgEl.style.display = 'block';
+            const tryLoadImage = (index) => {
+                if (index >= urlsToTry.length) {
+                    if(loadContainer) loadContainer.style.display = 'none';
+                    alert("L'immagine del turno non è stata trovata.");
+                    window.chiudiImageModal();
+                    return;
+                }
+                window.currentImagePath = urlsToTry[index];
+                imgEl.onload = () => {
+                    if(loadContainer) loadContainer.style.display = 'none';
+                    imgEl.style.display = 'block';
+                    imgEl.onerror = null;
+                };
+                imgEl.onerror = () => {
+                    tryLoadImage(index + 1);
+                };
+                imgEl.src = urlsToTry[index];
             };
-        };
 
-        window.erroreImmagine = () => {
-            let imgEl = document.getElementById('turnoImage');
-            let loadContainer = document.getElementById('imgTurnoLoadingContainer');
-            if (window.imgBaseFallback) {
-                window.currentImagePath = window.imgBaseFallback;
-                imgEl.src = window.imgBaseFallback;
-                window.imgBaseFallback = "";
-            } else {
-                imgEl.onerror = null;
-                if(loadContainer) loadContainer.style.display = 'none';
-                alert("L'immagine del turno non è stata trovata nel database.");
-                window.chiudiImageModal();
-            }
+            tryLoadImage(0);
         };
 
         window.chiudiImageModal = () => {
