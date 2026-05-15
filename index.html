@@ -158,17 +158,14 @@
             65% { opacity: 1; transform: translateY(-4px) scale(1.02); } 
             100% { opacity: 1; transform: translateY(0) scale(1); } 
         }
+        
         @keyframes modalPop {
             0% { opacity: 0; transform: scale(0.92) translateY(20px); }
             100% { opacity: 1; transform: scale(1) translateY(0); }
         }
         
-        /* Modale Profilo: Espansione specifica dal bottone alto-sinistra */
-        #profileModal .modal-content {
-            transform-origin: 15% -10%;
-            animation: expandFromProfileBtn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15) forwards;
-        }
-        @keyframes expandFromProfileBtn {
+        /* Modale: Espansione dinamica dal punto di click/tap */
+        @keyframes expandFromClick {
             0% { opacity: 0; transform: scale(0.05); border-radius: 60px; }
             100% { opacity: 1; transform: scale(1); border-radius: var(--radius-lg); }
         }
@@ -821,6 +818,14 @@
         window.currentUserData = {}; 
         window.utentiMap = {};
         window.utentiArrayCache = [];
+
+        // TRACCIATORE EVENTI CLICK E TOUCH: Cattura le coordinate assolute
+        window.addEventListener('click', (e) => { 
+            if(e.clientX) { window.lastClickX = e.clientX; window.lastClickY = e.clientY; } 
+        }, true);
+        window.addEventListener('touchstart', (e) => { 
+            if(e.touches && e.touches.length > 0) { window.lastClickX = e.touches[0].clientX; window.lastClickY = e.touches[0].clientY; } 
+        }, {passive: true, capture: true});
 
         window.ROTAZIONI_MAP = {
             "disp_5_1": "Disponibile 5-1", "disp_6_2_6_1": "Disponibile 6-2-6-1",
@@ -1499,7 +1504,26 @@
             ripristinaPredefiniti: async function() { if(!confirm("Ripristinare tutto?")) return; localStorage.removeItem('preferenze_layout_haze'); if (auth.currentUser) await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_layout: null }, { merge: true }); location.reload(); }
         };
 
-        window.apriModal = (id, authMode) => { document.getElementById(id).style.display = 'flex'; if(id === 'authModal' && authMode) { currentAuthMode = authMode; window.aggiornaUIAuth(); } };
+        // GESTORE MODALI: Modificato per espandersi dal punto del click
+        window.apriModal = (id, authMode) => { 
+            const modale = document.getElementById(id);
+            modale.style.display = 'flex'; 
+            
+            const content = modale.querySelector('.modal-content');
+            if (content && window.lastClickX !== undefined && (id === 'settingsModal' || id === 'modal-gestione' || id === 'profileModal')) {
+                const rect = content.getBoundingClientRect();
+                const originX = window.lastClickX - rect.left;
+                const originY = window.lastClickY - rect.top;
+                
+                content.style.transformOrigin = `${originX}px ${originY}px`;
+                content.style.animation = 'none';
+                content.offsetHeight; // Forza il riavvio dell'animazione
+                content.style.animation = 'expandFromClick 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15) forwards';
+            }
+
+            if(id === 'authModal' && authMode) { currentAuthMode = authMode; window.aggiornaUIAuth(); } 
+        };
+        
         window.chiudiModal = (id) => { document.getElementById(id).style.display = 'none'; };
         window.chiudiSuSfondo = (e, id) => { if (e.target.id === id) window.chiudiModal(id); };
 
