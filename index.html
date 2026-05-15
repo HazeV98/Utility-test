@@ -10,7 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const datiImportati = urlParams.get('dati');
@@ -22,6 +21,48 @@
 
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    
+    <script>
+        const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/HazeV98/Utility/main/version.json";
+
+        async function controllaAggiornamentiAPK() {
+            if (!window.Capacitor || !window.Capacitor.isNativePlatform() || !window.Capacitor.Plugins.App) {
+                return;
+            }
+
+            try {
+                const appInfo = await window.Capacitor.Plugins.App.getInfo();
+                const versioneInstallata = appInfo.version; 
+
+                const response = await fetch(UPDATE_CHECK_URL + "?t=" + new Date().getTime());
+                const data = await response.json();
+
+                if (data.latest_version && data.latest_version !== versioneInstallata) {
+                    mostraPopupAggiornamento(data);
+                }
+            } catch (error) {
+                console.error("Errore nel controllo aggiornamenti APK:", error);
+            }
+        }
+
+        function mostraPopupAggiornamento(data) {
+            const modale = document.createElement('div');
+            modale.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99999; display:flex; justify-content:center; align-items:center; padding:20px; box-sizing:border-box; backdrop-filter:blur(5px); animation: fadeIn 0.3s ease;";
+            
+            modale.innerHTML = `
+                <div style="background:var(--surface); padding:30px; border-radius:24px; text-align:center; max-width:360px; width:100%; box-shadow: 0 20px 40px rgba(0,0,0,0.4); font-family: 'Inter', sans-serif;">
+                    <h2 style="color:var(--primary); margin-top:0; display:flex; align-items:center; justify-content:center; gap:10px;"><i class="fa-solid fa-rocket"></i> Nuovo Aggiornamento!</h2>
+                    <p style="font-size:15px; color:var(--text-main); font-weight: 500;">È disponibile la versione <b>${data.latest_version}</b>.</p>
+                    <p style="font-size:14px; color:var(--text-muted); background:var(--bg-color); padding:16px; border-radius:12px; text-align: left; line-height: 1.6; border: 1px solid var(--border-color);">${data.note_aggiornamento}</p>
+                    <a href="${data.download_url}" style="display:flex; justify-content:center; align-items:center; gap:10px; background:var(--success); color:white; padding:16px; border-radius:14px; text-decoration:none; font-weight:700; margin-top:24px; font-size: 16px; box-shadow: 0 4px 12px rgba(15,157,88,0.3);"><i class="fa-solid fa-download"></i> Scarica e Aggiorna</a>
+                    <button onclick="this.parentElement.parentElement.remove()" style="margin-top:16px; background:none; border:none; color:var(--text-muted); font-size:14px; cursor:pointer; font-weight: 600; text-decoration: underline;">Più tardi</button>
+                </div>
+            `;
+            document.body.appendChild(modale);
+        }
+
+        window.addEventListener('DOMContentLoaded', controllaAggiornamentiAPK);
+    </script>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
@@ -45,10 +86,10 @@
             --danger-light: #fce8e6;
             --danger-border: #fad2cf;
             --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
-            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            --shadow-md: 0 10px 20px -5px rgba(0,0,0,0.12), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.15), 0 10px 10px -5px rgba(0,0,0,0.04);
             --radius-md: 14px;
-            --radius-lg: 20px;
+            --radius-lg: 24px;
             --label-size: 14px;
             --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -68,8 +109,8 @@
             --danger-light: rgba(234, 67, 53, 0.15);
             --danger-border: rgba(234, 67, 53, 0.3);
             --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
-            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
-            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
+            --shadow-md: 0 10px 20px -5px rgba(0,0,0,0.4);
+            --shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.5);
         }
 
         @media (prefers-color-scheme: dark) {
@@ -88,8 +129,8 @@
                 --danger-light: rgba(234, 67, 53, 0.15);
                 --danger-border: rgba(234, 67, 53, 0.3);
                 --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
-                --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
-                --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
+                --shadow-md: 0 10px 20px -5px rgba(0,0,0,0.4);
+                --shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.5);
             }
         }
 
@@ -98,35 +139,46 @@
         body { 
             font-family: 'Inter', -apple-system, sans-serif;
             background-color: var(--bg-color); 
-            background-size: cover;
-            background-position: center top;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
-            color: var(--text-main); 
-            margin: 0; padding: 20px; 
+            background-size: cover; background-position: center top; background-attachment: fixed; background-repeat: no-repeat;
+            color: var(--text-main); margin: 0; padding: 20px; 
             display: flex; flex-direction: column; align-items: center; 
-            min-height: 100vh;
-            overflow-x: hidden;
-            transition: background-image 0.5s ease, background-color 0.3s;
+            min-height: 100vh; overflow-x: hidden;
+            transition: background-image 0.6s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease;
         }
 
-        @keyframes slideInUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        /* --- ANIMAZIONI GENERALI --- */
+        @keyframes fadeSlideIn { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInUpBouncy { 0% { opacity: 0; transform: translateY(35px) scale(0.9); } 65% { opacity: 1; transform: translateY(-4px) scale(1.02); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes modalPop { 0% { opacity: 0; transform: scale(0.92) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+        
+        /* Modale Profilo: Espansione specifica dal bottone alto-sinistra */
+        #profileModal .modal-content {
+            transform-origin: 15% -10%;
+            animation: expandFromProfileBtn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15) forwards;
+        }
+        @keyframes expandFromProfileBtn {
+            0% { opacity: 0; transform: scale(0.05); border-radius: 60px; }
+            100% { opacity: 1; transform: scale(1); border-radius: var(--radius-lg); }
+        }
+
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); opacity: 0.8; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        #view-app {
-            position: fixed !important;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 440px;
-            height: 100vh;
-            height: 100dvh;
-            margin: 0;
-            padding: 0;
-            z-index: 50;
+        /* 1. Animazione "Respiro" per i Banner */
+        @keyframes breathe { 0%, 100% { transform: scale(1); box-shadow: var(--shadow-md); } 50% { transform: scale(1.02); box-shadow: var(--shadow-lg); } }
+
+        /* 2. Shimmer Effect Skeleton */
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .skeleton { background: linear-gradient(90deg, var(--surface) 25%, var(--border-color) 50%, var(--surface) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; opacity: 0.7;}
+        :root[data-theme="dark"] .skeleton { background: linear-gradient(90deg, var(--surface) 25%, #2f333d 50%, var(--surface) 75%); background-size: 200% 100%; }
+
+        /* 3. Transizione Viste a Scorrimento */
+        .view-container { 
+            width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; 
+            animation: fadeSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
         }
+
+        #view-app { position: fixed !important; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 440px; height: 100vh; height: 100dvh; margin: 0; padding: 0; z-index: 50; }
 
         #view-app .header {
             position: absolute;
@@ -144,100 +196,74 @@
         }
 
         .scroll-area {
-            width: 100%;
-            height: 100%;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: calc(95px + env(safe-area-inset-top, 0px)) 20px 40px 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            
+            width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; padding: calc(95px + env(safe-area-inset-top, 0px)) 20px 40px 20px;
+            box-sizing: border-box; display: flex; flex-direction: column; align-items: center;
             -webkit-mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(65px + env(safe-area-inset-top, 0px)), black calc(120px + env(safe-area-inset-top, 0px)), black 100%);
             mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(65px + env(safe-area-inset-top, 0px)), black calc(120px + env(safe-area-inset-top, 0px)), black 100%);
-            
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+            -ms-overflow-style: none; scrollbar-width: none;
         }
         .scroll-area::-webkit-scrollbar { display: none; }
 
         .header-side { flex: 1; display: flex; align-items: center; gap: 10px; }
         .header-side.right { justify-content: flex-end; }
         h2 { margin: 0; font-size: 30px; font-weight: 800; display: flex; align-items: center; justify-content: center; letter-spacing: -0.5px; color: var(--primary); user-select: none; }
-        h2 img { height: 36px; margin-right: 4px; margin-bottom: 2px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
-
-        .view-container { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; }
+        h2 img { height: 36px; margin-right: 4px; margin-bottom: 2px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15)); }
 
         #install-btn { display: none; background-color: var(--success); color: white; border: none; padding: 10px 16px; font-size: 13px; font-weight: 700; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(15,157,88,0.3); white-space: nowrap; animation: pulse 2s infinite; align-items:center; gap:6px;}
-        .btn-header-alt { background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 20px; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
-        .btn-header-alt:active { transform: scale(0.95); }
-        .btn-header-alt:hover { border-color: var(--primary); color: var(--primary); }
+        
+        /* 5. Haptic Flash Feedback per bottoni azione */
+        .btn-header-alt, .btn-action, .btn-modal { position: relative; overflow: hidden; }
+        .btn-header-alt::after, .btn-action::after, .btn-modal::after {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.3); opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
+        .btn-header-alt:active::after, .btn-action:active::after, .btn-modal:active::after { opacity: 1; transition: 0s; }
+
+        .btn-header-alt { background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 20px; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 6px; transition: var(--transition); }
+        .btn-header-alt:active { transform: scale(0.92) translateY(2px); }
+        .btn-header-alt:hover { border-color: var(--primary); color: var(--primary); box-shadow: 0 6px 12px var(--primary-glow); }
 
         #app-container { width: 100%; max-width: 440px; }
-        .app-grid { 
-            display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 28px 0; 
-            justify-items: center; 
-            padding: 10px 0; 
-            width: 100%;
-        }
-        .app-grid .app-btn { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: flex-start;
-            text-decoration: none; 
-            cursor: pointer; 
-            position: relative; 
-            width: 100%; 
-            min-width: 0; 
-            animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; 
-        }
-        .app-grid .app-btn:active { transform: scale(0.92); transition: transform 0.1s; }
+        .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px 0; justify-items: center; padding: 10px 0; width: 100%; }
         
+        .app-grid .app-btn { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-decoration: none; cursor: pointer; position: relative; width: 100%; min-width: 0; animation: slideInUpBouncy 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+        
+        /* --- MODIFICA EFFETTO 3D PULITO (STATO ATTIVO) --- */
+        .app-grid .app-btn:active .app-icon { transform: scale(0.88) translateY(4px); box-shadow: 0 1px 3px rgba(0,0,0,0.2), inset 0 6px 12px rgba(0,0,0,0.3); filter: brightness(0.9); transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
+        .app-grid .app-btn:active .app-label { transform: scale(0.95); opacity: 0.7; transition: all 0.15s; }
+        
+        /* --- MODIFICA EFFETTO 3D PULITO --- */
         .app-grid .app-icon { 
             width: 62px; height: 62px; margin: 0 auto 10px auto; border-radius: 18px; 
             color: white; font-size: 28px; display: flex; align-items: center; justify-content: center; 
-            box-shadow: var(--shadow-md); transition: var(--transition); overflow: hidden; position: relative;
-        }
-        .app-grid .app-icon::after {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+            box-shadow: 0 12px 24px -6px rgba(0,0,0,0.3), 0 4px 8px -2px rgba(0,0,0,0.15), inset 0 -6px 12px rgba(0,0,0,0.25); 
+            border: 1px solid rgba(0,0,0,0.05); transition: var(--transition); overflow: hidden; position: relative;
         }
         
-        .app-grid .app-label { 
-            font-size: var(--label-size); color: var(--text-main); font-weight: 600; text-align: center; 
-            line-height: 1.2; text-shadow: 0px 1px 3px rgba(255,255,255,0.8); width: 100%; word-wrap: break-word; 
+        /* Haptic flash per icone */
+        .app-grid .app-icon::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.4); opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 2;
         }
+        .app-grid .app-btn:active .app-icon::before { opacity: 1; transition: 0s; }
+
+        /* Rimuove l'effetto luce diagonale preesistente */
+        .app-grid .app-icon::after { display: none; }
+        
+        .app-grid .app-label { font-size: var(--label-size); color: var(--text-main); font-weight: 600; text-align: center; line-height: 1.2; text-shadow: 0px 1px 3px rgba(255,255,255,0.8); width: 100%; word-wrap: break-word; transition: var(--transition); }
 
         .app-list { display: flex; flex-direction: column; gap: 12px; padding: 10px; width: 100%; }
-        .app-list .app-btn { 
-            display: flex; align-items: center; background: rgba(255,255,255,0.85); padding: 14px 20px; 
-            border-radius: var(--radius-md); box-shadow: var(--shadow-sm); text-decoration: none; position: relative; 
-            backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.4); 
-            animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-            width: 100%;
-        }
-        .app-list .app-icon { 
-            width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 20px; 
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: var(--shadow-sm); overflow: hidden; 
-        }
+        .app-list .app-btn { display: flex; align-items: center; background: rgba(255,255,255,0.85); padding: 14px 20px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); text-decoration: none; position: relative; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.6); animation: slideInUpBouncy 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; width: 100%; transition: var(--transition); overflow:hidden;}
+        .app-list .app-btn:active { transform: scale(0.97); background: rgba(255,255,255,0.6); }
+        .app-list .app-btn::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.05); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .app-list .app-btn:active::after { opacity: 1; transition: 0s; }
+        
+        /* --- MODIFICA EFFETTO 3D PULITO (LISTA) --- */
+        .app-list .app-icon { width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 6px 12px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1), inset 0 -4px 6px rgba(0,0,0,0.2); border: 1px solid rgba(0,0,0,0.04); overflow: hidden; }
         .app-list .app-label { font-size: calc(var(--label-size) + 2px); color: #1a1a1a; font-weight: 700; margin: 0; text-shadow: none; flex: 1; text-align: left; }
 
-        :root[data-theme="dark"] .app-grid .app-label { text-shadow: 0px 1px 3px rgba(0,0,0,0.8); }
-        :root[data-theme="dark"] .app-list .app-btn { background: rgba(30, 30, 30, 0.85); border: 1px solid rgba(255,255,255,0.1); }
-        :root[data-theme="dark"] .app-list .app-label { color: #e8eaed; }
-        
-        @media (prefers-color-scheme: dark) {
-            :root:not([data-theme="light"]) .app-grid .app-label { text-shadow: 0px 1px 3px rgba(0,0,0,0.8); }
-            :root:not([data-theme="light"]) .app-list .app-btn { background: rgba(30, 30, 30, 0.85); border: 1px solid rgba(255,255,255,0.1); }
-            :root:not([data-theme="light"]) .app-list .app-label { color: #e8eaed; }
-        }
-
-        .transparent-icons .app-icon { background-color: transparent !important; box-shadow: none !important; color: var(--text-main) !important; }
-        .transparent-icons .app-icon::after { display: none; }
+        .transparent-icons .app-icon { background-color: transparent !important; box-shadow: none !important; border: none !important; color: var(--text-main) !important; }
+        .transparent-icons .app-icon::after, .transparent-icons .app-icon::before { display: none; }
         .transparent-icons.app-grid .app-icon { font-size: 36px !important; } 
         .transparent-icons.app-list .app-icon { font-size: 26px !important; }
 
@@ -248,7 +274,7 @@
         .app-list .edit-badge { right: auto; left: 0; top: -10px; }
 
         .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 5999; animation: fadeIn 0.3s ease; }
-        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-lg); z-index: 6000; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; overflow-y: auto;}
+        .sidebar { position: fixed; top: 0; left: -320px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-lg); z-index: 6000; transition: left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; overflow-y: auto;}
         .sidebar.open { left: 0; }
         .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 28px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; }
         .sidebar-header h3 { margin:0; font-weight: 700; display: flex; align-items: center; gap: 10px;}
@@ -257,49 +283,56 @@
         .sidebar-link:active, .sidebar-link:hover { background-color: var(--surface-hover); color: var(--primary); padding-left: 28px; }
         .sidebar-link:active i, .sidebar-link:hover i { color: var(--primary); }
 
-        .btn-action { background-color: var(--success); color: white; border: none; padding: 16px; font-size: 16px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; margin-top: 10px; display:flex; justify-content:center; align-items:center; gap:8px; box-shadow: 0 4px 12px rgba(15,157,88,0.2); transition: all 0.2s;}
-        .btn-action:hover { transform: translateY(-2px); filter: brightness(1.05); }
-        .btn-action:active { transform: translateY(1px); box-shadow: none; }
+        .btn-action { background-color: var(--success); color: white; border: none; padding: 16px; font-size: 16px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; margin-top: 10px; display:flex; justify-content:center; align-items:center; gap:8px; box-shadow: 0 8px 16px rgba(15,157,88,0.25); transition: var(--transition);}
+        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(15,157,88,0.3); filter: brightness(1.05); }
+        .btn-action:active { transform: scale(0.96) translateY(2px); box-shadow: 0 4px 8px rgba(15,157,88,0.2); }
         
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 7000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(8px); animation: fadeIn 0.3s ease; }
-        .modal-content { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 380px; text-align: left; box-shadow: var(--shadow-lg); border: 1px solid var(--border-color); position: relative; color: var(--text-main); max-height: 90vh; overflow-y: auto; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 7000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: fadeIn 0.3s ease; }
         
-        .input-field { width: 100%; padding: 14px; margin-bottom: 16px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 15px; background-color: var(--surface); color: var(--text-main); font-family: inherit; transition: all 0.2s;}
-        .input-field:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-glow); }
+        .modal-content { 
+            background: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 380px; text-align: left; 
+            box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.4) inset; border: 1px solid var(--border-color); 
+            position: relative; color: var(--text-main); max-height: 90vh; overflow-y: auto; 
+            animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+        }
+        
+        /* 6. Floating Labels per Input */
+        .float-wrapper { position: relative; margin-bottom: 16px; width: 100%; }
+        .float-wrapper .input-field { margin-bottom: 0; padding: 22px 14px 10px 14px; }
+        .float-wrapper label {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); font-size: 14px; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; font-weight: 500;
+        }
+        .float-wrapper .input-field:focus + label,
+        .float-wrapper .input-field:not(:placeholder-shown) + label {
+            top: 12px; font-size: 11px; color: var(--primary); font-weight: 700;
+        }
+
+        .input-field { 
+            width: 100%; padding: 14px; margin-bottom: 16px; border: 2px solid var(--border-color); border-radius: var(--radius-md); 
+            box-sizing: border-box; font-size: 15px; background-color: var(--surface-hover); color: var(--text-main); 
+            font-family: inherit; transition: var(--transition);
+        }
+        .input-field:focus { border-color: var(--primary); outline: none; background-color: var(--surface); transform: translateY(-2px); box-shadow: 0 8px 16px var(--primary-glow); }
         .input-field::placeholder { color: var(--text-muted); opacity: 0.7; }
         
-        .btn-modal { border: none; border-radius: 12px; padding: 14px; cursor: pointer; font-weight: 700; font-size: 15px; width: 100%; margin-top: 10px; display:flex; justify-content:center; align-items:center; gap:8px; transition: all 0.2s;}
-        .btn-modal:active { transform: scale(0.98); }
+        .btn-modal { border: none; border-radius: 12px; padding: 14px; cursor: pointer; font-weight: 700; font-size: 15px; width: 100%; margin-top: 10px; display:flex; justify-content:center; align-items:center; gap:8px; transition: var(--transition);}
+        .btn-modal:active { transform: scale(0.96); }
         
-        .color-picker-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: var(--surface-hover); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .color-picker-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: var(--surface-hover); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); transition: var(--transition); }
+        .color-picker-row:hover { border-color: var(--primary); }
         .color-picker-row label { font-size: 13px; font-weight: 600; color: var(--text-main); }
         input[type="color"] { width: 44px; height: 44px; border: none; border-radius: 10px; cursor: pointer; padding: 0; background: transparent; }
         input[type="range"] { width: 100%; margin: 10px 0; accent-color: var(--primary); }
 
-        .badge-rotazioni { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border: 2px solid var(--bg-color); z-index: 10; pointer-events: none;}
+        .badge-rotazioni { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(217,48,37,0.4); border: 2px solid var(--bg-color); z-index: 10; pointer-events: none;}
+        .badge-notif { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; min-width: 22px; height: 22px; padding: 0 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(217,48,37,0.4); border: 2px solid var(--surface); z-index: 20; pointer-events: none; }
 
-        .badge-notif { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; min-width: 22px; height: 22px; padding: 0 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border: 2px solid var(--surface); z-index: 20; pointer-events: none; }
-
-        .banner-alert { padding: 14px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 20px; width: 100%; max-width: 440px; cursor: pointer; box-shadow: var(--shadow-sm); display:flex; align-items:center; justify-content:center; gap:10px; transition: transform 0.2s;}
-        .banner-alert:active { transform: scale(0.98); }
+        .banner-alert { padding: 14px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 20px; width: 100%; max-width: 440px; cursor: pointer; box-shadow: var(--shadow-md); display:flex; align-items:center; justify-content:center; gap:10px; transition: var(--transition); animation: slideInUpBouncy 0.5s ease both, breathe 3s infinite ease-in-out 0.5s;}
+        .banner-alert:active { transform: scale(0.96); }
         .banner-yellow { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
         .banner-red { background: var(--danger); color: white; }
         .banner-blue { background: #17a2b8; color: white; }
-
-        /* STILI ANTEPRIMA SETTIMANALE WIDGET */
-        .preview-barra {
-            display: flex; overflow-x: auto; gap: 10px; padding: 10px 0; width: 100%; margin-bottom: 20px;
-            -ms-overflow-style: none; scrollbar-width: none;
-        }
-        .preview-barra::-webkit-scrollbar { display: none; }
-        .preview-day {
-            flex: 0 0 calc(100% / 4.2); background: var(--surface); border-radius: 12px; padding: 10px;
-            text-align: center; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
-            cursor: pointer; transition: transform 0.2s; user-select: none;
-        }
-        .preview-day:active { transform: scale(0.95); }
-        .preview-date { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 5px; text-transform: uppercase; }
-        .preview-turno { font-size: 15px; font-weight: 800; }
     </style>
 </head>
 <body>
@@ -336,8 +369,22 @@
         <a href="admin.html" class="sidebar-link" id="menu-admin" style="display:none; color: var(--danger); font-weight: bold;"><i class="fa-solid fa-lock" style="color: var(--danger);"></i> Admin</a>
     </div>
 
-    <div id="view-loading" class="view-container" style="display: flex; justify-content: center; align-items: center; height: 90vh; width: 100%;">
-        <img src="icon-512.png" alt="Logo" style="height: 100px; animation: pulse 1.5s infinite; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));">
+    <div id="view-loading" class="view-container" style="display: flex; justify-content: flex-start; align-items: center; height: 100vh; width: 100%; padding-top: 60px;">
+        <div style="width: 100%; max-width: 440px; padding: 20px; display:flex; justify-content:space-between; align-items:center;">
+            <div class="skeleton" style="width: 80px; height: 35px; border-radius: 20px;"></div>
+            <div class="skeleton" style="width: 120px; height: 35px; border-radius: 8px;"></div>
+            <div class="skeleton" style="width: 90px; height: 35px; border-radius: 20px;"></div>
+        </div>
+        <div style="width: 100%; max-width: 440px; padding: 10px 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px 0; justify-items: center; margin-top:20px;">
+            <div style="display:flex; flex-direction:column; align-items:center;"><div class="skeleton" style="width:62px; height:62px; border-radius:18px; margin-bottom:10px;"></div><div class="skeleton" style="width:50px; height:12px; border-radius:4px;"></div></div>
+            <div style="display:flex; flex-direction:column; align-items:center;"><div class="skeleton" style="width:62px; height:62px; border-radius:18px; margin-bottom:10px;"></div><div class="skeleton" style="width:50px; height:12px; border-radius:4px;"></div></div>
+            <div style="display:flex; flex-direction:column; align-items:center;"><div class="skeleton" style="width:62px; height:62px; border-radius:18px; margin-bottom:10px;"></div><div class="skeleton" style="width:50px; height:12px; border-radius:4px;"></div></div>
+            <div style="display:flex; flex-direction:column; align-items:center;"><div class="skeleton" style="width:62px; height:62px; border-radius:18px; margin-bottom:10px;"></div><div class="skeleton" style="width:50px; height:12px; border-radius:4px;"></div></div>
+            <div style="display:flex; flex-direction:column; align-items:center;"><div class="skeleton" style="width:62px; height:62px; border-radius:18px; margin-bottom:10px;"></div><div class="skeleton" style="width:50px; height:12px; border-radius:4px;"></div></div>
+            <div style="display:flex; flex-direction:column; align-items:center;"><div class="skeleton" style="width:62px; height:62px; border-radius:18px; margin-bottom:10px;"></div><div class="skeleton" style="width:50px; height:12px; border-radius:4px;"></div></div>
+            <div style="display:flex; flex-direction:column; align-items:center;"><div class="skeleton" style="width:62px; height:62px; border-radius:18px; margin-bottom:10px;"></div><div class="skeleton" style="width:50px; height:12px; border-radius:4px;"></div></div>
+            <div style="display:flex; flex-direction:column; align-items:center;"><div class="skeleton" style="width:62px; height:62px; border-radius:18px; margin-bottom:10px;"></div><div class="skeleton" style="width:50px; height:12px; border-radius:4px;"></div></div>
+        </div>
     </div>
 
     <div id="view-guest" class="view-container" style="display: none; justify-content: center; height: 90vh;">
@@ -399,23 +446,10 @@
                 <i class="fa-solid fa-headset fa-bounce"></i> <span id="testo-segnalazione-banner"></span>
             </div>
 
-            <div id="preview-settimana" class="preview-barra" style="display: none;"></div>
-
             <div id="app-container" class="app-grid"></div>
             <button id="btn-salva-layout" class="btn-action" style="display: none; background: #ff9800; color: white; margin-top: 30px; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4); width:100%; max-width:440px;" onclick="LayoutEngine.toggleEditMode()"><i class="fa-solid fa-check"></i> Fatto (Salva Layout)</button>
         </div>
     </div> 
-
-    <div id="imagePreviewModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
-        <div class="modal-content" style="padding: 10px; text-align: center; background: transparent; box-shadow: none; border: none; max-width: 95%;">
-            <div style="background: var(--surface); padding: 5px; border-radius: 15px; display: inline-block; position: relative;">
-                <button onclick="document.getElementById('imagePreviewModal').style.display='none'" style="position: absolute; top: -15px; right: -15px; background: var(--danger); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; box-shadow: var(--shadow-md); z-index: 10;">X</button>
-                <img id="imgTurnoPreview" src="" alt="Turno" style="max-width: 100%; max-height: 80vh; border-radius: 10px; display: none; margin: 0 auto;">
-                <div id="imgTurnoLoading" style="padding: 20px; color: var(--primary); font-weight: bold;"><i class="fa-solid fa-spinner fa-spin"></i> Cerco immagine...</div>
-                <p id="imgTurnoError" style="display: none; padding: 20px; font-weight: bold; color: var(--danger);">Immagine non disponibile.</p>
-            </div>
-        </div>
-    </div>
 
     <div id="settingsModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'settingsModal')">
         <div class="modal-content">
@@ -461,11 +495,6 @@
                     </div>
                 </div>
             </div>
-
-            <label style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 15px; background: var(--surface-hover); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); cursor: pointer;">
-                Widget Calendario (Anteprima)
-                <input type="checkbox" id="set-show-widget" style="width: 20px; height: 20px; accent-color: var(--primary);">
-            </label>
 
             <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Tema dell'App:</label>
             <select id="set-theme" class="input-field" style="cursor:pointer;">
@@ -577,36 +606,42 @@
             
             <div id="adminBadge" style="display:none; text-align:center; background:var(--danger); color:white; padding:8px; border-radius:8px; margin-bottom:20px; font-weight:700; font-size: 13px; letter-spacing:1px;"><i class="fa-solid fa-shield-halved"></i> AMMINISTRATORE</div>
             
-            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">EMAIL ACCOUNT</label>
-            <input type="text" id="profileEmail" class="input-field" disabled style="background: var(--surface-hover); color:var(--text-muted);">
+            <div class="float-wrapper">
+                <input type="text" id="profileEmail" class="input-field" placeholder=" " disabled style="background: var(--bg-color); color:var(--text-muted);">
+                <label>Email Account</label>
+            </div>
             
             <div style="display: flex; gap: 12px;">
-                <div style="flex: 1;">
-                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">NOME</label>
-                    <input type="text" id="profileNome" class="input-field" placeholder="Es. Mario">
+                <div style="flex: 1;" class="float-wrapper">
+                    <input type="text" id="profileNome" class="input-field" placeholder=" ">
+                    <label>Nome</label>
                 </div>
-                <div style="flex: 1;">
-                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">COGNOME</label>
-                    <input type="text" id="profileCognome" class="input-field" placeholder="Es. Rossi">
+                <div style="flex: 1;" class="float-wrapper">
+                    <input type="text" id="profileCognome" class="input-field" placeholder=" ">
+                    <label>Cognome</label>
                 </div>
             </div>
 
             <div style="display: flex; gap: 12px;">
-                <div style="flex: 1;">
-                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">MATRICOLA</label>
-                    <input type="text" id="profileMatricola" class="input-field" placeholder="Es. 123456">
+                <div style="flex: 1;" class="float-wrapper">
+                    <input type="text" id="profileMatricola" class="input-field" placeholder=" ">
+                    <label>Matricola</label>
                 </div>
-                <div style="flex: 1;">
-                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">N° OMONIMIA</label>
-                    <input type="text" id="profileProgressivo" class="input-field" placeholder="(Opz) Es. 02">
+                <div style="flex: 1;" class="float-wrapper">
+                    <input type="text" id="profileProgressivo" class="input-field" placeholder=" ">
+                    <label>N° Omonimia</label>
                 </div>
             </div>
 
-            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">SOPRANNOME (FACOLTATIVO)</label>
-            <input type="text" id="profileSoprannome" class="input-field" placeholder="Es. Il Capitano">
+            <div class="float-wrapper">
+                <input type="text" id="profileSoprannome" class="input-field" placeholder=" ">
+                <label>Soprannome (Facoltativo)</label>
+            </div>
 
-            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">TELEFONO</label>
-            <input type="tel" id="profileTelefono" class="input-field" placeholder="Es. 3331234567">
+            <div class="float-wrapper">
+                <input type="tel" id="profileTelefono" class="input-field" placeholder=" ">
+                <label>Telefono</label>
+            </div>
 
             <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">MANSIONE</label>
             <select id="profileMansione" class="input-field" style="cursor:pointer;">
@@ -630,18 +665,37 @@
         <div class="modal-content" style="text-align: center; padding:40px 32px;">
             <h2 id="authModalTitle" style="color:var(--primary); font-weight:800; margin-top:0; margin-bottom:24px; display:flex; align-items:center; justify-content:center; gap:10px;"><i class="fa-solid fa-cloud"></i> Accedi</h2>
             
-            <input type="email" id="emailInput" placeholder="Indirizzo Email" class="input-field">
-            <input type="password" id="passwordInput" placeholder="Password" class="input-field">
+            <div class="float-wrapper">
+                <input type="email" id="emailInput" placeholder=" " class="input-field">
+                <label>Indirizzo Email</label>
+            </div>
+            
+            <div class="float-wrapper">
+                <input type="password" id="passwordInput" placeholder=" " class="input-field">
+                <label>Password</label>
+            </div>
             
             <div id="forgotPasswordLink" style="margin-bottom: 20px; text-align: right;">
                 <a href="#" onclick="recuperaPassword(); return false;" style="font-size: 13px; color: var(--primary); font-weight:600; text-decoration:none;">Password dimenticata?</a>
             </div>
 
             <div id="registerFields" style="display: none; text-align: left;">
-                <input type="text" id="regNome" class="input-field" placeholder="Nome *">
-                <input type="text" id="regCognome" class="input-field" placeholder="Cognome *">
-                <input type="text" id="regMatricola" class="input-field" placeholder="Matricola *">
-                <input type="text" id="regProg" class="input-field" placeholder="Numero Omonimia (facoltativo) es. 02">
+                <div class="float-wrapper">
+                    <input type="text" id="regNome" class="input-field" placeholder=" ">
+                    <label>Nome *</label>
+                </div>
+                <div class="float-wrapper">
+                    <input type="text" id="regCognome" class="input-field" placeholder=" ">
+                    <label>Cognome *</label>
+                </div>
+                <div class="float-wrapper">
+                    <input type="text" id="regMatricola" class="input-field" placeholder=" ">
+                    <label>Matricola *</label>
+                </div>
+                <div class="float-wrapper">
+                    <input type="text" id="regProg" class="input-field" placeholder=" ">
+                    <label>Numero Omonimia es. 02 (facoltativo)</label>
+                </div>
             </div>
             
             <div id="authError" style="color: var(--danger); background: var(--danger-light); padding:10px; border-radius:8px; border:1px solid var(--danger-border); display: none; margin-bottom: 15px; font-size:13px; font-weight:600;"></div>
@@ -668,10 +722,23 @@
         <div class="modal-content" style="text-align: center;">
             <h3 style="color:var(--primary); margin-top:0; font-weight:800;"><i class="fa-solid fa-clipboard-user"></i> Dati Obbligatori</h3>
             <p style="font-size: 14px; color: var(--text-muted); margin-bottom:24px;">Per la sicurezza del database aziendale è richiesto l'inserimento dei dati reali.</p>
-            <input type="text" id="obbl-nome" placeholder="Nome *" class="input-field">
-            <input type="text" id="obbl-cognome" placeholder="Cognome *" class="input-field">
-            <input type="text" id="obbl-matricola" placeholder="Matricola *" class="input-field">
-            <input type="text" id="obbl-prog" placeholder="Numero Omonimia (facoltativo) es. 02" class="input-field">
+            
+            <div class="float-wrapper">
+                <input type="text" id="obbl-nome" placeholder=" " class="input-field">
+                <label>Nome *</label>
+            </div>
+            <div class="float-wrapper">
+                <input type="text" id="obbl-cognome" placeholder=" " class="input-field">
+                <label>Cognome *</label>
+            </div>
+            <div class="float-wrapper">
+                <input type="text" id="obbl-matricola" placeholder=" " class="input-field">
+                <label>Matricola *</label>
+            </div>
+            <div class="float-wrapper">
+                <input type="text" id="obbl-prog" placeholder=" " class="input-field">
+                <label>Numero Omonimia es. 02 (facoltativo)</label>
+            </div>
             <button class="btn-action" style="margin-top:10px;" onclick="salvaDatiObbligatori()"><i class="fa-solid fa-check"></i> Salva e Continua</button>
         </div>
     </div>
@@ -782,108 +849,6 @@
             { id: "admin", label: "Admin", href: "admin.html", condition: "admin", defaultColor: "#ff3b30" },
             { id: "accessi", label: "Accessi", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#1c1c1e" }
         ];
-
-        // --- GESTIONE WIDGET ANTEPRIMA SETTIMANALE ---
-        window.caricaAnteprimaSettimanale = () => {
-            const contenitore = document.getElementById('preview-settimana');
-            if (!contenitore) return;
-
-            // Controllo preferenza Widget
-            if (window.LayoutEngine && window.LayoutEngine.prefs.showWidget === false) {
-                contenitore.style.display = 'none';
-                return;
-            }
-
-            const datiSalvati = localStorage.getItem('anteprima_turni');
-            if (!datiSalvati) return;
-
-            let turni = [];
-            try { turni = JSON.parse(datiSalvati); } catch(e) { return; }
-
-            if (turni.length === 0) return;
-
-            contenitore.style.display = 'flex';
-            contenitore.innerHTML = '';
-
-            const giorniSettimana = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
-            const turniSettimana = turni.slice(0, 7);
-
-            turniSettimana.forEach(t => {
-                const dataObj = new Date(t.data);
-                const giornoNome = giorniSettimana[dataObj.getDay()];
-                const giornoNum = String(dataObj.getDate()).padStart(2, '0');
-                const meseNum = String(dataObj.getMonth() + 1).padStart(2, '0');
-                
-                let codiceTurno = t.turno || "??";
-                let coloreTurno = t.colore || "var(--primary)";
-                if(t.modificato) coloreTurno = "var(--danger)";
-
-                const btn = document.createElement('div');
-                btn.className = 'preview-day';
-                btn.innerHTML = `
-                    <div class="preview-date">${giornoNome} ${giornoNum}/${meseNum}</div>
-                    <div class="preview-turno" style="color: ${coloreTurno}">${codiceTurno}</div>
-                `;
-
-                const noImg = ["RI", "AL", "FER", "MAL", "PER", "L104", "KMAL"];
-                if(!noImg.includes(codiceTurno.toUpperCase()) && codiceTurno !== "??") {
-                    btn.onclick = () => window.apriSoloImmagineTurno(codiceTurno, t.data);
-                }
-
-                contenitore.appendChild(btn);
-            });
-        };
-
-        window.apriSoloImmagineTurno = (codiceTurno, dataISO) => {
-            const modal = document.getElementById('imagePreviewModal');
-            const imgEl = document.getElementById('imgTurnoPreview');
-            const loadEl = document.getElementById('imgTurnoLoading');
-            const errEl = document.getElementById('imgTurnoError');
-            
-            imgEl.style.display = 'none';
-            errEl.style.display = 'none';
-            loadEl.style.display = 'block';
-            modal.style.display = 'flex';
-
-            const dataParts = dataISO.split('-');
-            const mappaCache = localStorage.getItem('mappa_file_cache');
-            let pathTurni = `turni_${dataISO}`; 
-
-            if (mappaCache) {
-                try {
-                    const mappa = JSON.parse(mappaCache);
-                    // Gestisce sia "tree" (GitHub) che "albero" (precedente script di base)
-                    const cartelle = mappa.tree ? mappa.tree.filter(p => p.type==="tree" && p.path.startsWith("turni_")).map(p=>p.path) : (mappa.albero ? mappa.albero.filter(p => p.startsWith("turni_")) : []);
-                    cartelle.sort();
-                    const target = cartelle.find(p => p >= `turni_${dataISO}`) || cartelle[cartelle.length - 1];
-                    if(target) pathTurni = target.replace('/', '');
-                } catch(e) {}
-            }
-
-            const baseUrl = `https://raw.githubusercontent.com/HazeV98/Utility/main/${pathTurni}/${codiceTurno.toUpperCase()}`;
-            
-            const img = new Image();
-            img.onload = function() {
-                loadEl.style.display = 'none';
-                imgEl.src = this.src;
-                imgEl.style.display = 'block';
-            };
-            img.onerror = function() {
-                const imgPng = new Image();
-                imgPng.onload = function() {
-                    loadEl.style.display = 'none';
-                    imgEl.src = this.src;
-                    imgEl.style.display = 'block';
-                };
-                imgPng.onerror = function() {
-                    loadEl.style.display = 'none';
-                    errEl.style.display = 'block';
-                    setTimeout(() => { modal.style.display = 'none'; }, 1500);
-                };
-                imgPng.src = baseUrl + '.png';
-            };
-            img.src = baseUrl + '.jpg';
-        };
 
         window.controllaBacheca = async () => {
             if (!auth.currentUser) return;
@@ -1241,7 +1206,7 @@
         };
 
         window.LayoutEngine = {
-            prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#0066cc", view: "grid", iconStyle: "box", iconType: "minimal", fontSize: 14, theme: "system", showWidget: true, apps: [] },
+            prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#0066cc", view: "grid", iconStyle: "box", iconType: "minimal", fontSize: 14, theme: "system", apps: [] },
             isEditMode: false,
             sortableInstance: null,
             init: function(firebasePrefsStr) {
@@ -1262,7 +1227,6 @@
                 this.applicaGrafica();
                 this.popolaModaleImpostazioni();
                 this.render();
-                window.caricaAnteprimaSettimanale();
             },
             mergeWithDefaults: function() {
                 const defaultIds = DEFAULT_APPS.map(a => a.id);
@@ -1330,7 +1294,6 @@
                 document.getElementById('set-icontype').value = this.prefs.iconType || "minimal";
                 document.getElementById('set-labelsize').value = this.prefs.fontSize || 14;
                 document.getElementById('set-theme').value = this.prefs.theme || 'system';
-                document.getElementById('set-show-widget').checked = this.prefs.showWidget !== false;
             },
             render: function() {
                 const container = document.getElementById('app-container');
@@ -1502,9 +1465,7 @@
                 this.prefs.iconStyle = document.getElementById('set-iconstyle').value; this.prefs.fontSize = parseInt(document.getElementById('set-labelsize').value);
                 this.prefs.iconType = document.getElementById('set-icontype').value;
                 this.prefs.theme = document.getElementById('set-theme').value;
-                this.prefs.showWidget = document.getElementById('set-show-widget').checked;
                 this.applicaGrafica(); this.render(); window.chiudiModal('settingsModal'); this.sincronizzaConFirebase();
-                window.caricaAnteprimaSettimanale();
             },
             sincronizzaConFirebase: async function() {
                 const str = JSON.stringify(this.prefs); localStorage.setItem('preferenze_layout_haze', str);
