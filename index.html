@@ -227,12 +227,10 @@
         .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px 0; justify-items: center; padding: 10px 0; width: 100%; }
         
         .app-grid .app-btn { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-decoration: none; cursor: pointer; position: relative; width: 100%; min-width: 0; animation: slideInUpBouncy 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-        
-        /* --- MODIFICA EFFETTO 3D PULITO (STATO ATTIVO) --- */
         .app-grid .app-btn:active .app-icon { transform: scale(0.88) translateY(4px); box-shadow: 0 1px 3px rgba(0,0,0,0.2), inset 0 6px 12px rgba(0,0,0,0.3); filter: brightness(0.9); transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
         .app-grid .app-btn:active .app-label { transform: scale(0.95); opacity: 0.7; transition: all 0.15s; }
         
-        /* --- MODIFICA EFFETTO 3D PULITO --- */
+        /* Effetto 3D Base */
         .app-grid .app-icon { 
             width: 62px; height: 62px; margin: 0 auto 10px auto; border-radius: 18px; 
             color: white; font-size: 28px; display: flex; align-items: center; justify-content: center; 
@@ -247,7 +245,6 @@
         }
         .app-grid .app-btn:active .app-icon::before { opacity: 1; transition: 0s; }
 
-        /* Rimuove l'effetto luce diagonale preesistente */
         .app-grid .app-icon::after { display: none; }
         
         .app-grid .app-label { font-size: var(--label-size); color: var(--text-main); font-weight: 600; text-align: center; line-height: 1.2; text-shadow: 0px 1px 3px rgba(255,255,255,0.8); width: 100%; word-wrap: break-word; transition: var(--transition); }
@@ -258,7 +255,7 @@
         .app-list .app-btn::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.05); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .app-list .app-btn:active::after { opacity: 1; transition: 0s; }
         
-        /* --- MODIFICA EFFETTO 3D PULITO (LISTA) --- */
+        /* Effetto 3D Lista Base */
         .app-list .app-icon { width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 6px 12px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1), inset 0 -4px 6px rgba(0,0,0,0.2); border: 1px solid rgba(0,0,0,0.04); overflow: hidden; }
         .app-list .app-label { font-size: calc(var(--label-size) + 2px); color: #1a1a1a; font-weight: 700; margin: 0; text-shadow: none; flex: 1; text-align: left; }
 
@@ -266,6 +263,17 @@
         .transparent-icons .app-icon::after, .transparent-icons .app-icon::before { display: none; }
         .transparent-icons.app-grid .app-icon { font-size: 36px !important; } 
         .transparent-icons.app-list .app-icon { font-size: 26px !important; }
+
+        /* Dark mode overrides per l'effetto 3D e nomi app */
+        :root[data-theme="dark"] .app-grid .app-icon { box-shadow: 0 12px 24px -6px rgba(0,0,0,0.8), 0 4px 8px -2px rgba(0,0,0,0.5), inset 0 -6px 12px rgba(0,0,0,0.6), inset 1px 1px 3px rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.08); }
+        :root[data-theme="dark"] .app-list .app-icon { box-shadow: 0 6px 12px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4), inset 0 -4px 6px rgba(0,0,0,0.5), inset 1px 1px 2px rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.08); }
+        :root[data-theme="dark"] .app-grid .app-label { text-shadow: none; }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .app-grid .app-icon { box-shadow: 0 12px 24px -6px rgba(0,0,0,0.8), 0 4px 8px -2px rgba(0,0,0,0.5), inset 0 -6px 12px rgba(0,0,0,0.6), inset 1px 1px 3px rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.08); }
+            :root:not([data-theme="light"]) .app-list .app-icon { box-shadow: 0 6px 12px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4), inset 0 -4px 6px rgba(0,0,0,0.5), inset 1px 1px 2px rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.08); }
+            :root:not([data-theme="light"]) .app-grid .app-label { text-shadow: none; }
+        }
 
         @keyframes wiggle { 0% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } 100% { transform: rotate(-2deg); } }
         .wiggle-mode .app-btn { animation: wiggle 0.3s infinite; cursor: grab; }
@@ -643,7 +651,7 @@
                 <label>Telefono</label>
             </div>
 
-            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">MANSIONE</label>
+            <label style="font-size: 11px; font-weight: 700; color: var(--primary); margin-bottom:8px; display:block;">MANSIONE</label>
             <select id="profileMansione" class="input-field" style="cursor:pointer;">
                 <option value="" disabled selected>Seleziona Mansione (Facoltativo)</option>
                 <option value="Preposto al comando">Preposto al comando</option>
