@@ -263,9 +263,11 @@
         
         .app-grid .app-btn:active .app-icon { 
             transform: scale(0.88) translateY(4px); 
+            /* Inversione dell'effetto 3D al click (effetto schiacciamento) */
             box-shadow: 
                 0 2px 5px -1px rgba(0,0,0,0.2),
-                inset 0 -2px 4px rgba(0,0,0,0.1);
+                inset 0 4px 8px rgba(0,0,0,0.15), 
+                inset 0 -2px 4px rgba(255,255,255,0.15);
             filter: brightness(0.9); 
             transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); 
         }
@@ -279,9 +281,19 @@
         .app-grid .app-icon { 
             width: 62px; height: 62px; margin: 0 auto 10px auto; border-radius: 18px; 
             color: white; font-size: 28px; display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.2), inset 0 -4px 8px rgba(0,0,0,0.15); 
-            border: 1px solid rgba(0,0,0,0.05); 
+            /* VERO EFFETTO 3D TANGIBILE - Luce bilanciata */
+            box-shadow: 
+                0 10px 20px -5px rgba(0,0,0,0.2), /* Ombra esterna */
+                inset 0 4px 8px rgba(255,255,255,0.2), /* Luce forte dall'alto (glass) - Smorzata */
+                inset 0 -4px 8px rgba(0,0,0,0.2); /* Ombra interna in basso */
+            border: 1px solid rgba(255,255,255,0.15); 
             transition: var(--transition); overflow: hidden; position: relative;
+        }
+        
+        .app-grid .app-icon::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            /* Effetto diagonale smorzato */
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%);
         }
         
         .app-grid .app-label { 
@@ -303,8 +315,8 @@
         .app-list .app-icon { 
             width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 20px; 
             display: flex; align-items: center; justify-content: center; flex-shrink: 0; 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1), inset 0 -3px 5px rgba(0,0,0,0.15); 
-            border: 1px solid rgba(0,0,0,0.05); overflow: hidden; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1), inset 0 3px 5px rgba(255,255,255,0.2), inset 0 -3px 5px rgba(0,0,0,0.15); 
+            border: 1px solid rgba(255,255,255,0.15); overflow: hidden; 
         }
         .app-list .app-label { font-size: calc(var(--label-size) + 2px); color: #1a1a1a; font-weight: 700; margin: 0; text-shadow: none; flex: 1; text-align: left; }
 
@@ -312,29 +324,36 @@
         :root[data-theme="dark"] .app-grid .app-icon { 
             box-shadow: 
                 0 10px 20px -5px rgba(0,0,0,0.5),
+                inset 0 2px 4px rgba(255,255,255,0.05), /* Solo un leggero bordo superiore */
                 inset 0 -4px 8px rgba(0,0,0,0.4); 
             border: 1px solid rgba(255,255,255,0.02); 
+        }
+        /* Disattivazione specifica della diagonale in Dark Mode */
+        :root[data-theme="dark"] .app-grid .app-icon::after {
+            display: none;
         }
         :root[data-theme="dark"] .app-grid .app-btn:active .app-icon { 
             box-shadow: 
                 0 2px 5px -1px rgba(0,0,0,0.4),
-                inset 0 -2px 4px rgba(0,0,0,0.3);
+                inset 0 4px 8px rgba(0,0,0,0.4), 
+                inset 0 -2px 4px rgba(255,255,255,0.05);
         }
         :root[data-theme="dark"] .app-grid .app-label { text-shadow: 0px 1px 3px rgba(0,0,0,0.9); }
         :root[data-theme="dark"] .app-list .app-btn { background: rgba(30, 30, 30, 0.7); border: 1px solid rgba(255,255,255,0.05); }
         :root[data-theme="dark"] .app-list .app-label { color: #e8eaed; }
         :root[data-theme="dark"] .app-list .app-icon {
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 -3px 5px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.05), inset 0 -3px 5px rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.02);
         }
         
         @media (prefers-color-scheme: dark) {
-            :root:not([data-theme="light"]) .app-grid .app-icon { box-shadow: 0 10px 20px -5px rgba(0,0,0,0.5), inset 0 -4px 8px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.02); }
-            :root:not([data-theme="light"]) .app-grid .app-btn:active .app-icon { box-shadow: 0 2px 5px -1px rgba(0,0,0,0.4), inset 0 -2px 4px rgba(0,0,0,0.3); }
+            :root:not([data-theme="light"]) .app-grid .app-icon { box-shadow: 0 10px 20px -5px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.05), inset 0 -4px 8px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.02); }
+            :root:not([data-theme="light"]) .app-grid .app-icon::after { display: none; }
+            :root:not([data-theme="light"]) .app-grid .app-btn:active .app-icon { box-shadow: 0 2px 5px -1px rgba(0,0,0,0.4), inset 0 4px 8px rgba(0,0,0,0.4), inset 0 -2px 4px rgba(255,255,255,0.05); }
             :root:not([data-theme="light"]) .app-grid .app-label { text-shadow: 0px 1px 3px rgba(0,0,0,0.9); }
             :root:not([data-theme="light"]) .app-list .app-btn { background: rgba(30, 30, 30, 0.7); border: 1px solid rgba(255,255,255,0.05); }
             :root:not([data-theme="light"]) .app-list .app-label { color: #e8eaed; }
-            :root:not([data-theme="light"]) .app-list .app-icon { box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 -3px 5px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.02); }
+            :root:not([data-theme="light"]) .app-list .app-icon { box-shadow: 0 4px 8px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.05), inset 0 -3px 5px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.02); }
         }
 
         .transparent-icons .app-icon { background-color: transparent !important; box-shadow: none !important; border: none !important; color: var(--text-main) !important; }
