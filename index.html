@@ -152,7 +152,7 @@
             transition: background-image 0.6s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease;
         }
 
-        /* --- NUOVE ANIMAZIONI BOUNCY --- */
+        /* --- NUOVE ANIMAZIONI BOUNCY E VERO 3D --- */
         @keyframes slideInUpBouncy { 
             0% { opacity: 0; transform: translateY(35px) scale(0.9); } 
             65% { opacity: 1; transform: translateY(-4px) scale(1.02); } 
@@ -162,6 +162,17 @@
             0% { opacity: 0; transform: scale(0.92) translateY(20px); }
             100% { opacity: 1; transform: scale(1) translateY(0); }
         }
+        
+        /* Modale Profilo: Espansione specifica dal bottone alto-sinistra */
+        #profileModal .modal-content {
+            transform-origin: 15% -10%;
+            animation: expandFromProfileBtn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15) forwards;
+        }
+        @keyframes expandFromProfileBtn {
+            0% { opacity: 0; transform: scale(0.05); border-radius: 60px; }
+            100% { opacity: 1; transform: scale(1); border-radius: var(--radius-lg); }
+        }
+
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); opacity: 0.8; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
@@ -236,7 +247,7 @@
             width: 100%;
         }
         
-        /* --- APP ICONS E INTERAZIONI --- */
+        /* --- APP ICONS E INTERAZIONI 3D --- */
         .app-grid .app-btn { 
             display: flex; 
             flex-direction: column; 
@@ -250,12 +261,17 @@
             animation: slideInUpBouncy 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; 
         }
         
-        /* Animazione distinta per l'icona e per il testo al tocco */
         .app-grid .app-btn:active .app-icon { 
             transform: scale(0.88) translateY(4px); 
-            filter: brightness(0.85); 
+            /* Inversione dell'effetto 3D al click (effetto schiacciamento) */
+            box-shadow: 
+                0 2px 5px -1px rgba(0,0,0,0.2),
+                inset 0 4px 8px rgba(0,0,0,0.25), 
+                inset 0 -2px 4px rgba(255,255,255,0.3);
+            filter: brightness(0.9); 
             transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); 
         }
+        
         .app-grid .app-btn:active .app-label { 
             transform: scale(0.95); 
             opacity: 0.7; 
@@ -265,13 +281,18 @@
         .app-grid .app-icon { 
             width: 62px; height: 62px; margin: 0 auto 10px auto; border-radius: 18px; 
             color: white; font-size: 28px; display: flex; align-items: center; justify-content: center; 
-            box-shadow: var(--shadow-md), inset 0 2px 4px rgba(255,255,255,0.25); /* Luce interna */
-            border: 1px solid rgba(255,255,255,0.1); /* Bordo glassmorphism */
+            /* VERO EFFETTO 3D TANGIBILE */
+            box-shadow: 
+                0 10px 20px -5px rgba(0,0,0,0.2), /* Ombra esterna per dare profondità */
+                inset 0 4px 8px rgba(255,255,255,0.5), /* Luce forte dall'alto (glass) */
+                inset 0 -4px 8px rgba(0,0,0,0.2); /* Ombra interna in basso */
+            border: 1px solid rgba(255,255,255,0.25); 
             transition: var(--transition); overflow: hidden; position: relative;
         }
+        
         .app-grid .app-icon::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%);
+            background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 50%);
         }
         
         .app-grid .app-label { 
@@ -293,18 +314,32 @@
         .app-list .app-icon { 
             width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 20px; 
             display: flex; align-items: center; justify-content: center; flex-shrink: 0; 
-            box-shadow: var(--shadow-sm), inset 0 2px 3px rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.1); overflow: hidden; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1), inset 0 3px 5px rgba(255,255,255,0.4), inset 0 -3px 5px rgba(0,0,0,0.15); 
+            border: 1px solid rgba(255,255,255,0.2); overflow: hidden; 
         }
         .app-list .app-label { font-size: calc(var(--label-size) + 2px); color: #1a1a1a; font-weight: 700; margin: 0; text-shadow: none; flex: 1; text-align: left; }
 
-        /* Dark mode tweaks per le ombre */
-        :root[data-theme="dark"] .app-grid .app-icon { box-shadow: var(--shadow-md), inset 0 2px 3px rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.03); }
+        /* Dark mode tweaks per le ombre e l'effetto 3D */
+        :root[data-theme="dark"] .app-grid .app-icon { 
+            box-shadow: 
+                0 10px 20px -5px rgba(0,0,0,0.5),
+                inset 0 3px 6px rgba(255,255,255,0.15), 
+                inset 0 -4px 8px rgba(0,0,0,0.4); 
+            border: 1px solid rgba(255,255,255,0.05); 
+        }
+        :root[data-theme="dark"] .app-grid .app-btn:active .app-icon { 
+            box-shadow: 
+                0 2px 5px -1px rgba(0,0,0,0.4),
+                inset 0 4px 8px rgba(0,0,0,0.4), 
+                inset 0 -2px 4px rgba(255,255,255,0.1);
+        }
         :root[data-theme="dark"] .app-grid .app-label { text-shadow: 0px 1px 3px rgba(0,0,0,0.9); }
         :root[data-theme="dark"] .app-list .app-btn { background: rgba(30, 30, 30, 0.7); border: 1px solid rgba(255,255,255,0.05); }
         :root[data-theme="dark"] .app-list .app-label { color: #e8eaed; }
         
         @media (prefers-color-scheme: dark) {
-            :root:not([data-theme="light"]) .app-grid .app-icon { box-shadow: var(--shadow-md), inset 0 2px 3px rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.03); }
+            :root:not([data-theme="light"]) .app-grid .app-icon { box-shadow: 0 10px 20px -5px rgba(0,0,0,0.5), inset 0 3px 6px rgba(255,255,255,0.15), inset 0 -4px 8px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); }
+            :root:not([data-theme="light"]) .app-grid .app-btn:active .app-icon { box-shadow: 0 2px 5px -1px rgba(0,0,0,0.4), inset 0 4px 8px rgba(0,0,0,0.4), inset 0 -2px 4px rgba(255,255,255,0.1); }
             :root:not([data-theme="light"]) .app-grid .app-label { text-shadow: 0px 1px 3px rgba(0,0,0,0.9); }
             :root:not([data-theme="light"]) .app-list .app-btn { background: rgba(30, 30, 30, 0.7); border: 1px solid rgba(255,255,255,0.05); }
             :root:not([data-theme="light"]) .app-list .app-label { color: #e8eaed; }
@@ -337,12 +372,12 @@
         
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 7000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: fadeIn 0.3s ease; }
         
-        /* Modale con effetto pop e glassmorphism sul bordo */
+        /* Modale di default con glassmorphism sul bordo */
         .modal-content { 
             background: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 380px; text-align: left; 
             box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.4) inset; border: 1px solid var(--border-color); 
             position: relative; color: var(--text-main); max-height: 90vh; overflow-y: auto; 
-            animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+            animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
         }
         :root[data-theme="dark"] .modal-content { box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.05) inset; }
         
