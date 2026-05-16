@@ -57,7 +57,6 @@
             --transition-speed: 0.3s;
         }
 
-        /* TEMA SCURO - Override Esplicito */
         :root[data-theme="dark"] {
             --primary: #4da3ff;
             --primary-hover: #73b9ff;
@@ -77,7 +76,6 @@
             --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
         }
 
-        /* TEMA SCURO - Default di Sistema (Se non c'è forzatura Light) */
         @media (prefers-color-scheme: dark) {
             :root:not([data-theme="light"]) {
                 --primary: #4da3ff;
@@ -112,21 +110,18 @@
             -webkit-font-smoothing: antialiased;
         }
         
-        /* ANIMAZIONI BASE */
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-pop { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-        /* HEADER */
         .header { width: 100%; max-width: 420px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
         .hamburger-btn { background: none; border: none; font-size: 26px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; transition: transform 0.2s; display: flex; align-items: center;}
         .hamburger-btn:active { transform: scale(0.9); }
         h2 { margin: 0; color: var(--text-main); font-size: 24px; font-weight: 700; text-align: center; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px;}
         h2 i { color: var(--primary); }
         
-        /* MENU LATERALE */
         .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 5999; animation: fadeIn 0.3s ease; }
         .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: var(--shadow-lg); z-index: 6000; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; overflow-y: auto;}
         .sidebar.open { left: 0; }
@@ -139,11 +134,9 @@
         .sidebar-link.active-link { background-color: var(--primary-glow); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary); padding-left: 20px;}
         .sidebar-link.active-link i { color: var(--primary); }
 
-        /* VISTE DI SICUREZZA E CONTENITORI */
         .view-container { width: 100%; max-width: 420px; display: none; flex-direction: column; gap: 20px; text-align: center; }
         .card-panel { background: var(--surface); padding: 32px 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); text-align: left; border: 1px solid var(--border-color); }
         
-        /* PULSANTI */
         .btn-action { background-color: var(--primary); color: white; border: none; padding: 16px; font-size: 16px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; width: 100%; transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 4px 12px var(--primary-glow); }
         .btn-action:hover { background-color: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 16px var(--primary-glow); }
         .btn-action:active { transform: translateY(1px); box-shadow: none; }
@@ -156,22 +149,18 @@
         .btn-outline { background-color: transparent; border: 2px solid var(--primary); color: var(--primary); padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .btn-outline:hover { background-color: var(--primary); color: white; }
 
-        /* INPUTS */
         .input-field { width: 100%; padding: 16px; margin-bottom: 20px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 15px; font-family: inherit; background-color: var(--surface); color: var(--text-main); transition: all 0.2s; }
         .input-field:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-glow); }
         .input-field::placeholder { color: var(--text-muted); opacity: 0.7; }
 
-        /* MODALI */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 5000; padding: 20px; box-sizing: border-box; animation: fadeIn 0.3s ease; }
         .modal-content { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 380px; text-align: left; box-shadow: var(--shadow-lg); position: relative; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-color); }
         
-        /* LISTE UTENTI */
         .user-list-item { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 16px; border-radius: var(--radius-md); margin-bottom: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); transition: transform 0.2s; }
         .user-list-item:hover { transform: translateX(4px); border-color: var(--primary); }
         .user-banned { background: var(--danger-light); border-color: var(--danger-border); }
         .user-banned:hover { border-color: var(--danger); }
 
-        /* CONTENUTI SPECIFICI TURNI */
         .status-message { text-align: center; color: var(--text-muted); font-size: 15px; padding: 24px; background: var(--surface); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 10px;}
         
         .folder-btn { background-color: var(--surface); color: var(--text-main); border: 2px solid var(--border-color); padding: 24px 20px; font-size: 16px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; text-align: left; box-shadow: var(--shadow-sm); transition: all 0.2s; display: flex; align-items: center; gap: 16px; }
@@ -349,21 +338,7 @@
         </div>
     </div>
 
-    <div id="imageModal" style="display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); overflow: hidden; animation: fadeIn 0.3s ease;" onclick="chiudiSeSfondoImg(event)">
-        <i class="fa-solid fa-xmark" style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 24px; font-size: 32px; color: white; cursor: pointer; text-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 20001; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiImageModal()"></i>
-        <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px; padding-bottom: 100px; position: relative;">
-            <img id="turnoImage" src="" style="max-width: 100%; max-height: 75vh; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); object-fit: contain; background: white;">
-            
-            <div id="imageBanner" style="position: relative; z-index: 20001; margin-top: 24px; background: rgba(20,20,20,0.85); backdrop-filter: blur(10px); color: #fff; padding: 14px 24px; border-radius: 12px; font-size: 14px; text-align: center; max-width: 90%; box-shadow: 0 8px 20px rgba(0,0,0,0.4); font-weight: 500; border: 1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:10px;">
-                ⚠️ Controllare sempre la presenza di eventuali varianti ai turni.
-            </div>
-            
-        </div>
-        <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(40px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: var(--primary); color: white; border: none; padding: 16px 32px; border-radius: 30px; font-weight: 700; font-size: 16px; box-shadow: 0 8px 25px var(--primary-glow); cursor: pointer; z-index: 20001; transition: all 0.2s; display: flex; align-items: center; gap: 10px;">
-            <i class="fa-solid fa-download" style="font-size: 18px;"></i> Scarica Turno
-        </button>
-    </div>
-
+    <!-- Modale Cerca Corse inalterata -->
     <div id="searchCorseModal" class="modal-overlay-search" onclick="chiudiSeSfondoSearch(event)">
         <div class="modal-content-search">
             <i class="fa-solid fa-xmark close-modal" onclick="chiudiSearchCorseModal()"></i>
@@ -405,9 +380,12 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Importiamo il nostro nuovo modulo visualizzatore
+        import { initVisualizzatore } from "./moduli/visualizzatore.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -445,7 +423,6 @@
                 return;
             }
 
-            // Mostra permessi admin se corrispondono
             if (user.uid === ADMIN_UID) {
                 document.getElementById('btn-admin-gestione').style.display = 'flex';
                 const menuAdmin = document.getElementById('menu-admin');
@@ -618,8 +595,6 @@
         let currentImgList = [];
         let currentImgDir = "";
         let currentCorseData = null; 
-        let pzInstance = null;
-        let currentImagePath = "";
         let mappaAlbero = [];
 
         window.downloadForzato = async (url, filename) => {
@@ -635,28 +610,8 @@
         };
 
         async function initTurniApp() {
-            const imgElem = document.getElementById('turnoImage');
-            if (typeof Panzoom !== 'undefined') {
-                pzInstance = Panzoom(imgElem, { maxScale: 5, minScale: 1 });
-                document.getElementById('imageFlexContainer').addEventListener('wheel', pzInstance.zoomWithWheel);
-                
-                function eseguiZoomToggle(e) {
-                    if (!pzInstance) return;
-                    let currentScale = pzInstance.getScale();
-                    if (currentScale < 1.1) pzInstance.zoom(1.75, { animate: true });
-                    else pzInstance.reset({ animate: true });
-                }
-
-                let lastTap = 0; let isPinching = false;
-                imgElem.addEventListener('touchstart', function(e) { if (e.touches.length > 1) { isPinching = true; } });
-                imgElem.addEventListener('touchend', function(e) {
-                    if (isPinching) { if (e.touches.length === 0) { setTimeout(() => isPinching = false, 300); } return; }
-                    let currentTime = new Date().getTime(); let tapLength = currentTime - lastTap;
-                    if (tapLength < 300 && tapLength > 0) { eseguiZoomToggle(e); if (e.cancelable) e.preventDefault(); }
-                    lastTap = currentTime;
-                });
-                imgElem.addEventListener('dblclick', function(e) { eseguiZoomToggle(e); });
-            }
+            // Avviamo il modulo del visualizzatore immagini
+            initVisualizzatore();
 
             const area = document.getElementById('content-area');
             try {
@@ -764,7 +719,6 @@
                     if (hasJson) {
                         const btnSearch = document.createElement('button');
                         btnSearch.className = "icon-btn btn-search-spec"; 
-                        // Bottone con icona lente di ingrandimento
                         btnSearch.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
                         btnSearch.onclick = () => window.apriRicercaCorse(nomeOrig, dir);
                         row.appendChild(btnSearch);
@@ -792,7 +746,10 @@
                     const nomeSenzaExt = m.name.replace(/\.[^/.]+$/, "").toUpperCase();
                     const item = document.createElement('div'); item.className = 'suggestion-item';
                     item.innerHTML = `<span>Turno <strong>${nomeSenzaExt}</strong></span> <i class="fa-regular fa-image"></i>`;
-                    item.onclick = () => { window.apriImmagineTurno(m.name); box.style.display = 'none'; input.value = ''; };
+                    
+                    // Ora usiamo il modulo:
+                    item.onclick = () => { window.apriImmagineTurno(`${currentImgDir}/${m.name}`); box.style.display = 'none'; input.value = ''; };
+                    
                     box.appendChild(item);
                 });
                 box.style.display = 'block';
@@ -801,17 +758,10 @@
             }
         };
 
-        window.chiudiSeSfondoImg = (event) => { if (event.target.id === 'imageModal' || event.target.id === 'imageFlexContainer') window.chiudiImageModal(); };
-        window.chiudiImageModal = () => { document.getElementById('imageModal').style.display = 'none'; document.getElementById('turnoImage').removeAttribute('src'); if (pzInstance) { pzInstance.reset(); } };
-        window.erroreImmagine = () => { document.getElementById('turnoImage').onerror = null; alert("Immagine non trovata."); window.chiudiImageModal(); };
-        window.scaricaImmagineTurno = () => { if (!currentImagePath) return; const a = document.createElement('a'); a.href = currentImagePath; a.download = currentImagePath.split('/').pop(); document.body.appendChild(a); a.click(); document.body.removeChild(a); };
-        window.apriImmagineTurno = (nomeFile) => { currentImagePath = `${currentImgDir}/${nomeFile}`; let imgElement = document.getElementById('turnoImage'); imgElement.onerror = window.erroreImmagine; imgElement.src = currentImagePath; if (pzInstance) { pzInstance.reset(); } document.getElementById('imageModal').style.display = 'block'; };
-        
-        window.apriImmagineTurnoDallaRicerca = (turnoPilota) => {
-            if (!currentImgList || currentImgList.length === 0) { alert("Nessuna immagine disponibile."); return; }
-            const match = currentImgList.find(f => { return f.name.replace(/\.[^/.]+$/, "").toUpperCase().includes(turnoPilota.toUpperCase()); });
-            if (match) { window.apriImmagineTurno(match.name); } else { alert("Immagine turno " + turnoPilota + " non trovata."); }
-        };
+        // Questo wrapper ci permette di richiamare la funzione del modulo passandogli i dati caricati in questa pagina
+        window.cercaEApriDaRisultato = (codiceTurno) => {
+            window.cercaEApriTurno(codiceTurno, currentImgList, currentImgDir);
+        }
 
         window.chiudiSeSfondoSearch = (event) => { if (event.target.id === 'searchCorseModal') { window.chiudiSearchCorseModal(); } };
         window.chiudiSearchCorseModal = () => { document.getElementById('searchCorseModal').style.display = 'none'; };
@@ -939,7 +889,8 @@
                     } catch(e) {}
                 }
 
-                box.innerHTML = `<div style="margin-bottom:8px;"><i class="fa-regular fa-calendar" style="color:var(--primary); width:20px;"></i> <strong>Data:</strong> ${giorno ? giorno.split('-').reverse().join('/') : "Oggi"}</div><div style="margin-bottom:16px;"><i class="fa-solid fa-location-dot" style="color:var(--primary); width:20px;"></i> <strong>${tipo === 'partenza' ? 'Partenza da' : 'Arrivo a'}:</strong> ${luogo} alle ${orarioInput}</div><strong style="display:block; margin-bottom:12px; color:var(--text-muted); font-size:13px; text-transform:uppercase;">Turni che effettuano la corsa:</strong><div style="display:flex; flex-wrap:wrap; gap:10px;">${turniTrovati.map(t => `<button class="file-btn" style="flex-grow:0; width:auto; padding: 10px 16px; font-size: 14px; margin:0;" onclick="apriImmagineTurnoDallaRicerca('${t}')"><i class="fa-regular fa-image" style="color:var(--primary);"></i> ${t}</button>`).join('')}</div>${rotazioniHtml}`;
+                // Ora usa il nuovo wrapper che chiama il modulo!
+                box.innerHTML = `<div style="margin-bottom:8px;"><i class="fa-regular fa-calendar" style="color:var(--primary); width:20px;"></i> <strong>Data:</strong> ${giorno ? giorno.split('-').reverse().join('/') : "Oggi"}</div><div style="margin-bottom:16px;"><i class="fa-solid fa-location-dot" style="color:var(--primary); width:20px;"></i> <strong>${tipo === 'partenza' ? 'Partenza da' : 'Arrivo a'}:</strong> ${luogo} alle ${orarioInput}</div><strong style="display:block; margin-bottom:12px; color:var(--text-muted); font-size:13px; text-transform:uppercase;">Turni che effettuano la corsa:</strong><div style="display:flex; flex-wrap:wrap; gap:10px;">${turniTrovati.map(t => `<button class="file-btn" style="flex-grow:0; width:auto; padding: 10px 16px; font-size: 14px; margin:0;" onclick="cercaEApriDaRisultato('${t}')"><i class="fa-regular fa-image" style="color:var(--primary);"></i> ${t}</button>`).join('')}</div>${rotazioniHtml}`;
             } else { box.innerHTML = "<i class='fa-solid fa-circle-info' style='color:var(--primary);'></i> Nessun turno trovato nel database per questa selezione."; }
         };
 
