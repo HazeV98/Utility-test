@@ -1,0 +1,4618 @@
+{
+  "2C01_LUN": [
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "22:46",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "23:10"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "23:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "23:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "23:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "23:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "23:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "0:09"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "0:50",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "1:27"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "1:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "2:09"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "2:20",
+      "arrivo_luogo": "TRONCHETTO",
+      "arrivo_ora": "2:29"
+    },
+    {
+      "partenza_luogo": "TRONCHETTO",
+      "partenza_ora": "2:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "2:39"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "2:50",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "3:27"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "3:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "4:09"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "4:20",
+      "arrivo_luogo": "TRONCHETTO",
+      "arrivo_ora": "4:29"
+    },
+    {
+      "partenza_luogo": "TRONCHETTO",
+      "partenza_ora": "4:29",
+      "arrivo_luogo": "TRONCHETTO",
+      "arrivo_ora": "4:30"
+    },
+    {
+      "partenza_luogo": "TRONCHETTO",
+      "partenza_ora": "4:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "4:39"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "4:50",
+      "arrivo_luogo": "M.V.E",
+      "arrivo_ora": "5:27"
+    }
+  ],
+  "2C02_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "0:02",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "0:12"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "0:12",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "0:30"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "0:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "1:09"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "1:20",
+      "arrivo_luogo": "TRONCHETTO",
+      "arrivo_ora": "1:29"
+    },
+    {
+      "partenza_luogo": "TRONCHETTO",
+      "partenza_ora": "1:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "1:39"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "1:50",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "2:27"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "2:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "3:09"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "3:20",
+      "arrivo_luogo": "TRONCHETTO",
+      "arrivo_ora": "3:29"
+    },
+    {
+      "partenza_luogo": "TRONCHETTO",
+      "partenza_ora": "3:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "3:39"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "3:50",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "4:27"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "4:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "5:09"
+    }
+  ],
+  "2C03_LUN": [
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "22:55",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "23:13"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "23:13",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "23:16"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "23:16",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "23:19"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "23:30",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "23:33"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "23:36",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "23:39"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "23:39",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "23:58"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "0:03",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "0:50"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "1:09",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "1:26"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "1:26",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "1:33"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "1:34",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "1:50"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "2:09",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "2:26"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "2:26",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "2:33"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "2:34",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "2:50"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "3:09",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "3:26"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "3:26",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "3:33"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "3:34",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "3:50"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "3:50",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "4:00"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "4:18",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "4:28"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "4:28",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "4:55"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "4:55",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "5:14"
+    }
+  ],
+  "2C04_LUN": [
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "22:36",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "22:56"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "23:13",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "23:16"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "23:16",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "23:19"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "23:30",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "23:33"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "23:36",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "23:39"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "23:39",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "23:51"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "23:57",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "0:30"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "0:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "0:32"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "0:49",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "1:36"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "1:36",
+      "arrivo_luogo": "DEP. ARSENALE",
+      "arrivo_ora": "1:48"
+    },
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "1:48",
+      "arrivo_luogo": "DEP. ARSENALE",
+      "arrivo_ora": "1:58"
+    },
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "1:58",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "2:03"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "2:17",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "2:43"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "2:43",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "2:56"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "3:03",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "3:17"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "3:43",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "3:56"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "4:03",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "4:50"
+    }
+  ],
+  "2C05_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "22:36",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "22:46"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "22:46",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "23:04"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "23:04",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "23:17"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "23:36",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "23:50"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "0:04",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "0:17"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "0:19",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "0:33"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "1:03",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "1:16"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "1:33",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "2:20"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "2:39",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "3:26"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "3:33",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "4:20"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "4:39",
+      "arrivo_luogo": "S.TOMA'",
+      "arrivo_ora": "5:01"
+    }
+  ],
+  "2C06_LUN": [
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "16:27",
+      "arrivo_luogo": "DEP. ARSENALE",
+      "arrivo_ora": "16:37"
+    },
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "16:37",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "16:40"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "16:40",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "16:46"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "16:50",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "16:56"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "17:00",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "17:06"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "17:10",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "17:16"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "17:20",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "17:26"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "17:30",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "17:36"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "17:40",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "17:46"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "17:50",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "17:56"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "18:00",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "18:06"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "18:10",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "18:16"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "18:20",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "18:26"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "18:30",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "18:36"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "18:40",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "18:46"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "18:50",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "18:56"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "18:56",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "19:31"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "19:53",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "19:56"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "19:56",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "19:59"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "20:10",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "20:13"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "20:16",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "20:19"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "20:30",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "20:33"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "20:36",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "20:39"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "20:50",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "20:53"
+    }
+  ],
+  "2C07_LUN": [
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "4:40",
+      "arrivo_luogo": "DEP. ARSENALE",
+      "arrivo_ora": "4:50"
+    },
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "4:50",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "5:00"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "5:00",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "5:09"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "5:10",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "5:19"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "5:20",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "5:29"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "5:30",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "5:39"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "5:40",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "5:49"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "5:50",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "5:59"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "6:00",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "6:03"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "6:06",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "6:09"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "6:10",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "6:13"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "6:16",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "6:19"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "6:20",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "6:23"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "6:26",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "6:29"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "6:30",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "6:33"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "6:36",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "6:39"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "6:40",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "6:43"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "7:23",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "7:26"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "7:26",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "7:29"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "7:30",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "7:33"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "7:36",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "7:39"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "7:40",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "7:43"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "7:46",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "7:49"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "7:50",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "7:53"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "7:56",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "7:59"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "8:00",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "8:03"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "8:06",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "8:09"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "8:10",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "8:13"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "8:16",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "8:19"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "8:20",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "8:23"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "8:26",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "8:29"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "8:30",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "8:33"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "8:36",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "8:39"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "8:40",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "8:43"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "8:46",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "8:49"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "8:50",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "8:53"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "8:54",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "8:59"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "9:43",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "9:46"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "9:46",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "9:49"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "10:00",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "10:03"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "10:06",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "10:09"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "10:20",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "10:23"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "10:26",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "10:29"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "10:40",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "10:43"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "10:46",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "10:49"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "11:00",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "11:03"
+    }
+  ],
+  "2C08_LUN": [
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "5:47",
+      "arrivo_luogo": "DEP. ARSENALE",
+      "arrivo_ora": "5:57"
+    },
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "5:57",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "6:00"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "6:00",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "6:06"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "6:10",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "6:16"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "6:20",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "6:26"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "6:30",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "6:36"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "6:40",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "6:46"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "6:50",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "6:56"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "7:00",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "7:06"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "7:10",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "7:16"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "8:06",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "8:10"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "8:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "8:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "8:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "8:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "8:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "8:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "8:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "8:46"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "8:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "8:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "9:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "9:06"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "9:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "9:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "9:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "9:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "9:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "9:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "9:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "9:46"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "9:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "9:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "10:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "10:06"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "11:06",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "11:10"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "11:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "11:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "11:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "11:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "11:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "11:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "11:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "11:46"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "11:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "11:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "12:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "12:06"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "12:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "12:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "12:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "12:26"
+    }
+  ],
+  "2C09_LUN": [
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "4:37",
+      "arrivo_luogo": "DEP. ARSENALE",
+      "arrivo_ora": "4:47"
+    },
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "4:47",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "4:50"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "4:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "4:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "5:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "5:06"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "5:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "5:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "5:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "5:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "5:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "5:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "5:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "5:46"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "5:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "5:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "6:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "6:06"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "6:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "6:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "6:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "6:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "7:16",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "7:20"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "7:20",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "7:26"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "7:30",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "7:36"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "7:40",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "7:46"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "7:50",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "7:56"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "8:00",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "8:06"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "8:10",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "8:16"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "8:20",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "8:26"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "8:30",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "8:36"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "8:40",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "8:46"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "8:50",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "8:56"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "9:00",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "9:06"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "9:10",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "9:16"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "9:16",
+      "arrivo_luogo": "DEP. ARSENALE",
+      "arrivo_ora": "9:19"
+    },
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "9:19",
+      "arrivo_luogo": "DEP. ARSENALE",
+      "arrivo_ora": "9:29"
+    },
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "9:30",
+      "arrivo_luogo": "M.V.E",
+      "arrivo_ora": "9:33"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "10:06",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "10:10"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "10:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "10:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "10:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "10:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "10:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "10:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "10:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "10:46"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "10:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "10:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "11:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "11:06"
+    }
+  ],
+  "2C10_LUN": [
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "6:43",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "6:46"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "6:46",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "6:49"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "6:50",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "6:53"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "6:56",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "6:59"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "7:00",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "7:03"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "7:06",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "7:09"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "7:10",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "7:13"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "7:16",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "7:19"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "7:20",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "7:23"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "7:23",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "7:28"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "7:53",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "7:56"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "7:56",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "7:59"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "8:00",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "8:03"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "8:06",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "8:09"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "8:10",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "8:13"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "8:16",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "8:19"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "8:20",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "8:23"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "8:26",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "8:29"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "8:30",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "8:33"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "8:36",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "8:39"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "8:40",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "8:43"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "8:46",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "8:49"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "8:50",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "8:53"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "8:56",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "8:59"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "9:00",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "9:03"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "9:06",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "9:09"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "9:20",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "9:23"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "9:26",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "9:29"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "9:40",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "9:43"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "9:43",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "9:48"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "10:23",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "10:26"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "10:26",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "10:29"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "10:40",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "10:43"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "10:46",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "10:49"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "11:00",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "11:03"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "11:06",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "11:09"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "11:20",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "11:23"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "11:26",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "11:29"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "11:40",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "11:43"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "11:46",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "11:49"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "12:00",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "12:03"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "12:06",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "12:09"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "12:20",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "12:23"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "12:26",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "12:29"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "12:40",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "12:43"
+    }
+  ],
+  "2C11_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "15:41",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "15:51"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "15:51",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "16:20"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "16:20",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "16:34"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "16:34",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "16:36"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "16:39",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "16:53"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "16:53",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "17:00"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "17:00",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "17:14"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "17:14",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "17:16"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "17:19",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "17:33"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "17:33",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "17:40"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "17:40",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "17:54"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "17:54",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "17:56"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "17:59",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "18:13"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "18:53",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "19:00"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "19:00",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "19:14"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "19:14",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "19:16"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "19:19",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "19:33"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "19:33",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "19:58"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "19:58",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "20:08"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "20:38",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "20:48"
+    }
+  ],
+  "2C12_LUN": [
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "5:35",
+      "arrivo_luogo": "DEP. ARSENALE",
+      "arrivo_ora": "5:45"
+    },
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "5:45",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "6:00"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "6:00",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "6:03"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "6:06",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "6:09"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "6:10",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "6:13"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "6:16",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "6:19"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "6:20",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "6:23"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "6:26",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "6:29"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "6:30",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "6:33"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "6:36",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "6:39"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "6:40",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "6:43"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "6:46",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "6:49"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "6:50",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "6:53"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "6:56",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "6:59"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "7:00",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "7:03"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "7:06",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "7:09"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "7:10",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "7:13"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "7:16",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "7:19"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "7:20",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "7:23"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "7:26",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "7:29"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "7:30",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "7:33"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "7:36",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "7:39"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "7:40",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "7:43"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "7:46",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "7:49"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "7:50",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "7:53"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "7:53",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "7:58"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "8:53",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "8:56"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "8:56",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "8:59"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "9:00",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "9:03"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "9:06",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "9:09"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "9:20",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "9:23"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "9:26",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "9:29"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "9:40",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "9:43"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "9:46",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "9:49"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "10:00",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "10:03"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "10:06",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "10:09"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "10:20",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "10:23"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "10:24",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "10:29"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "11:03",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "11:06"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "11:06",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "11:09"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "11:20",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "11:23"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "11:26",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "11:29"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "11:40",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "11:43"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "11:46",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "11:49"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "12:00",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "12:03"
+    }
+  ],
+  "2C13_LUN": [
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "14:06",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "14:09"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "14:20",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "14:23"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "14:26",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "14:29"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "14:40",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "14:43"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "14:46",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "14:49"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "15:00",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "15:03"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "15:06",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "15:09"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "15:20",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "15:23"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "15:24",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "15:29"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "15:43",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "15:46"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "15:46",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "15:49"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "16:00",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "16:03"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "16:06",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "16:09"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "16:20",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "16:23"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "16:26",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "16:29"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "16:30",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "16:33"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "16:36",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "16:39"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "16:40",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "16:43"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "16:46",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "16:49"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "16:50",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "16:53"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "16:56",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "16:59"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "17:00",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "17:03"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "17:06",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "17:09"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "17:10",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "17:13"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "17:16",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "17:19"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "17:20",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "17:23"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "17:26",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "17:29"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "17:30",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "17:33"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "17:33",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "17:38"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "18:33",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "18:36"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "18:36",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "18:39"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "18:40",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "18:43"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "18:46",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "18:49"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "18:50",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "18:53"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "18:56",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "18:59"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "19:00",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "19:03"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "19:06",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "19:09"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "19:10",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "19:13"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "19:16",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "19:19"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "19:20",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "19:23"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "19:26",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "19:29"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "19:30",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "19:33"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "19:36",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "19:39"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "19:50",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "19:53"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "19:56",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "19:59"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "20:10",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "20:13"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "20:16",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "20:19"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "20:30",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "20:33"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "20:36",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "20:39"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "20:50",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "20:53"
+    }
+  ],
+  "2C14_LUN": [
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "15:06",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "15:10"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "15:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "15:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "15:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "15:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "15:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "15:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "15:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "15:46"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "15:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "15:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "16:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "16:06"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "16:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "16:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "16:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "16:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "16:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "16:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "16:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "16:46"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "16:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "16:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "17:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "17:06"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "17:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "17:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "17:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "17:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "18:26",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "18:30"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "18:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "18:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "18:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "18:46"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "18:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "18:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "19:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "19:06"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "19:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "19:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "19:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "19:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "19:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "19:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "19:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "19:46"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "19:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "19:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "20:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "20:06"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "20:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "20:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "20:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "20:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "20:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "20:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "20:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "20:46"
+    }
+  ],
+  "2C15_LUN": [
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "17:33",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "17:36"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "17:36",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "17:39"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "17:40",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "17:43"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "17:46",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "17:49"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "17:50",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "17:53"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "17:56",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "17:59"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "18:00",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "18:03"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "18:06",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "18:09"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "18:10",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "18:13"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "18:16",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "18:19"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "18:20",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "18:23"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "18:26",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "18:29"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "18:30",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "18:33"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "18:36",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "18:39"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "18:40",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "18:43"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "18:46",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "18:49"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "18:50",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "18:53"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "18:56",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "18:59"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "19:00",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "19:03"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "19:06",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "19:09"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "19:10",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "19:13"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "19:16",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "19:19"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "19:20",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "19:23"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "19:26",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "19:29"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "19:30",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "19:33"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "19:36",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "19:39"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "19:50",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "19:53"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "20:53",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "20:56"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "20:56",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "20:59"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "21:10",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "21:13"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "21:16",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "21:19"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "21:30",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "21:33"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "21:36",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "21:39"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "21:50",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "21:53"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "21:56",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "21:59"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "22:10",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "22:13"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "22:16",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "22:19"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "22:30",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "22:33"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "22:36",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "22:39"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "22:50",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "22:53"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "22:56",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "22:59"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "23:10",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "23:13"
+    }
+  ],
+  "2C16_LUN": [
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "12:43",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "12:46"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "12:46",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "12:49"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "13:00",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "13:03"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "13:06",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "13:09"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "13:20",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "13:23"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "13:26",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "13:29"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "13:40",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "13:43"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "13:46",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "13:49"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "14:00",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "14:03"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "14:03",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "14:06"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "14:06",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "14:11"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "14:23",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "14:26"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "14:26",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "14:29"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "14:40",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "14:43"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "14:46",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "14:49"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "15:00",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "15:03"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "15:06",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "15:09"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "15:20",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "15:23"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "15:26",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "15:29"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "15:40",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "15:43"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "15:43",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "15:48"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "16:43",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "16:46"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "16:46",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "16:49"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "16:50",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "16:53"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "16:56",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "16:59"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "17:00",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "17:03"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "17:06",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "17:09"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "17:10",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "17:13"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "17:16",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "17:19"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "17:20",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "17:23"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "17:26",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "17:29"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "17:30",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "17:33"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "17:36",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "17:39"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "17:40",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "17:43"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "17:46",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "17:49"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "17:50",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "17:53"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "17:56",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "17:59"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "18:00",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "18:03"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "18:06",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "18:09"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "18:10",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "18:13"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "18:16",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "18:19"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "18:20",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "18:23"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "18:26",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "18:29"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "18:30",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "18:33"
+    }
+  ],
+  "2C17_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "5:39",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "5:49"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "5:49",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "5:59"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "5:59",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "6:13"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "6:13",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "6:20"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "6:20",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "6:34"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "6:34",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "6:36"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "6:39",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "6:53"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "6:53",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "7:00"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "7:00",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "7:14"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "7:14",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "7:16"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "7:19",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "7:33"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "7:33",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "7:40"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "7:40",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "7:54"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "7:54",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "7:56"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "7:59",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "8:13"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "8:13",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "8:20"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "8:20",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "8:34"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "8:34",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "8:36"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "8:39",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "8:53"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "8:53",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "9:00"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "9:00",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "9:14"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "9:14",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "9:24"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "9:24",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "9:34"
+    }
+  ],
+  "2C18_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "5:31",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "5:41"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "5:41",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "6:10"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "6:10",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "6:24"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "6:24",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "6:26"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "6:29",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "6:43"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "6:43",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "6:50"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "6:50",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "7:04"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "7:04",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "7:06"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "7:09",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "7:23"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "7:23",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "7:30"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "7:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "7:44"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "7:44",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "7:46"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "7:49",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "8:03"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "8:03",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "8:10"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "8:10",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "8:24"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "8:24",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "8:26"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "8:29",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "8:43"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "8:43",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "8:50"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "8:50",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "9:04"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "9:04",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "9:14"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "9:14",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "9:24"
+    }
+  ],
+  "2C20_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "15:59",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "16:09"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "16:09",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "16:19"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "17:49",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "18:03"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "18:13",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "18:20"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "18:20",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "18:34"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "18:34",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "18:36"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "18:39",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "18:53"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "19:03",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "19:10"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "19:10",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "19:24"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "19:24",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "19:26"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "19:29",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "19:43"
+    }
+  ],
+  "2C24_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "5:49",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "5:59"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "5:59",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "6:09"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "6:09",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "6:23"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "6:23",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "6:30"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "6:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "6:44"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "6:44",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "6:46"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "6:49",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "7:03"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "7:03",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "7:10"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "7:10",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "7:24"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "7:24",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "7:26"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "7:29",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "7:43"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "7:43",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "7:50"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "7:50",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "8:04"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "8:04",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "8:06"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "8:09",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "8:23"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "8:23",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "8:30"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "8:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "8:44"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "8:44",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "8:46"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "8:49",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "9:03"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "9:03",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "9:28"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "9:28",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "9:38"
+    }
+  ],
+  "2C25_LUN": [
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "16:19",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "16:33"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "16:33",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "16:40"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "16:40",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "16:54"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "16:54",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "16:56"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "16:59",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "17:13"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "17:13",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "17:20"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "17:20",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "17:34"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "17:34",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "17:36"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "17:39",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "17:53"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "17:53",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "18:00"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "18:00",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "18:14"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "18:14",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "18:16"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "18:19",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "18:33"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "18:33",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "18:40"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "18:40",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "18:54"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "18:54",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "18:56"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "18:59",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "19:13"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "19:13",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "19:20"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "19:20",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "19:34"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "19:34",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "19:44"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "19:44",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "19:54"
+    }
+  ],
+  "2C28_LUN": [
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "12:03",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "12:06"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "12:06",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "12:09"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "12:20",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "12:23"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "12:26",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "12:29"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "12:40",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "12:43"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "12:46",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "12:49"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "13:00",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "13:03"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "13:06",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "13:09"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "13:20",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "13:23"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "13:26",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "13:29"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "13:40",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "13:43"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "13:46",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "13:49"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "14:00",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "14:03"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "14:06",
+      "arrivo_luogo": "SACCA F",
+      "arrivo_ora": "14:09"
+    },
+    {
+      "partenza_luogo": "SACCA F",
+      "partenza_ora": "14:20",
+      "arrivo_luogo": "S.BASILIO",
+      "arrivo_ora": "14:23"
+    },
+    {
+      "partenza_luogo": "S.BASILIO",
+      "partenza_ora": "14:23",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "14:28"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "15:23",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "15:26"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "15:26",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "15:29"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "15:40",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "15:43"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "15:46",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "15:49"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "16:00",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "16:03"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "16:06",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "16:09"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "16:20",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "16:23"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "16:26",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "16:29"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "16:30",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "16:33"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "16:36",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "16:39"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "16:40",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "16:43"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "16:44",
+      "arrivo_luogo": "M.V.E",
+      "arrivo_ora": "17:19"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "17:26",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "17:30"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "17:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "17:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "17:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "17:46"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "17:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "17:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "18:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "18:06"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "18:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "18:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "18:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "18:26"
+    }
+  ],
+  "2C29_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "15:51",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "16:01"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "16:01",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "16:30"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "16:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "16:44"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "16:44",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "16:46"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "16:49",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "17:03"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "17:03",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "17:10"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "17:10",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "17:24"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "17:24",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "17:26"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "17:29",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "17:43"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "17:43",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "17:50"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "17:50",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "18:04"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "18:04",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "18:06"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "18:09",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "18:23"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "18:23",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "18:30"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "18:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "18:44"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "18:44",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "18:46"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "18:49",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "19:03"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "19:43",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "20:08"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "20:08",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "20:18"
+    }
+  ],
+  "2C30_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "5:21",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "5:31"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "5:31",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "6:00"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "6:00",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "6:14"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "6:14",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "6:16"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "6:19",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "6:33"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "6:33",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "6:40"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "6:40",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "6:54"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "6:54",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "6:56"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "6:59",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "7:13"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "7:13",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "7:20"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "7:20",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "7:34"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "7:34",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "7:36"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "7:39",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "7:53"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "7:53",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "8:00"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "8:00",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "8:14"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "8:14",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "8:16"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "8:19",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "8:33"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "8:33",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "8:40"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "8:40",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "8:54"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "8:54",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "8:56"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "8:59",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "9:13"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "9:13",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "9:38"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "9:38",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "9:48"
+    }
+  ],
+  "2C32_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "16:09",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "16:19"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "16:19",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "16:29"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "16:29",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "16:43"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "16:43",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "16:50"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "16:50",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "17:04"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "17:04",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "17:06"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "17:09",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "17:23"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "17:23",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "17:30"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "17:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "17:44"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "17:44",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "17:46"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "17:49",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "18:03"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "18:03",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "18:10"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "18:10",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "18:24"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "18:24",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "18:26"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "18:29",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "18:43"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "18:43",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "18:50"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "18:50",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "19:04"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "19:04",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "19:06"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "19:09",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "19:23"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "19:23",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "19:30"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "19:30",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "19:44"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "19:44",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "19:54"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "19:54",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "20:04"
+    }
+  ],
+  "2C35_LUN": [
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "18:56",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "19:00"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "19:00",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "19:06"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "19:10",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "19:16"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "19:20",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "19:26"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "19:30",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "19:36"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "19:36",
+      "arrivo_luogo": "DEP. ARSENALE",
+      "arrivo_ora": "19:39"
+    },
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "19:39",
+      "arrivo_luogo": "DEP. ARSENALE",
+      "arrivo_ora": "19:49"
+    },
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "19:49",
+      "arrivo_luogo": "M.V.E",
+      "arrivo_ora": "20:09"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "20:46",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "20:50"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "20:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "20:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "21:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "21:06"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "21:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "21:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "21:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "21:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "21:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "21:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "21:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "21:46"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "21:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "21:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "22:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "22:06"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "22:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "22:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "22:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "22:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "22:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "22:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "22:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "22:46"
+    },
+    {
+      "partenza_luogo": "M.V.E",
+      "partenza_ora": "22:46",
+      "arrivo_luogo": "DEP. ARSENALE",
+      "arrivo_ora": "22:51"
+    },
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "23:01",
+      "arrivo_luogo": "DEP. ARSENALE",
+      "arrivo_ora": "23:11"
+    },
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "23:11",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "23:23"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "23:23",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "0:47"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "1:00",
+      "arrivo_luogo": "TRONCHETTO",
+      "arrivo_ora": "1:30"
+    },
+    {
+      "partenza_luogo": "TRONCHETTO",
+      "partenza_ora": "1:30",
+      "arrivo_luogo": "DEP. ARSENALE",
+      "arrivo_ora": "1:51"
+    },
+    {
+      "partenza_luogo": "DEP. ARSENALE",
+      "partenza_ora": "1:51",
+      "arrivo_luogo": "DEP. ARSENALE",
+      "arrivo_ora": "2:01"
+    }
+  ],
+  "2C40_LUN": [
+    {
+      "partenza_luogo": "M.V.E",
+      "partenza_ora": "12:00",
+      "arrivo_luogo": "M.V.E",
+      "arrivo_ora": "15:54"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "6:26",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "6:30"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "6:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "6:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "6:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "6:46"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "6:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "6:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "7:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "7:06"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "7:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "7:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "7:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "7:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "7:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "7:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "7:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "7:46"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "7:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "7:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "8:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "8:06"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "12:26",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "12:30"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "12:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "12:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "12:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "12:46"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "12:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "12:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "13:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "13:06"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "13:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "13:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "13:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "13:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "13:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "13:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "13:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "13:46"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "13:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "13:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "14:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "14:06"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "14:10",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "14:16"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "14:20",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "14:26"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "14:30",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "14:36"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "14:40",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "14:46"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "14:50",
+      "arrivo_luogo": "ZITELLE",
+      "arrivo_ora": "14:56"
+    },
+    {
+      "partenza_luogo": "ZITELLE",
+      "partenza_ora": "15:00",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "15:06"
+    }
+  ],
+  "2C43_LUN": [
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "20:53",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "20:56"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "20:56",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "20:59"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "21:10",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "21:13"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "21:16",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "21:19"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "21:30",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "21:33"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "21:36",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "21:39"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "21:50",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "21:53"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "21:56",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "21:59"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "22:10",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "22:13"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "22:16",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "22:19"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "22:30",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "22:33"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "22:36",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "22:39"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "22:50",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "22:53"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "22:56",
+      "arrivo_luogo": "PALANCA",
+      "arrivo_ora": "22:59"
+    },
+    {
+      "partenza_luogo": "PALANCA",
+      "partenza_ora": "23:10",
+      "arrivo_luogo": "ZATTERE",
+      "arrivo_ora": "23:13"
+    },
+    {
+      "partenza_luogo": "ZATTERE",
+      "partenza_ora": "23:34",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "23:54"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "0:09",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "0:56"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "1:03",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "1:17"
+    },
+    {
+      "partenza_luogo": "S.ZACCARIA",
+      "partenza_ora": "1:43",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "1:56"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "2:03",
+      "arrivo_luogo": "S.ZACCARIA",
+      "arrivo_ora": "2:17"
+    }
+  ]
+}

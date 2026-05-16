@@ -1,0 +1,66 @@
+{
+  "AT01_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "4:20",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "11:24"
+    }
+  ],
+  "AT02_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "10:20",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "17:24"
+    }
+  ],
+  "AT03_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "16:20",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "23:24"
+    }
+  ],
+  "AT04_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "22:20",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "5:24"
+    }
+  ],
+  "AT11_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "4:20",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "11:24"
+    }
+  ],
+  "AT12_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "10:20",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "17:24"
+    }
+  ],
+  "AT13_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "16:20",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "23:24"
+    }
+  ],
+  "AT14_LUN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "22:20",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "5:24"
+    }
+  ]
+}

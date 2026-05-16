@@ -100,7 +100,7 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .animate-pop { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-        /* HEADER UNIFICATO (Non più blu e fisso) */
+        /* HEADER UNIFICATO */
         .header { width: 100%; max-width: 420px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
         .hamburger-btn { background: none; border: none; font-size: 26px; color: var(--primary); cursor: pointer; padding: 0; width: 50px; text-align: left; transition: transform 0.2s; display: flex; align-items: center;}
         .hamburger-btn:active { transform: scale(0.9); }
@@ -135,6 +135,39 @@
         .btn-success { background-color: var(--success); box-shadow: 0 4px 12px rgba(15, 157, 88, 0.2); }
         .btn-danger { background-color: var(--danger); box-shadow: 0 4px 12px rgba(217, 48, 37, 0.2); }
 
+        /* ACCORDION CATEGORIE */
+        .category-group { margin-bottom: 16px; animation: fadeInUp 0.4s ease forwards; }
+        .category-header {
+            background: var(--surface);
+            padding: 18px 20px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .category-header:hover { border-color: var(--primary); }
+        .category-header i.fa-chevron-down { transition: transform 0.3s; color: var(--text-muted); }
+        .category-header.open i.fa-chevron-down { transform: rotate(180deg); color: var(--primary); }
+        
+        .category-content {
+            padding: 12px 0 0 0;
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+        .category-content.open {
+            display: flex;
+        }
+
         /* CARDS LISTA UNITÀ */
         .top-controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
         
@@ -142,7 +175,7 @@
             background: var(--surface);
             border-radius: var(--radius-md);
             padding: 20px;
-            margin-bottom: 12px;
+            margin-bottom: 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -150,7 +183,6 @@
             border: 1px solid var(--border-color);
             cursor: pointer;
             transition: all 0.2s;
-            animation: fadeInUp 0.4s ease forwards;
         }
         .unit-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--primary); }
         .unit-card:active { transform: scale(0.98); }
@@ -285,14 +317,6 @@
                 <i class="fa-solid fa-magnifying-glass" style="position:absolute; right:16px; top:18px; color:var(--text-muted);"></i>
             </div>
             
-            <select id="categoryFilter" class="input-field" style="margin-bottom:0;" onchange="filterUnits()">
-                <option value="all">Tutte le categorie</option>
-                <option value="M/S">M/S - Motoscafi</option>
-                <option value="M/B">M/B - Motobattelli</option>
-                <option value="M/N">M/N - Motonavi</option>
-                <option value="M/Z">M/Z - Motozattere</option>
-            </select>
-            
             <button class="btn-action btn-success" onclick="openAddUnit()">
                 <i class="fa-solid fa-plus"></i> Aggiungi Unità
             </button>
@@ -394,7 +418,6 @@
         import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
-        // Configurazione reale estratta dal tuo progetto
         const firebaseConfig = { 
             apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
             authDomain: "utility-haze.firebaseapp.com", 
@@ -412,6 +435,9 @@
         let currentUser = null;
         let allUnits = [];
         let activeUnitId = null;
+
+        // Variabile globale per conteggio segnalazioni in tempo reale
+        window.reportsCount = {};
 
         let unsubUserVote = null;
         let unsubAllVotes = null;
@@ -435,24 +461,47 @@
         });
 
         function initApp() {
+            // Listener per le unità
             onSnapshot(collection(db, "flotta_unita"), (snapshot) => {
                 allUnits = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderUnits();
             });
+
+            // Listener globale per le segnalazioni (serve per i badge)
+            onSnapshot(collection(db, "flotta_segnalazioni"), (snapshot) => {
+                window.reportsCount = {};
+                snapshot.docs.forEach(d => {
+                    const data = d.data();
+                    if(data.unitId) {
+                        window.reportsCount[data.unitId] = (window.reportsCount[data.unitId] || 0) + 1;
+                    }
+                });
+                renderUnits();
+            });
         }
 
-        // --- LOGICA VISTA LISTA ---
+        // Funzione per aprire/chiudere l'accordion
+        window.toggleCategory = function(catId) {
+            const content = document.getElementById('cat-content-' + catId);
+            const header = document.getElementById('cat-header-' + catId);
+            if(content.classList.contains('open')) {
+                content.classList.remove('open');
+                header.classList.remove('open');
+            } else {
+                content.classList.add('open');
+                header.classList.add('open');
+            }
+        };
+
+        // --- LOGICA VISTA LISTA CON ACCORDION CATEGORIE ---
         window.renderUnits = function() {
             const container = document.getElementById('unitsContainer');
             const search = document.getElementById('searchInput').value.toLowerCase();
-            const filterCat = document.getElementById('categoryFilter').value;
             container.innerHTML = '';
 
             const filtered = allUnits.filter(u => {
                 const displayId = u.id.replace(/_/g, '/');
-                const matchesSearch = displayId.toLowerCase().includes(search);
-                const matchesCat = (filterCat === 'all' || displayId.startsWith(filterCat));
-                return matchesSearch && matchesCat;
+                return displayId.toLowerCase().includes(search);
             });
 
             if(filtered.length === 0) {
@@ -460,29 +509,91 @@
                 return;
             }
 
-            filtered.sort((a,b) => a.id.localeCompare(b.id)).forEach(unit => {
-                const isAdmin = currentUser.uid === ADMIN_UID;
-                const card = document.createElement('div');
-                card.className = 'unit-card';
-                card.onclick = () => showDetail(unit.id);
-                
-                const displayId = unit.id.replace(/_/g, '/');
-                let iconaBarca = 'fa-ship';
-                if(displayId.startsWith('M/B')) iconaBarca = 'fa-ferry';
-                if(displayId.startsWith('M/Z')) iconaBarca = 'fa-truck-fast';
+            // Inizializza i gruppi
+            const groups = {
+                "Motoscafi": [],
+                "Motobattelli": [],
+                "Motobattelli foranei": [],
+                "Motonavi": [],
+                "Motozattere": [],
+                "Altre Unità": []
+            };
 
-                card.innerHTML = `
-                    <div class="unit-info">
-                        <h3><i class="fa-solid ${iconaBarca}"></i> ${displayId}</h3>
-                        <div class="unit-rating"><i class="fa-solid fa-star"></i> ${unit.mediaVoto || 'N/D'}</div>
-                    </div>
-                    ${isAdmin ? `
-                        <div class="admin-menu-trigger" onclick="event.stopPropagation(); openAdminMenu('${unit.id}')">
-                            <i class="fa-solid fa-ellipsis-vertical"></i>
+            const orderCats = ["Motoscafi", "Motobattelli", "Motobattelli foranei", "Motonavi", "Motozattere", "Altre Unità"];
+
+            // Suddivide le unità filtrate nei gruppi (utilizzando anche localeCompare {numeric:true} per l'ordine naturale)
+            filtered.sort((a,b) => a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: 'base' })).forEach(unit => {
+                const displayId = unit.id.replace(/_/g, '/');
+                let cat = "Altre Unità";
+                
+                if(displayId.startsWith('M/Z')) cat = "Motozattere";
+                else if(displayId.startsWith('M/N')) cat = "Motonavi";
+                else if(displayId.startsWith('M/S')) cat = "Motoscafi";
+                else if(displayId.startsWith('M/B')) {
+                    // Estraggo tutto ciò che segue "M/B" ignorando gli spazi
+                    let suffix = displayId.replace('M/B', '').trim();
+                    // Se inizia con un numero, è un Motobattello classico, altrimenti foraneo
+                    if(/^\d/.test(suffix)) {
+                        cat = "Motobattelli";
+                    } else {
+                        cat = "Motobattelli foranei";
+                    }
+                }
+                
+                groups[cat].push(unit);
+            });
+
+            // Genera l'HTML per ogni gruppo che non è vuoto
+            orderCats.forEach((catName, index) => {
+                if(groups[catName].length === 0) return;
+
+                const catSafe = "cat_" + index;
+                // Se c'è testo nella ricerca, l'accordion si apre in automatico
+                const isOpenClass = search.length > 0 ? "open" : "";
+                
+                let groupHTML = `
+                    <div class="category-group">
+                        <div id="cat-header-${catSafe}" class="category-header ${isOpenClass}" onclick="toggleCategory('${catSafe}')">
+                            <span><i class="fa-solid fa-layer-group" style="margin-right:8px; opacity:0.7;"></i> ${catName} <span style="color:var(--text-muted); font-size:13px; font-weight:500; margin-left:6px;">(${groups[catName].length})</span></span>
+                            <i class="fa-solid fa-chevron-down"></i>
                         </div>
-                    ` : ''}
+                        <div id="cat-content-${catSafe}" class="category-content ${isOpenClass}">
                 `;
-                container.appendChild(card);
+
+                groups[catName].forEach(unit => {
+                    const isAdmin = currentUser && currentUser.uid === ADMIN_UID;
+                    const displayId = unit.id.replace(/_/g, '/');
+                    
+                    let iconaBarca = 'fa-ship';
+                    if(displayId.startsWith('M/B')) iconaBarca = 'fa-ferry';
+                    if(displayId.startsWith('M/Z')) iconaBarca = 'fa-truck-fast';
+
+                    // Creazione badge di attenzione se ci sono segnalazioni
+                    const repCount = window.reportsCount ? (window.reportsCount[unit.id] || 0) : 0;
+                    const alertBadge = repCount > 0 
+                        ? `<span style="color:var(--danger); margin-left:8px; font-weight:800; font-size:13px; display:inline-flex; align-items:center; gap:4px; background:var(--danger-light); padding:2px 6px; border-radius:6px; border:1px solid var(--danger-border);"><i class="fa-solid fa-triangle-exclamation"></i> ${repCount}</span>` 
+                        : '';
+
+                    groupHTML += `
+                        <div class="unit-card" onclick="showDetail('${unit.id}')">
+                            <div class="unit-info">
+                                <h3><i class="fa-solid ${iconaBarca}"></i> ${displayId}</h3>
+                                <div class="unit-rating">
+                                    <i class="fa-solid fa-star"></i> ${unit.mediaVoto || 'N/D'}
+                                    ${alertBadge}
+                                </div>
+                            </div>
+                            ${isAdmin ? `
+                                <div class="admin-menu-trigger" onclick="event.stopPropagation(); openAdminMenu('${unit.id}')">
+                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+
+                groupHTML += `</div></div>`;
+                container.innerHTML += groupHTML;
             });
         }
 
@@ -543,8 +654,8 @@
                         const div = document.createElement('div');
                         div.className = 'report-card';
                         
-                        const isAdmin = currentUser.uid === ADMIN_UID;
-                        const btnRisolto = isAdmin ? `<button class="btn-resolve" onclick="deleteReport('${d.id}')"><i class="fa-solid fa-check"></i> Risolto</button>` : '';
+                        // Genera il tasto Risolto per tutti gli utenti, rimosso il vincolo isAdmin
+                        const btnRisolto = `<button class="btn-resolve" onclick="deleteReport('${d.id}')"><i class="fa-solid fa-check"></i> Risolto</button>`;
 
                         div.innerHTML = `
                             ${btnRisolto}

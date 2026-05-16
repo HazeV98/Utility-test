@@ -1,0 +1,42 @@
+{
+  "PO66_LUN": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "7:00",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "14:04"
+    }
+  ],
+  "PO67_LUN": [
+    {
+      "partenza_luogo": "PIETA'",
+      "partenza_ora": "13:54",
+      "arrivo_luogo": "PIETA'",
+      "arrivo_ora": "20:58"
+    }
+  ],
+  "PO68_LUN": [
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "6:40",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "13:44"
+    }
+  ],
+  "PO69_LUN": [
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "13:40",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "20:44"
+    }
+  ],
+  "PO70_LUN": [
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "6:00",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "13:04"
+    }
+  ]
+}

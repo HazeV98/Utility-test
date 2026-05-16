@@ -160,13 +160,32 @@
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <h3><i class="fa-solid fa-layer-group"></i> Menu</h3>
-            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
         </div>
+        
         <a href="index.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Home Page</a>
         <a href="calendario.html?oggi=true" class="sidebar-link"><i class="fa-solid fa-bullseye"></i> Oggi</a>
         <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
+        <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
+        <a href="rotazioni.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
         <a href="turni.html" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
+        <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
+        <a href="barcadvisor.html" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
+        <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
+        <a href="rotazione_ferie.html" class="sidebar-link"><i class="fa-solid fa-umbrella-beach"></i> Rotazione Ferie</a>
+        <a href="orari.html" class="sidebar-link"><i class="fa-regular fa-clock"></i> Orari Navigazione</a>
+        <a href="https://m.chebateo.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-water"></i> CheBateo</a>
+        <a href="documenti.html" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Documenti</a>
+        <a href="link.html" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
+        <a href="contatti.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i> Contatti</a>
+        <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
+        <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
+        <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
+        <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
         <a href="report.html" class="sidebar-link" style="background-color: var(--primary-glow); color: var(--info); font-weight: 700; border-left: 4px solid var(--info);"><i class="fa-solid fa-headset" style="color: var(--info);"></i> Segnalazioni</a>
+        <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
+        
+        <a href="admin.html" class="sidebar-link" id="menu-admin" style="display:none; color: var(--danger); font-weight: bold;"><i class="fa-solid fa-lock" style="color: var(--danger);"></i> Admin</a>
     </div>
 
     <div class="content-area">
@@ -244,7 +263,11 @@
             if (user) {
                 currentUid = user.uid;
                 isAdmin = (user.uid === ADMIN_UID);
-                if (isAdmin) document.getElementById('btn-cronologia-admin').style.display = 'flex';
+                if (isAdmin) {
+                    document.getElementById('btn-cronologia-admin').style.display = 'flex';
+                    const menuAdmin = document.getElementById('menu-admin');
+                    if (menuAdmin) menuAdmin.style.display = 'flex';
+                }
                 ascoltaSegnalazioni();
             } else { window.location.href = "index.html"; }
         });
@@ -313,7 +336,6 @@
                     let num = data.mittente_telefono.replace(/\D/g, '');
                     if (num.length > 0) {
                         if (!num.startsWith('39')) num = '39' + num;
-                        // Icona WhatsApp grande (26px) con allineamento verticale corretto
                         waIcon = `<a href="https://wa.me/${num}" target="_blank" style="color:#25D366; margin-left:12px; font-size:26px; vertical-align:middle; text-decoration:none; transition:transform 0.2s; display:inline-block;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Contatta su WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>`;
                     }
                     phoneInfo = `<br><span style="color:var(--text-main); line-height: 26px;"><i class="fa-solid fa-phone" style="font-size:12px; width:16px;"></i> <b>Telefono:</b> ${data.mittente_telefono}</span> ${waIcon}`;

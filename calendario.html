@@ -3016,9 +3016,6 @@
     }
 
     function inizializzaCalendario() { 
-        let turniAttuali = calcolaTurni();
-        salvaAnteprimaPulita(turniAttuali);
-        
         calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { 
             initialView: 'dayGridMonth', 
             locale: 'it', 
@@ -3033,57 +3030,10 @@
             },
             dateClick: (i) => gestisciInterazione(i.dateStr),
             eventClick: (info) => gestisciInterazione(info.event.startStr),
-            events: (i, success) => success(turniAttuali)
+            events: (i, success) => success(calcolaTurni())
         });
         calendar.render();
     }
-
-    // Funzione per salvare l'anteprima pulendo i giorni passati
-async function salvaAnteprimaPulita(eventiCalendario) {
-    const oggi = new Date();
-    oggi.setHours(0,0,0,0);
-    
-    const turniFuturi = [];
-    
-    // Scorri l'array dei turni appena calcolati (passalo come argomento alla funzione)
-    eventiCalendario.forEach(evento => {
-        // La data deve essere un oggetto Date
-        const dataEvento = new Date(evento.start || evento.data);
-        dataEvento.setHours(0,0,0,0);
-        
-        const diffGiorni = Math.round((dataEvento - oggi) / (1000 * 60 * 60 * 24));
-        
-        // CONDIZIONE CHIAVE: Salva solo i turni da OGGI a +30 giorni.
-        // I turni < 0 (passati) vengono IGNORATI e quindi automaticamente CANCELLATI dall'anteprima.
-        if (diffGiorni >= 0 && diffGiorni <= 30) {
-            turniFuturi.push({
-                data: dataEvento.toISOString().split('T')[0], // formato YYYY-MM-DD
-                turno: evento.title || evento.turno,
-                colore: evento.backgroundColor || evento.colore || 'var(--primary)',
-                modificato: evento.classNames ? evento.classNames.includes('bg-modificato') : false
-            });
-        }
-    });
-
-    // Ordina per data
-    turniFuturi.sort((a,b) => new Date(a.data) - new Date(b.data));
-
-    // 1. Salva in locale (veloce)
-    localStorage.setItem('anteprima_turni', JSON.stringify(turniFuturi));
-    
-    // 2. Salva su Firebase (per gli altri dispositivi)
-    if (window.utenteLoggato && typeof setDoc !== "undefined") {
-        try {
-            await setDoc(doc(db, "anteprime", window.utenteLoggato), {
-                turni: turniFuturi,
-                ultimo_aggiornamento: new Date().toISOString()
-            }, { merge: true });
-        } catch (e) {
-            console.error("Errore salvataggio anteprima su Firebase:", e);
-        }
-    }
-}
-
 </script>
 
 <script type="module">
@@ -3169,7 +3119,6 @@ async function salvaAnteprimaPulita(eventiCalendario) {
                                 aggiornaUI();
                                 controllaEmptyState();
                                 if (typeof renderizzaProfiliUI === 'function') renderizzaProfiliUI();
-                                salvaAnteprimaPulita(calcolaTurni());
                             }
                         } else if (localTime > cloudTime) {
                             console.log("Dati locali più recenti, sincronizzo verso il cloud...");

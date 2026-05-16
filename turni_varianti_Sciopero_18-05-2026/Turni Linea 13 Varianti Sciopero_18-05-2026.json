@@ -1,0 +1,268 @@
+{
+  "1301_LUN": [
+    {
+      "partenza_luogo": "DEP. F.TE NOVE",
+      "partenza_ora": "4:47",
+      "arrivo_luogo": "DEP. F.TE NOVE",
+      "arrivo_ora": "4:57"
+    },
+    {
+      "partenza_luogo": "DEP. F.TE NOVE",
+      "partenza_ora": "4:57",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "5:00"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "5:00",
+      "arrivo_luogo": "CAPANNONE",
+      "arrivo_ora": "5:28"
+    },
+    {
+      "partenza_luogo": "CAPANNONE",
+      "partenza_ora": "5:30",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "5:58"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "6:00",
+      "arrivo_luogo": "CAPANNONE",
+      "arrivo_ora": "6:28"
+    },
+    {
+      "partenza_luogo": "CAPANNONE",
+      "partenza_ora": "6:30",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "6:58"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "7:00",
+      "arrivo_luogo": "CAPANNONE",
+      "arrivo_ora": "7:28"
+    },
+    {
+      "partenza_luogo": "CAPANNONE",
+      "partenza_ora": "7:30",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "7:58"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "10:28",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "10:30"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "10:30",
+      "arrivo_luogo": "CAPANNONE",
+      "arrivo_ora": "10:58"
+    },
+    {
+      "partenza_luogo": "CAPANNONE",
+      "partenza_ora": "11:00",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "11:28"
+    }
+  ],
+  "1302_LUN": [
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "7:58",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "8:00"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "8:00",
+      "arrivo_luogo": "CAPANNONE",
+      "arrivo_ora": "8:28"
+    },
+    {
+      "partenza_luogo": "CAPANNONE",
+      "partenza_ora": "8:30",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "8:58"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "9:30",
+      "arrivo_luogo": "CAPANNONE",
+      "arrivo_ora": "9:58"
+    },
+    {
+      "partenza_luogo": "CAPANNONE",
+      "partenza_ora": "10:00",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "10:28"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "11:28",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "11:30"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "11:30",
+      "arrivo_luogo": "CAPANNONE",
+      "arrivo_ora": "11:58"
+    },
+    {
+      "partenza_luogo": "CAPANNONE",
+      "partenza_ora": "12:00",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "12:28"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "12:30",
+      "arrivo_luogo": "CAPANNONE",
+      "arrivo_ora": "12:58"
+    },
+    {
+      "partenza_luogo": "CAPANNONE",
+      "partenza_ora": "13:00",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "13:28"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "13:28",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "14:00"
+    }
+  ],
+  "1303_LUN": [
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "14:00",
+      "arrivo_luogo": "CAPANNONE",
+      "arrivo_ora": "14:28"
+    },
+    {
+      "partenza_luogo": "CAPANNONE",
+      "partenza_ora": "14:30",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "14:58"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "15:00",
+      "arrivo_luogo": "CAPANNONE",
+      "arrivo_ora": "15:28"
+    },
+    {
+      "partenza_luogo": "CAPANNONE",
+      "partenza_ora": "15:30",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "15:58"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "16:30",
+      "arrivo_luogo": "CAPANNONE",
+      "arrivo_ora": "16:58"
+    },
+    {
+      "partenza_luogo": "CAPANNONE",
+      "partenza_ora": "17:00",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "17:28"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "18:28",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "18:30"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "18:30",
+      "arrivo_luogo": "CAPANNONE",
+      "arrivo_ora": "18:58"
+    },
+    {
+      "partenza_luogo": "CAPANNONE",
+      "partenza_ora": "19:00",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "19:28"
+    }
+  ],
+  "1304_LUN": [
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "17:28",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "17:30"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "17:30",
+      "arrivo_luogo": "CAPANNONE",
+      "arrivo_ora": "17:58"
+    },
+    {
+      "partenza_luogo": "CAPANNONE",
+      "partenza_ora": "18:00",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "18:28"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "19:28",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "19:30"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "19:30",
+      "arrivo_luogo": "CAPANNONE",
+      "arrivo_ora": "19:58"
+    },
+    {
+      "partenza_luogo": "CAPANNONE",
+      "partenza_ora": "20:00",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "20:28"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "21:30",
+      "arrivo_luogo": "CAPANNONE",
+      "arrivo_ora": "21:58"
+    },
+    {
+      "partenza_luogo": "CAPANNONE",
+      "partenza_ora": "22:00",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "22:28"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "22:30",
+      "arrivo_luogo": "CAPANNONE",
+      "arrivo_ora": "22:58"
+    },
+    {
+      "partenza_luogo": "CAPANNONE",
+      "partenza_ora": "23:00",
+      "arrivo_luogo": "F.TE NOVE",
+      "arrivo_ora": "23:28"
+    },
+    {
+      "partenza_luogo": "F.TE NOVE",
+      "partenza_ora": "23:28",
+      "arrivo_luogo": "DEP. F.TE NOVE",
+      "arrivo_ora": "23:31"
+    },
+    {
+      "partenza_luogo": "DEP. F.TE NOVE",
+      "partenza_ora": "23:31",
+      "arrivo_luogo": "DEP. F.TE NOVE",
+      "arrivo_ora": "23:41"
+    }
+  ]
+}
