@@ -1,6 +1,6 @@
 import { initVisualizzatore } from './visualizzatore.js';
 
-// Variabili globali del modulo turni
+// Variabili globali del modulo
 let numCartelle = 0;
 let currentImgList = [];
 let currentImgDir = "";
@@ -8,11 +8,13 @@ let currentCorseData = null;
 let mappaAlbero = [];
 
 export async function avviaMotoreTurni() {
-    // Inizializza il visualizzatore immagini universale
+    // 1. Inizializza il visualizzatore immagini (che espone apriImmagineTurno)
     initVisualizzatore();
 
-    const area = document.getElementById('turni-content-area');
-    area.innerHTML = "<div style='text-align:center; padding:20px; color:var(--text-muted);'><i class='fa-solid fa-spinner fa-spin' style='color:var(--primary); font-size:24px;'></i><br><br>Caricamento dati turni...</div>";
+    const area = document.getElementById('content-area');
+    if (!area) return; // Se la modale non è pronta, esce
+    
+    area.innerHTML = "<div class='status-message'><i class='fa-solid fa-spinner fa-spin' style='color:var(--primary); font-size:20px;'></i> Caricamento dati turni...</div>";
     
     try {
         const resMappa = await fetch('mappa_file.json?t=' + new Date().getTime());
@@ -25,7 +27,7 @@ export async function avviaMotoreTurni() {
         numCartelle = dirs.length;
         
         if (numCartelle === 1) { 
-            window.caricaFilesTurni(dirs[0]); 
+            window.caricaFiles(dirs[0]); 
         } else {
             area.innerHTML = ""; 
             dirs.sort((a,b) => b.localeCompare(a));
@@ -35,7 +37,7 @@ export async function avviaMotoreTurni() {
                 btn.className = "folder-btn";
                 btn.style.animation = `fadeInUp 0.4s ease forwards ${index * 0.05}s`;
                 btn.style.opacity = "0";
-                btn.onclick = () => window.caricaFilesTurni(d); 
+                btn.onclick = () => window.caricaFiles(d); 
                 area.appendChild(btn);
                 
                 if (d.includes("varianti")) {
@@ -51,11 +53,11 @@ export async function avviaMotoreTurni() {
             });
         }
     } catch (e) { 
-        area.innerHTML = "<div style='text-align:center; padding:20px; color:var(--danger);'><i class='fa-solid fa-triangle-exclamation'></i> Errore di caricamento mappa turni.</div>"; 
+        area.innerHTML = "<div class='status-message'><i class='fa-solid fa-spinner fa-spin'></i> In attesa di caricamento dati...</div>"; 
     }
 }
 
-// --- FUNZIONI GLOBALI ESPOSTE A WINDOW ---
+// --- FUNZIONI GLOBALI (Esportate a window per l'HTML) ---
 
 window.downloadForzato = async (url, filename) => {
     try {
@@ -69,9 +71,9 @@ window.downloadForzato = async (url, filename) => {
     } catch (e) { window.open(url, '_blank'); }
 };
 
-window.caricaFilesTurni = async (dir) => {
-    const area = document.getElementById('turni-content-area'); 
-    area.innerHTML = "<div style='text-align:center; padding:20px; color:var(--text-muted);'><i class='fa-solid fa-spinner fa-spin'></i> Caricamento file in corso...</div>";
+window.caricaFiles = async (dir) => {
+    const area = document.getElementById('content-area'); 
+    area.innerHTML = "<div class='status-message'><i class='fa-solid fa-spinner fa-spin'></i> Caricamento file in corso...</div>";
     
     let imgDir = "";
     if (dir.startsWith("turni_pdf_")) imgDir = dir.replace("turni_pdf_", "turni_");
@@ -98,9 +100,8 @@ window.caricaFilesTurni = async (dir) => {
         
         if (numCartelle > 1) { 
             const b = document.createElement('button'); 
-            b.className = "back-btn"; b.innerHTML = "<i class='fa-solid fa-arrow-left'></i> Indietro"; 
-            b.onclick = () => { avviaMotoreTurni(); }; 
-            area.appendChild(b); 
+            b.className = "back-btn"; b.innerHTML = "<i class='fa-solid fa-arrow-left'></i> Indietro alle cartelle"; 
+            b.onclick = avviaMotoreTurni; area.appendChild(b); 
         }
         
         if (currentImgList.length > 0) {
@@ -136,15 +137,13 @@ window.caricaFilesTurni = async (dir) => {
             if (hasJson) {
                 const btnSearch = document.createElement('button');
                 btnSearch.className = "icon-btn btn-search-spec"; 
-                btnSearch.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
+                btnSearch.innerHTML = '<i class="fa-solid fa-route"></i>';
                 btnSearch.onclick = () => window.apriRicercaCorse(nomeOrig, dir);
                 row.appendChild(btnSearch);
             }
             area.appendChild(row);
         });
-    } catch (e) { 
-        area.innerHTML = "<div style='color:var(--danger); text-align:center; padding:20px;'><i class='fa-solid fa-triangle-exclamation'></i> Errore caricamento PDF.</div>"; 
-    }
+    } catch (e) { area.innerHTML = "<div class='status-message' style='color:var(--danger);'><i class='fa-solid fa-triangle-exclamation'></i> Errore caricamento PDF.</div>"; }
 };
 
 window.filtraTurni = () => {
@@ -166,7 +165,11 @@ window.filtraTurni = () => {
             const item = document.createElement('div'); item.className = 'suggestion-item';
             item.innerHTML = `<span>Turno <strong>${nomeSenzaExt}</strong></span> <i class="fa-regular fa-image"></i>`;
             
-            item.onclick = () => { window.apriImmagineTurno(`${currentImgDir}/${m.name}`); box.style.display = 'none'; input.value = ''; };
+            // Lancia la visualizzazione immagine
+            item.onclick = () => { 
+                if(window.apriImmagineTurno) window.apriImmagineTurno(`${currentImgDir}/${m.name}`); 
+                box.style.display = 'none'; input.value = ''; 
+            };
             
             box.appendChild(item);
         });
@@ -177,11 +180,10 @@ window.filtraTurni = () => {
 };
 
 window.cercaEApriDaRisultato = (codiceTurno) => {
-    window.cercaEApriTurno(codiceTurno, currentImgList, currentImgDir);
+    if(window.cercaEApriTurno) window.cercaEApriTurno(codiceTurno, currentImgList, currentImgDir);
 };
 
-// --- LOGICA RICERCA CORSE (Sub-Modale) ---
-
+// --- LOGICA RICERCA CORSE ---
 window.chiudiSeSfondoSearch = (event) => { if (event.target.id === 'searchCorseModal') { window.chiudiSearchCorseModal(); } };
 window.chiudiSearchCorseModal = () => { document.getElementById('searchCorseModal').style.display = 'none'; };
 
@@ -190,17 +192,10 @@ window.apriRicercaCorse = async (pdfName, dirName) => {
     document.getElementById('sc-form').style.display = 'none'; document.getElementById('sc-risultato').style.display = 'none';
     const statusEl = document.getElementById('sc-status');
     
-    document.getElementById('sc-tipo').value = ""; 
-    document.getElementById('btn-partenza').classList.remove('active'); 
-    document.getElementById('btn-arrivo').classList.remove('active'); 
-    document.getElementById('sc-rest-form').classList.remove('unlocked');
-    document.getElementById('label-luogo').innerText = "Luogo:"; 
-    document.getElementById('label-orario').innerText = "Orario:"; 
-    document.getElementById('sc-orario').value = ""; 
-    document.getElementById('sc-giorno').valueAsDate = new Date(); 
+    document.getElementById('sc-tipo').value = ""; document.getElementById('btn-partenza').classList.remove('active'); document.getElementById('btn-arrivo').classList.remove('active'); document.getElementById('sc-rest-form').classList.remove('unlocked');
+    document.getElementById('label-luogo').innerText = "Luogo:"; document.getElementById('label-orario').innerText = "Orario:"; document.getElementById('sc-orario').value = ""; document.getElementById('sc-giorno').valueAsDate = new Date(); 
 
-    statusEl.style.display = 'block'; 
-    statusEl.innerHTML = "<i class='fa-solid fa-spinner fa-spin' style='color:var(--primary);'></i> Caricamento dati corse...";
+    statusEl.style.display = 'block'; statusEl.innerHTML = "<i class='fa-solid fa-spinner fa-spin' style='color:var(--primary);'></i> Caricamento dati corse...";
 
     const jsonName = pdfName.substring(0, pdfName.lastIndexOf('.')) + ".json";
     
@@ -210,29 +205,16 @@ window.apriRicercaCorse = async (pdfName, dirName) => {
         if (!res.ok) throw new Error("File dati (JSON) non trovato.");
         currentCorseData = await res.json();
         statusEl.style.display = 'none'; document.getElementById('sc-form').style.display = 'block';
-    } catch(e) { 
-        statusEl.innerHTML = `<span style='color:var(--danger); font-weight: 600;'><i class='fa-solid fa-triangle-exclamation'></i> Errore: ${e.message}</span>`; 
-    }
+    } catch(e) { statusEl.innerHTML = `<span style='color:var(--danger); font-weight: 600;'><i class='fa-solid fa-triangle-exclamation'></i> Errore: ${e.message}</span>`; }
 };
 
 window.selezionaTipo = (tipo) => {
     document.getElementById('sc-tipo').value = tipo;
-    if (tipo === 'partenza') { 
-        document.getElementById('btn-partenza').classList.add('active'); 
-        document.getElementById('btn-arrivo').classList.remove('active'); 
-        document.getElementById('label-luogo').innerText = "Luogo di partenza:"; 
-        document.getElementById('label-orario').innerText = "Orario di partenza:"; 
-    } else { 
-        document.getElementById('btn-arrivo').classList.add('active'); 
-        document.getElementById('btn-partenza').classList.remove('active'); 
-        document.getElementById('label-luogo').innerText = "Luogo di arrivo:"; 
-        document.getElementById('label-orario').innerText = "Orario di arrivo:"; 
-    }
+    if (tipo === 'partenza') { document.getElementById('btn-partenza').classList.add('active'); document.getElementById('btn-arrivo').classList.remove('active'); document.getElementById('label-luogo').innerText = "Luogo di partenza:"; document.getElementById('label-orario').innerText = "Orario di partenza:"; } 
+    else { document.getElementById('btn-arrivo').classList.add('active'); document.getElementById('btn-partenza').classList.remove('active'); document.getElementById('label-luogo').innerText = "Luogo di arrivo:"; document.getElementById('label-orario').innerText = "Orario di arrivo:"; }
     
     document.getElementById('sc-rest-form').classList.add('unlocked');
-    document.getElementById('sc-orario').value = ""; 
-    document.getElementById('sc-suggestions').style.display = 'none'; 
-    document.getElementById('sc-risultato').style.display = 'none';
+    document.getElementById('sc-orario').value = ""; document.getElementById('sc-suggestions').style.display = 'none'; document.getElementById('sc-risultato').style.display = 'none';
     window.popolaLuoghi();
 };
 
@@ -240,34 +222,22 @@ window.popolaLuoghi = () => {
     if (!currentCorseData) return;
     const tipo = document.getElementById('sc-tipo').value;
     let luoghi = new Set();
-    for (let turno in currentCorseData) { 
-        currentCorseData[turno].forEach(corsa => { 
-            let luogoCorretto = tipo === 'partenza' ? corsa.partenza_luogo : corsa.arrivo_luogo; 
-            if (luogoCorretto) luoghi.add(luogoCorretto.trim()); 
-        }); 
-    }
+    for (let turno in currentCorseData) { currentCorseData[turno].forEach(corsa => { let luogoCorretto = tipo === 'partenza' ? corsa.partenza_luogo : corsa.arrivo_luogo; if (luogoCorretto) luoghi.add(luogoCorretto.trim()); }); }
     let select = document.getElementById('sc-luogo');
     select.innerHTML = '<option value="">-- Seleziona Luogo --</option>';
     Array.from(luoghi).sort().forEach(l => { select.innerHTML += `<option value="${l}">${l}</option>`; });
 };
 
 window.formattaOrario = (e) => {
-    let val = e.target.value.replace(/\D/g, ''); 
-    if (val.length > 4) val = val.substring(0, 4); 
+    let val = e.target.value.replace(/\D/g, ''); if (val.length > 4) val = val.substring(0, 4); 
     if (val.length > 2) val = val.substring(0, 2) + '.' + val.substring(2);
-    e.target.value = val; 
-    window.mostraSuggerimentiOrario(val);
+    e.target.value = val; window.mostraSuggerimentiOrario(val);
 };
 
-window.aggiornaSuggerimentiOrario = () => { 
-    window.mostraSuggerimentiOrario(document.getElementById('sc-orario').value); 
-};
+window.aggiornaSuggerimentiOrario = () => { window.mostraSuggerimentiOrario(document.getElementById('sc-orario').value); };
 
 window.mostraSuggerimentiOrario = (typedVal) => {
-    const luogo = document.getElementById('sc-luogo').value; 
-    const tipo = document.getElementById('sc-tipo').value; 
-    const suggBox = document.getElementById('sc-suggestions');
-    
+    const luogo = document.getElementById('sc-luogo').value; const tipo = document.getElementById('sc-tipo').value; const suggBox = document.getElementById('sc-suggestions');
     if (!luogo || typedVal.length === 0) { suggBox.style.display = 'none'; return; }
 
     let orari = new Set();
@@ -287,49 +257,30 @@ window.mostraSuggerimentiOrario = (typedVal) => {
     if (filtrati.length > 0) {
         suggBox.innerHTML = '';
         filtrati.forEach(o => {
-            let div = document.createElement('div'); 
-            div.className = 'sc-suggestion-item'; 
-            div.innerText = o;
+            let div = document.createElement('div'); div.className = 'sc-suggestion-item'; div.innerText = o;
             div.onclick = function() { document.getElementById('sc-orario').value = o; suggBox.style.display = 'none'; };
             suggBox.appendChild(div);
         });
         suggBox.style.display = 'block';
-    } else { 
-        suggBox.style.display = 'none'; 
-    }
+    } else { suggBox.style.display = 'none'; }
 };
 
 window.eseguiRicercaCorsa = async () => {
-    const tipo = document.getElementById('sc-tipo').value; 
-    const luogo = document.getElementById('sc-luogo').value; 
-    const giorno = document.getElementById('sc-giorno').value; 
-    const orarioInput = document.getElementById('sc-orario').value; 
-    const box = document.getElementById('sc-risultato');
-    
-    if (!luogo || !orarioInput || orarioInput.length < 5) { 
-        box.style.display = 'block'; 
-        box.innerHTML = "<span style='color:var(--danger); font-weight:600;'><i class='fa-solid fa-circle-exclamation'></i> Seleziona un luogo e inserisci un orario completo.</span>"; 
-        return; 
-    }
+    const tipo = document.getElementById('sc-tipo').value; const luogo = document.getElementById('sc-luogo').value; const giorno = document.getElementById('sc-giorno').value; const orarioInput = document.getElementById('sc-orario').value; const box = document.getElementById('sc-risultato');
+    if (!luogo || !orarioInput || orarioInput.length < 5) { box.style.display = 'block'; box.innerHTML = "<span style='color:var(--danger); font-weight:600;'><i class='fa-solid fa-circle-exclamation'></i> Seleziona un luogo e inserisci un orario completo.</span>"; return; }
 
-    box.style.display = 'block'; 
-    box.innerHTML = "<i class='fa-solid fa-spinner fa-spin' style='color:var(--primary);'></i> Ricerca in corso...";
+    box.style.display = 'block'; box.innerHTML = "<i class='fa-solid fa-spinner fa-spin' style='color:var(--primary);'></i> Ricerca in corso...";
 
-    let p = orarioInput.split('.'); 
-    let targetFormat1 = `${parseInt(p[0], 10)}:${p[1]}`; 
-    let targetFormat2 = `${parseInt(p[0], 10)}.${p[1]}`; 
-    let targetFormat3 = `${p[0]}:${p[1]}`; 
+    let p = orarioInput.split('.'); let targetFormat1 = `${parseInt(p[0], 10)}:${p[1]}`; let targetFormat2 = `${parseInt(p[0], 10)}.${p[1]}`; let targetFormat3 = `${p[0]}:${p[1]}`; 
     let turniTrovati = [];
 
     for (let turno in currentCorseData) {
         currentCorseData[turno].forEach(corsa => {
-            let targetLuogo = tipo === 'partenza' ? corsa.partenza_luogo : corsa.arrivo_luogo; 
-            let targetOra = tipo === 'partenza' ? corsa.partenza_ora : corsa.arrivo_ora;
+            let targetLuogo = tipo === 'partenza' ? corsa.partenza_luogo : corsa.arrivo_luogo; let targetOra = tipo === 'partenza' ? corsa.partenza_ora : corsa.arrivo_ora;
             if (targetLuogo && targetLuogo.trim() === luogo) {
                 let o = targetOra ? targetOra.trim() : "";
                 if (o === targetFormat1 || o === targetFormat2 || o === targetFormat3) {
-                    let matchPilota = turno.match(/\d[A-Z0-9]{3}/i); 
-                    let nomePilota = matchPilota ? matchPilota[0].toUpperCase() : turno.toUpperCase();
+                    let matchPilota = turno.match(/\d[A-Z0-9]{3}/i); let nomePilota = matchPilota ? matchPilota[0].toUpperCase() : turno.toUpperCase();
                     if (!turniTrovati.includes(nomePilota)) turniTrovati.push(nomePilota);
                 }
             }
@@ -360,18 +311,13 @@ window.eseguiRicercaCorsa = async () => {
         }
 
         box.innerHTML = `<div style="margin-bottom:8px;"><i class="fa-regular fa-calendar" style="color:var(--primary); width:20px;"></i> <strong>Data:</strong> ${giorno ? giorno.split('-').reverse().join('/') : "Oggi"}</div><div style="margin-bottom:16px;"><i class="fa-solid fa-location-dot" style="color:var(--primary); width:20px;"></i> <strong>${tipo === 'partenza' ? 'Partenza da' : 'Arrivo a'}:</strong> ${luogo} alle ${orarioInput}</div><strong style="display:block; margin-bottom:12px; color:var(--text-muted); font-size:13px; text-transform:uppercase;">Turni che effettuano la corsa:</strong><div style="display:flex; flex-wrap:wrap; gap:10px;">${turniTrovati.map(t => `<button class="file-btn" style="flex-grow:0; width:auto; padding: 10px 16px; font-size: 14px; margin:0;" onclick="window.cercaEApriDaRisultato('${t}')"><i class="fa-regular fa-image" style="color:var(--primary);"></i> ${t}</button>`).join('')}</div>${rotazioniHtml}`;
-    } else { 
-        box.innerHTML = "<i class='fa-solid fa-circle-info' style='color:var(--primary);'></i> Nessun turno trovato nel database per questa selezione."; 
-    }
+    } else { box.innerHTML = "<i class='fa-solid fa-circle-info' style='color:var(--primary);'></i> Nessun turno trovato nel database per questa selezione."; }
 };
 
 // Chiudi tendine risultati se si clicca fuori
 document.addEventListener('click', function(e) {
-    const boxImg = document.getElementById('suggestionsBox'); 
-    const inputImg = document.getElementById('shiftSearch');
+    const boxImg = document.getElementById('suggestionsBox'); const inputImg = document.getElementById('shiftSearch');
     if (boxImg && inputImg && e.target !== inputImg && !boxImg.contains(e.target)) boxImg.style.display = 'none';
-    
-    const scSuggBox = document.getElementById('sc-suggestions'); 
-    const scInputOrario = document.getElementById('sc-orario');
+    const scSuggBox = document.getElementById('sc-suggestions'); const scInputOrario = document.getElementById('sc-orario');
     if (scSuggBox && scInputOrario && e.target !== scInputOrario && !scSuggBox.contains(e.target)) scSuggBox.style.display = 'none';
-}); 
+});
