@@ -1,7 +1,7 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
-import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-messaging.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
 // Importiamo il sottomodulo segnalazioni
 import { avviaMotoreSegnalazioni } from './report.js';
@@ -74,7 +74,6 @@ const DEFAULT_APPS = [
     { id: "buoni", label: "Buoni\nPasto", href: "buoni.html", defaultColor: "#d63384" },
     { id: "promemoria", label: "Promemoria", href: "promemoria.html", defaultColor: "#0dcaf0" },
     { id: "dds", label: "Archivio\nDDS", href: "dds.html", defaultColor: "#5856d6" },
-    // MODIFICATO QUI: Ora apre la modale invece della pagina
     { id: "report", label: "Segnalazioni", onclick: "window.apriMainModaleSegnalazioni()", defaultColor: "#0088ff" },
     { id: "impostazioni", label: "Impostazioni", onclick: "window.apriModal('settingsModal')", defaultColor: "#8e8e93" },
     { id: "spriss", label: "Spriss", image: "icone_app/iconspriss.png", href: "https://spriss.avmspa.it/" },
