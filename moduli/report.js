@@ -1,52 +1,60 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDoc, onSnapshot, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDoc, onSnapshot, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Importa il menu
-import { caricaMenu } from './menu.js'; 
-
-// Inizializza il menu all'avvio del file
-caricaMenu();
-
-const firebaseConfig = { 
-    apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
-    authDomain: "utility-haze.firebaseapp.com", 
-    projectId: "utility-haze", 
-    messagingSenderId: "686237947418", 
-    appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" 
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2";
+// Variabili globali interne al modulo
+let db;
+let auth;
+let currentUid;
 let isAdmin = false;
 let vistaCronologia = false;
-let currentUid = null;
 let unsubscribeReports = null;
 
-// --- GESTIONE INTERFACCIA (ESPOSTE ALL'HTML TRAMITE WINDOW) ---
+// Funzione principale esposta a index.js per avviare il modulo
+export function avviaMotoreSegnalazioni(database, authentication, uid, userIsAdmin) {
+    db = database;
+    auth = authentication;
+    currentUid = uid;
+    isAdmin = userIsAdmin;
 
-window.apriModaleNuova = () => { 
-    document.getElementById('modal-nuova').style.display = 'flex'; 
+    if (isAdmin) {
+        document.getElementById('btn-cronologia-admin').style.display = 'flex';
+    } else {
+        document.getElementById('btn-cronologia-admin').style.display = 'none';
+    }
+    
+    ascoltaSegnalazioni();
+}
+
+// --- GESTIONE INTERFACCIA MODALI SECONDARIE ---
+
+window.apriModaleNuovaSegnalazione = () => { 
+    document.getElementById('modal-nuova-segnalazione').style.display = 'flex'; 
 };
-window.chiudiModaleNuova = () => {
-    document.getElementById('modal-nuova').style.display = 'none';
+window.chiudiModaleNuovaSegnalazione = () => {
+    document.getElementById('modal-nuova-segnalazione').style.display = 'none';
 };
 
-window.apriModaleRisposta = (id) => { 
+window.apriModaleRispostaSegnalazione = (id) => { 
     document.getElementById('admin-rep-id').value = id; 
-    document.getElementById('modal-risposta').style.display = 'flex'; 
+    document.getElementById('modal-risposta-segnalazione').style.display = 'flex'; 
 };
-window.chiudiModaleRisposta = () => {
-    document.getElementById('modal-risposta').style.display = 'none';
+window.chiudiModaleRispostaSegnalazione = () => {
+    document.getElementById('modal-risposta-segnalazione').style.display = 'none';
 };
 
-window.toggleVistaAdmin = () => {
+window.toggleVistaAdminSegnalazioni = () => {
     vistaCronologia = !vistaCronologia;
     const btn = document.getElementById('btn-cronologia-admin');
-    btn.classList.toggle('active', vistaCronologia);
+    
+    if(vistaCronologia) {
+        btn.style.backgroundColor = "var(--info-light)";
+        btn.style.borderColor = "var(--info)";
+        btn.style.color = "var(--info)";
+    } else {
+        btn.style.backgroundColor = "var(--surface)";
+        btn.style.borderColor = "var(--border-color)";
+        btn.style.color = "var(--text-main)";
+    }
+
     btn.innerHTML = vistaCronologia 
         ? '<i class="fa-solid fa-list-ul"></i> Torna a Segnalazioni in Attesa' 
         : '<i class="fa-solid fa-clock-rotate-left"></i> Mostra Cronologia Risposte';
@@ -55,24 +63,8 @@ window.toggleVistaAdmin = () => {
 
 // --- GESTIONE DATI FIREBASE ---
 
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        currentUid = user.uid;
-        isAdmin = (user.uid === ADMIN_UID);
-        
-        if (isAdmin) {
-            document.getElementById('btn-cronologia-admin').style.display = 'flex';
-            const menuAdmin = document.getElementById('menu-admin');
-            if (menuAdmin) menuAdmin.style.display = 'flex';
-        }
-        ascoltaSegnalazioni();
-    } else { 
-        window.location.href = "index.html"; 
-    }
-});
-
 function ascoltaSegnalazioni() {
-    if (!currentUid) return;
+    if (!currentUid || !db) return;
     if (unsubscribeReports) unsubscribeReports();
 
     const colRef = collection(db, "segnalazioni");
@@ -92,13 +84,13 @@ function ascoltaSegnalazioni() {
         listContainer.innerHTML = '';
 
         if (snapshot.empty) {
-            listContainer.innerHTML = `<div class="empty-state">Nessuna segnalazione trovata.</div>`;
+            listContainer.innerHTML = `<div style="text-align:center; padding:40px 20px; color:var(--text-muted); font-size:15px; background:var(--surface-hover); border-radius:12px; border:1px dashed var(--border-color); margin-top:10px;">Nessuna segnalazione trovata.</div>`;
             return;
         }
 
         snapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            creaCard(docSnap.id, data, listContainer);
+            creaCardSegnalazione(docSnap.id, data, listContainer);
             
             // Gestione notifiche/lettura
             if (isAdmin && !vistaCronologia && data.letta_da_admin === false) {
@@ -108,24 +100,24 @@ function ascoltaSegnalazioni() {
             }
         });
     }, (error) => {
-        console.error("Errore query:", error);
+        console.error("Errore query segnalazioni:", error);
     });
 }
 
-function creaCard(id, data, container) {
+function creaCardSegnalazione(id, data, container) {
+    const isRisposto = data.stato === 'risposto';
+    const cardBorderColor = isRisposto ? 'var(--success)' : 'var(--info)';
+    
     const card = document.createElement('div');
+    card.style.cssText = `background: var(--surface); padding: 20px; border-radius: 14px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 12px; border-left: 6px solid ${cardBorderColor}; position: relative; margin-bottom: 15px; animation: slideInUp 0.3s ease both;`;
     
-    // Gestione classe CSS principale
-    let cssRisposto = data.stato === 'risposto' ? ' risposto' : '';
-    card.className = 'report-card' + cssRisposto;
-    
-    let statusBadge = data.stato === 'risposto' 
-        ? '<div class="status-badge status-risolto">Risolto</div>' 
-        : '<div class="status-badge status-attesa">In Attesa</div>';
+    let statusBadge = isRisposto 
+        ? '<div style="position:absolute; top:16px; right:16px; font-size:11px; font-weight:700; padding:4px 8px; border-radius:6px; text-transform:uppercase; background:rgba(15,157,88,0.15); color:var(--success);">Risolto</div>' 
+        : '<div style="position:absolute; top:16px; right:16px; font-size:11px; font-weight:700; padding:4px 8px; border-radius:6px; text-transform:uppercase; background:var(--warning-light); color:var(--warning);">In Attesa</div>';
     
     let dot = "";
-    if (isAdmin && !vistaCronologia && !data.letta_da_admin) dot = '<span class="unread-dot"></span>';
-    if (!isAdmin && data.stato === 'risposto' && !data.letta_da_utente) dot = '<span class="unread-dot"></span>';
+    if (isAdmin && !vistaCronologia && !data.letta_da_admin) dot = '<span style="width:10px; height:10px; background:var(--danger); border-radius:50%; display:inline-block; margin-left:5px; box-shadow:0 0 5px var(--danger);"></span>';
+    if (!isAdmin && isRisposto && !data.letta_da_utente) dot = '<span style="width:10px; height:10px; background:var(--danger); border-radius:50%; display:inline-block; margin-left:5px; box-shadow:0 0 5px var(--danger);"></span>';
 
     let infoUtente = "";
     let headerName = isAdmin ? (data.mittente_nome || 'Utente Sconosciuto') : 'Tua Segnalazione';
@@ -138,7 +130,7 @@ function creaCard(id, data, container) {
             let num = data.mittente_telefono.replace(/\D/g, '');
             if (num.length > 0) {
                 if (!num.startsWith('39')) num = '39' + num;
-                waIcon = `<a href="https://wa.me/${num}" target="_blank" style="color:#25D366; margin-left:12px; font-size:26px; vertical-align:middle; text-decoration:none; transition:transform 0.2s; display:inline-block;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Contatta su WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>`;
+                waIcon = `<a href="https://wa.me/${num}" target="_blank" style="color:#25D366; margin-left:12px; font-size:26px; vertical-align:middle; text-decoration:none;"><i class="fa-brands fa-whatsapp"></i></a>`;
             }
             phoneInfo = `<br><span style="color:var(--text-main); line-height: 26px;"><i class="fa-solid fa-phone" style="font-size:12px; width:16px;"></i> <b>Telefono:</b> ${data.mittente_telefono}</span> ${waIcon}`;
         }
@@ -151,39 +143,30 @@ function creaCard(id, data, container) {
         </div>`;
     }
 
-    // Costruiamo la risposta in modo sicuro senza annidare i backtick
-    let rispostaHtml = "";
-    if (data.risposta_admin) {
-        let linkResHtml = data.link_risposta ? `<a href="${data.link_risposta}" target="_blank" class="report-link"><i class="fa-solid fa-link"></i> Link Allegato</a>` : "";
-        rispostaHtml = `
-            <div class="admin-reply-box">
-                <div class="admin-reply-title"><i class="fa-solid fa-reply"></i> Risposta Admin</div>
-                <div class="admin-reply-text">${data.risposta_admin}</div>
-                ${linkResHtml}
-            </div>`;
-    }
+    let rispostaHtml = data.risposta_admin ? `
+        <div style="margin-top:8px; border-left:3px solid var(--success); padding-left:12px;">
+            <div style="font-size:12px; font-weight:700; color:var(--success); margin-bottom:4px; display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-reply"></i> Risposta Admin</div>
+            <div style="font-size:14px; color:var(--text-main); font-style:italic; white-space:pre-wrap;">${data.risposta_admin}</div>
+            ${data.link_risposta ? `<a href="${data.link_risposta}" target="_blank" style="font-size:13px; color:var(--info); text-decoration:none; display:inline-flex; align-items:center; gap:5px; margin-top:5px; font-weight:500;"><i class="fa-solid fa-link"></i> Link Allegato</a>` : ''}
+        </div>` : '';
 
-    let linkUtenteHtml = data.link_allegato ? `<a href="${data.link_allegato}" target="_blank" class="report-link"><i class="fa-solid fa-link"></i> Link Utente</a>` : "";
-    
-    let btnRispondi = (isAdmin && data.stato === 'in_attesa') ? `<button class="btn-reply" onclick="window.apriModaleRisposta('${id}')">Rispondi</button>` : "";
-    let dataFormattata = new Date(data.timestamp_creazione).toLocaleString();
-    let margineData = isAdmin ? '12px' : '0';
+    let linkUtenteHtml = data.link_allegato ? `<a href="${data.link_allegato}" target="_blank" style="font-size:13px; color:var(--info); text-decoration:none; display:inline-flex; align-items:center; gap:5px; margin-top:5px; font-weight:500;"><i class="fa-solid fa-link"></i> Link Utente</a>` : '';
 
-    // Assemblaggio finale pulito
+    let btnRispondi = (isAdmin && data.stato === 'in_attesa') ? `<button style="background:var(--success); color:white; border:none; padding:10px; border-radius:10px; font-weight:600; font-size:13px; cursor:pointer; flex:1; display:flex; justify-content:center; align-items:center; gap:6px;" onclick="window.apriModaleRispostaSegnalazione('${id}')">Rispondi</button>` : '';
+
     card.innerHTML = `
         ${statusBadge}
-        <div class="report-sender"><i class="fa-solid fa-circle-user"></i> ${headerName} ${dot}</div>
-        <div class="report-date" style="margin-bottom: ${margineData};">${dataFormattata}</div>
+        <div style="font-weight:800; font-size:16px; color:var(--info); display:flex; align-items:center; gap:6px;"><i class="fa-solid fa-circle-user"></i> ${headerName} ${dot}</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:${isAdmin ? '12px' : '0'};">${new Date(data.timestamp_creazione).toLocaleString()}</div>
         ${infoUtente}
-        <div class="report-body">${data.messaggio}</div>
+        <div style="font-size:14px; color:var(--text-main); background:var(--surface-hover); padding:14px; border-radius:10px; line-height:1.5; white-space:pre-wrap;">${data.messaggio}</div>
         ${linkUtenteHtml}
         ${rispostaHtml}
-        <div class="btn-group">
+        <div style="display:flex; gap:10px; margin-top:5px;">
             ${btnRispondi}
-            <button class="btn-delete" onclick="window.eliminaSegnalazione('${id}')"><i class="fa-solid fa-trash"></i> Elimina</button>
+            <button style="background:var(--surface); color:var(--danger); border:1px solid var(--danger); padding:10px; border-radius:10px; font-weight:600; font-size:13px; cursor:pointer; flex:1; display:flex; justify-content:center; align-items:center; gap:6px;" onclick="window.eliminaSegnalazione('${id}')"><i class="fa-solid fa-trash"></i> Elimina</button>
         </div>
     `;
-    
     container.appendChild(card);
 }
 
@@ -212,7 +195,9 @@ window.inviaSegnalazione = async () => {
             letta_da_admin: false,
             letta_da_utente: true
         });
-        window.chiudiModaleNuova();
+        window.chiudiModaleNuovaSegnalazione();
+        document.getElementById('rep-messaggio').value = ""; // Pulisce
+        document.getElementById('rep-link').value = "";
     } catch(e) { 
         console.error("Errore invio:", e); 
     }
@@ -233,7 +218,9 @@ window.inviaRispostaAdmin = async () => {
             letta_da_utente: false,
             timestamp_risposta: Date.now()
         });
-        window.chiudiModaleRisposta();
+        window.chiudiModaleRispostaSegnalazione();
+        document.getElementById('admin-rep-messaggio').value = "";
+        document.getElementById('admin-rep-link').value = "";
     } catch(e) { 
         console.error("Errore risposta:", e); 
     }
