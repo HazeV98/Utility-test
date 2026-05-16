@@ -1,4 +1,3 @@
-```javascript
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDoc, onSnapshot, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
@@ -63,7 +62,6 @@ onAuthStateChanged(auth, (user) => {
         
         if (isAdmin) {
             document.getElementById('btn-cronologia-admin').style.display = 'flex';
-            // Il menu admin viene gestito da menu.js, ma assicuriamoci che appaia
             const menuAdmin = document.getElementById('menu-admin');
             if (menuAdmin) menuAdmin.style.display = 'flex';
         }
@@ -116,7 +114,10 @@ function ascoltaSegnalazioni() {
 
 function creaCard(id, data, container) {
     const card = document.createElement('div');
-    card.className = `report-card ${data.stato === 'risposto' ? 'risposto' : ''}`;
+    
+    // Gestione classe CSS principale
+    let cssRisposto = data.stato === 'risposto' ? ' risposto' : '';
+    card.className = 'report-card' + cssRisposto;
     
     let statusBadge = data.stato === 'risposto' 
         ? '<div class="status-badge status-risolto">Risolto</div>' 
@@ -150,26 +151,39 @@ function creaCard(id, data, container) {
         </div>`;
     }
 
-    let rispostaHtml = data.risposta_admin ? `
-        <div class="admin-reply-box">
-            <div class="admin-reply-title"><i class="fa-solid fa-reply"></i> Risposta Admin</div>
-            <div class="admin-reply-text">${data.risposta_admin}</div>
-            ${data.link_risposta ? `<a href="${data.link_risposta}" target="_blank" class="report-link"><i class="fa-solid fa-link"></i> Link Allegato</a>` : ''}
-        </div>` : '';
+    // Costruiamo la risposta in modo sicuro senza annidare i backtick
+    let rispostaHtml = "";
+    if (data.risposta_admin) {
+        let linkResHtml = data.link_risposta ? `<a href="${data.link_risposta}" target="_blank" class="report-link"><i class="fa-solid fa-link"></i> Link Allegato</a>` : "";
+        rispostaHtml = `
+            <div class="admin-reply-box">
+                <div class="admin-reply-title"><i class="fa-solid fa-reply"></i> Risposta Admin</div>
+                <div class="admin-reply-text">${data.risposta_admin}</div>
+                ${linkResHtml}
+            </div>`;
+    }
 
+    let linkUtenteHtml = data.link_allegato ? `<a href="${data.link_allegato}" target="_blank" class="report-link"><i class="fa-solid fa-link"></i> Link Utente</a>` : "";
+    
+    let btnRispondi = (isAdmin && data.stato === 'in_attesa') ? `<button class="btn-reply" onclick="window.apriModaleRisposta('${id}')">Rispondi</button>` : "";
+    let dataFormattata = new Date(data.timestamp_creazione).toLocaleString();
+    let margineData = isAdmin ? '12px' : '0';
+
+    // Assemblaggio finale pulito
     card.innerHTML = `
         ${statusBadge}
         <div class="report-sender"><i class="fa-solid fa-circle-user"></i> ${headerName} ${dot}</div>
-        <div class="report-date" style="margin-bottom: ${isAdmin ? '12px' : '0'};">${new Date(data.timestamp_creazione).toLocaleString()}</div>
+        <div class="report-date" style="margin-bottom: ${margineData};">${dataFormattata}</div>
         ${infoUtente}
         <div class="report-body">${data.messaggio}</div>
-        ${data.link_allegato ? `<a href="${data.link_allegato}" target="_blank" class="report-link"><i class="fa-solid fa-link"></i> Link Utente</a>` : ''}
+        ${linkUtenteHtml}
         ${rispostaHtml}
         <div class="btn-group">
-            ${isAdmin && data.stato === 'in_attesa' ? `<button class="btn-reply" onclick="window.apriModaleRisposta('${id}')">Rispondi</button>` : ''}
+            ${btnRispondi}
             <button class="btn-delete" onclick="window.eliminaSegnalazione('${id}')"><i class="fa-solid fa-trash"></i> Elimina</button>
         </div>
     `;
+    
     container.appendChild(card);
 }
 
@@ -234,5 +248,3 @@ window.eliminaSegnalazione = async (id) => {
         }
     }
 };
-
-```
