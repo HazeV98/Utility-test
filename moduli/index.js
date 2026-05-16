@@ -3,6 +3,9 @@ import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signO
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-messaging.js";
 
+// Importiamo il sottomodulo segnalazioni
+import { avviaMotoreSegnalazioni } from './report.js';
+
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
     authDomain: "utility-haze.firebaseapp.com", 
@@ -71,7 +74,8 @@ const DEFAULT_APPS = [
     { id: "buoni", label: "Buoni\nPasto", href: "buoni.html", defaultColor: "#d63384" },
     { id: "promemoria", label: "Promemoria", href: "promemoria.html", defaultColor: "#0dcaf0" },
     { id: "dds", label: "Archivio\nDDS", href: "dds.html", defaultColor: "#5856d6" },
-    { id: "report", label: "Segnalazioni", href: "report.html", defaultColor: "#0088ff" },
+    // MODIFICATO QUI: Ora apre la modale invece della pagina
+    { id: "report", label: "Segnalazioni", onclick: "window.apriMainModaleSegnalazioni()", defaultColor: "#0088ff" },
     { id: "impostazioni", label: "Impostazioni", onclick: "window.apriModal('settingsModal')", defaultColor: "#8e8e93" },
     { id: "spriss", label: "Spriss", image: "icone_app/iconspriss.png", href: "https://spriss.avmspa.it/" },
     { id: "guida", label: "Guida", href: "guida.html", defaultColor: "#34c759" },
@@ -79,7 +83,7 @@ const DEFAULT_APPS = [
     { id: "accessi", label: "Accessi", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#1c1c1e" }
 ];
 
-// Fallback funzioni chiusura menù laterale (nel caso l'overlay venga cliccato)
+// Fallback funzioni chiusura menù laterale
 window.apriMenuLaterale = () => { 
     const s = document.getElementById('sidebar'); if(s) s.classList.add('open'); 
     const o = document.getElementById('sidebar-overlay'); if(o) o.style.display = 'block'; 
@@ -87,6 +91,14 @@ window.apriMenuLaterale = () => {
 window.chiudiMenuLaterale = () => { 
     const s = document.getElementById('sidebar'); if(s) s.classList.remove('open'); 
     const o = document.getElementById('sidebar-overlay'); if(o) o.style.display = 'none'; 
+};
+
+// Funzione ponte per aprire la modale segnalazioni e avviare il sottomodulo
+window.apriMainModaleSegnalazioni = () => {
+    window.apriModal('modal-segnalazioni-main');
+    if (auth.currentUser) {
+        avviaMotoreSegnalazioni(db, auth, auth.currentUser.uid, globalIsAdmin);
+    }
 };
 
 window.controllaBacheca = async () => {
