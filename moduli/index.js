@@ -3,8 +3,9 @@ import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signO
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
-// Importiamo il sottomodulo segnalazioni
+// Importiamo i sottomoduli
 import { avviaMotoreSegnalazioni } from './report.js';
+import { avviaMotoreTurni } from './turni.js';
 
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -61,7 +62,8 @@ const DEFAULT_APPS = [
     { id: "calendario", label: "Calendario", href: "calendario.html", defaultColor: "#0066cc" },
     { id: "statistiche", label: "Statistiche", href: "dati_calendario.html", defaultColor: "#6f42c1" },
     { id: "rotazioni", label: "Rotazioni", href: "rotazioni.html", defaultColor: "#fd7e14" },
-    { id: "turni", label: "Turni", href: "turni.html", defaultColor: "#20c997" },
+    // MODIFICATO QUI: Ora apre la modale invece della pagina
+    { id: "turni", label: "Turni", onclick: "window.apriModaleTurni()", defaultColor: "#20c997" },
     { id: "bachecaturni", label: "Bacheca\nTurni", href: "bacheca_turni.html", defaultColor: "#e83e8c" },
     { id: "barcadvisor", label: "BarcAdvisor", image: "icone_app/iconba.png", href: "barcadvisor.html" },
     { id: "rubrica", label: "Rubrica", href: "rubrica.html", defaultColor: "#343a40" },
@@ -92,11 +94,47 @@ window.chiudiMenuLaterale = () => {
     const o = document.getElementById('sidebar-overlay'); if(o) o.style.display = 'none'; 
 };
 
-// Funzione ponte per aprire la modale segnalazioni e avviare il sottomodulo
+// Funzione ponte per aprire la modale segnalazioni
 window.apriMainModaleSegnalazioni = () => {
     window.apriModal('modal-segnalazioni-main');
     if (auth.currentUser) {
         avviaMotoreSegnalazioni(db, auth, auth.currentUser.uid, globalIsAdmin);
+    }
+};
+
+// Nuova funzione ponte per aprire i Turni
+window.apriModaleTurni = () => {
+    if (!auth.currentUser) {
+        alert("Devi effettuare il login per accedere ai turni.");
+        return;
+    }
+    
+    // Controllo permessi turni (bannato o mancante dati)
+    if (window.currentUserData) {
+        if (window.currentUserData.turni_banned === true) {
+            alert("Il tuo accesso alla pagina Turni è stato temporaneamente revocato.");
+            return;
+        }
+        if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined || window.currentUserData.matricola === "") {
+            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per visualizzare i turni.");
+            window.apriModal('profileModal');
+            return;
+        }
+    }
+
+    // Se tutto ok, apro la modale e avvio il motore turni
+    window.apriModal('modal-turni-main');
+    avviaMotoreTurni();
+    
+    // Aggiorniamo la data di ultimo accesso turni su firebase
+    const oggiStr = new Date().toISOString().split('T')[0];
+    if (window.currentUserData && (window.currentUserData.turni_access !== true || window.currentUserData.last_turni_access !== oggiStr)) {
+        setDoc(doc(db, "utenti", auth.currentUser.uid), { 
+            turni_access: true,
+            last_turni_access: oggiStr
+        }, { merge: true });
+        window.currentUserData.turni_access = true;
+        window.currentUserData.last_turni_access = oggiStr;
     }
 };
 

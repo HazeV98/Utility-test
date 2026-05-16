@@ -21,7 +21,7 @@
 
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
@@ -122,58 +122,25 @@
         @keyframes slideInUpBouncy { 0% { opacity: 0; transform: translateY(35px) scale(0.9); } 65% { opacity: 1; transform: translateY(-4px) scale(1.02); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes modalPop { 0% { opacity: 0; transform: scale(0.92) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
         @keyframes slideInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Modale Profilo: Espansione specifica dal bottone alto-sinistra */
-        #profileModal .modal-content {
-            transform-origin: 15% -10%;
-            animation: expandFromProfileBtn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15) forwards;
-        }
-        @keyframes expandFromProfileBtn {
-            0% { opacity: 0; transform: scale(0.05); border-radius: 60px; }
-            100% { opacity: 1; transform: scale(1); border-radius: var(--radius-lg); }
-        }
-
+        #profileModal .modal-content { transform-origin: 15% -10%; animation: expandFromProfileBtn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15) forwards; }
+        @keyframes expandFromProfileBtn { 0% { opacity: 0; transform: scale(0.05); border-radius: 60px; } 100% { opacity: 1; transform: scale(1); border-radius: var(--radius-lg); } }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); opacity: 0.8; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
-        /* 1. Animazione "Respiro" per i Banner */
         @keyframes breathe { 0%, 100% { transform: scale(1); box-shadow: var(--shadow-md); } 50% { transform: scale(1.02); box-shadow: var(--shadow-lg); } }
 
-        /* 2. Shimmer Effect Skeleton */
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .skeleton { background: linear-gradient(90deg, var(--surface) 25%, var(--border-color) 50%, var(--surface) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; opacity: 0.7;}
         :root[data-theme="dark"] .skeleton { background: linear-gradient(90deg, var(--surface) 25%, #2f333d 50%, var(--surface) 75%); background-size: 200% 100%; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-        /* 3. Transizione Viste a Scorrimento */
-        .view-container { 
-            width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; 
-            animation: fadeSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
-        }
+        .view-container { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; animation: fadeSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
         #view-app { position: fixed !important; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 440px; height: 100vh; height: 100dvh; margin: 0; padding: 0; z-index: 50; }
 
-        #view-app .header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: calc(20px + env(safe-area-inset-top, 0px)) 20px 10px 20px;
-            margin: 0;
-            box-sizing: border-box;
-            z-index: 100;
-            background: transparent;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        #view-app .header { position: absolute; top: 0; left: 0; width: 100%; padding: calc(20px + env(safe-area-inset-top, 0px)) 20px 10px 20px; margin: 0; box-sizing: border-box; z-index: 100; background: transparent; display: flex; justify-content: space-between; align-items: center; }
 
-        .scroll-area {
-            width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; padding: calc(95px + env(safe-area-inset-top, 0px)) 20px 40px 20px;
-            box-sizing: border-box; display: flex; flex-direction: column; align-items: center;
-            -webkit-mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(65px + env(safe-area-inset-top, 0px)), black calc(120px + env(safe-area-inset-top, 0px)), black 100%);
-            mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(65px + env(safe-area-inset-top, 0px)), black calc(120px + env(safe-area-inset-top, 0px)), black 100%);
-            -ms-overflow-style: none; scrollbar-width: none;
-        }
+        .scroll-area { width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; padding: calc(95px + env(safe-area-inset-top, 0px)) 20px 40px 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(65px + env(safe-area-inset-top, 0px)), black calc(120px + env(safe-area-inset-top, 0px)), black 100%); mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(65px + env(safe-area-inset-top, 0px)), black calc(120px + env(safe-area-inset-top, 0px)), black 100%); -ms-overflow-style: none; scrollbar-width: none; }
         .scroll-area::-webkit-scrollbar { display: none; }
 
         .header-side { flex: 1; display: flex; align-items: center; gap: 10px; }
@@ -183,12 +150,8 @@
 
         #install-btn { display: none; background-color: var(--success); color: white; border: none; padding: 10px 16px; font-size: 13px; font-weight: 700; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(15,157,88,0.3); white-space: nowrap; animation: pulse 2s infinite; align-items:center; gap:6px;}
         
-        /* 5. Haptic Flash Feedback per bottoni azione */
         .btn-header-alt, .btn-action, .btn-modal { position: relative; overflow: hidden; }
-        .btn-header-alt::after, .btn-action::after, .btn-modal::after {
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.3); opacity: 0; transition: opacity 0.3s; pointer-events: none;
-        }
+        .btn-header-alt::after, .btn-action::after, .btn-modal::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.3); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .btn-header-alt:active::after, .btn-action:active::after, .btn-modal:active::after { opacity: 1; transition: 0s; }
 
         .btn-header-alt { background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 20px; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 6px; transition: var(--transition); }
@@ -202,23 +165,10 @@
         .app-grid .app-btn:active .app-icon { transform: scale(0.88) translateY(4px); box-shadow: 0 1px 3px rgba(0,0,0,0.2), inset 0 6px 12px rgba(0,0,0,0.3); filter: brightness(0.9); transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
         .app-grid .app-btn:active .app-label { transform: scale(0.95); opacity: 0.7; transition: all 0.15s; }
         
-        /* Effetto 3D Base */
-        .app-grid .app-icon { 
-            width: 62px; height: 62px; margin: 0 auto 10px auto; border-radius: 18px; 
-            color: white; font-size: 28px; display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 12px 24px -6px rgba(0,0,0,0.3), 0 4px 8px -2px rgba(0,0,0,0.15), inset 0 -6px 12px rgba(0,0,0,0.25); 
-            border: 1px solid rgba(0,0,0,0.05); transition: var(--transition); overflow: hidden; position: relative;
-        }
-        
-        /* Haptic flash per icone */
-        .app-grid .app-icon::before {
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.4); opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 2;
-        }
+        .app-grid .app-icon { width: 62px; height: 62px; margin: 0 auto 10px auto; border-radius: 18px; color: white; font-size: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 24px -6px rgba(0,0,0,0.3), 0 4px 8px -2px rgba(0,0,0,0.15), inset 0 -6px 12px rgba(0,0,0,0.25); border: 1px solid rgba(0,0,0,0.05); transition: var(--transition); overflow: hidden; position: relative; }
+        .app-grid .app-icon::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.4); opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 2; }
         .app-grid .app-btn:active .app-icon::before { opacity: 1; transition: 0s; }
-
         .app-grid .app-icon::after { display: none; }
-        
         .app-grid .app-label { font-size: var(--label-size); color: var(--text-main); font-weight: 600; text-align: center; line-height: 1.2; text-shadow: 0px 1px 3px rgba(255,255,255,0.8); width: 100%; word-wrap: break-word; transition: var(--transition); }
 
         .app-list { display: flex; flex-direction: column; gap: 12px; padding: 10px; width: 100%; }
@@ -226,8 +176,6 @@
         .app-list .app-btn:active { transform: scale(0.97); background: rgba(255,255,255,0.6); }
         .app-list .app-btn::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.05); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .app-list .app-btn:active::after { opacity: 1; transition: 0s; }
-        
-        /* Effetto 3D Lista Base */
         .app-list .app-icon { width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 6px 12px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1), inset 0 -4px 6px rgba(0,0,0,0.2); border: 1px solid rgba(0,0,0,0.04); overflow: hidden; }
         .app-list .app-label { font-size: calc(var(--label-size) + 2px); color: #1a1a1a; font-weight: 700; margin: 0; text-shadow: none; flex: 1; text-align: left; }
 
@@ -236,7 +184,6 @@
         .transparent-icons.app-grid .app-icon { font-size: 36px !important; } 
         .transparent-icons.app-list .app-icon { font-size: 26px !important; }
 
-        /* Dark mode overrides per l'effetto 3D e nomi app */
         :root[data-theme="dark"] .app-grid .app-icon { box-shadow: 0 12px 24px -6px rgba(0,0,0,0.8), 0 4px 8px -2px rgba(0,0,0,0.5), inset 0 -6px 12px rgba(0,0,0,0.6), inset 1px 1px 3px rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.08); }
         :root[data-theme="dark"] .app-list .app-icon { box-shadow: 0 6px 12px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4), inset 0 -4px 6px rgba(0,0,0,0.5), inset 1px 1px 2px rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.08); }
         :root[data-theme="dark"] .app-grid .app-label { text-shadow: none; }
@@ -268,31 +215,14 @@
         .btn-action:active { transform: scale(0.96) translateY(2px); box-shadow: 0 4px 8px rgba(15,157,88,0.2); }
         
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 7000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: fadeIn 0.3s ease; }
+        .modal-content { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 380px; text-align: left; box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.4) inset; border: 1px solid var(--border-color); position: relative; color: var(--text-main); max-height: 90vh; overflow-y: auto; animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
-        .modal-content { 
-            background: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 380px; text-align: left; 
-            box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.4) inset; border: 1px solid var(--border-color); 
-            position: relative; color: var(--text-main); max-height: 90vh; overflow-y: auto; 
-            animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
-        }
-        
-        /* 6. Floating Labels per Input */
         .float-wrapper { position: relative; margin-bottom: 16px; width: 100%; }
         .float-wrapper .input-field { margin-bottom: 0; padding: 22px 14px 10px 14px; }
-        .float-wrapper label {
-            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-            color: var(--text-muted); font-size: 14px; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; font-weight: 500;
-        }
-        .float-wrapper .input-field:focus + label,
-        .float-wrapper .input-field:not(:placeholder-shown) + label {
-            top: 12px; font-size: 11px; color: var(--primary); font-weight: 700;
-        }
+        .float-wrapper label { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; font-weight: 500; }
+        .float-wrapper .input-field:focus + label, .float-wrapper .input-field:not(:placeholder-shown) + label { top: 12px; font-size: 11px; color: var(--primary); font-weight: 700; }
 
-        .input-field { 
-            width: 100%; padding: 14px; margin-bottom: 16px; border: 2px solid var(--border-color); border-radius: var(--radius-md); 
-            box-sizing: border-box; font-size: 15px; background-color: var(--surface-hover); color: var(--text-main); 
-            font-family: inherit; transition: var(--transition);
-        }
+        .input-field { width: 100%; padding: 14px; margin-bottom: 16px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 15px; background-color: var(--surface-hover); color: var(--text-main); font-family: inherit; transition: var(--transition); }
         .input-field:focus { border-color: var(--primary); outline: none; background-color: var(--surface); transform: translateY(-2px); box-shadow: 0 8px 16px var(--primary-glow); }
         .input-field::placeholder { color: var(--text-muted); opacity: 0.7; }
         
@@ -305,7 +235,6 @@
         input[type="color"] { width: 44px; height: 44px; border: none; border-radius: 10px; cursor: pointer; padding: 0; background: transparent; }
         input[type="range"] { width: 100%; margin: 10px 0; accent-color: var(--primary); }
 
-        .badge-rotazioni { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(217,48,37,0.4); border: 2px solid var(--bg-color); z-index: 10; pointer-events: none;}
         .badge-notif { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; min-width: 22px; height: 22px; padding: 0 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(217,48,37,0.4); border: 2px solid var(--surface); z-index: 20; pointer-events: none; }
 
         .banner-alert { padding: 14px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 20px; width: 100%; max-width: 440px; cursor: pointer; box-shadow: var(--shadow-md); display:flex; align-items:center; justify-content:center; gap:10px; transition: var(--transition); animation: slideInUpBouncy 0.5s ease both, breathe 3s infinite ease-in-out 0.5s;}
@@ -313,6 +242,48 @@
         .banner-yellow { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
         .banner-red { background: var(--danger); color: white; }
         .banner-blue { background: #17a2b8; color: white; }
+
+        /* --- STILI AGGIUNTI PER IL MODULO TURNI --- */
+        .folder-btn { background-color: var(--surface); color: var(--text-main); border: 2px solid var(--border-color); padding: 24px 20px; font-size: 16px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; text-align: left; box-shadow: var(--shadow-sm); transition: all 0.2s; display: flex; align-items: center; gap: 16px; width: 100%; margin-bottom: 12px;}
+        .folder-btn i { font-size: 24px; color: var(--primary); transition: transform 0.2s; }
+        .folder-btn:hover { border-color: var(--primary); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .folder-btn:hover i { transform: scale(1.1); }
+        .file-row { display: flex; gap: 12px; width: 100%; align-items: stretch; margin-bottom: 12px;}
+        .file-btn { flex-grow: 1; background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); padding: 16px; font-size: 15px; border-radius: var(--radius-md); cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: flex-start; gap: 12px; font-weight: 600; transition: all 0.2s; box-shadow: var(--shadow-sm); }
+        .file-btn i { color: var(--danger); font-size: 18px; }
+        .file-btn:hover { border-color: var(--primary); background-color: var(--surface-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .icon-btn { width: 56px; background-color: var(--surface); color: var(--primary); border: 1px solid var(--border-color); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; transition: all 0.2s; box-shadow: var(--shadow-sm); }
+        .icon-btn:hover { background-color: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .btn-search-spec { background-color: var(--surface); color: var(--success); border: 1px solid var(--border-color); }
+        .btn-search-spec:hover { background-color: var(--success); color: white; border-color: var(--success); }
+        .back-btn { background-color: transparent; color: var(--text-muted); border: 2px solid var(--border-color); padding: 14px; border-radius: var(--radius-md); cursor: pointer; width: 100%; font-weight: 600; font-size: 15px; margin-bottom: 12px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;}
+        .back-btn:hover { background-color: var(--surface); color: var(--text-main); border-color: var(--text-main); }
+        .search-container { position: relative; width: 100%; margin-bottom: 16px; }
+        .search-wrapper { position: relative; display: flex; align-items: center; }
+        .search-wrapper i { position: absolute; left: 16px; color: var(--text-muted); font-size: 16px; }
+        #shiftSearch { width: 100%; padding: 16px 16px 16px 44px; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px; box-sizing: border-box; outline: none; font-family: inherit; background: var(--surface); color: var(--text-main); transition: all 0.2s; box-shadow: var(--shadow-sm); }
+        #shiftSearch:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); }
+        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: var(--shadow-lg); display: none; margin-top: 8px; padding: 8px 0; }
+        .suggestion-item { padding: 14px 20px; cursor: pointer; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; font-weight: 500; transition: background-color 0.2s; }
+        .suggestion-item i { color: var(--primary); font-size: 18px; }
+        .suggestion-item:hover, .suggestion-item:active { background-color: var(--surface-hover); color: var(--primary); }
+        
+        .modal-overlay-search { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(8px); animation: fadeIn 0.3s ease;}
+        .modal-content-search { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); max-width: 90%; width: 420px; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: var(--shadow-lg); border: 1px solid var(--border-color); }
+        .tipo-toggle-container { display: flex; gap: 12px; margin-bottom: 24px; margin-top: 10px; }
+        .btn-tipo { flex: 1; padding: 16px; border: 2px solid var(--border-color); background: var(--surface); color: var(--text-muted); font-size: 15px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;}
+        .btn-tipo.active { border-color: var(--primary); background: var(--primary); color: white; box-shadow: 0 4px 12px var(--primary-glow); }
+        #sc-rest-form { opacity: 0.4; pointer-events: none; transition: opacity 0.3s ease; filter: grayscale(1); }
+        #sc-rest-form.unlocked { opacity: 1; pointer-events: auto; filter: grayscale(0); }
+        .sc-form-group { margin-bottom: 20px; display: flex; flex-direction: column; }
+        .sc-form-group label { font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; text-align: left; text-transform: uppercase; letter-spacing: 0.5px;}
+        .sc-form-group input, .sc-form-group select { width: 100%; padding: 16px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 16px; font-family: inherit; background: var(--surface); color: var(--text-main); transition: all 0.2s; }
+        .sc-form-group input:focus, .sc-form-group select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-glow); }
+        .risultato-box { background: var(--surface-hover); border-left: 4px solid var(--primary); padding: 20px; margin-top: 24px; font-size: 15px; line-height: 1.6; border-radius: 0 var(--radius-md) var(--radius-md) 0; text-align: left; color: var(--text-main); border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); animation: fadeInUp 0.4s ease; box-shadow: var(--shadow-sm); }
+        #sc-suggestions { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border-color); border-radius: 0 0 var(--radius-md) var(--radius-md); max-height: 160px; overflow-y: auto; z-index: 10; box-shadow: var(--shadow-md); margin-top: -4px; border-top: none; }
+        .sc-suggestion-item { padding: 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; font-size: 16px; font-weight: 600; text-align: left; color: var(--text-main); }
+        .sc-suggestion-item:last-child { border-bottom: none; }
+        .sc-suggestion-item:hover, .sc-suggestion-item:active { background-color: var(--surface-hover); color: var(--primary); padding-left: 20px; transition: padding 0.2s;}
     </style>
 </head>
 <body>
@@ -329,7 +300,8 @@
         <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
         <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
         <a href="rotazioni.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
-        <a href="turni.html" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
+        <!-- Aggiornato il link nel menu -->
+        <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleTurni(); return false;" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
         <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
         <a href="barcadvisor.html" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
         <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
@@ -343,7 +315,6 @@
         <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
         <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
         <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
-        <!-- Anche nel menu modifichiamo il link -->
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriMainModaleSegnalazioni(); return false;" class="sidebar-link"><i class="fa-solid fa-headset"></i> Segnalazioni</a>
         <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
         
@@ -432,7 +403,7 @@
         </div>
     </div> 
 
-    <!-- MODALI ORIGINALI (Settings, App, Profilo, Auth, ecc) -->
+    <!-- Tutte le vecchie modali (Settings, App, Profilo, Auth, Gestione Accessi) -->
     
     <div id="settingsModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'settingsModal')">
         <div class="modal-content">
@@ -764,78 +735,115 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- NUOVE MODALI PER IL MODULO SEGNALAZIONI    -->
-    <!-- ========================================== -->
-
-    <!-- 1. Modale Principale Segnalazioni -->
+    <!-- MODALI SEGNALAZIONI -->
     <div id="modal-segnalazioni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-segnalazioni-main')">
         <div class="modal-content" style="max-width: 460px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
             <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-segnalazioni-main')"></i>
-            
-            <h3 style="margin-top: 0; color: var(--info); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
-                <i class="fa-solid fa-headset"></i> Segnalazioni
-            </h3>
-
-            <!-- Area scorrevole interna -->
+            <h3 style="margin-top: 0; color: var(--info); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-headset"></i> Segnalazioni</h3>
             <div style="flex: 1; overflow-y: auto; padding-right: 5px;">
-                <button style="background-color: var(--info); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; box-shadow: 0 4px 12px rgba(0, 136, 255, 0.3); width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; transition: all 0.2s; margin-bottom: 15px;" onclick="window.apriModaleNuovaSegnalazione()">
-                    <i class="fa-solid fa-paper-plane"></i> Nuova Segnalazione
-                </button>
-                
-                <button id="btn-cronologia-admin" style="display: none; background-color: var(--surface); color: var(--text-main); border: 2px solid var(--border-color); padding: 14px; font-size: 14px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; justify-content: center; align-items: center; gap: 10px; transition: all 0.2s; margin-bottom: 15px;" onclick="window.toggleVistaAdminSegnalazioni()">
-                    <i class="fa-solid fa-clock-rotate-left"></i> Mostra Cronologia Risposte
-                </button>
-                
+                <button style="background-color: var(--info); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; box-shadow: 0 4px 12px rgba(0, 136, 255, 0.3); width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; transition: all 0.2s; margin-bottom: 15px;" onclick="window.apriModaleNuovaSegnalazione()"><i class="fa-solid fa-paper-plane"></i> Nuova Segnalazione</button>
+                <button id="btn-cronologia-admin" style="display: none; background-color: var(--surface); color: var(--text-main); border: 2px solid var(--border-color); padding: 14px; font-size: 14px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; justify-content: center; align-items: center; gap: 10px; transition: all 0.2s; margin-bottom: 15px;" onclick="window.toggleVistaAdminSegnalazioni()"><i class="fa-solid fa-clock-rotate-left"></i> Mostra Cronologia Risposte</button>
                 <div id="reports-list"></div>
             </div>
-
             <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 15px;" onclick="window.chiudiModal('modal-segnalazioni-main')"><i class="fa-solid fa-xmark"></i> Chiudi Finestra</button>
         </div>
     </div>
 
-    <!-- 2. Sottomodale: Nuova Segnalazione -->
     <div id="modal-nuova-segnalazione" class="modal-overlay" style="z-index: 7500;">
         <div class="modal-content">
             <h3 style="margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px; text-align:center;"><i class="fa-solid fa-paper-plane" style="color:var(--info);"></i> Invia Segnalazione</h3>
-            
             <div class="float-wrapper">
                 <textarea id="rep-messaggio" rows="4" class="input-field" placeholder=" " style="resize: vertical;"></textarea>
                 <label style="top: 20px;">Messaggio / Problema</label>
             </div>
-            
             <div class="float-wrapper">
                 <input type="url" id="rep-link" class="input-field" placeholder=" ">
                 <label>Link Allegato (Facoltativo)</label>
             </div>
-            
             <button id="btn-salva-rep" class="btn-action" style="background-color: var(--info);" onclick="window.inviaSegnalazione()"><i class="fa-solid fa-paper-plane"></i> Invia ora</button>
             <button class="btn-modal" style="background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color);" onclick="window.chiudiModaleNuovaSegnalazione()">Annulla</button>
         </div>
     </div>
 
-    <!-- 3. Sottomodale: Risposta Admin -->
     <div id="modal-risposta-segnalazione" class="modal-overlay" style="z-index: 7500;">
         <div class="modal-content">
             <h3 style="margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px; text-align:center;"><i class="fa-solid fa-reply" style="color:var(--success);"></i> Rispondi</h3>
             <input type="hidden" id="admin-rep-id">
-            
             <div class="float-wrapper">
                 <textarea id="admin-rep-messaggio" rows="4" class="input-field" placeholder=" " style="resize: vertical;"></textarea>
                 <label style="top: 20px;">Risposta</label>
             </div>
-            
             <div class="float-wrapper">
                 <input type="url" id="admin-rep-link" class="input-field" placeholder=" ">
                 <label>Link Allegato (Facoltativo)</label>
             </div>
-            
             <button id="btn-invia-risposta" class="btn-action" style="background:var(--success);" onclick="window.inviaRispostaAdmin()"><i class="fa-solid fa-reply"></i> Invia Risposta</button>
             <button class="btn-modal" style="background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color);" onclick="window.chiudiModaleRispostaSegnalazione()">Annulla</button>
         </div>
     </div>
 
-    <!-- SCRIPT CHE GESTISCE TUTTA LA LOGICA -->
+    <!-- ========================================== -->
+    <!-- NUOVE MODALI PER IL MODULO TURNI           -->
+    <!-- ========================================== -->
+
+    <!-- 1. Modale Principale Turni -->
+    <div id="modal-turni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-turni-main')">
+        <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-turni-main')"></i>
+            
+            <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-rotate"></i> Turni
+            </h3>
+
+            <!-- Area scorrevole interna dove turni.js inietterà i bottoni -->
+            <div id="turni-content-area" style="flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 16px;">
+                <!-- Contenuto generato dinamicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Modale Ricerca Corse (Sub-modale di Turni) -->
+    <div id="searchCorseModal" class="modal-overlay-search" onclick="window.chiudiSeSfondoSearch(event)">
+        <div class="modal-content-search">
+            <i class="fa-solid fa-xmark close-modal" onclick="window.chiudiSearchCorseModal()"></i>
+            <h3 style="margin-top:0; color:var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 20px; font-weight: 700; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-route" style="color: var(--primary);"></i> Cerca Corsa
+            </h3>
+            
+            <div id="sc-status" class="status-message" style="padding: 20px; font-size:14px; display:none; margin-top: 20px;">
+                <i class="fa-solid fa-spinner fa-spin" style="color:var(--primary);"></i> Caricamento dati in corso...
+            </div>
+            
+            <div id="sc-form" style="display:none; margin-top: 24px;">
+                <div class="tipo-toggle-container">
+                    <button id="btn-partenza" class="btn-tipo" onclick="window.selezionaTipo('partenza')"><i class="fa-solid fa-plane-departure"></i> Partenza</button>
+                    <button id="btn-arrivo" class="btn-tipo" onclick="window.selezionaTipo('arrivo')"><i class="fa-solid fa-plane-arrival"></i> Arrivo</button>
+                </div>
+                <input type="hidden" id="sc-tipo" value="">
+
+                <div id="sc-rest-form">
+                    <div class="sc-form-group">
+                        <label id="label-luogo">Luogo:</label>
+                        <select id="sc-luogo" onchange="window.aggiornaSuggerimentiOrario()"></select>
+                    </div>
+                    <div class="sc-form-group">
+                        <label>Giorno (Opz. per rotazioni):</label>
+                        <input type="date" id="sc-giorno">
+                    </div>
+                    <div class="sc-form-group" style="position: relative;">
+                        <label id="label-orario">Orario:</label>
+                        <input type="text" id="sc-orario" inputmode="numeric" placeholder="es. 07.30" oninput="window.formattaOrario(event)" autocomplete="off">
+                        <div id="sc-suggestions"></div>
+                    </div>
+                    <button class="btn-action" style="margin-top: 10px;" onclick="window.eseguiRicercaCorsa()"><i class="fa-solid fa-magnifying-glass"></i> Trova Turno</button>
+                </div>
+
+                <div id="sc-risultato" class="risultato-box" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT CHE GESTISCE TUTTA LA LOGICA (Home + Moduli) -->
     <script type="module" src="./moduli/index.js"></script>
 
 </body>
