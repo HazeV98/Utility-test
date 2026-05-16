@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -30,7 +29,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="global.js"></script>
 
     <style>
         /* --- CORE DESIGN SYSTEM --- */
@@ -159,7 +157,7 @@
     </div>
 
     <!-- CONTENITORE PER IL MENU MODULARE -->
-    <div id="menu-container"></div>
+    <div id="sidebar-container"></div>
 
     <div class="content-area">
         <button class="btn-add-main" onclick="apriModaleNuova()"><i class="fa-solid fa-paper-plane"></i> Nuova Segnalazione</button>
@@ -207,8 +205,9 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDoc, onSnapshot, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
         
-        // ---> IMPORTA IL MODULO MENU <---
-        import { initMenu } from './moduli/menu.js'; 
+        // Importa il menu dal modulo e lo carica
+        import { caricaMenu } from './moduli/menu.js'; 
+        caricaMenu();
 
         const firebaseConfig = { apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", authDomain: "utility-haze.firebaseapp.com", projectId: "utility-haze", messagingSenderId: "686237947418", appId: "1:686237947418:web:f03ba19ab8fff43110a3a3" };
         const app = initializeApp(firebaseConfig);
@@ -221,25 +220,6 @@
         let currentUid = null;
         let unsubscribeReports = null;
 
-        // Inizializza il menu nel DOM (se la funzione nel tuo file si chiama diversamente, cambiala qui sotto)
-        if (typeof initMenu === 'function') {
-            initMenu('report'); // Passiamo 'report' per fargli sapere quale pagina è attiva
-        }
-
-        // Ho lasciato intatte queste due funzioni in modo che il bottone Hamburger funzioni subito
-        window.apriMenuLaterale = () => { 
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            if(sidebar) sidebar.classList.add('open'); 
-            if(overlay) overlay.style.display = 'block'; 
-        };
-        window.chiudiMenuLaterale = () => { 
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            if(sidebar) sidebar.classList.remove('open'); 
-            if(overlay) overlay.style.display = 'none'; 
-        };
-        
         window.apriModaleNuova = () => { document.getElementById('modal-nuova').style.display = 'flex'; };
         window.chiudiModaleNuova = () => document.getElementById('modal-nuova').style.display = 'none';
         window.apriModaleRisposta = (id) => { document.getElementById('admin-rep-id').value = id; document.getElementById('modal-risposta').style.display = 'flex'; };
@@ -272,10 +252,12 @@
             const colRef = collection(db, "segnalazioni");
             let q;
 
+            // Logica Query differenziata
             if (isAdmin) {
                 const statoTarget = vistaCronologia ? "risposto" : "in_attesa";
                 q = query(colRef, where("stato", "==", statoTarget), orderBy("timestamp_creazione", "desc"));
             } else {
+                // Utente vede SOLO le sue (inviate e ricevute)
                 q = query(colRef, where("mittente_uid", "==", currentUid), orderBy("timestamp_creazione", "desc"));
             }
 
@@ -292,6 +274,7 @@
                     const data = docSnap.data();
                     creaCard(docSnap.id, data, listContainer);
                     
+                    // Reset banner notifiche
                     if (isAdmin && !vistaCronologia && data.letta_da_admin === false) {
                         updateDoc(doc(db, "segnalazioni", docSnap.id), { letta_da_admin: true });
                     } else if (!isAdmin && data.stato === "risposto" && data.letta_da_utente === false) {
@@ -416,5 +399,3 @@
     </script>
 </body>
 </html>
-
-```
