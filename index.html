@@ -188,12 +188,6 @@
         :root[data-theme="dark"] .app-list .app-icon { box-shadow: 0 6px 12px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4), inset 0 -4px 6px rgba(0,0,0,0.5), inset 1px 1px 2px rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.08); }
         :root[data-theme="dark"] .app-grid .app-label { text-shadow: none; }
 
-        @media (prefers-color-scheme: dark) {
-            :root:not([data-theme="light"]) .app-grid .app-icon { box-shadow: 0 12px 24px -6px rgba(0,0,0,0.8), 0 4px 8px -2px rgba(0,0,0,0.5), inset 0 -6px 12px rgba(0,0,0,0.6), inset 1px 1px 3px rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.08); }
-            :root:not([data-theme="light"]) .app-list .app-icon { box-shadow: 0 6px 12px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4), inset 0 -4px 6px rgba(0,0,0,0.5), inset 1px 1px 2px rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.08); }
-            :root:not([data-theme="light"]) .app-grid .app-label { text-shadow: none; }
-        }
-
         @keyframes wiggle { 0% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } 100% { transform: rotate(-2deg); } }
         .wiggle-mode .app-btn { animation: wiggle 0.3s infinite; cursor: grab; }
         .sortable-ghost { opacity: 0.3; transform: scale(0.9); }
@@ -243,26 +237,34 @@
         .banner-red { background: var(--danger); color: white; }
         .banner-blue { background: #17a2b8; color: white; }
 
-        /* --- STILI AGGIUNTI PER IL MODULO TURNI --- */
+        /* ================================================================= */
+        /* --- STILI SPECIFICI PER I TURNI INIETTATI DALLA TUA PAGINA ---    */
+        /* ================================================================= */
         .folder-btn { background-color: var(--surface); color: var(--text-main); border: 2px solid var(--border-color); padding: 24px 20px; font-size: 16px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; text-align: left; box-shadow: var(--shadow-sm); transition: all 0.2s; display: flex; align-items: center; gap: 16px; width: 100%; margin-bottom: 12px;}
         .folder-btn i { font-size: 24px; color: var(--primary); transition: transform 0.2s; }
         .folder-btn:hover { border-color: var(--primary); box-shadow: var(--shadow-md); transform: translateY(-2px); }
         .folder-btn:hover i { transform: scale(1.1); }
+        
         .file-row { display: flex; gap: 12px; width: 100%; align-items: stretch; margin-bottom: 12px;}
         .file-btn { flex-grow: 1; background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); padding: 16px; font-size: 15px; border-radius: var(--radius-md); cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: flex-start; gap: 12px; font-weight: 600; transition: all 0.2s; box-shadow: var(--shadow-sm); }
         .file-btn i { color: var(--danger); font-size: 18px; }
         .file-btn:hover { border-color: var(--primary); background-color: var(--surface-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        
         .icon-btn { width: 56px; background-color: var(--surface); color: var(--primary); border: 1px solid var(--border-color); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; transition: all 0.2s; box-shadow: var(--shadow-sm); }
         .icon-btn:hover { background-color: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        
         .btn-search-spec { background-color: var(--surface); color: var(--success); border: 1px solid var(--border-color); }
         .btn-search-spec:hover { background-color: var(--success); color: white; border-color: var(--success); }
+        
         .back-btn { background-color: transparent; color: var(--text-muted); border: 2px solid var(--border-color); padding: 14px; border-radius: var(--radius-md); cursor: pointer; width: 100%; font-weight: 600; font-size: 15px; margin-bottom: 12px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;}
         .back-btn:hover { background-color: var(--surface); color: var(--text-main); border-color: var(--text-main); }
+        
         .search-container { position: relative; width: 100%; margin-bottom: 16px; }
         .search-wrapper { position: relative; display: flex; align-items: center; }
         .search-wrapper i { position: absolute; left: 16px; color: var(--text-muted); font-size: 16px; }
         #shiftSearch { width: 100%; padding: 16px 16px 16px 44px; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px; box-sizing: border-box; outline: none; font-family: inherit; background: var(--surface); color: var(--text-main); transition: all 0.2s; box-shadow: var(--shadow-sm); }
         #shiftSearch:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); }
+        
         .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: var(--shadow-lg); display: none; margin-top: 8px; padding: 8px 0; }
         .suggestion-item { padding: 14px 20px; cursor: pointer; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; font-weight: 500; transition: background-color 0.2s; }
         .suggestion-item i { color: var(--primary); font-size: 18px; }
@@ -284,6 +286,8 @@
         .sc-suggestion-item { padding: 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; font-size: 16px; font-weight: 600; text-align: left; color: var(--text-main); }
         .sc-suggestion-item:last-child { border-bottom: none; }
         .sc-suggestion-item:hover, .sc-suggestion-item:active { background-color: var(--surface-hover); color: var(--primary); padding-left: 20px; transition: padding 0.2s;}
+        
+        .status-message { text-align: center; color: var(--text-muted); font-size: 15px; padding: 24px; background: var(--surface); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 10px;}
     </style>
 </head>
 <body>
@@ -300,8 +304,10 @@
         <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
         <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
         <a href="rotazioni.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
-        <!-- Aggiornato il link nel menu -->
+        
+        <!-- LINK MENU AGGIORNATO PER APRIRE LA MODALE TURNI -->
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleTurni(); return false;" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
+        
         <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
         <a href="barcadvisor.html" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
         <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
@@ -403,7 +409,7 @@
         </div>
     </div> 
 
-    <!-- Tutte le vecchie modali (Settings, App, Profilo, Auth, Gestione Accessi) -->
+    <!-- Tutte le modali base (Settings, App, Profilo, Auth, Gestione Accessi) -->
     
     <div id="settingsModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'settingsModal')">
         <div class="modal-content">
@@ -782,105 +788,80 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- MODALE UNIFICATA TURNI                     -->
-    <!-- ========================================== -->
+    <!-- ========================================================== -->
+    <!-- MODALE TURNI (Ora identica al layout originale) -->
+    <!-- ========================================================== -->
     <div id="modal-turni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-turni-main')">
-        <div class="modal-content" style="max-width: 600px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
+        <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
             <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-turni-main')"></i>
             
-            <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px; flex-shrink: 0;">
+            <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
                 <i class="fa-solid fa-rotate"></i> Consultazione Turni
             </h3>
 
-            <div style="flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column;">
-                
-                <!-- Interruttore Cerca Turno / Cerca Corsa -->
-                <div class="tipo-toggle-container" style="margin-bottom: 15px;">
-                    <button id="tab-turno" class="btn-tipo active" onclick="window.cambiaTabTurni('turno')"><i class="fa-solid fa-magnifying-glass"></i> Turno</button>
-                    <button id="tab-corsa" class="btn-tipo" onclick="window.cambiaTabTurni('corsa')"><i class="fa-solid fa-route"></i> Corsa</button>
-                </div>
-
-                <!-- SEZIONE: RICERCA TURNO -->
-                <div id="sezione-ricerca-turno" style="display: block;">
-                    <div class="search-container" style="position: relative;">
-                        <div class="search-wrapper">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" id="shiftSearch" placeholder="Cerca turno o autista (es. 101, Mario)..." autocomplete="off" oninput="if(window.cercaNeiTurniRapido) window.cercaNeiTurniRapido(this.value)" onfocus="if(this.value.trim()!=='') document.getElementById('suggestionsBox').style.display='block'">
-                        </div>
-                        <div id="suggestionsBox" class="suggestions-box"></div>
-                    </div>
-
-                    <div id="turni-folders-area" style="display:flex; flex-direction: column; gap:12px; margin-bottom: 20px;"></div>
-                    <!-- Area in cui turni.js inietterà cartelle/risultati -->
-                    <div id="turni-content-area" style="display: flex; flex-direction: column; gap: 12px;"></div>
-                </div>
-
-                <!-- SEZIONE: RICERCA CORSA -->
-                <div id="sezione-ricerca-corsa" style="display: none;">
-                    <div class="tipo-toggle-container" style="margin-top: 0; margin-bottom: 15px;">
-                        <button id="btn-partenza" class="btn-tipo active" onclick="window.selezionaTipoSc('partenza')"><i class="fa-solid fa-plane-departure"></i> Partenza</button>
-                        <button id="btn-arrivo" class="btn-tipo" onclick="window.selezionaTipoSc('arrivo')"><i class="fa-solid fa-plane-arrival"></i> Arrivo</button>
-                    </div>
-                    <input type="hidden" id="sc-tipo" value="partenza">
-
-                    <div id="sc-rest-form" style="background: var(--surface-hover); padding: 15px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-                        <div class="sc-form-group">
-                            <label id="label-luogo">Luogo:</label>
-                            <select id="sc-luogo" onchange="if(window.aggiornaSuggerimentiOrario) window.aggiornaSuggerimentiOrario()"></select>
-                        </div>
-                        <div class="sc-form-group">
-                            <label>Giorno (Opz. per rotazioni):</label>
-                            <input type="date" id="sc-giorno">
-                        </div>
-                        <div class="sc-form-group" style="position: relative;">
-                            <label id="label-orario">Orario:</label>
-                            <input type="text" id="sc-orario" inputmode="numeric" placeholder="es. 07.30" oninput="if(window.formattaOrario) window.formattaOrario(event)" autocomplete="off">
-                            <div id="sc-suggestions"></div>
-                        </div>
-                        <button class="btn-action" style="margin-top: 15px; width: 100%;" onclick="if(window.eseguiRicercaCorsa) window.eseguiRicercaCorsa()"><i class="fa-solid fa-magnifying-glass"></i> Trova Turno</button>
-                    </div>
-                    
-                    <div id="sc-risultato" class="risultato-box" style="display:none;"></div>
-                </div>
-
+            <!-- Area scorrevole interna dove turni.js inietterà i bottoni (Identico a "content-area" originale) -->
+            <div id="content-area" style="flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 16px;">
+                <!-- turni.js riempirà questo div con le cartelle o la barra di ricerca -->
             </div>
         </div>
     </div>
-    
-    <script>
-        // Logica per cambiare le sezioni all'interno della modale dei turni
-        window.cambiaTabTurni = function(tab) {
-            const btnTurno = document.getElementById('tab-turno');
-            const btnCorsa = document.getElementById('tab-corsa');
-            const sezTurno = document.getElementById('sezione-ricerca-turno');
-            const sezCorsa = document.getElementById('sezione-ricerca-corsa');
+
+    <!-- Modale Cerca Corse (Identica all'originale) -->
+    <div id="searchCorseModal" class="modal-overlay-search" onclick="window.chiudiSeSfondoSearch(event)">
+        <div class="modal-content-search">
+            <i class="fa-solid fa-xmark close-modal" onclick="window.chiudiSearchCorseModal()"></i>
+            <h3 style="margin-top:0; color:var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 20px; font-weight: 700; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-route" style="color: var(--primary);"></i> Cerca Corsa
+            </h3>
             
-            if (tab === 'turno') {
-                btnTurno.classList.add('active');
-                btnCorsa.classList.remove('active');
-                sezTurno.style.display = 'block';
-                sezCorsa.style.display = 'none';
-            } else {
-                btnTurno.classList.remove('active');
-                btnCorsa.classList.add('active');
-                sezTurno.style.display = 'none';
-                sezCorsa.style.display = 'block';
-            }
-        };
+            <div id="sc-status" class="status-message" style="padding: 20px; font-size:14px; display:none; margin-top: 20px;">
+                <i class="fa-solid fa-spinner fa-spin" style="color:var(--primary);"></i> Caricamento dati in corso...
+            </div>
+            
+            <div id="sc-form" style="display:none; margin-top: 24px;">
+                <div class="tipo-toggle-container">
+                    <button id="btn-partenza" class="btn-tipo" onclick="window.selezionaTipo('partenza')"><i class="fa-solid fa-plane-departure"></i> Partenza</button>
+                    <button id="btn-arrivo" class="btn-tipo" onclick="window.selezionaTipo('arrivo')"><i class="fa-solid fa-plane-arrival"></i> Arrivo</button>
+                </div>
+                <input type="hidden" id="sc-tipo" value="">
 
-        window.selezionaTipoSc = function(tipo) {
-            document.getElementById('sc-tipo').value = tipo;
-            document.getElementById('btn-partenza').classList.toggle('active', tipo === 'partenza');
-            document.getElementById('btn-arrivo').classList.toggle('active', tipo === 'arrivo');
-            const label = document.getElementById('label-luogo');
-            if(label) label.textContent = tipo === 'partenza' ? 'Luogo di partenza:' : 'Luogo di arrivo:';
-            if(window.aggiornaSuggerimentiOrario) window.aggiornaSuggerimentiOrario();
-        };
-    </script>
+                <div id="sc-rest-form">
+                    <div class="sc-form-group">
+                        <label id="label-luogo">Luogo:</label>
+                        <select id="sc-luogo" onchange="window.aggiornaSuggerimentiOrario()"></select>
+                    </div>
+                    <div class="sc-form-group">
+                        <label>Giorno (Opz. per rotazioni):</label>
+                        <input type="date" id="sc-giorno">
+                    </div>
+                    <div class="sc-form-group" style="position: relative;">
+                        <label id="label-orario">Orario:</label>
+                        <input type="text" id="sc-orario" inputmode="numeric" placeholder="es. 07.30" oninput="window.formattaOrario(event)" autocomplete="off">
+                        <div id="sc-suggestions"></div>
+                    </div>
+                    <button class="btn-action" style="margin-top: 10px;" onclick="window.eseguiRicercaCorsa()"><i class="fa-solid fa-magnifying-glass"></i> Trova Turno</button>
+                </div>
 
-    <!-- SCRIPT CHE GESTISCE TUTTA LA LOGICA (Home + Moduli) -->
+                <div id="sc-risultato" class="risultato-box" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT CHE GESTISCE TUTTA LA LOGICA -->
     <script type="module" src="./moduli/index.js"></script>
 
+    <script>
+        // Questa funzione ora chiama semplicemente l'avvio importato dal tuo modulo index.js
+        window.apriModaleTurni = () => {
+            const modale = document.getElementById('modal-turni-main');
+            if (modale) {
+                modale.style.display = 'flex';
+                // L'import e il richiamo della funzione devono essere nel tuo moduli/index.js
+                if(window.avviaMotoreTurniDaIndex) {
+                    window.avviaMotoreTurniDaIndex();
+                }
+            }
+        };
+    </script>
 </body>
 </html>
