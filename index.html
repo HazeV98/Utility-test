@@ -44,6 +44,10 @@
             --danger: #d93025;
             --danger-light: #fce8e6;
             --danger-border: #fad2cf;
+            --info: #0088ff;
+            --info-light: #e6f3ff;
+            --warning: #ff9800;
+            --warning-light: #fff3e0;
             --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
             --shadow-md: 0 10px 20px -5px rgba(0,0,0,0.12), 0 4px 6px -2px rgba(0,0,0,0.05);
             --shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.15), 0 10px 10px -5px rgba(0,0,0,0.04);
@@ -67,6 +71,10 @@
             --danger: #ea4335;
             --danger-light: rgba(234, 67, 53, 0.15);
             --danger-border: rgba(234, 67, 53, 0.3);
+            --info: #33aaff;
+            --info-light: rgba(51, 170, 255, 0.15);
+            --warning: #ffb74d;
+            --warning-light: rgba(255, 152, 0, 0.15);
             --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
             --shadow-md: 0 10px 20px -5px rgba(0,0,0,0.4);
             --shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.5);
@@ -87,6 +95,10 @@
                 --danger: #ea4335;
                 --danger-light: rgba(234, 67, 53, 0.15);
                 --danger-border: rgba(234, 67, 53, 0.3);
+                --info: #33aaff;
+                --info-light: rgba(51, 170, 255, 0.15);
+                --warning: #ffb74d;
+                --warning-light: rgba(255, 152, 0, 0.15);
                 --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
                 --shadow-md: 0 10px 20px -5px rgba(0,0,0,0.4);
                 --shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.5);
@@ -109,6 +121,7 @@
         @keyframes fadeSlideIn { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
         @keyframes slideInUpBouncy { 0% { opacity: 0; transform: translateY(35px) scale(0.9); } 65% { opacity: 1; transform: translateY(-4px) scale(1.02); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes modalPop { 0% { opacity: 0; transform: scale(0.92) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         /* Modale Profilo: Espansione specifica dal bottone alto-sinistra */
         #profileModal .modal-content {
@@ -330,7 +343,8 @@
         <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
         <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
         <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
-        <a href="report.html" class="sidebar-link"><i class="fa-solid fa-headset"></i> Segnalazioni</a>
+        <!-- Anche nel menu modifichiamo il link -->
+        <a href="#" onclick="window.chiudiMenuLaterale(); window.apriMainModaleSegnalazioni(); return false;" class="sidebar-link"><i class="fa-solid fa-headset"></i> Segnalazioni</a>
         <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
         
         <a href="admin.html" class="sidebar-link" id="menu-admin" style="display:none; color: var(--danger); font-weight: bold;"><i class="fa-solid fa-lock" style="color: var(--danger);"></i> Admin</a>
@@ -409,7 +423,7 @@
                 <i class="fa-solid fa-stopwatch fa-beat"></i> Hai dei promemoria per oggi!
             </div>
             
-            <div id="banner-segnalazioni-alert" class="banner-alert" style="display: none; background: #e6f3ff; color: #0066cc; border: 1px solid #b3dfff;" onclick="window.location.href='report.html'">
+            <div id="banner-segnalazioni-alert" class="banner-alert" style="display: none; background: #e6f3ff; color: #0066cc; border: 1px solid #b3dfff;" onclick="window.apriMainModaleSegnalazioni()">
                 <i class="fa-solid fa-headset fa-bounce"></i> <span id="testo-segnalazione-banner"></span>
             </div>
 
@@ -418,6 +432,8 @@
         </div>
     </div> 
 
+    <!-- MODALI ORIGINALI (Settings, App, Profilo, Auth, ecc) -->
+    
     <div id="settingsModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'settingsModal')">
         <div class="modal-content">
             <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('settingsModal')"></i>
@@ -478,7 +494,7 @@
             <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; margin-top: 15px; display:block;">Colore Base App:</label>
             <div class="color-picker-row"><label>Sfondo Icone</label><input type="color" id="set-appbg"></div>
 
-            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; margin-top: 15px; display:block;">Visualizzazione:</label>
+            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Visualizzazione:</label>
             <select id="set-viewmode" class="input-field" style="cursor:pointer;">
                 <option value="grid">Griglia app</option>
                 <option value="list">Lista</option>
@@ -745,6 +761,77 @@
             
             <button id="btn-rendi-collab" class="btn-modal" style="background: #6f42c1; color: white; margin-bottom:10px;" onclick="window.cambiaRuoloUtente()"><i class="fa-solid fa-user-shield"></i> Rendi Collaboratore</button>
             <button class="btn-modal" style="background: transparent; color: var(--text-muted); border: 2px solid var(--border-color);" onclick="window.chiudiModal('modal-dettaglio-utente')">Chiudi</button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- NUOVE MODALI PER IL MODULO SEGNALAZIONI    -->
+    <!-- ========================================== -->
+
+    <!-- 1. Modale Principale Segnalazioni -->
+    <div id="modal-segnalazioni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-segnalazioni-main')">
+        <div class="modal-content" style="max-width: 460px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-segnalazioni-main')"></i>
+            
+            <h3 style="margin-top: 0; color: var(--info); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-headset"></i> Segnalazioni
+            </h3>
+
+            <!-- Area scorrevole interna -->
+            <div style="flex: 1; overflow-y: auto; padding-right: 5px;">
+                <button style="background-color: var(--info); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; box-shadow: 0 4px 12px rgba(0, 136, 255, 0.3); width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; transition: all 0.2s; margin-bottom: 15px;" onclick="window.apriModaleNuovaSegnalazione()">
+                    <i class="fa-solid fa-paper-plane"></i> Nuova Segnalazione
+                </button>
+                
+                <button id="btn-cronologia-admin" style="display: none; background-color: var(--surface); color: var(--text-main); border: 2px solid var(--border-color); padding: 14px; font-size: 14px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; justify-content: center; align-items: center; gap: 10px; transition: all 0.2s; margin-bottom: 15px;" onclick="window.toggleVistaAdminSegnalazioni()">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Mostra Cronologia Risposte
+                </button>
+                
+                <div id="reports-list"></div>
+            </div>
+
+            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 15px;" onclick="window.chiudiModal('modal-segnalazioni-main')"><i class="fa-solid fa-xmark"></i> Chiudi Finestra</button>
+        </div>
+    </div>
+
+    <!-- 2. Sottomodale: Nuova Segnalazione -->
+    <div id="modal-nuova-segnalazione" class="modal-overlay" style="z-index: 7500;">
+        <div class="modal-content">
+            <h3 style="margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px; text-align:center;"><i class="fa-solid fa-paper-plane" style="color:var(--info);"></i> Invia Segnalazione</h3>
+            
+            <div class="float-wrapper">
+                <textarea id="rep-messaggio" rows="4" class="input-field" placeholder=" " style="resize: vertical;"></textarea>
+                <label style="top: 20px;">Messaggio / Problema</label>
+            </div>
+            
+            <div class="float-wrapper">
+                <input type="url" id="rep-link" class="input-field" placeholder=" ">
+                <label>Link Allegato (Facoltativo)</label>
+            </div>
+            
+            <button id="btn-salva-rep" class="btn-action" style="background-color: var(--info);" onclick="window.inviaSegnalazione()"><i class="fa-solid fa-paper-plane"></i> Invia ora</button>
+            <button class="btn-modal" style="background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color);" onclick="window.chiudiModaleNuovaSegnalazione()">Annulla</button>
+        </div>
+    </div>
+
+    <!-- 3. Sottomodale: Risposta Admin -->
+    <div id="modal-risposta-segnalazione" class="modal-overlay" style="z-index: 7500;">
+        <div class="modal-content">
+            <h3 style="margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px; text-align:center;"><i class="fa-solid fa-reply" style="color:var(--success);"></i> Rispondi</h3>
+            <input type="hidden" id="admin-rep-id">
+            
+            <div class="float-wrapper">
+                <textarea id="admin-rep-messaggio" rows="4" class="input-field" placeholder=" " style="resize: vertical;"></textarea>
+                <label style="top: 20px;">Risposta</label>
+            </div>
+            
+            <div class="float-wrapper">
+                <input type="url" id="admin-rep-link" class="input-field" placeholder=" ">
+                <label>Link Allegato (Facoltativo)</label>
+            </div>
+            
+            <button id="btn-invia-risposta" class="btn-action" style="background:var(--success);" onclick="window.inviaRispostaAdmin()"><i class="fa-solid fa-reply"></i> Invia Risposta</button>
+            <button class="btn-modal" style="background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color);" onclick="window.chiudiModaleRispostaSegnalazione()">Annulla</button>
         </div>
     </div>
 
