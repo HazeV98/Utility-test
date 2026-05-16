@@ -1047,3 +1047,15 @@ if (!isStandalone) {
 } else {
     if(installBtn) installBtn.style.display = 'none';
 }
+
+// --- GESTIONE APERTURA FINESTRA TURNI ---
+window.apriFinestraTurni = () => {
+    const modaleTurni = document.getElementById('turniModal');
+    if (modaleTurni) {
+        modaleTurni.style.display = 'block';
+        // Avvia il motore dei turni solo quando apri la finestra
+        if (typeof avviaMotoreTurni === 'function') {
+            avviaMotoreTurni(); 
+        }
+    }
+};
