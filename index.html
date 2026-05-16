@@ -783,65 +783,101 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- NUOVE MODALI PER IL MODULO TURNI           -->
+    <!-- MODALE UNIFICATA TURNI                     -->
     <!-- ========================================== -->
-
-    <!-- 1. Modale Principale Turni -->
     <div id="modal-turni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-turni-main')">
-        <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
+        <div class="modal-content" style="max-width: 600px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
             <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-turni-main')"></i>
             
-            <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
-                <i class="fa-solid fa-rotate"></i> Turni
+            <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px; flex-shrink: 0;">
+                <i class="fa-solid fa-rotate"></i> Consultazione Turni
             </h3>
 
-            <!-- Area scorrevole interna dove turni.js inietterà i bottoni -->
-            <div id="turni-content-area" style="flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 16px;">
-                <!-- Contenuto generato dinamicamente -->
+            <div style="flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column;">
+                
+                <!-- Interruttore Cerca Turno / Cerca Corsa -->
+                <div class="tipo-toggle-container" style="margin-bottom: 15px;">
+                    <button id="tab-turno" class="btn-tipo active" onclick="window.cambiaTabTurni('turno')"><i class="fa-solid fa-magnifying-glass"></i> Turno</button>
+                    <button id="tab-corsa" class="btn-tipo" onclick="window.cambiaTabTurni('corsa')"><i class="fa-solid fa-route"></i> Corsa</button>
+                </div>
+
+                <!-- SEZIONE: RICERCA TURNO -->
+                <div id="sezione-ricerca-turno" style="display: block;">
+                    <div class="search-container" style="position: relative;">
+                        <div class="search-wrapper">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="shiftSearch" placeholder="Cerca turno o autista (es. 101, Mario)..." autocomplete="off" oninput="if(window.cercaNeiTurniRapido) window.cercaNeiTurniRapido(this.value)" onfocus="if(this.value.trim()!=='') document.getElementById('suggestionsBox').style.display='block'">
+                        </div>
+                        <div id="suggestionsBox" class="suggestions-box"></div>
+                    </div>
+
+                    <div id="turni-folders-area" style="display:flex; flex-direction: column; gap:12px; margin-bottom: 20px;"></div>
+                    <!-- Area in cui turni.js inietterà cartelle/risultati -->
+                    <div id="turni-content-area" style="display: flex; flex-direction: column; gap: 12px;"></div>
+                </div>
+
+                <!-- SEZIONE: RICERCA CORSA -->
+                <div id="sezione-ricerca-corsa" style="display: none;">
+                    <div class="tipo-toggle-container" style="margin-top: 0; margin-bottom: 15px;">
+                        <button id="btn-partenza" class="btn-tipo active" onclick="window.selezionaTipoSc('partenza')"><i class="fa-solid fa-plane-departure"></i> Partenza</button>
+                        <button id="btn-arrivo" class="btn-tipo" onclick="window.selezionaTipoSc('arrivo')"><i class="fa-solid fa-plane-arrival"></i> Arrivo</button>
+                    </div>
+                    <input type="hidden" id="sc-tipo" value="partenza">
+
+                    <div id="sc-rest-form" style="background: var(--surface-hover); padding: 15px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                        <div class="sc-form-group">
+                            <label id="label-luogo">Luogo:</label>
+                            <select id="sc-luogo" onchange="if(window.aggiornaSuggerimentiOrario) window.aggiornaSuggerimentiOrario()"></select>
+                        </div>
+                        <div class="sc-form-group">
+                            <label>Giorno (Opz. per rotazioni):</label>
+                            <input type="date" id="sc-giorno">
+                        </div>
+                        <div class="sc-form-group" style="position: relative;">
+                            <label id="label-orario">Orario:</label>
+                            <input type="text" id="sc-orario" inputmode="numeric" placeholder="es. 07.30" oninput="if(window.formattaOrario) window.formattaOrario(event)" autocomplete="off">
+                            <div id="sc-suggestions"></div>
+                        </div>
+                        <button class="btn-action" style="margin-top: 15px; width: 100%;" onclick="if(window.eseguiRicercaCorsa) window.eseguiRicercaCorsa()"><i class="fa-solid fa-magnifying-glass"></i> Trova Turno</button>
+                    </div>
+                    
+                    <div id="sc-risultato" class="risultato-box" style="display:none;"></div>
+                </div>
+
             </div>
         </div>
     </div>
-
-    <!-- 2. Modale Ricerca Corse (Sub-modale di Turni) -->
-    <div id="searchCorseModal" class="modal-overlay-search" onclick="window.chiudiSeSfondoSearch(event)">
-        <div class="modal-content-search">
-            <i class="fa-solid fa-xmark close-modal" onclick="window.chiudiSearchCorseModal()"></i>
-            <h3 style="margin-top:0; color:var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 20px; font-weight: 700; display:flex; align-items:center; gap:10px;">
-                <i class="fa-solid fa-route" style="color: var(--primary);"></i> Cerca Corsa
-            </h3>
+    
+    <script>
+        // Logica per cambiare le sezioni all'interno della modale dei turni
+        window.cambiaTabTurni = function(tab) {
+            const btnTurno = document.getElementById('tab-turno');
+            const btnCorsa = document.getElementById('tab-corsa');
+            const sezTurno = document.getElementById('sezione-ricerca-turno');
+            const sezCorsa = document.getElementById('sezione-ricerca-corsa');
             
-            <div id="sc-status" class="status-message" style="padding: 20px; font-size:14px; display:none; margin-top: 20px;">
-                <i class="fa-solid fa-spinner fa-spin" style="color:var(--primary);"></i> Caricamento dati in corso...
-            </div>
-            
-            <div id="sc-form" style="display:none; margin-top: 24px;">
-                <div class="tipo-toggle-container">
-                    <button id="btn-partenza" class="btn-tipo" onclick="window.selezionaTipo('partenza')"><i class="fa-solid fa-plane-departure"></i> Partenza</button>
-                    <button id="btn-arrivo" class="btn-tipo" onclick="window.selezionaTipo('arrivo')"><i class="fa-solid fa-plane-arrival"></i> Arrivo</button>
-                </div>
-                <input type="hidden" id="sc-tipo" value="">
+            if (tab === 'turno') {
+                btnTurno.classList.add('active');
+                btnCorsa.classList.remove('active');
+                sezTurno.style.display = 'block';
+                sezCorsa.style.display = 'none';
+            } else {
+                btnTurno.classList.remove('active');
+                btnCorsa.classList.add('active');
+                sezTurno.style.display = 'none';
+                sezCorsa.style.display = 'block';
+            }
+        };
 
-                <div id="sc-rest-form">
-                    <div class="sc-form-group">
-                        <label id="label-luogo">Luogo:</label>
-                        <select id="sc-luogo" onchange="window.aggiornaSuggerimentiOrario()"></select>
-                    </div>
-                    <div class="sc-form-group">
-                        <label>Giorno (Opz. per rotazioni):</label>
-                        <input type="date" id="sc-giorno">
-                    </div>
-                    <div class="sc-form-group" style="position: relative;">
-                        <label id="label-orario">Orario:</label>
-                        <input type="text" id="sc-orario" inputmode="numeric" placeholder="es. 07.30" oninput="window.formattaOrario(event)" autocomplete="off">
-                        <div id="sc-suggestions"></div>
-                    </div>
-                    <button class="btn-action" style="margin-top: 10px;" onclick="window.eseguiRicercaCorsa()"><i class="fa-solid fa-magnifying-glass"></i> Trova Turno</button>
-                </div>
-
-                <div id="sc-risultato" class="risultato-box" style="display:none;"></div>
-            </div>
-        </div>
-    </div>
+        window.selezionaTipoSc = function(tipo) {
+            document.getElementById('sc-tipo').value = tipo;
+            document.getElementById('btn-partenza').classList.toggle('active', tipo === 'partenza');
+            document.getElementById('btn-arrivo').classList.toggle('active', tipo === 'arrivo');
+            const label = document.getElementById('label-luogo');
+            if(label) label.textContent = tipo === 'partenza' ? 'Luogo di partenza:' : 'Luogo di arrivo:';
+            if(window.aggiornaSuggerimentiOrario) window.aggiornaSuggerimentiOrario();
+        };
+    </script>
 
     <!-- SCRIPT CHE GESTISCE TUTTA LA LOGICA (Home + Moduli) -->
     <script type="module" src="./moduli/index.js"></script>
