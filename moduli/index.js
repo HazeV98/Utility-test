@@ -12,6 +12,7 @@ import { avviaMotoreLink } from './link.js';
 import { avviaMotoreDocumenti } from './documenti.js';
 import { avviaMotoreContatti } from './contatti.js';
 import { avviaMotoreBachecaUtility } from './bacheca_utility.js';
+import { avviaMotoreRubrica } from './rubrica.js';
 
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -74,7 +75,10 @@ const DEFAULT_APPS = [
     { id: "turni", label: "Turni", onclick: "window.apriModaleTurni()", defaultColor: "#20c997" },
     { id: "bachecaturni", label: "Bacheca\nTurni", href: "bacheca_turni.html", defaultColor: "#e83e8c" },
     { id: "barcadvisor", label: "BarcAdvisor", image: "icone_app/iconba.png", href: "barcadvisor.html" },
-    { id: "rubrica", label: "Rubrica", href: "rubrica.html", defaultColor: "#343a40" },
+    
+    // QUI ABBIAMO MODIFICATO L'APP RUBRICA PER FAR APRIRE LA MODALE INVECE DEL LINK HREF
+    { id: "rubrica", label: "Rubrica", onclick: "window.apriModaleRubrica()", defaultColor: "#343a40" },
+    
     { id: "ferie", label: "Rotazione\nFerie", href: "rotazione_ferie.html", defaultColor: "#ffc107" },
     { id: "orari", label: "Orari\nNavigaz.", onclick: "window.apriModaleOrari()", defaultColor: "#17a2b8" },
     { id: "chebateo", label: "CheBateo", image: "icone_app/iconcb.png", href: "https://m.chebateo.it/" },
@@ -187,6 +191,25 @@ window.avviaMotoreContattiDaIndex = () => {
         window.currentUserData.contatti_access = true; window.currentUserData.last_contatti_access = oggiStr;
     }
 };
+
+window.avviaMotoreBachecaUtilityDaIndex = () => {
+    // Il modulo bacheca viene caricato e inizializzato tramite questa funzione ponte HTML
+    // Per ora non facciamo un check ferreo del login per far vedere le robe pubbliche
+    const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
+    avviaMotoreBachecaUtility(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
+};
+
+// --- NUOVA FUNZIONE PONTE PER LA RUBRICA ---
+window.avviaMotoreRubricaDaIndex = () => {
+    // Non blocchiamo qui chi non ha il login, così il modulo può mostrare il lucchetto "Accesso Richiesto"
+    if (window.currentUserData && window.currentUserData.app_banned === true) {
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return;
+    }
+    // Avviamo il modulo rubrica passando i dati aggiornati
+    avviaMotoreRubrica(db, auth, window.currentUserData, globalIsAdmin);
+};
+
 
 window.controllaBacheca = async () => {
     if (!auth.currentUser) return;
@@ -772,21 +795,6 @@ window.LayoutEngine = {
 window.apriModal = (id, authMode) => { document.getElementById(id).style.display = 'flex'; if(id === 'authModal' && authMode) { currentAuthMode = authMode; window.aggiornaUIAuth(); } };
 window.chiudiModal = (id) => { document.getElementById(id).style.display = 'none'; };
 window.chiudiSuSfondo = (e, id) => { if (e.target.id === id) window.chiudiModal(id); };
-
-window.apriBachecaUtility = () => {
-    const timestamp = Date.now(); localStorage.setItem('ultimo_accesso_bacheca', timestamp);
-    document.getElementById('badge-messaggi').style.display = 'none'; 
-    document.getElementById('banner-nuovo-messaggio').style.display = 'none';
-    if (auth.currentUser) setDoc(doc(db, "utenti", auth.currentUser.uid), { ultimo_accesso_bacheca: timestamp }, { merge: true });
-    
-    window.apriModal('modal-bacheca-utility-main');
-    
-    // Innesca il caricamento tramite il nuovo engine della bacheca (se l'utente è loggato)
-    if(auth.currentUser) {
-        const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
-        avviaMotoreBachecaUtility(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
-    }
-};
 
 window.apriGestioneAccessi = async () => {
     window.apriModal('modal-gestione');
