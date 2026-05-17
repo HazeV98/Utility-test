@@ -21,6 +21,8 @@
 
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <!-- Panzoom è fondamentale per i Turni, lo carichiamo qui -->
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
     
     <script>
         const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/HazeV98/Utility/main/version.json";
@@ -345,11 +347,11 @@
 </head>
 <body>
 
-    <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="window.chiudiMenuLaterale()"></div>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <h3><i class="fa-solid fa-layer-group"></i> Menu</h3>
-            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="window.chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         
         <a href="index.html" class="sidebar-link" style="background-color: var(--primary-glow); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary);"><i class="fa-solid fa-house" style="color: var(--primary);"></i> Home Page</a>
@@ -403,9 +405,9 @@
             <p style="color: var(--text-muted); font-size: 16px; line-height: 1.6; margin-bottom: 40px;">
                 Questa è un app non ufficiale gestita da un collega.<br>Accedi o registrati per continuare.
             </p>
-            <button class="btn-action" style="padding: 18px;" onclick="apriModal('authModal', 'login')"><i class="fa-solid fa-right-to-bracket"></i> Accedi</button>
+            <button class="btn-action" style="padding: 18px;" onclick="window.apriModal('authModal', 'login')"><i class="fa-solid fa-right-to-bracket"></i> Accedi</button>
             <div style="margin-top: 25px;">
-                <a href="#" onclick="apriModal('authModal', 'register'); return false;" style="font-size: 15px; color: var(--primary); font-weight: 600; text-decoration: none;">Non sei registrato? Registrati qui</a>
+                <a href="#" onclick="window.apriModal('authModal', 'register'); return false;" style="font-size: 15px; color: var(--primary); font-weight: 600; text-decoration: none;">Non sei registrato? Registrati qui</a>
             </div>
         </div>
     </div>
@@ -415,22 +417,22 @@
             <i class="fa-solid fa-ban" style="font-size: 48px; color: var(--danger); margin-bottom: 16px;"></i>
             <h3 style="color: var(--danger); margin-top: 0; font-weight: 700;">Accesso Revocato</h3>
             <p style="color: var(--text-main); font-size: 15px; margin-bottom: 24px;">Sei stato escluso da questa applicazione da un Amministratore.</p>
-            <button class="btn-action btn-danger" style="width: auto; padding: 12px 24px; margin: 0 auto;" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Esci dall'Account</button>
+            <button class="btn-action btn-danger" style="width: auto; padding: 12px 24px; margin: 0 auto;" onclick="window.logout()"><i class="fa-solid fa-right-from-bracket"></i> Esci dall'Account</button>
         </div>
     </div>
 
     <div id="view-app" style="display: none;">
         <div class="header">
             <div class="header-side">
-                <button id="btnOpenLogin" class="btn-header-alt" style="display:none; color: var(--danger); border-color: var(--danger);" onclick="apriModal('authModal', 'login')"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
-                <button id="btnOpenProfile" class="btn-header-alt" onclick="apriModal('profileModal')"><i class="fa-solid fa-user-astronaut"></i> Profilo</button>
+                <button id="btnOpenLogin" class="btn-header-alt" style="display:none; color: var(--danger); border-color: var(--danger);" onclick="window.apriModal('authModal', 'login')"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
+                <button id="btnOpenProfile" class="btn-header-alt" onclick="window.apriModal('profileModal')"><i class="fa-solid fa-user-astronaut"></i> Profilo</button>
             </div>
             <div class="header-center">
                 <h2 id="main-title"><img src="icon-512.png" alt="U">tility</h2>
             </div>
             <div class="header-side right">
                 <button id="install-btn"><i class="fa-solid fa-download"></i> Installa</button>
-                <div id="icona-bacheca" style="position: relative; cursor: pointer; margin-left: 10px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--surface); border-radius: 50%; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); transition: all 0.2s;" onclick="apriBachecaUtility()">
+                <div id="icona-bacheca" style="position: relative; cursor: pointer; margin-left: 10px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--surface); border-radius: 50%; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); transition: all 0.2s;" onclick="window.apriBachecaUtility()">
                     <i class="fa-solid fa-bullhorn" style="font-size: 18px; color: var(--primary);"></i>
                     <div id="badge-messaggi" class="badge-notif" style="display: none;">0</div>
                 </div>
@@ -438,11 +440,11 @@
         </div>
 
         <div class="scroll-area">
-            <div id="banner-nuovo-messaggio" class="banner-alert banner-yellow" style="display: none;" onclick="apriBachecaUtility()">
+            <div id="banner-nuovo-messaggio" class="banner-alert banner-yellow" style="display: none;" onclick="window.apriBachecaUtility()">
                 <i class="fa-solid fa-bell fa-shake"></i> Nuovo avviso in Bacheca Utility!
             </div>
 
-            <div id="banner-dds-alert" class="banner-alert banner-red" style="display: none;" onclick="apriBachecaUtility()">
+            <div id="banner-dds-alert" class="banner-alert banner-red" style="display: none;" onclick="window.apriBachecaUtility()">
                 <i class="fa-solid fa-triangle-exclamation"></i> Nuova DDS: <span id="titolo-dds-text"></span>
             </div>
 
@@ -455,13 +457,13 @@
             </div>
 
             <div id="app-container" class="app-grid"></div>
-            <button id="btn-salva-layout" class="btn-action" style="display: none; background: #ff9800; color: white; margin-top: 30px; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4); width:100%; max-width:440px;" onclick="LayoutEngine.toggleEditMode()"><i class="fa-solid fa-check"></i> Fatto (Salva Layout)</button>
+            <button id="btn-salva-layout" class="btn-action" style="display: none; background: #ff9800; color: white; margin-top: 30px; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4); width:100%; max-width:440px;" onclick="window.LayoutEngine.toggleEditMode()"><i class="fa-solid fa-check"></i> Fatto (Salva Layout)</button>
         </div>
     </div> 
 
-    <div id="settingsModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'settingsModal')">
+    <div id="settingsModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'settingsModal')">
         <div class="modal-content">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="chiudiModal('settingsModal')"></i>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('settingsModal')"></i>
             <h3 style="margin-top: 0; color: var(--text-main); font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-gear" style="color: var(--primary);"></i> Impostazioni</h3>
 
             <div id="native-notifications-center" style="display: none; margin-top: 20px; margin-bottom: 20px; padding: 20px; background: var(--surface-hover); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
@@ -541,18 +543,18 @@
             <input type="range" id="set-labelsize" min="10" max="18" step="1">
             <div style="text-align:center; font-size:11px; color:var(--text-muted); margin-bottom:20px; font-weight:500;">Regola la grandezza dei titoli sotto le icone</div>
 
-            <button class="btn-modal" style="background: #ff9800; color: white;" onclick="LayoutEngine.toggleEditMode(); chiudiModal('settingsModal');"><i class="fa-solid fa-arrows-up-down-left-right"></i> Modifica Layout</button>
-            <button class="btn-modal" style="background: #17a2b8; color: white;" onclick="apriModal('customAppModal'); chiudiModal('settingsModal');"><i class="fa-solid fa-plus"></i> Aggiungi App Personalizzata</button>
+            <button class="btn-modal" style="background: #ff9800; color: white;" onclick="window.LayoutEngine.toggleEditMode(); window.chiudiModal('settingsModal');"><i class="fa-solid fa-arrows-up-down-left-right"></i> Modifica Layout</button>
+            <button class="btn-modal" style="background: #17a2b8; color: white;" onclick="window.apriModal('customAppModal'); window.chiudiModal('settingsModal');"><i class="fa-solid fa-plus"></i> Aggiungi App Personalizzata</button>
             
             <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 24px 0;">
-            <button class="btn-modal" style="background: var(--success); color: white;" onclick="LayoutEngine.salvaPreferenzeGlobali()"><i class="fa-solid fa-floppy-disk"></i> Salva Impostazioni</button>
-            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger);" onclick="LayoutEngine.ripristinaPredefiniti()"><i class="fa-solid fa-rotate-left"></i> Ripristina Predefiniti</button>
+            <button class="btn-modal" style="background: var(--success); color: white;" onclick="window.LayoutEngine.salvaPreferenzeGlobali()"><i class="fa-solid fa-floppy-disk"></i> Salva Impostazioni</button>
+            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger);" onclick="window.LayoutEngine.ripristinaPredefiniti()"><i class="fa-solid fa-rotate-left"></i> Ripristina Predefiniti</button>
         </div>
     </div>
 
-    <div id="editAppModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'editAppModal')">
+    <div id="editAppModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'editAppModal')">
         <div class="modal-content">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModal('editAppModal')"></i>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="window.chiudiModal('editAppModal')"></i>
             <h3 style="text-align: center; color: var(--text-main); margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px;"><i class="fa-solid fa-pen-to-square" style="color:var(--primary);"></i> Modifica App</h3>
             <input type="hidden" id="edit-app-id">
             
@@ -563,25 +565,25 @@
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <input type="text" id="edit-app-icon" class="input-field" style="margin-bottom:0;" placeholder="es. fa-solid fa-star">
                 <button class="btn-modal" style="margin:0; background:var(--surface-hover); color:var(--text-main); border:1px solid var(--border-color); width:auto; padding:0 20px; font-size:20px;" onclick="document.getElementById('edit-upload').click()"><i class="fa-regular fa-image"></i></button>
-                <input type="file" id="edit-upload" accept="image/*" style="display:none;" onchange="LayoutEngine.handleImageUpload(event, 'edit')">
+                <input type="file" id="edit-upload" accept="image/*" style="display:none;" onchange="window.LayoutEngine.handleImageUpload(event, 'edit')">
             </div>
             
             <div id="edit-app-img-preview" style="display:none; text-align:center; margin-bottom:20px; background:var(--surface-hover); padding:15px; border-radius:12px; border:1px solid var(--border-color);">
                 <img id="edit-app-img-preview-src" src="" style="width:60px; height:60px; border-radius:14px; object-fit:cover; vertical-align:middle; box-shadow:var(--shadow-sm);">
-                <button class="btn-modal" style="background:var(--danger); color:white; width:auto; padding:8px 16px; margin-left:15px; display:inline-flex; align-items:center; gap:6px; font-size:13px;" onclick="LayoutEngine.rimuoviImmagine('edit')"><i class="fa-solid fa-trash"></i> Rimuovi Foto</button>
+                <button class="btn-modal" style="background:var(--danger); color:white; width:auto; padding:8px 16px; margin-left:15px; display:inline-flex; align-items:center; gap:6px; font-size:13px;" onclick="window.LayoutEngine.rimuoviImmagine('edit')"><i class="fa-solid fa-trash"></i> Rimuovi Foto</button>
             </div>
             <input type="hidden" id="edit-app-img-data">
 
             <div class="color-picker-row"><label>Colore Specifico</label><input type="color" id="edit-app-color"></div>
             
-            <button class="btn-modal" style="background: var(--success); color: white; margin-top:20px;" onclick="LayoutEngine.salvaModificaSingolaApp()"><i class="fa-solid fa-check"></i> Conferma</button>
-            <button id="btn-elimina-custom" class="btn-modal" style="background: transparent; color: var(--danger); border: 2px dashed var(--danger); display: none;" onclick="LayoutEngine.eliminaAppCorrente()"><i class="fa-solid fa-trash-can"></i> Elimina App</button>
+            <button class="btn-modal" style="background: var(--success); color: white; margin-top:20px;" onclick="window.LayoutEngine.salvaModificaSingolaApp()"><i class="fa-solid fa-check"></i> Conferma</button>
+            <button id="btn-elimina-custom" class="btn-modal" style="background: transparent; color: var(--danger); border: 2px dashed var(--danger); display: none;" onclick="window.LayoutEngine.eliminaAppCorrente()"><i class="fa-solid fa-trash-can"></i> Elimina App</button>
         </div>
     </div>
 
-    <div id="customAppModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'customAppModal')">
+    <div id="customAppModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'customAppModal')">
         <div class="modal-content">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModal('customAppModal')"></i>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="window.chiudiModal('customAppModal')"></i>
             <h3 style="text-align: center; color: var(--text-main); margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px;"><i class="fa-solid fa-plus" style="color:var(--success);"></i> Nuova App</h3>
             
             <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">NOME APP</label>
@@ -594,22 +596,22 @@
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <input type="text" id="new-app-icon" class="input-field" style="margin-bottom:0;" placeholder="es. fa-solid fa-globe">
                 <button class="btn-modal" style="margin:0; background:var(--surface-hover); color:var(--text-main); border:1px solid var(--border-color); width:auto; padding:0 20px; font-size:20px;" onclick="document.getElementById('new-upload').click()"><i class="fa-regular fa-image"></i></button>
-                <input type="file" id="new-upload" accept="image/*" style="display:none;" onchange="LayoutEngine.handleImageUpload(event, 'new')">
+                <input type="file" id="new-upload" accept="image/*" style="display:none;" onchange="window.LayoutEngine.handleImageUpload(event, 'new')">
             </div>
 
             <div id="new-app-img-preview" style="display:none; text-align:center; margin-bottom:20px; background:var(--surface-hover); padding:15px; border-radius:12px; border:1px solid var(--border-color);">
                 <img id="new-app-img-preview-src" src="" style="width:60px; height:60px; border-radius:14px; object-fit:cover; vertical-align:middle; box-shadow:var(--shadow-sm);">
-                <button class="btn-modal" style="background:var(--danger); color:white; width:auto; padding:8px 16px; margin-left:15px; display:inline-flex; align-items:center; gap:6px; font-size:13px;" onclick="LayoutEngine.rimuoviImmagine('new')"><i class="fa-solid fa-trash"></i> Rimuovi Foto</button>
+                <button class="btn-modal" style="background:var(--danger); color:white; width:auto; padding:8px 16px; margin-left:15px; display:inline-flex; align-items:center; gap:6px; font-size:13px;" onclick="window.LayoutEngine.rimuoviImmagine('new')"><i class="fa-solid fa-trash"></i> Rimuovi Foto</button>
             </div>
             <input type="hidden" id="new-app-img-data">
 
-            <button class="btn-modal" style="background: var(--success); color: white; margin-top:20px;" onclick="LayoutEngine.creaAppPersonalizzata()"><i class="fa-solid fa-plus"></i> Crea App</button>
+            <button class="btn-modal" style="background: var(--success); color: white; margin-top:20px;" onclick="window.LayoutEngine.creaAppPersonalizzata()"><i class="fa-solid fa-plus"></i> Crea App</button>
         </div>
     </div>
 
-    <div id="profileModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'profileModal')">
+    <div id="profileModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'profileModal')">
         <div class="modal-content" style="text-align: left;">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModal('profileModal')"></i>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="window.chiudiModal('profileModal')"></i>
             <h3 style="text-align: center; color: var(--text-main); margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-id-badge" style="color:var(--primary);"></i> Il tuo Profilo</h3>
             
             <div id="adminBadge" style="display:none; text-align:center; background:var(--danger); color:white; padding:8px; border-radius:8px; margin-bottom:20px; font-weight:700; font-size: 13px; letter-spacing:1px;"><i class="fa-solid fa-shield-halved"></i> AMMINISTRATORE</div>
@@ -664,12 +666,12 @@
 
             <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 24px 0;">
             
-            <button class="btn-modal" style="background: var(--success); color: white;" onclick="salvaProfilo()"><i class="fa-solid fa-floppy-disk"></i> Salva Modifiche</button>
-            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 12px;" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Esci dall'Account</button>
+            <button class="btn-modal" style="background: var(--success); color: white;" onclick="window.salvaProfilo()"><i class="fa-solid fa-floppy-disk"></i> Salva Modifiche</button>
+            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 12px;" onclick="window.logout()"><i class="fa-solid fa-right-from-bracket"></i> Esci dall'Account</button>
         </div>
     </div>
 
-    <div id="authModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'authModal')">
+    <div id="authModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'authModal')">
         <div class="modal-content" style="text-align: center; padding:40px 32px;">
             <h2 id="authModalTitle" style="color:var(--primary); font-weight:800; margin-top:0; margin-bottom:24px; display:flex; align-items:center; justify-content:center; gap:10px;"><i class="fa-solid fa-cloud"></i> Accedi</h2>
             
@@ -684,7 +686,7 @@
             </div>
             
             <div id="forgotPasswordLink" style="margin-bottom: 20px; text-align: right;">
-                <a href="#" onclick="recuperaPassword(); return false;" style="font-size: 13px; color: var(--primary); font-weight:600; text-decoration:none;">Password dimenticata?</a>
+                <a href="#" onclick="window.recuperaPassword(); return false;" style="font-size: 13px; color: var(--primary); font-weight:600; text-decoration:none;">Password dimenticata?</a>
             </div>
 
             <div id="registerFields" style="display: none; text-align: left;">
@@ -708,10 +710,10 @@
             
             <div id="authError" style="color: var(--danger); background: var(--danger-light); padding:10px; border-radius:8px; border:1px solid var(--danger-border); display: none; margin-bottom: 15px; font-size:13px; font-weight:600;"></div>
             
-            <button id="btnEseguiAuth" class="btn-action" style="background: var(--primary); margin-top:0;" onclick="eseguiAuth()"><i class="fa-solid fa-right-to-bracket"></i> Accedi</button>
+            <button id="btnEseguiAuth" class="btn-action" style="background: var(--primary); margin-top:0;" onclick="window.eseguiAuth()"><i class="fa-solid fa-right-to-bracket"></i> Accedi</button>
             
             <div style="margin-top: 20px;">
-                <a href="#" id="authSwitchLink" onclick="switchAuthMode(); return false;" style="font-size: 14px; color: var(--text-muted); font-weight:600; text-decoration:underline;">Non hai un account? Registrati qui</a>
+                <a href="#" id="authSwitchLink" onclick="window.switchAuthMode(); return false;" style="font-size: 14px; color: var(--text-muted); font-weight:600; text-decoration:underline;">Non hai un account? Registrati qui</a>
             </div>
             
             <div style="display:flex; align-items:center; gap:15px; margin:24px 0;">
@@ -720,7 +722,7 @@
                 <div style="flex:1; height:1px; background:var(--border-color);"></div>
             </div>
             
-            <button class="btn-modal" style="background: white; color: #333; border: 1px solid #ddd; box-shadow: var(--shadow-sm);" onclick="loginGoogle()">
+            <button class="btn-modal" style="background: white; color: #333; border: 1px solid #ddd; box-shadow: var(--shadow-sm);" onclick="window.loginGoogle()">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px; height:18px;"> Accedi con Google
             </button>
         </div>
@@ -747,13 +749,13 @@
                 <input type="text" id="obbl-prog" placeholder=" " class="input-field">
                 <label>Numero Omonimia es. 02 (facoltativo)</label>
             </div>
-            <button class="btn-action" style="margin-top:10px;" onclick="salvaDatiObbligatori()"><i class="fa-solid fa-check"></i> Salva e Continua</button>
+            <button class="btn-action" style="margin-top:10px;" onclick="window.salvaDatiObbligatori()"><i class="fa-solid fa-check"></i> Salva e Continua</button>
         </div>
     </div>
 
-    <div id="modal-gestione" class="modal-overlay" onclick="chiudiSuSfondo(event, 'modal-gestione')">
+    <div id="modal-gestione" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-gestione')">
         <div class="modal-content" style="max-width: 440px;">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModal('modal-gestione')"></i>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="window.chiudiModal('modal-gestione')"></i>
             <h3 style="color: var(--text-main); margin-top: 0; font-weight:700; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-users-gear" style="color:var(--primary);"></i> Utenti App</h3>
             
             <div style="display: flex; gap: 12px; margin-bottom: 20px;">
@@ -764,9 +766,9 @@
             <div style="display: flex; gap: 10px; margin-bottom: 16px;">
                 <div style="position:relative; flex:1;">
                     <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted);"></i>
-                    <input type="text" id="search-utenti-app" placeholder="Cerca collega..." style="margin: 0; width:100%; padding: 12px 12px 12px 36px; font-size: 14px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; background: var(--surface); color:var(--text-main); outline:none;" onkeyup="filtraUtentiApp()">
+                    <input type="text" id="search-utenti-app" placeholder="Cerca collega..." style="margin: 0; width:100%; padding: 12px 12px 12px 36px; font-size: 14px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; background: var(--surface); color:var(--text-main); outline:none;" onkeyup="window.filtraUtentiApp()">
                 </div>
-                <select id="sort-utenti-app" style="padding: 12px; font-size: 13px; margin: 0; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; background: var(--surface); color:var(--text-main); cursor:pointer; outline:none;" onchange="renderGestioneAccessi()">
+                <select id="sort-utenti-app" style="padding: 12px; font-size: 13px; margin: 0; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; background: var(--surface); color:var(--text-main); cursor:pointer; outline:none;" onchange="window.renderGestioneAccessi()">
                     <option value="recente">Recenti prima</option>
                     <option value="alfabetico">Alfabetico</option>
                 </select>
@@ -776,16 +778,16 @@
         </div>
     </div>
 
-    <div id="modal-dettaglio-utente" class="modal-overlay" onclick="chiudiSuSfondo(event, 'modal-dettaglio-utente')">
+    <div id="modal-dettaglio-utente" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-dettaglio-utente')">
         <div class="modal-content" style="max-width: 380px;">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModal('modal-dettaglio-utente')"></i>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="window.chiudiModal('modal-dettaglio-utente')"></i>
             <h3 style="margin-top: 0; color: var(--text-main); font-weight:700; text-align: center; border-bottom:1px solid var(--border-color); padding-bottom:15px;"><i class="fa-regular fa-address-card" style="color:var(--primary);"></i> Dettaglio Utente</h3>
             
             <div id="dettaglio-utente-body" style="font-size: 14px; line-height: 1.6; background: var(--surface-hover); padding: 20px; border-radius: 14px; border: 1px solid var(--border-color); margin-bottom: 20px; color:var(--text-main);">
             </div>
             
-            <button id="btn-rendi-collab" class="btn-modal" style="background: #6f42c1; color: white; margin-bottom:10px;" onclick="cambiaRuoloUtente()"><i class="fa-solid fa-user-shield"></i> Rendi Collaboratore</button>
-            <button class="btn-modal" style="background: transparent; color: var(--text-muted); border: 2px solid var(--border-color);" onclick="chiudiModal('modal-dettaglio-utente')">Chiudi</button>
+            <button id="btn-rendi-collab" class="btn-modal" style="background: #6f42c1; color: white; margin-bottom:10px;" onclick="window.cambiaRuoloUtente()"><i class="fa-solid fa-user-shield"></i> Rendi Collaboratore</button>
+            <button class="btn-modal" style="background: transparent; color: var(--text-muted); border: 2px solid var(--border-color);" onclick="window.chiudiModal('modal-dettaglio-utente')">Chiudi</button>
         </div>
     </div>
 
@@ -794,9 +796,8 @@
     <!-- ========================================== -->
 
     <!-- Modale Principale dei Turni -->
-    <div id="modal-turni-main" class="modal-overlay" onclick="chiudiSuSfondo(event, 'modal-turni-main')">
+    <div id="modal-turni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-turni-main')">
         <div class="modal-content" style="max-width: 600px; height: 90vh; display: flex; flex-direction: column; padding: 24px;">
-            <!-- X in alto a destra standardizzata -->
             <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s; z-index: 10;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-turni-main')"></i>
             
             <h3 style="margin-top: 0; color: var(--text-main); font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
@@ -809,7 +810,6 @@
                     <input type="text" id="shiftSearch" placeholder="Cerca turno (es. 101, T50)..." style="margin: 0; width:100%; padding: 14px 14px 14px 40px; font-size: 15px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; background: var(--surface-hover); color:var(--text-main); outline:none; transition: var(--transition);" onkeyup="if(window.filtraSuggerimentiTurni) window.filtraSuggerimentiTurni()" onfocus="if(window.filtraSuggerimentiTurni) window.filtraSuggerimentiTurni()" autocomplete="off">
                     <div id="suggestionsBox" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--surface); border:1px solid var(--border-color); border-radius:var(--radius-md); max-height:200px; overflow-y:auto; z-index:100; box-shadow:var(--shadow-md); margin-top:8px;"></div>
                 </div>
-                <!-- Pulsante apre la modale Ricerca Corsa -->
                 <button class="btn-action" style="width:auto; margin:0; padding:14px 20px; border-radius: var(--radius-md);" onclick="window.apriModal('modal-ricerca-corsa')"><i class="fa-solid fa-route"></i></button>
             </div>
             
@@ -820,9 +820,8 @@
     </div>
 
     <!-- Modale Ricerca Corsa -->
-    <div id="modal-ricerca-corsa" class="modal-overlay" onclick="chiudiSuSfondo(event, 'modal-ricerca-corsa')">
+    <div id="modal-ricerca-corsa" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-ricerca-corsa')">
         <div class="modal-content" style="max-width: 440px;">
-            <!-- ECCO LA X SPOSTATA IN ALTO A DESTRA -->
             <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s; z-index: 10;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-ricerca-corsa')"></i>
             
             <h3 style="margin-top: 0; color: var(--text-main); font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
@@ -838,7 +837,6 @@
             <div id="sc-rest-form" style="display:none;">
                 <div class="float-wrapper">
                     <select id="sc-luogo" class="input-field" style="cursor: pointer;" onchange="if(window.aggiornaSuggerimentiOrario) window.aggiornaSuggerimentiOrario()"></select>
-                    <!-- Label fissa in alto per il select -->
                     <label id="label-luogo" style="top:12px; font-size:11px; color:var(--primary); font-weight:700;">Luogo:</label>
                 </div>
                 <div class="float-wrapper">
@@ -858,9 +856,8 @@
     </div>
 
     <!-- Modale Segnalazioni -->
-    <div id="modal-segnalazioni-main" class="modal-overlay" onclick="chiudiSuSfondo(event, 'modal-segnalazioni-main')">
+    <div id="modal-segnalazioni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-segnalazioni-main')">
         <div class="modal-content" style="max-width: 600px; height: 90vh; display: flex; flex-direction: column; padding: 24px;">
-            <!-- X in alto a destra -->
             <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s; z-index: 10;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-segnalazioni-main')"></i>
             
             <h3 style="margin-top: 0; color: var(--text-main); font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
