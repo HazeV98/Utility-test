@@ -9,6 +9,7 @@ import { avviaMotoreTurni } from './turni.js';
 import { avviaMotoreOrari } from './orari.js';
 import { avviaMotoreLink } from './link.js';
 import { avviaMotoreDocumenti } from './documenti.js';
+import { avviaMotoreContatti } from './contatti.js';
 
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -74,7 +75,7 @@ const DEFAULT_APPS = [
     { id: "chebateo", label: "CheBateo", image: "icone_app/iconcb.png", href: "https://m.chebateo.it/" },
     { id: "documenti", label: "Documenti", onclick: "window.apriModaleDocumenti()", defaultColor: "#6c757d" },
     { id: "link", label: "Link", onclick: "window.apriModaleLink()", defaultColor: "#495057" },
-    { id: "contatti", label: "Contatti", href: "contatti.html", defaultColor: "#2c3e50" },
+    { id: "contatti", label: "Contatti", onclick: "window.apriModaleContatti()", defaultColor: "#2c3e50" },
     { id: "buoni", label: "Buoni\nPasto", href: "buoni.html", defaultColor: "#d63384" },
     { id: "promemoria", label: "Promemoria", href: "promemoria.html", defaultColor: "#0dcaf0" },
     { id: "dds", label: "Archivio\nDDS", href: "dds.html", defaultColor: "#5856d6" },
@@ -165,6 +166,25 @@ window.avviaMotoreDocumentiDaIndex = () => {
     if (window.currentUserData && (window.currentUserData.documenti_access !== true || window.currentUserData.last_documenti_access !== oggiStr)) {
         setDoc(doc(db, "utenti", auth.currentUser.uid), { documenti_access: true, last_documenti_access: oggiStr }, { merge: true });
         window.currentUserData.documenti_access = true; window.currentUserData.last_documenti_access = oggiStr;
+    }
+};
+
+window.avviaMotoreContattiDaIndex = () => {
+    if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai contatti aziendali."); return; }
+    if (window.currentUserData) {
+        if (window.currentUserData.contatti_banned === true) {
+            alert("L'accesso ai Contatti ti è stato revocato da un Amministratore."); return;
+        }
+        if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined) {
+            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per accedere ai contatti.");
+            window.apriModal('profileModal'); return;
+        }
+    }
+    avviaMotoreContatti();
+    const oggiStr = new Date().toISOString().split('T')[0];
+    if (window.currentUserData && (window.currentUserData.contatti_access !== true || window.currentUserData.last_contatti_access !== oggiStr)) {
+        setDoc(doc(db, "utenti", auth.currentUser.uid), { contatti_access: true, last_contatti_access: oggiStr }, { merge: true });
+        window.currentUserData.contatti_access = true; window.currentUserData.last_contatti_access = oggiStr;
     }
 };
 
