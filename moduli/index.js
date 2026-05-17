@@ -10,6 +10,7 @@ import { avviaMotoreOrari } from './orari.js';
 import { avviaMotoreLink } from './link.js';
 import { avviaMotoreDocumenti } from './documenti.js';
 import { avviaMotoreContatti } from './contatti.js';
+import { avviaMotoreBachecaUtility } from './bacheca_utility.js';
 
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -87,7 +88,6 @@ const DEFAULT_APPS = [
     { id: "accessi", label: "Accessi", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#1c1c1e" }
 ];
 
-// Fallback funzioni chiusura menù laterale
 window.apriMenuLaterale = () => { 
     const s = document.getElementById('sidebar'); if(s) s.classList.add('open'); 
     const o = document.getElementById('sidebar-overlay'); if(o) o.style.display = 'block'; 
@@ -96,10 +96,6 @@ window.chiudiMenuLaterale = () => {
     const s = document.getElementById('sidebar'); if(s) s.classList.remove('open'); 
     const o = document.getElementById('sidebar-overlay'); if(o) o.style.display = 'none'; 
 };
-
-// ============================================================================
-// FUNZIONI PONTE: Avviano i sottomoduli controllando permessi e accessi
-// ============================================================================
 
 window.apriMainModaleSegnalazioni = () => {
     window.apriModal('modal-segnalazioni-main');
@@ -187,10 +183,6 @@ window.avviaMotoreContattiDaIndex = () => {
         window.currentUserData.contatti_access = true; window.currentUserData.last_contatti_access = oggiStr;
     }
 };
-
-// ============================================================================
-// SISTEMI DI CHECK IN BACKGROUND (Bacheca, Segnalazioni, Promemoria)
-// ============================================================================
 
 window.controllaBacheca = async () => {
     if (!auth.currentUser) return;
@@ -333,10 +325,6 @@ window.controllaSegnalazioni = async () => {
         }
     } catch(e) { console.error("Errore check segnalazioni:", e); }
 };
-
-// ============================================================================
-// GESTIONE NOTIFICHE PUSH
-// ============================================================================
 
 window.inizializzaNotificheSeNativa = async (userData) => {
     const isNative = window.Capacitor && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins.PushNotifications;
@@ -516,10 +504,6 @@ window.salvaPreferenzeNotifiche = async () => {
     try { await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_notifiche: preferenze_notifiche }, { merge: true }); } 
     catch (error) { console.error("Errore salvataggio preferenze notifiche:", error); }
 };
-
-// ============================================================================
-// ENGINE LAYOUT & RENDER APP (Gestisce Icone, Temi, Drag&Drop)
-// ============================================================================
 
 window.LayoutEngine = {
     prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#0066cc", view: "grid", iconStyle: "box", iconType: "minimal", fontSize: 14, theme: "system", apps: [] },
@@ -781,24 +765,24 @@ window.LayoutEngine = {
     ripristinaPredefiniti: async function() { if(!confirm("Ripristinare tutto?")) return; localStorage.removeItem('preferenze_layout_haze'); if (auth.currentUser) await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_layout: null }, { merge: true }); location.reload(); }
 };
 
-// ============================================================================
-// GESTIONE MODALI E UI
-// ============================================================================
-
 window.apriModal = (id, authMode) => { document.getElementById(id).style.display = 'flex'; if(id === 'authModal' && authMode) { currentAuthMode = authMode; window.aggiornaUIAuth(); } };
 window.chiudiModal = (id) => { document.getElementById(id).style.display = 'none'; };
 window.chiudiSuSfondo = (e, id) => { if (e.target.id === id) window.chiudiModal(id); };
 
 window.apriBachecaUtility = () => {
     const timestamp = Date.now(); localStorage.setItem('ultimo_accesso_bacheca', timestamp);
-    document.getElementById('badge-messaggi').style.display = 'none'; document.getElementById('banner-nuovo-messaggio').style.display = 'none';
+    document.getElementById('badge-messaggi').style.display = 'none'; 
+    document.getElementById('banner-nuovo-messaggio').style.display = 'none';
     if (auth.currentUser) setDoc(doc(db, "utenti", auth.currentUser.uid), { ultimo_accesso_bacheca: timestamp }, { merge: true });
-    window.location.href = 'bacheca_utility.html';
+    
+    window.apriModal('modal-bacheca-utility-main');
+    
+    // Innesca il caricamento tramite il nuovo engine della bacheca (se l'utente è loggato)
+    if(auth.currentUser) {
+        const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
+        avviaMotoreBachecaUtility(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
+    }
 };
-
-// ============================================================================
-// LOGICA ADMIN & GESTIONE UTENTI
-// ============================================================================
 
 window.apriGestioneAccessi = async () => {
     window.apriModal('modal-gestione');
@@ -910,10 +894,6 @@ window.apriDettaglioUtente = (uid) => {
 
 window.cambiaRuoloUtente = async (uid, nuovoRuolo) => { if(!confirm("Sei sicuro?")) return; try { await setDoc(doc(db, "utenti", uid), { ruolo: nuovoRuolo }, { merge: true }); window.utentiMap[uid].ruolo = nuovoRuolo; window.chiudiModal('modal-dettaglio-utente'); alert("Ruolo aggiornato!"); } catch(e) { alert("Errore."); } };
 
-// ============================================================================
-// GESTIONE AUTENTICAZIONE E PROFILO
-// ============================================================================
-
 let currentAuthMode = 'login';
 window.switchAuthMode = () => { currentAuthMode = currentAuthMode === 'login' ? 'register' : 'login'; window.aggiornaUIAuth(); };
 window.aggiornaUIAuth = () => {
@@ -976,10 +956,6 @@ window.salvaProfilo = async () => {
     window.chiudiModal('profileModal');
 };
 
-// ============================================================================
-// INIZIALIZZAZIONE DELL'APP AL LOGIN/LOGOUT
-// ============================================================================
-
 onAuthStateChanged(auth, async (user) => {
     const vLoad = document.getElementById('view-loading'); const vGuest = document.getElementById('view-guest'); const vApp = document.getElementById('view-app'); const vBanned = document.getElementById('view-banned');
     if (user) {
@@ -1019,10 +995,6 @@ onAuthStateChanged(auth, async (user) => {
         vLoad.style.display = 'none'; window.LayoutEngine.init(); vGuest.style.display = 'flex'; vApp.style.display = 'none'; vBanned.style.display = 'none'; 
     }
 });
-
-// ============================================================================
-// GESTIONE INSTALLAZIONE PWA
-// ============================================================================
 
 let deferredPrompt;
 const installBtn = document.getElementById('install-btn');
