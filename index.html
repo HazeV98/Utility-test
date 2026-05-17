@@ -809,7 +809,8 @@
     <!-- Modale Cerca Corse (Identica all'originale) -->
     <div id="searchCorseModal" class="modal-overlay-search" onclick="window.chiudiSeSfondoSearch(event)">
         <div class="modal-content-search">
-            <i class="fa-solid fa-xmark close-modal" onclick="window.chiudiSearchCorseModal()"></i>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiSearchCorseModal()"></i>
+
             <h3 style="margin-top:0; color:var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 20px; font-weight: 700; display:flex; align-items:center; gap:10px;">
                 <i class="fa-solid fa-route" style="color: var(--primary);"></i> Cerca Corsa
             </h3>
