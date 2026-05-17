@@ -21,7 +21,48 @@
 
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
+    
+    <script>
+        const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/HazeV98/Utility/main/version.json";
+
+        async function controllaAggiornamentiAPK() {
+            if (!window.Capacitor || !window.Capacitor.isNativePlatform() || !window.Capacitor.Plugins.App) {
+                return;
+            }
+
+            try {
+                const appInfo = await window.Capacitor.Plugins.App.getInfo();
+                const versioneInstallata = appInfo.version; 
+
+                const response = await fetch(UPDATE_CHECK_URL + "?t=" + new Date().getTime());
+                const data = await response.json();
+
+                if (data.latest_version && data.latest_version !== versioneInstallata) {
+                    mostraPopupAggiornamento(data);
+                }
+            } catch (error) {
+                console.error("Errore nel controllo aggiornamenti APK:", error);
+            }
+        }
+
+        function mostraPopupAggiornamento(data) {
+            const modale = document.createElement('div');
+            modale.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99999; display:flex; justify-content:center; align-items:center; padding:20px; box-sizing:border-box; backdrop-filter:blur(5px); animation: fadeIn 0.3s ease;";
+            
+            modale.innerHTML = `
+                <div style="background:var(--surface); padding:30px; border-radius:24px; text-align:center; max-width:360px; width:100%; box-shadow: 0 20px 40px rgba(0,0,0,0.4); font-family: 'Inter', sans-serif;">
+                    <h2 style="color:var(--primary); margin-top:0; display:flex; align-items:center; justify-content:center; gap:10px;"><i class="fa-solid fa-rocket"></i> Nuovo Aggiornamento!</h2>
+                    <p style="font-size:15px; color:var(--text-main); font-weight: 500;">È disponibile la versione <b>${data.latest_version}</b>.</p>
+                    <p style="font-size:14px; color:var(--text-muted); background:var(--bg-color); padding:16px; border-radius:12px; text-align: left; line-height: 1.6; border: 1px solid var(--border-color);">${data.note_aggiornamento}</p>
+                    <a href="${data.download_url}" style="display:flex; justify-content:center; align-items:center; gap:10px; background:var(--success); color:white; padding:16px; border-radius:14px; text-decoration:none; font-weight:700; margin-top:24px; font-size: 16px; box-shadow: 0 4px 12px rgba(15,157,88,0.3);"><i class="fa-solid fa-download"></i> Scarica e Aggiorna</a>
+                    <button onclick="this.parentElement.parentElement.remove()" style="margin-top:16px; background:none; border:none; color:var(--text-muted); font-size:14px; cursor:pointer; font-weight: 600; text-decoration: underline;">Più tardi</button>
+                </div>
+            `;
+            document.body.appendChild(modale);
+        }
+
+        window.addEventListener('DOMContentLoaded', controllaAggiornamentiAPK);
+    </script>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
@@ -44,10 +85,6 @@
             --danger: #d93025;
             --danger-light: #fce8e6;
             --danger-border: #fad2cf;
-            --info: #0088ff;
-            --info-light: #e6f3ff;
-            --warning: #ff9800;
-            --warning-light: #fff3e0;
             --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
             --shadow-md: 0 10px 20px -5px rgba(0,0,0,0.12), 0 4px 6px -2px rgba(0,0,0,0.05);
             --shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.15), 0 10px 10px -5px rgba(0,0,0,0.04);
@@ -71,10 +108,6 @@
             --danger: #ea4335;
             --danger-light: rgba(234, 67, 53, 0.15);
             --danger-border: rgba(234, 67, 53, 0.3);
-            --info: #33aaff;
-            --info-light: rgba(51, 170, 255, 0.15);
-            --warning: #ffb74d;
-            --warning-light: rgba(255, 152, 0, 0.15);
             --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
             --shadow-md: 0 10px 20px -5px rgba(0,0,0,0.4);
             --shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.5);
@@ -95,10 +128,6 @@
                 --danger: #ea4335;
                 --danger-light: rgba(234, 67, 53, 0.15);
                 --danger-border: rgba(234, 67, 53, 0.3);
-                --info: #33aaff;
-                --info-light: rgba(51, 170, 255, 0.15);
-                --warning: #ffb74d;
-                --warning-light: rgba(255, 152, 0, 0.15);
                 --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
                 --shadow-md: 0 10px 20px -5px rgba(0,0,0,0.4);
                 --shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.5);
@@ -121,26 +150,58 @@
         @keyframes fadeSlideIn { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
         @keyframes slideInUpBouncy { 0% { opacity: 0; transform: translateY(35px) scale(0.9); } 65% { opacity: 1; transform: translateY(-4px) scale(1.02); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes modalPop { 0% { opacity: 0; transform: scale(0.92) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
-        @keyframes slideInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        #profileModal .modal-content { transform-origin: 15% -10%; animation: expandFromProfileBtn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15) forwards; }
-        @keyframes expandFromProfileBtn { 0% { opacity: 0; transform: scale(0.05); border-radius: 60px; } 100% { opacity: 1; transform: scale(1); border-radius: var(--radius-lg); } }
+        /* Modale Profilo: Espansione specifica dal bottone alto-sinistra */
+        #profileModal .modal-content {
+            transform-origin: 15% -10%;
+            animation: expandFromProfileBtn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15) forwards;
+        }
+        @keyframes expandFromProfileBtn {
+            0% { opacity: 0; transform: scale(0.05); border-radius: 60px; }
+            100% { opacity: 1; transform: scale(1); border-radius: var(--radius-lg); }
+        }
+
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); opacity: 0.8; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* 1. Animazione "Respiro" per i Banner */
         @keyframes breathe { 0%, 100% { transform: scale(1); box-shadow: var(--shadow-md); } 50% { transform: scale(1.02); box-shadow: var(--shadow-lg); } }
 
+        /* 2. Shimmer Effect Skeleton */
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .skeleton { background: linear-gradient(90deg, var(--surface) 25%, var(--border-color) 50%, var(--surface) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; opacity: 0.7;}
         :root[data-theme="dark"] .skeleton { background: linear-gradient(90deg, var(--surface) 25%, #2f333d 50%, var(--surface) 75%); background-size: 200% 100%; }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-        .view-container { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; animation: fadeSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        /* 3. Transizione Viste a Scorrimento */
+        .view-container { 
+            width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; 
+            animation: fadeSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+        }
 
         #view-app { position: fixed !important; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 440px; height: 100vh; height: 100dvh; margin: 0; padding: 0; z-index: 50; }
 
-        #view-app .header { position: absolute; top: 0; left: 0; width: 100%; padding: calc(20px + env(safe-area-inset-top, 0px)) 20px 10px 20px; margin: 0; box-sizing: border-box; z-index: 100; background: transparent; display: flex; justify-content: space-between; align-items: center; }
+        #view-app .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: calc(20px + env(safe-area-inset-top, 0px)) 20px 10px 20px;
+            margin: 0;
+            box-sizing: border-box;
+            z-index: 100;
+            background: transparent;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-        .scroll-area { width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; padding: calc(95px + env(safe-area-inset-top, 0px)) 20px 40px 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(65px + env(safe-area-inset-top, 0px)), black calc(120px + env(safe-area-inset-top, 0px)), black 100%); mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(65px + env(safe-area-inset-top, 0px)), black calc(120px + env(safe-area-inset-top, 0px)), black 100%); -ms-overflow-style: none; scrollbar-width: none; }
+        .scroll-area {
+            width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; padding: calc(95px + env(safe-area-inset-top, 0px)) 20px 40px 20px;
+            box-sizing: border-box; display: flex; flex-direction: column; align-items: center;
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(65px + env(safe-area-inset-top, 0px)), black calc(120px + env(safe-area-inset-top, 0px)), black 100%);
+            mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(65px + env(safe-area-inset-top, 0px)), black calc(120px + env(safe-area-inset-top, 0px)), black 100%);
+            -ms-overflow-style: none; scrollbar-width: none;
+        }
         .scroll-area::-webkit-scrollbar { display: none; }
 
         .header-side { flex: 1; display: flex; align-items: center; gap: 10px; }
@@ -150,8 +211,12 @@
 
         #install-btn { display: none; background-color: var(--success); color: white; border: none; padding: 10px 16px; font-size: 13px; font-weight: 700; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(15,157,88,0.3); white-space: nowrap; animation: pulse 2s infinite; align-items:center; gap:6px;}
         
+        /* 5. Haptic Flash Feedback per bottoni azione */
         .btn-header-alt, .btn-action, .btn-modal { position: relative; overflow: hidden; }
-        .btn-header-alt::after, .btn-action::after, .btn-modal::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.3); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .btn-header-alt::after, .btn-action::after, .btn-modal::after {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.3); opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
         .btn-header-alt:active::after, .btn-action:active::after, .btn-modal:active::after { opacity: 1; transition: 0s; }
 
         .btn-header-alt { background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 20px; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 6px; transition: var(--transition); }
@@ -165,10 +230,23 @@
         .app-grid .app-btn:active .app-icon { transform: scale(0.88) translateY(4px); box-shadow: 0 1px 3px rgba(0,0,0,0.2), inset 0 6px 12px rgba(0,0,0,0.3); filter: brightness(0.9); transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
         .app-grid .app-btn:active .app-label { transform: scale(0.95); opacity: 0.7; transition: all 0.15s; }
         
-        .app-grid .app-icon { width: 62px; height: 62px; margin: 0 auto 10px auto; border-radius: 18px; color: white; font-size: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 24px -6px rgba(0,0,0,0.3), 0 4px 8px -2px rgba(0,0,0,0.15), inset 0 -6px 12px rgba(0,0,0,0.25); border: 1px solid rgba(0,0,0,0.05); transition: var(--transition); overflow: hidden; position: relative; }
-        .app-grid .app-icon::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.4); opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 2; }
+        /* Effetto 3D Base */
+        .app-grid .app-icon { 
+            width: 62px; height: 62px; margin: 0 auto 10px auto; border-radius: 18px; 
+            color: white; font-size: 28px; display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 12px 24px -6px rgba(0,0,0,0.3), 0 4px 8px -2px rgba(0,0,0,0.15), inset 0 -6px 12px rgba(0,0,0,0.25); 
+            border: 1px solid rgba(0,0,0,0.05); transition: var(--transition); overflow: hidden; position: relative;
+        }
+        
+        /* Haptic flash per icone */
+        .app-grid .app-icon::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.4); opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 2;
+        }
         .app-grid .app-btn:active .app-icon::before { opacity: 1; transition: 0s; }
+
         .app-grid .app-icon::after { display: none; }
+        
         .app-grid .app-label { font-size: var(--label-size); color: var(--text-main); font-weight: 600; text-align: center; line-height: 1.2; text-shadow: 0px 1px 3px rgba(255,255,255,0.8); width: 100%; word-wrap: break-word; transition: var(--transition); }
 
         .app-list { display: flex; flex-direction: column; gap: 12px; padding: 10px; width: 100%; }
@@ -176,6 +254,8 @@
         .app-list .app-btn:active { transform: scale(0.97); background: rgba(255,255,255,0.6); }
         .app-list .app-btn::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.05); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .app-list .app-btn:active::after { opacity: 1; transition: 0s; }
+        
+        /* Effetto 3D Lista Base */
         .app-list .app-icon { width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 6px 12px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1), inset 0 -4px 6px rgba(0,0,0,0.2); border: 1px solid rgba(0,0,0,0.04); overflow: hidden; }
         .app-list .app-label { font-size: calc(var(--label-size) + 2px); color: #1a1a1a; font-weight: 700; margin: 0; text-shadow: none; flex: 1; text-align: left; }
 
@@ -184,9 +264,16 @@
         .transparent-icons.app-grid .app-icon { font-size: 36px !important; } 
         .transparent-icons.app-list .app-icon { font-size: 26px !important; }
 
+        /* Dark mode overrides per l'effetto 3D e nomi app */
         :root[data-theme="dark"] .app-grid .app-icon { box-shadow: 0 12px 24px -6px rgba(0,0,0,0.8), 0 4px 8px -2px rgba(0,0,0,0.5), inset 0 -6px 12px rgba(0,0,0,0.6), inset 1px 1px 3px rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.08); }
         :root[data-theme="dark"] .app-list .app-icon { box-shadow: 0 6px 12px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4), inset 0 -4px 6px rgba(0,0,0,0.5), inset 1px 1px 2px rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.08); }
         :root[data-theme="dark"] .app-grid .app-label { text-shadow: none; }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .app-grid .app-icon { box-shadow: 0 12px 24px -6px rgba(0,0,0,0.8), 0 4px 8px -2px rgba(0,0,0,0.5), inset 0 -6px 12px rgba(0,0,0,0.6), inset 1px 1px 3px rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.08); }
+            :root:not([data-theme="light"]) .app-list .app-icon { box-shadow: 0 6px 12px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4), inset 0 -4px 6px rgba(0,0,0,0.5), inset 1px 1px 2px rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.08); }
+            :root:not([data-theme="light"]) .app-grid .app-label { text-shadow: none; }
+        }
 
         @keyframes wiggle { 0% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } 100% { transform: rotate(-2deg); } }
         .wiggle-mode .app-btn { animation: wiggle 0.3s infinite; cursor: grab; }
@@ -209,14 +296,31 @@
         .btn-action:active { transform: scale(0.96) translateY(2px); box-shadow: 0 4px 8px rgba(15,157,88,0.2); }
         
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 7000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: fadeIn 0.3s ease; }
-        .modal-content { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 380px; text-align: left; box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.4) inset; border: 1px solid var(--border-color); position: relative; color: var(--text-main); max-height: 90vh; overflow-y: auto; animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
+        .modal-content { 
+            background: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 380px; text-align: left; 
+            box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.4) inset; border: 1px solid var(--border-color); 
+            position: relative; color: var(--text-main); max-height: 90vh; overflow-y: auto; 
+            animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+        }
+        
+        /* 6. Floating Labels per Input */
         .float-wrapper { position: relative; margin-bottom: 16px; width: 100%; }
         .float-wrapper .input-field { margin-bottom: 0; padding: 22px 14px 10px 14px; }
-        .float-wrapper label { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; font-weight: 500; }
-        .float-wrapper .input-field:focus + label, .float-wrapper .input-field:not(:placeholder-shown) + label { top: 12px; font-size: 11px; color: var(--primary); font-weight: 700; }
+        .float-wrapper label {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); font-size: 14px; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; font-weight: 500;
+        }
+        .float-wrapper .input-field:focus + label,
+        .float-wrapper .input-field:not(:placeholder-shown) + label {
+            top: 12px; font-size: 11px; color: var(--primary); font-weight: 700;
+        }
 
-        .input-field { width: 100%; padding: 14px; margin-bottom: 16px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 15px; background-color: var(--surface-hover); color: var(--text-main); font-family: inherit; transition: var(--transition); }
+        .input-field { 
+            width: 100%; padding: 14px; margin-bottom: 16px; border: 2px solid var(--border-color); border-radius: var(--radius-md); 
+            box-sizing: border-box; font-size: 15px; background-color: var(--surface-hover); color: var(--text-main); 
+            font-family: inherit; transition: var(--transition);
+        }
         .input-field:focus { border-color: var(--primary); outline: none; background-color: var(--surface); transform: translateY(-2px); box-shadow: 0 8px 16px var(--primary-glow); }
         .input-field::placeholder { color: var(--text-muted); opacity: 0.7; }
         
@@ -229,6 +333,7 @@
         input[type="color"] { width: 44px; height: 44px; border: none; border-radius: 10px; cursor: pointer; padding: 0; background: transparent; }
         input[type="range"] { width: 100%; margin: 10px 0; accent-color: var(--primary); }
 
+        .badge-rotazioni { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(217,48,37,0.4); border: 2px solid var(--bg-color); z-index: 10; pointer-events: none;}
         .badge-notif { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; min-width: 22px; height: 22px; padding: 0 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(217,48,37,0.4); border: 2px solid var(--surface); z-index: 20; pointer-events: none; }
 
         .banner-alert { padding: 14px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 20px; width: 100%; max-width: 440px; cursor: pointer; box-shadow: var(--shadow-md); display:flex; align-items:center; justify-content:center; gap:10px; transition: var(--transition); animation: slideInUpBouncy 0.5s ease both, breathe 3s infinite ease-in-out 0.5s;}
@@ -236,67 +341,15 @@
         .banner-yellow { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
         .banner-red { background: var(--danger); color: white; }
         .banner-blue { background: #17a2b8; color: white; }
-
-        /* ================================================================= */
-        /* --- STILI SPECIFICI PER I TURNI INIETTATI DALLA TUA PAGINA ---    */
-        /* ================================================================= */
-        .folder-btn { background-color: var(--surface); color: var(--text-main); border: 2px solid var(--border-color); padding: 24px 20px; font-size: 16px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; text-align: left; box-shadow: var(--shadow-sm); transition: all 0.2s; display: flex; align-items: center; gap: 16px; width: 100%; margin-bottom: 12px;}
-        .folder-btn i { font-size: 24px; color: var(--primary); transition: transform 0.2s; }
-        .folder-btn:hover { border-color: var(--primary); box-shadow: var(--shadow-md); transform: translateY(-2px); }
-        .folder-btn:hover i { transform: scale(1.1); }
-        
-        .file-row { display: flex; gap: 12px; width: 100%; align-items: stretch; margin-bottom: 12px;}
-        .file-btn { flex-grow: 1; background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); padding: 16px; font-size: 15px; border-radius: var(--radius-md); cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: flex-start; gap: 12px; font-weight: 600; transition: all 0.2s; box-shadow: var(--shadow-sm); }
-        .file-btn i { color: var(--danger); font-size: 18px; }
-        .file-btn:hover { border-color: var(--primary); background-color: var(--surface-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
-        
-        .icon-btn { width: 56px; background-color: var(--surface); color: var(--primary); border: 1px solid var(--border-color); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; transition: all 0.2s; box-shadow: var(--shadow-sm); }
-        .icon-btn:hover { background-color: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-md); }
-        
-        .btn-search-spec { background-color: var(--surface); color: var(--success); border: 1px solid var(--border-color); }
-        .btn-search-spec:hover { background-color: var(--success); color: white; border-color: var(--success); }
-        
-        .back-btn { background-color: transparent; color: var(--text-muted); border: 2px solid var(--border-color); padding: 14px; border-radius: var(--radius-md); cursor: pointer; width: 100%; font-weight: 600; font-size: 15px; margin-bottom: 12px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;}
-        .back-btn:hover { background-color: var(--surface); color: var(--text-main); border-color: var(--text-main); }
-        
-        .search-container { position: relative; width: 100%; margin-bottom: 16px; }
-        .search-wrapper { position: relative; display: flex; align-items: center; }
-        .search-wrapper i { position: absolute; left: 16px; color: var(--text-muted); font-size: 16px; }
-        #shiftSearch { width: 100%; padding: 16px 16px 16px 44px; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px; box-sizing: border-box; outline: none; font-family: inherit; background: var(--surface); color: var(--text-main); transition: all 0.2s; box-shadow: var(--shadow-sm); }
-        #shiftSearch:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); }
-        
-        .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: var(--shadow-lg); display: none; margin-top: 8px; padding: 8px 0; }
-        .suggestion-item { padding: 14px 20px; cursor: pointer; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; font-weight: 500; transition: background-color 0.2s; }
-        .suggestion-item i { color: var(--primary); font-size: 18px; }
-        .suggestion-item:hover, .suggestion-item:active { background-color: var(--surface-hover); color: var(--primary); }
-        
-        .modal-overlay-search { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(8px); animation: fadeIn 0.3s ease;}
-        .modal-content-search { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); max-width: 90%; width: 420px; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: var(--shadow-lg); border: 1px solid var(--border-color); }
-        .tipo-toggle-container { display: flex; gap: 12px; margin-bottom: 24px; margin-top: 10px; }
-        .btn-tipo { flex: 1; padding: 16px; border: 2px solid var(--border-color); background: var(--surface); color: var(--text-muted); font-size: 15px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;}
-        .btn-tipo.active { border-color: var(--primary); background: var(--primary); color: white; box-shadow: 0 4px 12px var(--primary-glow); }
-        #sc-rest-form { opacity: 0.4; pointer-events: none; transition: opacity 0.3s ease; filter: grayscale(1); }
-        #sc-rest-form.unlocked { opacity: 1; pointer-events: auto; filter: grayscale(0); }
-        .sc-form-group { margin-bottom: 20px; display: flex; flex-direction: column; }
-        .sc-form-group label { font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; text-align: left; text-transform: uppercase; letter-spacing: 0.5px;}
-        .sc-form-group input, .sc-form-group select { width: 100%; padding: 16px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 16px; font-family: inherit; background: var(--surface); color: var(--text-main); transition: all 0.2s; }
-        .sc-form-group input:focus, .sc-form-group select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-glow); }
-        .risultato-box { background: var(--surface-hover); border-left: 4px solid var(--primary); padding: 20px; margin-top: 24px; font-size: 15px; line-height: 1.6; border-radius: 0 var(--radius-md) var(--radius-md) 0; text-align: left; color: var(--text-main); border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); animation: fadeInUp 0.4s ease; box-shadow: var(--shadow-sm); }
-        #sc-suggestions { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border-color); border-radius: 0 0 var(--radius-md) var(--radius-md); max-height: 160px; overflow-y: auto; z-index: 10; box-shadow: var(--shadow-md); margin-top: -4px; border-top: none; }
-        .sc-suggestion-item { padding: 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; font-size: 16px; font-weight: 600; text-align: left; color: var(--text-main); }
-        .sc-suggestion-item:last-child { border-bottom: none; }
-        .sc-suggestion-item:hover, .sc-suggestion-item:active { background-color: var(--surface-hover); color: var(--primary); padding-left: 20px; transition: padding 0.2s;}
-        
-        .status-message { text-align: center; color: var(--text-muted); font-size: 15px; padding: 24px; background: var(--surface); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 10px;}
     </style>
 </head>
 <body>
 
-    <div id="sidebar-overlay" class="sidebar-overlay" onclick="window.chiudiMenuLaterale()"></div>
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale()"></div>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <h3><i class="fa-solid fa-layer-group"></i> Menu</h3>
-            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="window.chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
+            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         
         <a href="index.html" class="sidebar-link" style="background-color: var(--primary-glow); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary);"><i class="fa-solid fa-house" style="color: var(--primary);"></i> Home Page</a>
@@ -304,10 +357,7 @@
         <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
         <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
         <a href="rotazioni.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
-        
-        <!-- LINK MENU AGGIORNATO PER APRIRE LA MODALE TURNI -->
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleTurni(); return false;" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
-        
+        <a href="#" onclick="window.apriModaleTurni(); window.chiudiMenuLaterale(); return false;" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
         <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
         <a href="barcadvisor.html" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
         <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
@@ -321,7 +371,7 @@
         <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
         <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
         <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.apriMainModaleSegnalazioni(); return false;" class="sidebar-link"><i class="fa-solid fa-headset"></i> Segnalazioni</a>
+        <a href="#" onclick="window.apriMainModaleSegnalazioni(); window.chiudiMenuLaterale(); return false;" class="sidebar-link"><i class="fa-solid fa-headset"></i> Segnalazioni</a>
         <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
         
         <a href="admin.html" class="sidebar-link" id="menu-admin" style="display:none; color: var(--danger); font-weight: bold;"><i class="fa-solid fa-lock" style="color: var(--danger);"></i> Admin</a>
@@ -353,9 +403,9 @@
             <p style="color: var(--text-muted); font-size: 16px; line-height: 1.6; margin-bottom: 40px;">
                 Questa è un app non ufficiale gestita da un collega.<br>Accedi o registrati per continuare.
             </p>
-            <button class="btn-action" style="padding: 18px;" onclick="window.apriModal('authModal', 'login')"><i class="fa-solid fa-right-to-bracket"></i> Accedi</button>
+            <button class="btn-action" style="padding: 18px;" onclick="apriModal('authModal', 'login')"><i class="fa-solid fa-right-to-bracket"></i> Accedi</button>
             <div style="margin-top: 25px;">
-                <a href="#" onclick="window.apriModal('authModal', 'register'); return false;" style="font-size: 15px; color: var(--primary); font-weight: 600; text-decoration: none;">Non sei registrato? Registrati qui</a>
+                <a href="#" onclick="apriModal('authModal', 'register'); return false;" style="font-size: 15px; color: var(--primary); font-weight: 600; text-decoration: none;">Non sei registrato? Registrati qui</a>
             </div>
         </div>
     </div>
@@ -365,22 +415,22 @@
             <i class="fa-solid fa-ban" style="font-size: 48px; color: var(--danger); margin-bottom: 16px;"></i>
             <h3 style="color: var(--danger); margin-top: 0; font-weight: 700;">Accesso Revocato</h3>
             <p style="color: var(--text-main); font-size: 15px; margin-bottom: 24px;">Sei stato escluso da questa applicazione da un Amministratore.</p>
-            <button class="btn-action btn-danger" style="width: auto; padding: 12px 24px; margin: 0 auto;" onclick="window.logout()"><i class="fa-solid fa-right-from-bracket"></i> Esci dall'Account</button>
+            <button class="btn-action btn-danger" style="width: auto; padding: 12px 24px; margin: 0 auto;" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Esci dall'Account</button>
         </div>
     </div>
 
     <div id="view-app" style="display: none;">
         <div class="header">
             <div class="header-side">
-                <button id="btnOpenLogin" class="btn-header-alt" style="display:none; color: var(--danger); border-color: var(--danger);" onclick="window.apriModal('authModal', 'login')"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
-                <button id="btnOpenProfile" class="btn-header-alt" onclick="window.apriModal('profileModal')"><i class="fa-solid fa-user-astronaut"></i> Profilo</button>
+                <button id="btnOpenLogin" class="btn-header-alt" style="display:none; color: var(--danger); border-color: var(--danger);" onclick="apriModal('authModal', 'login')"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
+                <button id="btnOpenProfile" class="btn-header-alt" onclick="apriModal('profileModal')"><i class="fa-solid fa-user-astronaut"></i> Profilo</button>
             </div>
             <div class="header-center">
                 <h2 id="main-title"><img src="icon-512.png" alt="U">tility</h2>
             </div>
             <div class="header-side right">
                 <button id="install-btn"><i class="fa-solid fa-download"></i> Installa</button>
-                <div id="icona-bacheca" style="position: relative; cursor: pointer; margin-left: 10px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--surface); border-radius: 50%; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); transition: all 0.2s;" onclick="window.apriBachecaUtility()">
+                <div id="icona-bacheca" style="position: relative; cursor: pointer; margin-left: 10px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--surface); border-radius: 50%; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); transition: all 0.2s;" onclick="apriBachecaUtility()">
                     <i class="fa-solid fa-bullhorn" style="font-size: 18px; color: var(--primary);"></i>
                     <div id="badge-messaggi" class="badge-notif" style="display: none;">0</div>
                 </div>
@@ -388,11 +438,11 @@
         </div>
 
         <div class="scroll-area">
-            <div id="banner-nuovo-messaggio" class="banner-alert banner-yellow" style="display: none;" onclick="window.apriBachecaUtility()">
+            <div id="banner-nuovo-messaggio" class="banner-alert banner-yellow" style="display: none;" onclick="apriBachecaUtility()">
                 <i class="fa-solid fa-bell fa-shake"></i> Nuovo avviso in Bacheca Utility!
             </div>
 
-            <div id="banner-dds-alert" class="banner-alert banner-red" style="display: none;" onclick="window.apriBachecaUtility()">
+            <div id="banner-dds-alert" class="banner-alert banner-red" style="display: none;" onclick="apriBachecaUtility()">
                 <i class="fa-solid fa-triangle-exclamation"></i> Nuova DDS: <span id="titolo-dds-text"></span>
             </div>
 
@@ -405,15 +455,13 @@
             </div>
 
             <div id="app-container" class="app-grid"></div>
-            <button id="btn-salva-layout" class="btn-action" style="display: none; background: #ff9800; color: white; margin-top: 30px; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4); width:100%; max-width:440px;" onclick="window.LayoutEngine.toggleEditMode()"><i class="fa-solid fa-check"></i> Fatto (Salva Layout)</button>
+            <button id="btn-salva-layout" class="btn-action" style="display: none; background: #ff9800; color: white; margin-top: 30px; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4); width:100%; max-width:440px;" onclick="LayoutEngine.toggleEditMode()"><i class="fa-solid fa-check"></i> Fatto (Salva Layout)</button>
         </div>
     </div> 
 
-    <!-- Tutte le modali base (Settings, App, Profilo, Auth, Gestione Accessi) -->
-    
-    <div id="settingsModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'settingsModal')">
+    <div id="settingsModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'settingsModal')">
         <div class="modal-content">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('settingsModal')"></i>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="chiudiModal('settingsModal')"></i>
             <h3 style="margin-top: 0; color: var(--text-main); font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-gear" style="color: var(--primary);"></i> Impostazioni</h3>
 
             <div id="native-notifications-center" style="display: none; margin-top: 20px; margin-bottom: 20px; padding: 20px; background: var(--surface-hover); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
@@ -471,7 +519,7 @@
             <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; margin-top: 15px; display:block;">Colore Base App:</label>
             <div class="color-picker-row"><label>Sfondo Icone</label><input type="color" id="set-appbg"></div>
 
-            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Visualizzazione:</label>
+            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; margin-top: 15px; display:block;">Visualizzazione:</label>
             <select id="set-viewmode" class="input-field" style="cursor:pointer;">
                 <option value="grid">Griglia app</option>
                 <option value="list">Lista</option>
@@ -493,18 +541,18 @@
             <input type="range" id="set-labelsize" min="10" max="18" step="1">
             <div style="text-align:center; font-size:11px; color:var(--text-muted); margin-bottom:20px; font-weight:500;">Regola la grandezza dei titoli sotto le icone</div>
 
-            <button class="btn-modal" style="background: #ff9800; color: white;" onclick="window.LayoutEngine.toggleEditMode(); window.chiudiModal('settingsModal');"><i class="fa-solid fa-arrows-up-down-left-right"></i> Modifica Layout</button>
-            <button class="btn-modal" style="background: #17a2b8; color: white;" onclick="window.apriModal('customAppModal'); window.chiudiModal('settingsModal');"><i class="fa-solid fa-plus"></i> Aggiungi App Personalizzata</button>
+            <button class="btn-modal" style="background: #ff9800; color: white;" onclick="LayoutEngine.toggleEditMode(); chiudiModal('settingsModal');"><i class="fa-solid fa-arrows-up-down-left-right"></i> Modifica Layout</button>
+            <button class="btn-modal" style="background: #17a2b8; color: white;" onclick="apriModal('customAppModal'); chiudiModal('settingsModal');"><i class="fa-solid fa-plus"></i> Aggiungi App Personalizzata</button>
             
             <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 24px 0;">
-            <button class="btn-modal" style="background: var(--success); color: white;" onclick="window.LayoutEngine.salvaPreferenzeGlobali()"><i class="fa-solid fa-floppy-disk"></i> Salva Impostazioni</button>
-            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger);" onclick="window.LayoutEngine.ripristinaPredefiniti()"><i class="fa-solid fa-rotate-left"></i> Ripristina Predefiniti</button>
+            <button class="btn-modal" style="background: var(--success); color: white;" onclick="LayoutEngine.salvaPreferenzeGlobali()"><i class="fa-solid fa-floppy-disk"></i> Salva Impostazioni</button>
+            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger);" onclick="LayoutEngine.ripristinaPredefiniti()"><i class="fa-solid fa-rotate-left"></i> Ripristina Predefiniti</button>
         </div>
     </div>
 
-    <div id="editAppModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'editAppModal')">
+    <div id="editAppModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'editAppModal')">
         <div class="modal-content">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="window.chiudiModal('editAppModal')"></i>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModal('editAppModal')"></i>
             <h3 style="text-align: center; color: var(--text-main); margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px;"><i class="fa-solid fa-pen-to-square" style="color:var(--primary);"></i> Modifica App</h3>
             <input type="hidden" id="edit-app-id">
             
@@ -515,25 +563,25 @@
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <input type="text" id="edit-app-icon" class="input-field" style="margin-bottom:0;" placeholder="es. fa-solid fa-star">
                 <button class="btn-modal" style="margin:0; background:var(--surface-hover); color:var(--text-main); border:1px solid var(--border-color); width:auto; padding:0 20px; font-size:20px;" onclick="document.getElementById('edit-upload').click()"><i class="fa-regular fa-image"></i></button>
-                <input type="file" id="edit-upload" accept="image/*" style="display:none;" onchange="window.LayoutEngine.handleImageUpload(event, 'edit')">
+                <input type="file" id="edit-upload" accept="image/*" style="display:none;" onchange="LayoutEngine.handleImageUpload(event, 'edit')">
             </div>
             
             <div id="edit-app-img-preview" style="display:none; text-align:center; margin-bottom:20px; background:var(--surface-hover); padding:15px; border-radius:12px; border:1px solid var(--border-color);">
                 <img id="edit-app-img-preview-src" src="" style="width:60px; height:60px; border-radius:14px; object-fit:cover; vertical-align:middle; box-shadow:var(--shadow-sm);">
-                <button class="btn-modal" style="background:var(--danger); color:white; width:auto; padding:8px 16px; margin-left:15px; display:inline-flex; align-items:center; gap:6px; font-size:13px;" onclick="window.LayoutEngine.rimuoviImmagine('edit')"><i class="fa-solid fa-trash"></i> Rimuovi Foto</button>
+                <button class="btn-modal" style="background:var(--danger); color:white; width:auto; padding:8px 16px; margin-left:15px; display:inline-flex; align-items:center; gap:6px; font-size:13px;" onclick="LayoutEngine.rimuoviImmagine('edit')"><i class="fa-solid fa-trash"></i> Rimuovi Foto</button>
             </div>
             <input type="hidden" id="edit-app-img-data">
 
             <div class="color-picker-row"><label>Colore Specifico</label><input type="color" id="edit-app-color"></div>
             
-            <button class="btn-modal" style="background: var(--success); color: white; margin-top:20px;" onclick="window.LayoutEngine.salvaModificaSingolaApp()"><i class="fa-solid fa-check"></i> Conferma</button>
-            <button id="btn-elimina-custom" class="btn-modal" style="background: transparent; color: var(--danger); border: 2px dashed var(--danger); display: none;" onclick="window.LayoutEngine.eliminaAppCorrente()"><i class="fa-solid fa-trash-can"></i> Elimina App</button>
+            <button class="btn-modal" style="background: var(--success); color: white; margin-top:20px;" onclick="LayoutEngine.salvaModificaSingolaApp()"><i class="fa-solid fa-check"></i> Conferma</button>
+            <button id="btn-elimina-custom" class="btn-modal" style="background: transparent; color: var(--danger); border: 2px dashed var(--danger); display: none;" onclick="LayoutEngine.eliminaAppCorrente()"><i class="fa-solid fa-trash-can"></i> Elimina App</button>
         </div>
     </div>
 
-    <div id="customAppModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'customAppModal')">
+    <div id="customAppModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'customAppModal')">
         <div class="modal-content">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="window.chiudiModal('customAppModal')"></i>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModal('customAppModal')"></i>
             <h3 style="text-align: center; color: var(--text-main); margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px;"><i class="fa-solid fa-plus" style="color:var(--success);"></i> Nuova App</h3>
             
             <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">NOME APP</label>
@@ -546,22 +594,22 @@
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <input type="text" id="new-app-icon" class="input-field" style="margin-bottom:0;" placeholder="es. fa-solid fa-globe">
                 <button class="btn-modal" style="margin:0; background:var(--surface-hover); color:var(--text-main); border:1px solid var(--border-color); width:auto; padding:0 20px; font-size:20px;" onclick="document.getElementById('new-upload').click()"><i class="fa-regular fa-image"></i></button>
-                <input type="file" id="new-upload" accept="image/*" style="display:none;" onchange="window.LayoutEngine.handleImageUpload(event, 'new')">
+                <input type="file" id="new-upload" accept="image/*" style="display:none;" onchange="LayoutEngine.handleImageUpload(event, 'new')">
             </div>
 
             <div id="new-app-img-preview" style="display:none; text-align:center; margin-bottom:20px; background:var(--surface-hover); padding:15px; border-radius:12px; border:1px solid var(--border-color);">
                 <img id="new-app-img-preview-src" src="" style="width:60px; height:60px; border-radius:14px; object-fit:cover; vertical-align:middle; box-shadow:var(--shadow-sm);">
-                <button class="btn-modal" style="background:var(--danger); color:white; width:auto; padding:8px 16px; margin-left:15px; display:inline-flex; align-items:center; gap:6px; font-size:13px;" onclick="window.LayoutEngine.rimuoviImmagine('new')"><i class="fa-solid fa-trash"></i> Rimuovi Foto</button>
+                <button class="btn-modal" style="background:var(--danger); color:white; width:auto; padding:8px 16px; margin-left:15px; display:inline-flex; align-items:center; gap:6px; font-size:13px;" onclick="LayoutEngine.rimuoviImmagine('new')"><i class="fa-solid fa-trash"></i> Rimuovi Foto</button>
             </div>
             <input type="hidden" id="new-app-img-data">
 
-            <button class="btn-modal" style="background: var(--success); color: white; margin-top:20px;" onclick="window.LayoutEngine.creaAppPersonalizzata()"><i class="fa-solid fa-plus"></i> Crea App</button>
+            <button class="btn-modal" style="background: var(--success); color: white; margin-top:20px;" onclick="LayoutEngine.creaAppPersonalizzata()"><i class="fa-solid fa-plus"></i> Crea App</button>
         </div>
     </div>
 
-    <div id="profileModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'profileModal')">
+    <div id="profileModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'profileModal')">
         <div class="modal-content" style="text-align: left;">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="window.chiudiModal('profileModal')"></i>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModal('profileModal')"></i>
             <h3 style="text-align: center; color: var(--text-main); margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-id-badge" style="color:var(--primary);"></i> Il tuo Profilo</h3>
             
             <div id="adminBadge" style="display:none; text-align:center; background:var(--danger); color:white; padding:8px; border-radius:8px; margin-bottom:20px; font-weight:700; font-size: 13px; letter-spacing:1px;"><i class="fa-solid fa-shield-halved"></i> AMMINISTRATORE</div>
@@ -616,12 +664,12 @@
 
             <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 24px 0;">
             
-            <button class="btn-modal" style="background: var(--success); color: white;" onclick="window.salvaProfilo()"><i class="fa-solid fa-floppy-disk"></i> Salva Modifiche</button>
-            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 12px;" onclick="window.logout()"><i class="fa-solid fa-right-from-bracket"></i> Esci dall'Account</button>
+            <button class="btn-modal" style="background: var(--success); color: white;" onclick="salvaProfilo()"><i class="fa-solid fa-floppy-disk"></i> Salva Modifiche</button>
+            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 12px;" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Esci dall'Account</button>
         </div>
     </div>
 
-    <div id="authModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'authModal')">
+    <div id="authModal" class="modal-overlay" onclick="chiudiSuSfondo(event, 'authModal')">
         <div class="modal-content" style="text-align: center; padding:40px 32px;">
             <h2 id="authModalTitle" style="color:var(--primary); font-weight:800; margin-top:0; margin-bottom:24px; display:flex; align-items:center; justify-content:center; gap:10px;"><i class="fa-solid fa-cloud"></i> Accedi</h2>
             
@@ -636,7 +684,7 @@
             </div>
             
             <div id="forgotPasswordLink" style="margin-bottom: 20px; text-align: right;">
-                <a href="#" onclick="window.recuperaPassword(); return false;" style="font-size: 13px; color: var(--primary); font-weight:600; text-decoration:none;">Password dimenticata?</a>
+                <a href="#" onclick="recuperaPassword(); return false;" style="font-size: 13px; color: var(--primary); font-weight:600; text-decoration:none;">Password dimenticata?</a>
             </div>
 
             <div id="registerFields" style="display: none; text-align: left;">
@@ -660,10 +708,10 @@
             
             <div id="authError" style="color: var(--danger); background: var(--danger-light); padding:10px; border-radius:8px; border:1px solid var(--danger-border); display: none; margin-bottom: 15px; font-size:13px; font-weight:600;"></div>
             
-            <button id="btnEseguiAuth" class="btn-action" style="background: var(--primary); margin-top:0;" onclick="window.eseguiAuth()"><i class="fa-solid fa-right-to-bracket"></i> Accedi</button>
+            <button id="btnEseguiAuth" class="btn-action" style="background: var(--primary); margin-top:0;" onclick="eseguiAuth()"><i class="fa-solid fa-right-to-bracket"></i> Accedi</button>
             
             <div style="margin-top: 20px;">
-                <a href="#" id="authSwitchLink" onclick="window.switchAuthMode(); return false;" style="font-size: 14px; color: var(--text-muted); font-weight:600; text-decoration:underline;">Non hai un account? Registrati qui</a>
+                <a href="#" id="authSwitchLink" onclick="switchAuthMode(); return false;" style="font-size: 14px; color: var(--text-muted); font-weight:600; text-decoration:underline;">Non hai un account? Registrati qui</a>
             </div>
             
             <div style="display:flex; align-items:center; gap:15px; margin:24px 0;">
@@ -672,7 +720,7 @@
                 <div style="flex:1; height:1px; background:var(--border-color);"></div>
             </div>
             
-            <button class="btn-modal" style="background: white; color: #333; border: 1px solid #ddd; box-shadow: var(--shadow-sm);" onclick="window.loginGoogle()">
+            <button class="btn-modal" style="background: white; color: #333; border: 1px solid #ddd; box-shadow: var(--shadow-sm);" onclick="loginGoogle()">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px; height:18px;"> Accedi con Google
             </button>
         </div>
@@ -699,13 +747,13 @@
                 <input type="text" id="obbl-prog" placeholder=" " class="input-field">
                 <label>Numero Omonimia es. 02 (facoltativo)</label>
             </div>
-            <button class="btn-action" style="margin-top:10px;" onclick="window.salvaDatiObbligatori()"><i class="fa-solid fa-check"></i> Salva e Continua</button>
+            <button class="btn-action" style="margin-top:10px;" onclick="salvaDatiObbligatori()"><i class="fa-solid fa-check"></i> Salva e Continua</button>
         </div>
     </div>
 
-    <div id="modal-gestione" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-gestione')">
+    <div id="modal-gestione" class="modal-overlay" onclick="chiudiSuSfondo(event, 'modal-gestione')">
         <div class="modal-content" style="max-width: 440px;">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="window.chiudiModal('modal-gestione')"></i>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModal('modal-gestione')"></i>
             <h3 style="color: var(--text-main); margin-top: 0; font-weight:700; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-users-gear" style="color:var(--primary);"></i> Utenti App</h3>
             
             <div style="display: flex; gap: 12px; margin-bottom: 20px;">
@@ -716,9 +764,9 @@
             <div style="display: flex; gap: 10px; margin-bottom: 16px;">
                 <div style="position:relative; flex:1;">
                     <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted);"></i>
-                    <input type="text" id="search-utenti-app" placeholder="Cerca collega..." style="margin: 0; width:100%; padding: 12px 12px 12px 36px; font-size: 14px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; background: var(--surface); color:var(--text-main); outline:none;" onkeyup="window.filtraUtentiApp()">
+                    <input type="text" id="search-utenti-app" placeholder="Cerca collega..." style="margin: 0; width:100%; padding: 12px 12px 12px 36px; font-size: 14px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; background: var(--surface); color:var(--text-main); outline:none;" onkeyup="filtraUtentiApp()">
                 </div>
-                <select id="sort-utenti-app" style="padding: 12px; font-size: 13px; margin: 0; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; background: var(--surface); color:var(--text-main); cursor:pointer; outline:none;" onchange="window.renderGestioneAccessi()">
+                <select id="sort-utenti-app" style="padding: 12px; font-size: 13px; margin: 0; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; background: var(--surface); color:var(--text-main); cursor:pointer; outline:none;" onchange="renderGestioneAccessi()">
                     <option value="recente">Recenti prima</option>
                     <option value="alfabetico">Alfabetico</option>
                 </select>
@@ -728,140 +776,107 @@
         </div>
     </div>
 
-    <div id="modal-dettaglio-utente" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-dettaglio-utente')">
+    <div id="modal-dettaglio-utente" class="modal-overlay" onclick="chiudiSuSfondo(event, 'modal-dettaglio-utente')">
         <div class="modal-content" style="max-width: 380px;">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="window.chiudiModal('modal-dettaglio-utente')"></i>
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="chiudiModal('modal-dettaglio-utente')"></i>
             <h3 style="margin-top: 0; color: var(--text-main); font-weight:700; text-align: center; border-bottom:1px solid var(--border-color); padding-bottom:15px;"><i class="fa-regular fa-address-card" style="color:var(--primary);"></i> Dettaglio Utente</h3>
             
             <div id="dettaglio-utente-body" style="font-size: 14px; line-height: 1.6; background: var(--surface-hover); padding: 20px; border-radius: 14px; border: 1px solid var(--border-color); margin-bottom: 20px; color:var(--text-main);">
             </div>
             
-            <button id="btn-rendi-collab" class="btn-modal" style="background: #6f42c1; color: white; margin-bottom:10px;" onclick="window.cambiaRuoloUtente()"><i class="fa-solid fa-user-shield"></i> Rendi Collaboratore</button>
-            <button class="btn-modal" style="background: transparent; color: var(--text-muted); border: 2px solid var(--border-color);" onclick="window.chiudiModal('modal-dettaglio-utente')">Chiudi</button>
+            <button id="btn-rendi-collab" class="btn-modal" style="background: #6f42c1; color: white; margin-bottom:10px;" onclick="cambiaRuoloUtente()"><i class="fa-solid fa-user-shield"></i> Rendi Collaboratore</button>
+            <button class="btn-modal" style="background: transparent; color: var(--text-muted); border: 2px solid var(--border-color);" onclick="chiudiModal('modal-dettaglio-utente')">Chiudi</button>
         </div>
     </div>
 
-    <!-- MODALI SEGNALAZIONI -->
-    <div id="modal-segnalazioni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-segnalazioni-main')">
-        <div class="modal-content" style="max-width: 460px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-segnalazioni-main')"></i>
-            <h3 style="margin-top: 0; color: var(--info); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-headset"></i> Segnalazioni</h3>
-            <div style="flex: 1; overflow-y: auto; padding-right: 5px;">
-                <button style="background-color: var(--info); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; box-shadow: 0 4px 12px rgba(0, 136, 255, 0.3); width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; transition: all 0.2s; margin-bottom: 15px;" onclick="window.apriModaleNuovaSegnalazione()"><i class="fa-solid fa-paper-plane"></i> Nuova Segnalazione</button>
-                <button id="btn-cronologia-admin" style="display: none; background-color: var(--surface); color: var(--text-main); border: 2px solid var(--border-color); padding: 14px; font-size: 14px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; justify-content: center; align-items: center; gap: 10px; transition: all 0.2s; margin-bottom: 15px;" onclick="window.toggleVistaAdminSegnalazioni()"><i class="fa-solid fa-clock-rotate-left"></i> Mostra Cronologia Risposte</button>
-                <div id="reports-list"></div>
-            </div>
-            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 15px;" onclick="window.chiudiModal('modal-segnalazioni-main')"><i class="fa-solid fa-xmark"></i> Chiudi Finestra</button>
-        </div>
-    </div>
+    <!-- ========================================== -->
+    <!-- MODALI AGGIUNTIVE (TURNI E SEGNALAZIONI)   -->
+    <!-- ========================================== -->
 
-    <div id="modal-nuova-segnalazione" class="modal-overlay" style="z-index: 7500;">
-        <div class="modal-content">
-            <h3 style="margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px; text-align:center;"><i class="fa-solid fa-paper-plane" style="color:var(--info);"></i> Invia Segnalazione</h3>
-            <div class="float-wrapper">
-                <textarea id="rep-messaggio" rows="4" class="input-field" placeholder=" " style="resize: vertical;"></textarea>
-                <label style="top: 20px;">Messaggio / Problema</label>
-            </div>
-            <div class="float-wrapper">
-                <input type="url" id="rep-link" class="input-field" placeholder=" ">
-                <label>Link Allegato (Facoltativo)</label>
-            </div>
-            <button id="btn-salva-rep" class="btn-action" style="background-color: var(--info);" onclick="window.inviaSegnalazione()"><i class="fa-solid fa-paper-plane"></i> Invia ora</button>
-            <button class="btn-modal" style="background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color);" onclick="window.chiudiModaleNuovaSegnalazione()">Annulla</button>
-        </div>
-    </div>
-
-    <div id="modal-risposta-segnalazione" class="modal-overlay" style="z-index: 7500;">
-        <div class="modal-content">
-            <h3 style="margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px; text-align:center;"><i class="fa-solid fa-reply" style="color:var(--success);"></i> Rispondi</h3>
-            <input type="hidden" id="admin-rep-id">
-            <div class="float-wrapper">
-                <textarea id="admin-rep-messaggio" rows="4" class="input-field" placeholder=" " style="resize: vertical;"></textarea>
-                <label style="top: 20px;">Risposta</label>
-            </div>
-            <div class="float-wrapper">
-                <input type="url" id="admin-rep-link" class="input-field" placeholder=" ">
-                <label>Link Allegato (Facoltativo)</label>
-            </div>
-            <button id="btn-invia-risposta" class="btn-action" style="background:var(--success);" onclick="window.inviaRispostaAdmin()"><i class="fa-solid fa-reply"></i> Invia Risposta</button>
-            <button class="btn-modal" style="background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color);" onclick="window.chiudiModaleRispostaSegnalazione()">Annulla</button>
-        </div>
-    </div>
-
-    <!-- ========================================================== -->
-    <!-- MODALE TURNI (Ora identica al layout originale) -->
-    <!-- ========================================================== -->
-    <div id="modal-turni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-turni-main')">
-        <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-turni-main')"></i>
+    <!-- Modale Principale dei Turni -->
+    <div id="modal-turni-main" class="modal-overlay" onclick="chiudiSuSfondo(event, 'modal-turni-main')">
+        <div class="modal-content" style="max-width: 600px; height: 90vh; display: flex; flex-direction: column; padding: 24px;">
+            <!-- X in alto a destra standardizzata -->
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s; z-index: 10;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-turni-main')"></i>
             
-            <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
-                <i class="fa-solid fa-rotate"></i> Consultazione Turni
-            </h3>
-
-            <!-- Area scorrevole interna dove turni.js inietterà i bottoni (Identico a "content-area" originale) -->
-            <div id="content-area" style="flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 16px;">
-                <!-- turni.js riempirà questo div con le cartelle o la barra di ricerca -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Modale Cerca Corse (Identica all'originale) -->
-    <div id="searchCorseModal" class="modal-overlay-search" onclick="window.chiudiSeSfondoSearch(event)">
-        <div class="modal-content-search">
-            <i class="fa-solid fa-xmark close-modal" onclick="window.chiudiSearchCorseModal()"></i>
-            <h3 style="margin-top:0; color:var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 20px; font-weight: 700; display:flex; align-items:center; gap:10px;">
-                <i class="fa-solid fa-route" style="color: var(--primary);"></i> Cerca Corsa
+            <h3 style="margin-top: 0; color: var(--text-main); font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-rotate" style="color: var(--primary);"></i> Turni Navigazione
             </h3>
             
-            <div id="sc-status" class="status-message" style="padding: 20px; font-size:14px; display:none; margin-top: 20px;">
-                <i class="fa-solid fa-spinner fa-spin" style="color:var(--primary);"></i> Caricamento dati in corso...
+            <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center; position:relative;">
+                <div style="position:relative; flex:1;">
+                    <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted);"></i>
+                    <input type="text" id="shiftSearch" placeholder="Cerca turno (es. 101, T50)..." style="margin: 0; width:100%; padding: 14px 14px 14px 40px; font-size: 15px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; background: var(--surface-hover); color:var(--text-main); outline:none; transition: var(--transition);" onkeyup="if(window.filtraSuggerimentiTurni) window.filtraSuggerimentiTurni()" onfocus="if(window.filtraSuggerimentiTurni) window.filtraSuggerimentiTurni()" autocomplete="off">
+                    <div id="suggestionsBox" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--surface); border:1px solid var(--border-color); border-radius:var(--radius-md); max-height:200px; overflow-y:auto; z-index:100; box-shadow:var(--shadow-md); margin-top:8px;"></div>
+                </div>
+                <!-- Pulsante apre la modale Ricerca Corsa -->
+                <button class="btn-action" style="width:auto; margin:0; padding:14px 20px; border-radius: var(--radius-md);" onclick="window.apriModal('modal-ricerca-corsa')"><i class="fa-solid fa-route"></i></button>
             </div>
             
-            <div id="sc-form" style="display:none; margin-top: 24px;">
-                <div class="tipo-toggle-container">
-                    <button id="btn-partenza" class="btn-tipo" onclick="window.selezionaTipo('partenza')"><i class="fa-solid fa-plane-departure"></i> Partenza</button>
-                    <button id="btn-arrivo" class="btn-tipo" onclick="window.selezionaTipo('arrivo')"><i class="fa-solid fa-plane-arrival"></i> Arrivo</button>
-                </div>
-                <input type="hidden" id="sc-tipo" value="">
-
-                <div id="sc-rest-form">
-                    <div class="sc-form-group">
-                        <label id="label-luogo">Luogo:</label>
-                        <select id="sc-luogo" onchange="window.aggiornaSuggerimentiOrario()"></select>
-                    </div>
-                    <div class="sc-form-group">
-                        <label>Giorno (Opz. per rotazioni):</label>
-                        <input type="date" id="sc-giorno">
-                    </div>
-                    <div class="sc-form-group" style="position: relative;">
-                        <label id="label-orario">Orario:</label>
-                        <input type="text" id="sc-orario" inputmode="numeric" placeholder="es. 07.30" oninput="window.formattaOrario(event)" autocomplete="off">
-                        <div id="sc-suggestions"></div>
-                    </div>
-                    <button class="btn-action" style="margin-top: 10px;" onclick="window.eseguiRicercaCorsa()"><i class="fa-solid fa-magnifying-glass"></i> Trova Turno</button>
-                </div>
-
-                <div id="sc-risultato" class="risultato-box" style="display:none;"></div>
+            <div id="turni-content-area" style="flex:1; overflow-y:auto; padding-right:5px; margin-top:10px;">
+                <div style='text-align:center; padding:20px; color:var(--text-muted);'><i class='fa-solid fa-spinner fa-spin' style='color:var(--primary); font-size:24px;'></i><br><br>Caricamento dati turni...</div>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT CHE GESTISCE TUTTA LA LOGICA -->
-    <script type="module" src="./moduli/index.js"></script>
+    <!-- Modale Ricerca Corsa -->
+    <div id="modal-ricerca-corsa" class="modal-overlay" onclick="chiudiSuSfondo(event, 'modal-ricerca-corsa')">
+        <div class="modal-content" style="max-width: 440px;">
+            <!-- ECCO LA X SPOSTATA IN ALTO A DESTRA -->
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s; z-index: 10;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-ricerca-corsa')"></i>
+            
+            <h3 style="margin-top: 0; color: var(--text-main); font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-route" style="color: var(--primary);"></i> Ricerca Corsa
+            </h3>
+            
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <button class="btn-action" style="flex:1; margin:0; background:var(--primary);" onclick="if(window.selezionaTipoRicerca) window.selezionaTipoRicerca('partenza')"><i class="fa-solid fa-plane-departure"></i> Partenza</button>
+                <button class="btn-action" style="flex:1; margin:0; background:var(--success);" onclick="if(window.selezionaTipoRicerca) window.selezionaTipoRicerca('arrivo')"><i class="fa-solid fa-plane-arrival"></i> Arrivo</button>
+            </div>
+            <input type="hidden" id="sc-tipo" value="">
 
-    <script>
-        // Questa funzione ora chiama semplicemente l'avvio importato dal tuo modulo index.js
-        window.apriModaleTurni = () => {
-            const modale = document.getElementById('modal-turni-main');
-            if (modale) {
-                modale.style.display = 'flex';
-                // L'import e il richiamo della funzione devono essere nel tuo moduli/index.js
-                if(window.avviaMotoreTurniDaIndex) {
-                    window.avviaMotoreTurniDaIndex();
-                }
-            }
-        };
-    </script>
+            <div id="sc-rest-form" style="display:none;">
+                <div class="float-wrapper">
+                    <select id="sc-luogo" class="input-field" style="cursor: pointer;" onchange="if(window.aggiornaSuggerimentiOrario) window.aggiornaSuggerimentiOrario()"></select>
+                    <!-- Label fissa in alto per il select -->
+                    <label id="label-luogo" style="top:12px; font-size:11px; color:var(--primary); font-weight:700;">Luogo:</label>
+                </div>
+                <div class="float-wrapper">
+                    <input type="date" id="sc-giorno" class="input-field" placeholder=" ">
+                    <label>Giorno (Opzionale per rotazioni)</label>
+                </div>
+                <div class="float-wrapper" style="position: relative;">
+                    <input type="text" id="sc-orario" class="input-field" inputmode="numeric" placeholder=" " oninput="if(window.formattaOrario) window.formattaOrario(event)" autocomplete="off">
+                    <label id="label-orario">Orario (es. 07.30)</label>
+                    <div id="sc-suggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--surface); border:1px solid var(--border-color); border-radius:var(--radius-md); max-height:200px; overflow-y:auto; z-index:100; box-shadow:var(--shadow-md); margin-top:4px;"></div>
+                </div>
+                <button class="btn-action" style="margin-top: 10px;" onclick="if(window.eseguiRicercaCorsa) window.eseguiRicercaCorsa()"><i class="fa-solid fa-magnifying-glass"></i> Trova Turno</button>
+            </div>
+
+            <div id="sc-risultato" class="risultato-box" style="display:none; margin-top:20px; padding:15px; background:var(--surface-hover); border-radius:var(--radius-md); border:1px solid var(--border-color);"></div>
+        </div>
+    </div>
+
+    <!-- Modale Segnalazioni -->
+    <div id="modal-segnalazioni-main" class="modal-overlay" onclick="chiudiSuSfondo(event, 'modal-segnalazioni-main')">
+        <div class="modal-content" style="max-width: 600px; height: 90vh; display: flex; flex-direction: column; padding: 24px;">
+            <!-- X in alto a destra -->
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s; z-index: 10;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-segnalazioni-main')"></i>
+            
+            <h3 style="margin-top: 0; color: var(--text-main); font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-headset" style="color: var(--primary);"></i> Segnalazioni
+            </h3>
+            
+            <div id="segnalazioni-content-area" style="flex:1; overflow-y:auto; padding-right:5px; margin-top:10px;">
+                <div style='text-align:center; padding:20px; color:var(--text-muted);'><i class='fa-solid fa-spinner fa-spin' style='color:var(--primary); font-size:24px;'></i><br><br>Caricamento segnalazioni...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCRIPT MODULARE CHE GESTISCE TUTTO         -->
+    <!-- ========================================== -->
+    <script type="module" src="index.js"></script>
+
 </body>
 </html>
