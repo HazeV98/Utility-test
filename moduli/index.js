@@ -7,6 +7,7 @@ import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/fir
 import { avviaMotoreSegnalazioni } from './report.js';
 import { avviaMotoreTurni } from './turni.js';
 import { avviaMotoreOrari } from './orari.js';
+import { avviaMotoreLink } from './link.js';
 
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -68,11 +69,11 @@ const DEFAULT_APPS = [
     { id: "barcadvisor", label: "BarcAdvisor", image: "icone_app/iconba.png", href: "barcadvisor.html" },
     { id: "rubrica", label: "Rubrica", href: "rubrica.html", defaultColor: "#343a40" },
     { id: "ferie", label: "Rotazione\nFerie", href: "rotazione_ferie.html", defaultColor: "#ffc107" },
-    // MODIFICATO QUI: Ora apre la modale orari invece della pagina html
     { id: "orari", label: "Orari\nNavigaz.", onclick: "window.apriModaleOrari()", defaultColor: "#17a2b8" },
     { id: "chebateo", label: "CheBateo", image: "icone_app/iconcb.png", href: "https://m.chebateo.it/" },
     { id: "documenti", label: "Documenti", href: "documenti.html", defaultColor: "#6c757d" },
-    { id: "link", label: "Link", href: "link.html", defaultColor: "#495057" },
+    // MODIFICATO QUI: Ora apre la modale link invece della pagina html
+    { id: "link", label: "Link", onclick: "window.apriModaleLink()", defaultColor: "#495057" },
     { id: "contatti", label: "Contatti", href: "contatti.html", defaultColor: "#2c3e50" },
     { id: "buoni", label: "Buoni\nPasto", href: "buoni.html", defaultColor: "#d63384" },
     { id: "promemoria", label: "Promemoria", href: "promemoria.html", defaultColor: "#0dcaf0" },
@@ -136,6 +137,15 @@ window.avviaMotoreTurniDaIndex = () => {
 // Funzione ponte per aprire gli Orari
 window.avviaMotoreOrariDaIndex = () => {
     avviaMotoreOrari();
+};
+
+// Funzione ponte per aprire i Link
+window.avviaMotoreLinkDaIndex = () => {
+    if (!auth.currentUser) {
+        alert("Devi effettuare il login per accedere ai link aziendali.");
+        return;
+    }
+    avviaMotoreLink();
 };
 
 window.controllaBacheca = async () => {
