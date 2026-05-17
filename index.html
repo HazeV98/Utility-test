@@ -167,7 +167,8 @@
         .app-grid .app-icon::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.4); opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 2; }
         .app-grid .app-btn:active .app-icon::before { opacity: 1; transition: 0s; }
         .app-grid .app-icon::after { display: none; }
-        .app-grid .app-label { font-size: var(--label-size); color: var(--text-main); font-weight: 600; text-align: center; line-height: 1.2; text-shadow: 0px 1px 3px rgba(255,255,255,0.8); width: 100%; word-wrap: break-word; transition: var(--transition); }
+        /* Rimosso l'effetto chiaro dietro le scritte impostando text-shadow: none */
+        .app-grid .app-label { font-size: var(--label-size); color: var(--text-main); font-weight: 600; text-align: center; line-height: 1.2; text-shadow: none; width: 100%; word-wrap: break-word; transition: var(--transition); }
 
         .app-list { display: flex; flex-direction: column; gap: 12px; padding: 10px; width: 100%; }
         .app-list .app-btn { display: flex; align-items: center; background: rgba(255,255,255,0.85); padding: 14px 20px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); text-decoration: none; position: relative; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.6); animation: slideInUpBouncy 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; width: 100%; transition: var(--transition); overflow:hidden;}
@@ -182,8 +183,9 @@
         .transparent-icons.app-grid .app-icon { font-size: 36px !important; } 
         .transparent-icons.app-list .app-icon { font-size: 26px !important; }
 
-        :root[data-theme="dark"] .app-grid .app-icon { box-shadow: 0 12px 24px -6px rgba(0,0,0,0.8), 0 4px 8px -2px rgba(0,0,0,0.5), inset 0 -6px 12px rgba(0,0,0,0.6), inset 1px 1px 3px rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.08); }
-        :root[data-theme="dark"] .app-list .app-icon { box-shadow: 0 6px 12px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4), inset 0 -4px 6px rgba(0,0,0,0.5), inset 1px 1px 2px rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.08); }
+        /* Aumentato l'effetto 3D delle icone in modalità scura */
+        :root[data-theme="dark"] .app-grid .app-icon { box-shadow: 0 16px 32px -4px rgba(0,0,0,0.95), 0 8px 16px -4px rgba(0,0,0,0.8), inset 0 -8px 16px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.15); }
+        :root[data-theme="dark"] .app-list .app-icon { box-shadow: 0 10px 20px -2px rgba(0,0,0,0.9), 0 4px 8px -2px rgba(0,0,0,0.7), inset 0 -6px 12px rgba(0,0,0,0.7), inset 1px 1px 3px rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.12); }
         :root[data-theme="dark"] .app-grid .app-label { text-shadow: none; }
 
         @keyframes wiggle { 0% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } 100% { transform: rotate(-2deg); } }
@@ -205,6 +207,7 @@
         .btn-action { background-color: var(--success); color: white; border: none; padding: 16px; font-size: 16px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; margin-top: 10px; display:flex; justify-content:center; align-items:center; gap:8px; box-shadow: 0 8px 16px rgba(15,157,88,0.25); transition: var(--transition);}
         .btn-action:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(15,157,88,0.3); filter: brightness(1.05); }
         .btn-action:active { transform: scale(0.96) translateY(2px); box-shadow: 0 4px 8px rgba(15,157,88,0.2); }
+        .btn-info { background-color: var(--info); box-shadow: 0 4px 12px rgba(23, 162, 184, 0.2); }
         
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 7000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: fadeIn 0.3s ease; }
         .modal-content { background: var(--surface); padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 380px; text-align: left; box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.4) inset; border: 1px solid var(--border-color); position: relative; color: var(--text-main); max-height: 90vh; overflow-y: auto; animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -220,6 +223,10 @@
         
         .btn-modal { border: none; border-radius: 12px; padding: 14px; cursor: pointer; font-weight: 700; font-size: 15px; width: 100%; margin-top: 10px; display:flex; justify-content:center; align-items:center; gap:8px; transition: var(--transition);}
         .btn-modal:active { transform: scale(0.96); }
+        .btn-outline { background-color: transparent; border: 2px solid var(--primary); color: var(--primary); padding: 10px 16px; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;}
+        .btn-outline:hover { background-color: var(--primary); color: white; }
+        .btn-delete { position: absolute; top: 16px; right: 16px; background: var(--surface-hover); color: var(--danger); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+        .btn-delete:hover { background: var(--danger); color: white; border-color: var(--danger); }
         
         .color-picker-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: var(--surface-hover); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); transition: var(--transition); }
         .color-picker-row:hover { border-color: var(--primary); }
@@ -289,7 +296,7 @@
         
         .status-message { text-align: center; color: var(--text-muted); font-size: 15px; padding: 24px; background: var(--surface); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 10px;}
 
-        /* --- STILI SPECIFICI LINK & CONTATTI --- */
+        /* --- STILI SPECIFICI LINK, CONTATTI, BACHECA --- */
         .category-block { display: flex; flex-direction: column; gap: 12px; text-align: left; margin-bottom: 10px; animation: slideInUp 0.4s ease both;}
         .category-title { font-size: 13px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; margin-top: 16px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; display: flex; align-items: center; gap: 8px;}
         .link-row, .contact-row { display: flex; gap: 10px; width: 100%; align-items: stretch; }
@@ -300,6 +307,24 @@
         .copy-btn { width: 54px; background-color: var(--surface); color: var(--primary); border: 1px solid var(--border-color); border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; box-shadow: var(--shadow-sm); transition: all 0.2s; }
         .copy-btn:active { background-color: var(--surface-hover); transform: scale(0.95); border-color: var(--primary); color: white; background-color: var(--primary);}
 
+        /* Bacheca specific */
+        .card { background: var(--surface); padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); text-align: left; margin-bottom: 16px; position: relative; border-left: 4px solid var(--primary); transition: transform 0.2s; animation: fadeInUp 0.4s ease forwards;}
+        .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .card.card-dds { border-left-color: var(--danger); background-color: var(--danger-light); border: 1px solid var(--danger-border); border-left: 4px solid var(--danger);}
+        .msg-date { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; font-weight: 600; text-transform: uppercase; padding-right: 90px; min-height: 15px; display:flex; align-items:center; gap:6px;}
+        .msg-title-dds { font-size: 16px; color: var(--danger); font-weight: 700; margin-bottom: 8px; display:flex; align-items:center; gap:8px;}
+        .msg-text { font-size: 15px; line-height: 1.6; color: var(--text-main); white-space: pre-wrap; margin-bottom: 12px; }
+        .msg-link { display: inline-flex; align-items: center; gap: 8px; background: var(--surface-hover); color: var(--primary); padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); font-size: 14px; text-decoration: none; font-weight: 600; margin-top: 5px; word-break: break-all; transition: 0.2s; }
+        .msg-link:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; }
+        .checkbox-grid label { background: var(--surface); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; color: var(--text-main); font-weight: 500;}
+        .checkbox-grid input[type="checkbox"] { accent-color: var(--primary); width: 16px; height: 16px;}
+        .date-tag { display: inline-flex; align-items: center; background-color: var(--danger); color: white; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 6px; box-shadow: var(--shadow-sm);}
+        .date-tag-remove { margin-left: 8px; cursor: pointer; font-weight: bold; color: rgba(255,255,255,0.7); transition: 0.2s;}
+        .date-tag-remove:hover { color: white; transform: scale(1.2);}
+        .editor-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-align: left; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;}
+        
     </style>
 </head>
 <body>
@@ -312,6 +337,9 @@
         </div>
         
         <a href="index.html" class="sidebar-link" style="background-color: var(--primary-glow); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary);"><i class="fa-solid fa-house" style="color: var(--primary);"></i> Home Page</a>
+        
+        <a href="#" onclick="window.chiudiMenuLaterale(); window.apriBachecaUtility(); return false;" class="sidebar-link"><i class="fa-solid fa-bullhorn"></i> Bacheca Avvisi</a>
+        
         <a href="calendario.html?oggi=true" class="sidebar-link"><i class="fa-solid fa-bullseye"></i> Oggi</a>
         <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
         <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
@@ -332,7 +360,6 @@
         
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleLink(); return false;" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
         
-        <!-- LINK MENU AGGIORNATO PER APRIRE LA MODALE CONTATTI -->
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleContatti(); return false;" class="sidebar-link"><i class="fa-solid fa-id-card"></i> Contatti</a>
         
         <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
@@ -900,9 +927,7 @@
         </div>
     </div>
 
-    <!-- ========================================================== -->
-    <!-- NUOVA MODALE CONTATTI -->
-    <!-- ========================================================== -->
+    <!-- MODALE CONTATTI -->
     <div id="modal-contatti-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-contatti-main')">
         <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
             <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-contatti-main')"></i>
@@ -911,6 +936,144 @@
                 <i class="fa-solid fa-id-card"></i> Contatti
             </h3>
             <div id="contatti-content-area" style="flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 14px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- NUOVE MODALI BACHECA UTILITY -->
+    <!-- ========================================================== -->
+    <div id="modal-bacheca-utility-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-bacheca-utility-main')">
+        <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-bacheca-utility-main')"></i>
+            
+            <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-bullhorn"></i> Bacheca Avvisi
+            </h3>
+
+            <div style="flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column;">
+                <button id="btn-attiva-notifiche-bacheca" class="btn-action btn-info" style="display: none; margin-top: 0; margin-bottom: 16px;" onclick="window.attivaNotificheBacheca()"><i class="fa-solid fa-bell"></i> Attiva Notifiche Avvisi e DDS</button>
+                <button id="btn-admin-add-bacheca" class="btn-action" style="display: none; margin-top: 0; margin-bottom: 16px;" onclick="window.apriModaleNuovoAvviso()"><i class="fa-solid fa-plus"></i> Pubblica Avviso</button>
+                <div id="lista-messaggi"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-nuovo-avviso" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-nuovo-avviso')" style="z-index: 7500;">
+        <div class="modal-content">
+            <i class="fa-solid fa-xmark close-modal" onclick="document.getElementById('modal-nuovo-avviso').style.display='none'"></i>
+            <h3 style="margin-top: 0; margin-bottom: 24px; color: var(--text-main); display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-pen-to-square" style="color:var(--primary);"></i> Nuovo Avviso
+            </h3>
+            
+            <label class="editor-label">Tipo di Annuncio:</label>
+            <select id="pub-tipo" class="input-field" onchange="window.toggleCampiDDS()">
+                <option value="normale">Messaggio Normale</option>
+                <option value="dds">Avviso DDS</option>
+            </select>
+
+            <div id="area-dds" style="display: none; background: var(--danger-light); padding: 20px; border-radius: var(--radius-md); margin-bottom: 20px; border: 1px solid var(--danger-border);">
+                <label class="editor-label" style="color: var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> Titolo DDS:</label>
+                <input type="text" id="pub-titolo-dds" class="input-field" placeholder="Es. Variante Linea 1" style="background:var(--surface); border-color:var(--danger-border);">
+                
+                <label class="editor-label" style="color: var(--danger); margin-top: 16px;"><i class="fa-regular fa-calendar-check"></i> Date di Validità:</label>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <input type="text" id="pub-date-dds-display" class="input-field" placeholder="Nessuna data selezionata" readonly style="margin-bottom: 0; cursor: pointer; background:var(--surface); border-color:var(--danger-border);" onclick="window.apriDatePickerAvviso()">
+                    <button class="btn-action" style="margin-top: 0; width: auto; padding: 14px 20px; background:var(--danger); box-shadow:none;" onclick="window.apriDatePickerAvviso()"><i class="fa-regular fa-calendar"></i></button>
+                </div>
+            </div>
+
+            <label class="editor-label">Destinatari (Target):</label>
+            <select id="pub-target" class="input-field" onchange="window.toggleAreaTarget()">
+                <option value="tutti">Visibile a Tutti</option>
+                <option value="selezione">Solo Rotazioni Selezionate...</option>
+            </select>
+
+            <div id="area-target" style="display: none; margin-bottom: 20px; max-height: 250px; overflow-y: auto; background: var(--surface-hover); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                <div class="checkbox-grid">
+                    <label><input type="checkbox" class="target-check" value="rot_fnove"> Rot F.Nove</label>
+                    <label><input type="checkbox" class="target-check" value="spez_fnove"> Spez F.Nove</label>
+                    <label><input type="checkbox" class="target-check" value="tc_spez_fnove"> TC Spez F.Nove</label>
+                    <label><input type="checkbox" class="target-check" value="rot_proma"> Rot P.Roma</label>
+                    <label><input type="checkbox" class="target-check" value="spez_proma"> Spez P.Roma</label>
+                    <label><input type="checkbox" class="target-check" value="ris_proma"> Ris P.Roma</label>
+                    <label><input type="checkbox" class="target-check" value="rot_szaccaria"> Rot S.Zac</label>
+                    <label><input type="checkbox" class="target-check" value="spez_szaccaria"> Spez S.Zac</label>
+                    <label><input type="checkbox" class="target-check" value="tc_spez_szaccaria"> TC Spez S.Zac</label>
+                    <label><input type="checkbox" class="target-check" value="rot_lido"> Rot Lido</label>
+                    <label><input type="checkbox" class="target-check" value="spez_lido"> Spez Lido</label>
+                    <label><input type="checkbox" class="target-check" value="tc_spez_lido"> TC Spez Lido</label>
+                    <label><input type="checkbox" class="target-check" value="rot_linea12"> Rot Linea 12</label>
+                    <label><input type="checkbox" class="target-check" value="rot_linea13"> Rot Linea 13</label>
+                    <label><input type="checkbox" class="target-check" value="rot_linea14"> Rot Linea 14</label>
+                    <label><input type="checkbox" class="target-check" value="rot_linea14_mb"> Rot 14 M/B</label>
+                    <label><input type="checkbox" class="target-check" value="rot_17sn"> Rot 17 SN</label>
+                    <label><input type="checkbox" class="target-check" value="tc_rot_17sn"> TC Rot 17 SN</label>
+                    <label><input type="checkbox" class="target-check" value="rot_17tr"> Rot 17 TR</label>
+                    <label><input type="checkbox" class="target-check" value="tc_rot_17tr"> TC Rot 17 TR</label>
+                    <label><input type="checkbox" class="target-check" value="disp_indet"> Disponibili</label>
+                </div>
+            </div>
+
+            <label style="font-size: 15px; font-weight: 600; color: var(--primary); display: flex; align-items: center; gap: 10px; margin-top: 24px; margin-bottom: 16px; cursor:pointer;">
+                <input type="checkbox" id="pub-has-sondaggio" onchange="window.toggleSondaggio()" style="width:18px; height:18px; accent-color:var(--primary);"> <i class="fa-solid fa-chart-pie"></i> Aggiungi Sondaggio
+            </label>
+            
+            <div id="area-sondaggio" style="display: none; background: var(--surface-hover); padding: 20px; border-radius: var(--radius-md); margin-bottom: 20px; border: 1px dashed var(--primary);">
+                <label style="font-size: 14px; color: var(--text-main); display: flex; align-items: center; gap: 10px; margin-bottom: 16px; font-weight: 500; cursor:pointer;">
+                    <input type="checkbox" id="pub-multi-risposta" style="width:18px; height:18px; accent-color:var(--primary);"> Consenti risposte multiple
+                </label>
+
+                <label class="editor-label" style="color: var(--primary);">Opzioni di voto (minimo 2):</label>
+                <div id="lista-opzioni-sondaggio" style="margin-top: 10px;"></div>
+                <button class="btn-outline" style="width: 100%; margin-top: 8px; justify-content:center;" onclick="window.aggiungiOpzioneSondaggio()"><i class="fa-solid fa-plus"></i> Aggiungi un'opzione</button>
+            </div>
+
+            <label class="editor-label">Data di Scadenza (Auto-Elimina):</label>
+            <input type="date" id="pub-scadenza" class="input-field">
+
+            <label class="editor-label">Testo del messaggio:</label>
+            <textarea id="msgTesto" class="input-field" rows="4" placeholder="Scrivi qui la comunicazione..." style="resize:vertical;"></textarea>
+            
+            <label class="editor-label">Link Esterno (Opzionale):</label>
+            <input type="url" id="msgLink" class="input-field" placeholder="es. https://www.google.it o link Drive" style="text-transform:none;">
+            
+            <button id="btn-pubblica" class="btn-action" onclick="window.pubblicaMessaggio()"><i class="fa-regular fa-paper-plane"></i> Pubblica Avviso</button>
+        </div>
+    </div>
+
+    <div id="modal-date-picker-avviso" class="modal-overlay" style="z-index: 8000;">
+        <div class="modal-content" style="max-width: 320px; text-align: center;">
+            <h3 style="margin-top: 0; color: var(--primary); display:flex; justify-content:center; align-items:center; gap:8px;"><i class="fa-regular fa-calendar-days"></i> Scegli Date</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Seleziona una data alla volta e clicca il tasto '+'</p>
+            
+            <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                <input type="date" id="input-date-single" class="input-field" style="margin-bottom: 0;">
+                <button class="btn-action" style="width: 54px; margin-top: 0; padding: 14px;" onclick="window.aggiungiDataSingola()"><i class="fa-solid fa-plus"></i></button>
+            </div>
+
+            <div id="date-tags-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; justify-content: center; min-height: 40px;"></div>
+
+            <button class="btn-action btn-success" onclick="window.chiudiDatePickerAvviso()"><i class="fa-solid fa-check"></i> Fatto</button>
+        </div>
+    </div>
+
+    <div id="modal-letture" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-letture')" style="z-index: 8000;">
+        <div class="modal-content" style="max-width: 380px;">
+            <i class="fa-solid fa-xmark close-modal" onclick="document.getElementById('modal-letture').style.display='none'"></i>
+            <h3 style="margin-top: 0; color: var(--primary); display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-eye"></i> Visualizzazioni</h3>
+            <div id="lista-letture" style="margin-top: 20px; max-height: 60vh; overflow-y: auto; padding-right:5px;">
+                <div class="status-message"><i class="fa-solid fa-spinner fa-spin"></i> Caricamento in corso...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-voti" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-voti')" style="z-index: 8000;">
+        <div class="modal-content" style="max-width: 380px;">
+            <i class="fa-solid fa-xmark close-modal" onclick="document.getElementById('modal-voti').style.display='none'"></i>
+            <h3 style="margin-top: 0; color: var(--primary); display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-chart-bar"></i> Dettaglio Voti</h3>
+            <div id="lista-voti-dettaglio" style="margin-top: 20px; max-height: 60vh; overflow-y: auto; padding-right:5px;">
+                <div class="status-message"><i class="fa-solid fa-spinner fa-spin"></i> Caricamento in corso...</div>
             </div>
         </div>
     </div>
@@ -939,6 +1102,10 @@
         window.apriModaleContatti = () => {
             const modale = document.getElementById('modal-contatti-main');
             if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreContattiDaIndex) window.avviaMotoreContattiDaIndex(); }
+        };
+        window.apriBachecaUtility = () => {
+            const modale = document.getElementById('modal-bacheca-utility-main');
+            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreBachecaUtilityDaIndex) window.avviaMotoreBachecaUtilityDaIndex(); }
         };
     </script>
 </body>
