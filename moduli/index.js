@@ -3,11 +3,12 @@ import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signO
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
-// Importiamo i sottomoduli
+// Importiamo tutti i sottomoduli della SPA
 import { avviaMotoreSegnalazioni } from './report.js';
 import { avviaMotoreTurni } from './turni.js';
 import { avviaMotoreOrari } from './orari.js';
 import { avviaMotoreLink } from './link.js';
+import { avviaMotoreDocumenti } from './documenti.js';
 
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -71,8 +72,7 @@ const DEFAULT_APPS = [
     { id: "ferie", label: "Rotazione\nFerie", href: "rotazione_ferie.html", defaultColor: "#ffc107" },
     { id: "orari", label: "Orari\nNavigaz.", onclick: "window.apriModaleOrari()", defaultColor: "#17a2b8" },
     { id: "chebateo", label: "CheBateo", image: "icone_app/iconcb.png", href: "https://m.chebateo.it/" },
-    { id: "documenti", label: "Documenti", href: "documenti.html", defaultColor: "#6c757d" },
-    // MODIFICATO QUI: Ora apre la modale link invece della pagina html
+    { id: "documenti", label: "Documenti", onclick: "window.apriModaleDocumenti()", defaultColor: "#6c757d" },
     { id: "link", label: "Link", onclick: "window.apriModaleLink()", defaultColor: "#495057" },
     { id: "contatti", label: "Contatti", href: "contatti.html", defaultColor: "#2c3e50" },
     { id: "buoni", label: "Buoni\nPasto", href: "buoni.html", defaultColor: "#d63384" },
@@ -96,7 +96,10 @@ window.chiudiMenuLaterale = () => {
     const o = document.getElementById('sidebar-overlay'); if(o) o.style.display = 'none'; 
 };
 
-// Funzione ponte per aprire la modale segnalazioni
+// ============================================================================
+// FUNZIONI PONTE: Avviano i sottomoduli controllando permessi e accessi
+// ============================================================================
+
 window.apriMainModaleSegnalazioni = () => {
     window.apriModal('modal-segnalazioni-main');
     if (auth.currentUser) {
@@ -104,49 +107,70 @@ window.apriMainModaleSegnalazioni = () => {
     }
 };
 
-// Funzione ponte per aprire i Turni
 window.avviaMotoreTurniDaIndex = () => {
-    if (!auth.currentUser) {
-        alert("Devi effettuare il login per accedere ai turni.");
-        return;
-    }
+    if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai turni."); return; }
     if (window.currentUserData) {
         if (window.currentUserData.turni_banned === true) {
-            alert("Il tuo accesso alla pagina Turni è stato temporaneamente revocato.");
-            return;
+            alert("Il tuo accesso alla pagina Turni è stato temporaneamente revocato."); return;
         }
         if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined || window.currentUserData.matricola === "") {
             alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per visualizzare i turni.");
-            window.apriModal('profileModal');
-            return;
+            window.apriModal('profileModal'); return;
         }
     }
     avviaMotoreTurni();
-    
     const oggiStr = new Date().toISOString().split('T')[0];
     if (window.currentUserData && (window.currentUserData.turni_access !== true || window.currentUserData.last_turni_access !== oggiStr)) {
-        setDoc(doc(db, "utenti", auth.currentUser.uid), { 
-            turni_access: true,
-            last_turni_access: oggiStr
-        }, { merge: true });
-        window.currentUserData.turni_access = true;
-        window.currentUserData.last_turni_access = oggiStr;
+        setDoc(doc(db, "utenti", auth.currentUser.uid), { turni_access: true, last_turni_access: oggiStr }, { merge: true });
+        window.currentUserData.turni_access = true; window.currentUserData.last_turni_access = oggiStr;
     }
 };
 
-// Funzione ponte per aprire gli Orari
 window.avviaMotoreOrariDaIndex = () => {
     avviaMotoreOrari();
 };
 
-// Funzione ponte per aprire i Link
 window.avviaMotoreLinkDaIndex = () => {
-    if (!auth.currentUser) {
-        alert("Devi effettuare il login per accedere ai link aziendali.");
-        return;
+    if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai link aziendali."); return; }
+    if (window.currentUserData) {
+        if (window.currentUserData.link_banned === true) {
+            alert("L'accesso ai Link ti è stato revocato da un Amministratore."); return;
+        }
+        if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined) {
+            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per accedere.");
+            window.apriModal('profileModal'); return;
+        }
     }
     avviaMotoreLink();
+    const oggiStr = new Date().toISOString().split('T')[0];
+    if (window.currentUserData && (window.currentUserData.link_access !== true || window.currentUserData.last_link_access !== oggiStr)) {
+        setDoc(doc(db, "utenti", auth.currentUser.uid), { link_access: true, last_link_access: oggiStr }, { merge: true });
+        window.currentUserData.link_access = true; window.currentUserData.last_link_access = oggiStr;
+    }
 };
+
+window.avviaMotoreDocumentiDaIndex = () => {
+    if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai documenti."); return; }
+    if (window.currentUserData) {
+        if (window.currentUserData.documenti_banned === true) {
+            alert("L'accesso ai Documenti ti è stato revocato da un Amministratore."); return;
+        }
+        if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined) {
+            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per accedere all'archivio.");
+            window.apriModal('profileModal'); return;
+        }
+    }
+    avviaMotoreDocumenti();
+    const oggiStr = new Date().toISOString().split('T')[0];
+    if (window.currentUserData && (window.currentUserData.documenti_access !== true || window.currentUserData.last_documenti_access !== oggiStr)) {
+        setDoc(doc(db, "utenti", auth.currentUser.uid), { documenti_access: true, last_documenti_access: oggiStr }, { merge: true });
+        window.currentUserData.documenti_access = true; window.currentUserData.last_documenti_access = oggiStr;
+    }
+};
+
+// ============================================================================
+// SISTEMI DI CHECK IN BACKGROUND (Bacheca, Segnalazioni, Promemoria)
+// ============================================================================
 
 window.controllaBacheca = async () => {
     if (!auth.currentUser) return;
@@ -170,7 +194,6 @@ window.controllaBacheca = async () => {
 
         snap.forEach(d => {
             let m = d.data();
-            
             if (m.scadenza && m.scadenza < oggiStr) return; 
             
             if (!globalIsAdmin && !globalIsCollab && m.target && m.target !== "tutti") {
@@ -178,11 +201,8 @@ window.controllaBacheca = async () => {
             }
 
             if (m.timestamp > ultimoAccesso) {
-                if (m.tipo === "dds") {
-                    avvisiDDS.push(m.titolo_dds);
-                } else {
-                    avvisiNormali++;
-                }
+                if (m.tipo === "dds") avvisiDDS.push(m.titolo_dds);
+                else avvisiNormali++;
             }
         });
 
@@ -190,10 +210,7 @@ window.controllaBacheca = async () => {
 
         if (totali > 0) {
             const badge = document.getElementById('badge-messaggi');
-            if (badge) {
-                badge.innerText = totali;
-                badge.style.display = 'flex';
-            }
+            if (badge) { badge.innerText = totali; badge.style.display = 'flex'; }
 
             if (avvisiNormali > 0) {
                 const bannerNormal = document.getElementById('banner-nuovo-messaggio');
@@ -221,9 +238,7 @@ window.controllaRichiesteSospese = async () => {
         snap.forEach(d => {
             const u = d.data();
             if (globalIsAdmin) count++;
-            else if (globalIsCollab) {
-                if ((window.currentUserData?.permessi_gestione || []).includes(u.rotazione_richiesta)) count++;
-            }
+            else if (globalIsCollab && (window.currentUserData?.permessi_gestione || []).includes(u.rotazione_richiesta)) count++;
         });
         const btnRot = document.getElementById('btn-rotazioni');
         if (btnRot) {
@@ -246,9 +261,7 @@ window.controllaPromemoria = async () => {
 
         snap.forEach(d => {
             const p = d.data();
-            if (p.date && p.date.includes(oggiStr)) {
-                activeCount++;
-            }
+            if (p.date && p.date.includes(oggiStr)) activeCount++;
         });
 
         if (activeCount > 0) {
@@ -277,16 +290,12 @@ window.controllaSegnalazioni = async () => {
             const q = query(collection(db, "segnalazioni"), where("stato", "==", "in_attesa"), where("letta_da_admin", "==", false));
             const snap = await getDocs(q);
             count = snap.size;
-            if (count > 0) {
-                messaggioBanner = count === 1 ? "Hai 1 nuova segnalazione in attesa!" : `Hai ${count} nuove segnalazioni in attesa!`;
-            }
+            if (count > 0) messaggioBanner = count === 1 ? "Hai 1 nuova segnalazione in attesa!" : `Hai ${count} nuove segnalazioni in attesa!`;
         } else {
             const q = query(collection(db, "segnalazioni"), where("mittente_uid", "==", auth.currentUser.uid), where("stato", "==", "risposto"), where("letta_da_utente", "==", false));
             const snap = await getDocs(q);
             count = snap.size;
-            if (count > 0) {
-                messaggioBanner = count === 1 ? "L'Admin ha risposto alla tua segnalazione!" : `L'Admin ha risposto a ${count} tue segnalazioni!`;
-            }
+            if (count > 0) messaggioBanner = count === 1 ? "L'Admin ha risposto alla tua segnalazione!" : `L'Admin ha risposto a ${count} tue segnalazioni!`;
         }
 
         if (count > 0) {
@@ -304,6 +313,10 @@ window.controllaSegnalazioni = async () => {
         }
     } catch(e) { console.error("Errore check segnalazioni:", e); }
 };
+
+// ============================================================================
+// GESTIONE NOTIFICHE PUSH
+// ============================================================================
 
 window.inizializzaNotificheSeNativa = async (userData) => {
     const isNative = window.Capacitor && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins.PushNotifications;
@@ -365,11 +378,8 @@ window.inizializzaNotificheSeNativa = async (userData) => {
 
             let permStatus = await PushNotifications.checkPermissions();
             if (permStatus.receive === 'prompt') { permStatus = await PushNotifications.requestPermissions(); }
-
-            if (permStatus.receive === 'granted') {
-                PushNotifications.register();
-                aggiornaGraficaPermessi(true);
-            } else { aggiornaGraficaPermessi(false); }
+            if (permStatus.receive === 'granted') { PushNotifications.register(); aggiornaGraficaPermessi(true); } 
+            else { aggiornaGraficaPermessi(false); }
         } else if (isWeb) {
             if (Notification.permission === 'granted') {
                 aggiornaGraficaPermessi(true);
@@ -386,9 +396,7 @@ window.inizializzaNotificheSeNativa = async (userData) => {
                             device_type: 'pwa_web'
                         }, { merge: true });
                     }
-                } catch (e) { 
-                    console.warn("Nessun token web ottenuto:", e); 
-                }
+                } catch (e) { console.warn("Nessun token web ottenuto:", e); }
             } else {
                 aggiornaGraficaPermessi(false);
             }
@@ -407,10 +415,9 @@ window.gestisciNotificheNative = async () => {
     if (isNative) {
         const PushNotifications = window.Capacitor.Plugins.PushNotifications;
         let permStatus = await PushNotifications.requestPermissions();
-        if (permStatus.receive === 'granted') {
-            await PushNotifications.register();
-        } else {
-            statusText.innerHTML = "<i class='fa-solid fa-xmark'></i> Devi attivarle dalle Impostazioni del telefono.";
+        if (permStatus.receive === 'granted') { await PushNotifications.register(); } 
+        else {
+            statusText.innerHTML = "<i class='fa-solid fa-xmark'></i> Devi attivarle dalle Impostazioni.";
             statusText.style.color = "var(--danger)";
         }
     } else if (isWeb) {
@@ -436,15 +443,12 @@ window.gestisciNotificheNative = async () => {
                             device_type: 'pwa_web'
                         }, { merge: true });
                     }
-                } catch (e) {
-                    console.error("Errore recupero token FCM Web:", e);
-                }
+                } catch (e) { console.error("Errore recupero token FCM Web:", e); }
             } else {
                 statusText.innerHTML = "<i class='fa-solid fa-xmark'></i> Devi attivarle dalle Impostazioni del browser.";
                 statusText.style.color = "var(--danger)";
             }
         } catch (error) {
-            console.error("Errore richiesta notifiche web:", error);
             statusText.innerHTML = "<i class='fa-solid fa-xmark'></i> Errore durante la richiesta.";
             statusText.style.color = "var(--danger)";
         }
@@ -453,24 +457,17 @@ window.gestisciNotificheNative = async () => {
 
 window.disattivaNotifiche = async () => {
     if (!confirm("Vuoi disattivare le notifiche e scollegare questo dispositivo?")) return;
-    
     const statusText = document.getElementById('notif-status-text');
     statusText.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Disattivazione in corso...";
     
     try {
         if (auth.currentUser) {
-            await setDoc(doc(db, "utenti", auth.currentUser.uid), {
-                fcm_token: null,
-                device_type: null
-            }, { merge: true });
+            await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: null, device_type: null }, { merge: true });
         }
-
         const isWeb = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
         if (isWeb) {
-            try {
-                const messaging = getMessaging(app);
-                await deleteToken(messaging);
-            } catch (e) { console.warn("Service worker non presente, elimino solo su DB", e); }
+            try { const messaging = getMessaging(app); await deleteToken(messaging); } 
+            catch (e) { console.warn("Service worker non presente", e); }
         }
 
         statusText.innerHTML = "<i class='fa-solid fa-bell-slash'></i> Notifiche disattivate";
@@ -480,8 +477,7 @@ window.disattivaNotifiche = async () => {
         document.getElementById('notif-preferences-section').style.display = 'none';
         
     } catch (error) {
-        console.error("Errore:", error);
-        statusText.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Errore durante la disattivazione";
+        statusText.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Errore disattivazione";
         statusText.style.color = "var(--danger)";
     }
 };
@@ -497,11 +493,13 @@ window.salvaPreferenzeNotifiche = async () => {
         segnalazioni: document.getElementById('pref-notif-segnalazioni').checked,
         mansioni_turni: mansioniSelezionate
     };
-
-    try {
-        await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_notifiche: preferenze_notifiche }, { merge: true });
-    } catch (error) { console.error("Errore salvataggio preferenze notifiche:", error); }
+    try { await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_notifiche: preferenze_notifiche }, { merge: true }); } 
+    catch (error) { console.error("Errore salvataggio preferenze notifiche:", error); }
 };
+
+// ============================================================================
+// ENGINE LAYOUT & RENDER APP (Gestisce Icone, Temi, Drag&Drop)
+// ============================================================================
 
 window.LayoutEngine = {
     prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#0066cc", view: "grid", iconStyle: "box", iconType: "minimal", fontSize: 14, theme: "system", apps: [] },
@@ -624,6 +622,10 @@ window.LayoutEngine = {
                 if (!useEmoji) { currentIcon = "fa-solid fa-martini-glass"; currentImage = null; }
                 else { currentImage = "icone_app/iconspriss.png"; currentIcon = null; }
             }
+            if (app.id === 'chebateo') {
+                if (!useEmoji) { currentIcon = "fa-solid fa-water"; currentImage = null; }
+                else { currentImage = "icone_app/iconcb.png"; currentIcon = null; }
+            }
 
             if (currentImage) {
                 isImagePath = true;
@@ -637,19 +639,12 @@ window.LayoutEngine = {
                 iconStyle += ` background-image: url('${imagePath}'); background-size: cover; background-position: center; background-repeat: no-repeat;`; 
                 iconContent = ""; 
             } else if (currentIcon) {
-                if (currentIcon.includes('fa-')) {
-                    iconContent = `<i class="${currentIcon}"></i>`;
-                } else {
-                    iconContent = currentIcon;
-                }
+                if (currentIcon.includes('fa-')) iconContent = `<i class="${currentIcon}"></i>`;
+                else iconContent = currentIcon;
             } else {
-                if (useEmoji && EMOJI_MAP[app.id]) {
-                    iconContent = EMOJI_MAP[app.id];
-                } else if (!useEmoji && ICON_MAP[app.id]) {
-                    iconContent = `<i class="${ICON_MAP[app.id]}"></i>`;
-                } else {
-                    iconContent = "🔗"; 
-                }
+                if (useEmoji && EMOJI_MAP[app.id]) iconContent = EMOJI_MAP[app.id];
+                else if (!useEmoji && ICON_MAP[app.id]) iconContent = `<i class="${ICON_MAP[app.id]}"></i>`;
+                else iconContent = "🔗"; 
             }
 
             let animDelay = this.isEditMode ? "0s" : `${index * 0.04}s`;
@@ -693,7 +688,6 @@ window.LayoutEngine = {
             this.sortableInstance = new Sortable(document.getElementById('app-container'), { animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: "sortable-ghost", onEnd: () => { this.aggiornaOrdineDaDOM(); } });
         } else { if(this.sortableInstance) this.sortableInstance.destroy(); this.sincronizzaConFirebase(); }
     },
-    
     aggiornaOrdineDaDOM: function() {
         const nuovoOrdine = []; 
         document.querySelectorAll('#app-container .app-btn').forEach(nodo => {
@@ -701,19 +695,15 @@ window.LayoutEngine = {
             const app = this.prefs.apps.find(a => a.id === id); 
             if (app) { nuovoOrdine.push(app); }
         });
-        
         this.prefs.apps.forEach(app => { 
             if (!nuovoOrdine.find(a => a.id === app.id)) { nuovoOrdine.push(app); }
         });
-        
         this.prefs.apps = nuovoOrdine;
     },
-
     apriEditorApp: function(appId) {
         const app = this.prefs.apps.find(a => a.id === appId); if(!app) return;
         document.getElementById('edit-app-id').value = app.id;
         document.getElementById('edit-app-label').value = app.label.replace('\n', ' ');
-        
         document.getElementById('edit-app-icon').value = app.icon || "";
         document.getElementById('edit-app-color').value = app.color || app.defaultColor || this.prefs.appBg || "#0066cc";
         
@@ -724,7 +714,6 @@ window.LayoutEngine = {
         } else { 
             this.rimuoviImmagine('edit'); 
         }
-        
         document.getElementById('btn-elimina-custom').style.display = app.id.startsWith('custom_') ? 'flex' : 'none';
         window.apriModal('editAppModal');
     },
@@ -772,6 +761,10 @@ window.LayoutEngine = {
     ripristinaPredefiniti: async function() { if(!confirm("Ripristinare tutto?")) return; localStorage.removeItem('preferenze_layout_haze'); if (auth.currentUser) await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_layout: null }, { merge: true }); location.reload(); }
 };
 
+// ============================================================================
+// GESTIONE MODALI E UI
+// ============================================================================
+
 window.apriModal = (id, authMode) => { document.getElementById(id).style.display = 'flex'; if(id === 'authModal' && authMode) { currentAuthMode = authMode; window.aggiornaUIAuth(); } };
 window.chiudiModal = (id) => { document.getElementById(id).style.display = 'none'; };
 window.chiudiSuSfondo = (e, id) => { if (e.target.id === id) window.chiudiModal(id); };
@@ -782,6 +775,10 @@ window.apriBachecaUtility = () => {
     if (auth.currentUser) setDoc(doc(db, "utenti", auth.currentUser.uid), { ultimo_accesso_bacheca: timestamp }, { merge: true });
     window.location.href = 'bacheca_utility.html';
 };
+
+// ============================================================================
+// LOGICA ADMIN & GESTIONE UTENTI
+// ============================================================================
 
 window.apriGestioneAccessi = async () => {
     window.apriModal('modal-gestione');
@@ -796,8 +793,7 @@ window.apriGestioneAccessi = async () => {
         const formatterDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' });
         const oggiStr = formatterDate.format(new Date());
         
-        window.utentiArrayCache = [];
-        window.utentiMap = {};
+        window.utentiArrayCache = []; window.utentiMap = {};
 
         snap.forEach(d => {
             const u = d.data(); tot++; const isOggi = (u.last_app_access === oggiStr); if (isOggi) oggi++;
@@ -821,32 +817,25 @@ window.renderGestioneAccessi = () => {
     let dataCopy = [...window.utentiArrayCache];
 
     const sortAlpha = (a, b) => {
-        let cognomeA = (a.cognome || '').trim().toUpperCase();
-        let cognomeB = (b.cognome || '').trim().toUpperCase();
-        if (cognomeA < cognomeB) return -1;
-        if (cognomeA > cognomeB) return 1;
-        let nomeA = (a.nome || '').trim().toUpperCase();
-        let nomeB = (b.nome || '').trim().toUpperCase();
-        if (nomeA < nomeB) return -1;
-        if (nomeA > nomeB) return 1;
+        let cognomeA = (a.cognome || '').trim().toUpperCase(); let cognomeB = (b.cognome || '').trim().toUpperCase();
+        if (cognomeA < cognomeB) return -1; if (cognomeA > cognomeB) return 1;
+        let nomeA = (a.nome || '').trim().toUpperCase(); let nomeB = (b.nome || '').trim().toUpperCase();
+        if (nomeA < nomeB) return -1; if (nomeA > nomeB) return 1;
         return 0;
     };
 
-    if (sortMode === 'alfabetico') {
-        dataCopy.sort(sortAlpha);
-    } else {
+    if (sortMode === 'alfabetico') { dataCopy.sort(sortAlpha); } 
+    else {
         dataCopy.sort((a, b) => {
             let dateA = a.last_access_full || a.last_app_access || '1970-01-01';
             let dateB = b.last_access_full || b.last_app_access || '1970-01-01';
-            if (dateA > dateB) return -1;
-            if (dateA < dateB) return 1;
+            if (dateA > dateB) return -1; if (dateA < dateB) return 1;
             return sortAlpha(a, b);
         });
     }
 
     const buildRiga = (u) => {
-        const isOggi = (u.last_app_access === oggiStr);
-        const isBanned = u.app_banned === true; 
+        const isOggi = (u.last_app_access === oggiStr); const isBanned = u.app_banned === true; 
         const fullName = `${u.cognome || ''} ${u.nome || ''} ${u.progressivo || ''}`.trim() || 'Sconosciuto';
         const dot = isOggi ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:8px; box-shadow: 0 0 5px rgba(15,157,88,0.5);"></span>` : '';
         const clickableName = `<span style="font-weight:700; font-size:14px; cursor:pointer; color:var(--primary); text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" onclick="window.apriDettaglioUtente('${u.uid}')">${fullName}</span>`;
@@ -858,8 +847,7 @@ window.renderGestioneAccessi = () => {
             accessDisplay = d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
         } else if (u.last_app_access) {
             let p = u.last_app_access.split('-');
-            if(p.length === 3) accessDisplay = `${p[2]}/${p[1]}/${p[0]}`;
-            else accessDisplay = u.last_app_access;
+            if(p.length === 3) accessDisplay = `${p[2]}/${p[1]}/${p[0]}`; else accessDisplay = u.last_app_access;
         }
         
         return `<div class="utente-row-app" data-search="${searchData}" style="display:flex; justify-content:space-between; align-items:center; background:${isBanned ? 'var(--danger-light)' : 'var(--surface-hover)'}; padding:14px; border-radius:12px; margin-bottom:12px; border:1px solid ${isBanned ? 'var(--danger-border)' : 'var(--border-color)'}; box-shadow:var(--shadow-sm); transition: transform 0.2s;"><div><div style="display:flex; align-items:center;">${clickableName}${dot}</div><div style="font-size:12px; color:var(--text-muted); margin-top:4px;"><i class="fa-regular fa-id-badge"></i> ${u.matricola || '??'} • <i class="fa-regular fa-clock"></i> ${accessDisplay}</div></div><button style="border:1px solid ${isBanned ? 'var(--success)' : 'var(--danger)'}; color:${isBanned ? 'var(--success)' : 'var(--danger)'}; background:var(--surface); padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:13px; transition:all 0.2s;" onmouseover="this.style.background='${isBanned ? 'var(--success)' : 'var(--danger)'}'; this.style.color='white';" onmouseout="this.style.background='var(--surface)'; this.style.color='${isBanned ? 'var(--success)' : 'var(--danger)'}';" onclick="window.toggleAppBan('${u.uid}', ${!isBanned})">${isBanned ? '<i class="fa-solid fa-unlock"></i> Sblocca' : '<i class="fa-solid fa-ban"></i> Blocca'}</button></div>`;
@@ -876,11 +864,8 @@ window.filtraUtentiApp = () => {
     let rows = document.getElementsByClassName('utente-row-app');
     for (let i = 0; i < rows.length; i++) {
         let txtValue = rows[i].getAttribute('data-search');
-        if (txtValue.indexOf(filter) > -1) {
-            rows[i].style.display = "flex";
-        } else {
-            rows[i].style.display = "none";
-        }
+        if (txtValue.indexOf(filter) > -1) rows[i].style.display = "flex";
+        else rows[i].style.display = "none";
     }
 };
 
@@ -904,6 +889,10 @@ window.apriDettaglioUtente = (uid) => {
 };
 
 window.cambiaRuoloUtente = async (uid, nuovoRuolo) => { if(!confirm("Sei sicuro?")) return; try { await setDoc(doc(db, "utenti", uid), { ruolo: nuovoRuolo }, { merge: true }); window.utentiMap[uid].ruolo = nuovoRuolo; window.chiudiModal('modal-dettaglio-utente'); alert("Ruolo aggiornato!"); } catch(e) { alert("Errore."); } };
+
+// ============================================================================
+// GESTIONE AUTENTICAZIONE E PROFILO
+// ============================================================================
 
 let currentAuthMode = 'login';
 window.switchAuthMode = () => { currentAuthMode = currentAuthMode === 'login' ? 'register' : 'login'; window.aggiornaUIAuth(); };
@@ -937,17 +926,9 @@ window.eseguiAuth = async () => {
 
 window.recuperaPassword = async () => {
     const email = document.getElementById('emailInput').value.trim();
-    if (!email) {
-        alert("Inserisci il tuo indirizzo email nel campo sopra per ricevere il link di ripristino.");
-        return;
-    }
-    try {
-        await sendPasswordResetEmail(auth, email);
-        alert("Email di ripristino inviata! Controlla la tua casella di posta (anche nella cartella Spam).");
-    } catch (error) {
-        console.error("Errore recupero password:", error);
-        alert("Si è verificato un errore. Verifica che l'indirizzo email sia corretto.");
-    }
+    if (!email) { alert("Inserisci il tuo indirizzo email nel campo sopra per ricevere il link di ripristino."); return; }
+    try { await sendPasswordResetEmail(auth, email); alert("Email di ripristino inviata! Controlla la tua casella di posta (anche nella cartella Spam)."); } 
+    catch (error) { alert("Si è verificato un errore. Verifica che l'indirizzo email sia corretto."); }
 };
 
 window.loginGoogle = async () => { try { await signInWithPopup(auth, provider); } catch(e) {} };
@@ -969,16 +950,15 @@ window.salvaProfilo = async () => {
         soprannome: document.getElementById('profileSoprannome').value.trim(),
         telefono: document.getElementById('profileTelefono').value.trim()
     };
-
-    if (!p.nome || !p.cognome || !p.matricola) {
-        alert("Errore: Impossibile salvare. Nome, Cognome e Matricola non possono essere vuoti.");
-        return;
-    }
-
+    if (!p.nome || !p.cognome || !p.matricola) { alert("Errore: Impossibile salvare. Nome, Cognome e Matricola non possono essere vuoti."); return; }
     await setDoc(doc(db, "utenti", auth.currentUser.uid), p, { merge: true }); 
     alert("Salvato con successo!"); 
     window.chiudiModal('profileModal');
 };
+
+// ============================================================================
+// INIZIALIZZAZIONE DELL'APP AL LOGIN/LOGOUT
+// ============================================================================
 
 onAuthStateChanged(auth, async (user) => {
     const vLoad = document.getElementById('view-loading'); const vGuest = document.getElementById('view-guest'); const vApp = document.getElementById('view-app'); const vBanned = document.getElementById('view-banned');
@@ -990,14 +970,10 @@ onAuthStateChanged(auth, async (user) => {
             if (!data.nome || !data.cognome || !data.matricola) document.getElementById('modal-dati-obbligatori').style.display = 'flex';
             
             globalIsAdmin = (user.uid === ADMIN_UID); globalIsCollab = data.ruolo === 'collaborator';
-            if(globalIsAdmin) {
-                document.getElementById('adminBadge').style.display = 'block';
-                document.getElementById('menu-admin').style.display = 'flex';
-            }
+            if(globalIsAdmin) { document.getElementById('adminBadge').style.display = 'block'; document.getElementById('menu-admin').style.display = 'flex'; }
             
             vGuest.style.display = 'none'; vApp.style.display = 'flex'; vBanned.style.display = 'none';
             document.getElementById('btnOpenLogin').style.display = 'none'; document.getElementById('btnOpenProfile').style.display = 'flex';
-            
             document.getElementById('profileEmail').value = user.email;
             
             const oggiLog = new Date();
@@ -1008,7 +984,6 @@ onAuthStateChanged(auth, async (user) => {
             }
             
             window.LayoutEngine.init(data.preferenze_layout);
-            
             if(window.inizializzaNotificheSeNativa) window.inizializzaNotificheSeNativa(data);
 
             document.getElementById('profileNome').value = data.nome || ''; 
@@ -1025,9 +1000,12 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
+// ============================================================================
+// GESTIONE INSTALLAZIONE PWA
+// ============================================================================
+
 let deferredPrompt;
 const installBtn = document.getElementById('install-btn');
-
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
 if (!isStandalone) {
@@ -1042,10 +1020,7 @@ if (!isStandalone) {
             if (deferredPrompt !== null) {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    deferredPrompt = null;
-                    installBtn.style.display = 'none';
-                }
+                if (outcome === 'accepted') { deferredPrompt = null; installBtn.style.display = 'none'; }
             }
         });
     }
