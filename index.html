@@ -23,48 +23,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
     
-    <script>
-        const UPDATE_CHECK_URL = "https://raw.githubusercontent.com/HazeV98/Utility/main/version.json";
-
-        async function controllaAggiornamentiAPK() {
-            if (!window.Capacitor || !window.Capacitor.isNativePlatform() || !window.Capacitor.Plugins.App) {
-                return;
-            }
-
-            try {
-                const appInfo = await window.Capacitor.Plugins.App.getInfo();
-                const versioneInstallata = appInfo.version; 
-
-                const response = await fetch(UPDATE_CHECK_URL + "?t=" + new Date().getTime());
-                const data = await response.json();
-
-                if (data.latest_version && data.latest_version !== versioneInstallata) {
-                    mostraPopupAggiornamento(data);
-                }
-            } catch (error) {
-                console.error("Errore nel controllo aggiornamenti APK:", error);
-            }
-        }
-
-        function mostraPopupAggiornamento(data) {
-            const modale = document.createElement('div');
-            modale.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99999; display:flex; justify-content:center; align-items:center; padding:20px; box-sizing:border-box; backdrop-filter:blur(5px); animation: fadeIn 0.3s ease;";
-            
-            modale.innerHTML = `
-                <div style="background:var(--surface); padding:30px; border-radius:24px; text-align:center; max-width:360px; width:100%; box-shadow: 0 20px 40px rgba(0,0,0,0.4); font-family: 'Inter', sans-serif;">
-                    <h2 style="color:var(--primary); margin-top:0; display:flex; align-items:center; justify-content:center; gap:10px;"><i class="fa-solid fa-rocket"></i> Nuovo Aggiornamento!</h2>
-                    <p style="font-size:15px; color:var(--text-main); font-weight: 500;">È disponibile la versione <b>${data.latest_version}</b>.</p>
-                    <p style="font-size:14px; color:var(--text-muted); background:var(--bg-color); padding:16px; border-radius:12px; text-align: left; line-height: 1.6; border: 1px solid var(--border-color);">${data.note_aggiornamento}</p>
-                    <a href="${data.download_url}" style="display:flex; justify-content:center; align-items:center; gap:10px; background:var(--success); color:white; padding:16px; border-radius:14px; text-decoration:none; font-weight:700; margin-top:24px; font-size: 16px; box-shadow: 0 4px 12px rgba(15,157,88,0.3);"><i class="fa-solid fa-download"></i> Scarica e Aggiorna</a>
-                    <button onclick="this.parentElement.parentElement.remove()" style="margin-top:16px; background:none; border:none; color:var(--text-muted); font-size:14px; cursor:pointer; font-weight: 600; text-decoration: underline;">Più tardi</button>
-                </div>
-            `;
-            document.body.appendChild(modale);
-        }
-
-        window.addEventListener('DOMContentLoaded', controllaAggiornamentiAPK);
-    </script>
-    
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-512.png">
     <meta name="theme-color" content="#0066cc">
@@ -271,7 +229,6 @@
         input[type="color"] { width: 44px; height: 44px; border: none; border-radius: 10px; cursor: pointer; padding: 0; background: transparent; }
         input[type="range"] { width: 100%; margin: 10px 0; accent-color: var(--primary); }
 
-        .badge-rotazioni { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(217,48,37,0.4); border: 2px solid var(--bg-color); z-index: 10; pointer-events: none;}
         .badge-notif { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; min-width: 22px; height: 22px; padding: 0 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(217,48,37,0.4); border: 2px solid var(--surface); z-index: 20; pointer-events: none; }
 
         .banner-alert { padding: 14px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 20px; width: 100%; max-width: 440px; cursor: pointer; box-shadow: var(--shadow-md); display:flex; align-items:center; justify-content:center; gap:10px; transition: var(--transition); animation: slideInUpBouncy 0.5s ease both, breathe 3s infinite ease-in-out 0.5s;}
@@ -280,26 +237,32 @@
         .banner-red { background: var(--danger); color: white; }
         .banner-blue { background: #17a2b8; color: white; }
 
-        /* --- STILI AGGIUNTI PER IL MODULO TURNI --- */
+        /* ================================================================= */
+        /* --- STILI SPECIFICI PER I TURNI INIETTATI DALLA TUA PAGINA ---    */
+        /* ================================================================= */
         .folder-btn { background-color: var(--surface); color: var(--text-main); border: 2px solid var(--border-color); padding: 24px 20px; font-size: 16px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; text-align: left; box-shadow: var(--shadow-sm); transition: all 0.2s; display: flex; align-items: center; gap: 16px; width: 100%; margin-bottom: 12px;}
         .folder-btn i { font-size: 24px; color: var(--primary); transition: transform 0.2s; }
         .folder-btn:hover { border-color: var(--primary); box-shadow: var(--shadow-md); transform: translateY(-2px); }
         .folder-btn:hover i { transform: scale(1.1); }
+        
         .file-row { display: flex; gap: 12px; width: 100%; align-items: stretch; margin-bottom: 12px;}
         .file-btn { flex-grow: 1; background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); padding: 16px; font-size: 15px; border-radius: var(--radius-md); cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: flex-start; gap: 12px; font-weight: 600; transition: all 0.2s; box-shadow: var(--shadow-sm); }
         .file-btn i { color: var(--danger); font-size: 18px; }
         .file-btn:hover { border-color: var(--primary); background-color: var(--surface-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        
         .icon-btn { width: 56px; background-color: var(--surface); color: var(--primary); border: 1px solid var(--border-color); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; transition: all 0.2s; box-shadow: var(--shadow-sm); }
         .icon-btn:hover { background-color: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        
         .btn-search-spec { background-color: var(--surface); color: var(--success); border: 1px solid var(--border-color); }
         .btn-search-spec:hover { background-color: var(--success); color: white; border-color: var(--success); }
+        
         .back-btn { background-color: transparent; color: var(--text-muted); border: 2px solid var(--border-color); padding: 14px; border-radius: var(--radius-md); cursor: pointer; width: 100%; font-weight: 600; font-size: 15px; margin-bottom: 12px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;}
         .back-btn:hover { background-color: var(--surface); color: var(--text-main); border-color: var(--text-main); }
+        
         .search-container { position: relative; width: 100%; margin-bottom: 16px; }
         .search-wrapper { position: relative; display: flex; align-items: center; }
         .search-wrapper i { position: absolute; left: 16px; color: var(--text-muted); font-size: 16px; }
-        
-        #shiftSearch { text-transform: uppercase; width: 100%; padding: 16px 16px 16px 44px; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px; box-sizing: border-box; outline: none; font-family: inherit; background: var(--surface); color: var(--text-main); transition: all 0.2s; box-shadow: var(--shadow-sm); }
+        #shiftSearch { width: 100%; padding: 16px 16px 16px 44px; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px; box-sizing: border-box; outline: none; font-family: inherit; background: var(--surface); color: var(--text-main); transition: all 0.2s; box-shadow: var(--shadow-sm); }
         #shiftSearch:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); }
         
         .suggestions-box { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: var(--shadow-lg); display: none; margin-top: 8px; padding: 8px 0; }
@@ -342,6 +305,7 @@
         <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
         <a href="rotazioni.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
         
+        <!-- LINK MENU AGGIORNATO PER APRIRE LA MODALE TURNI -->
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleTurni(); return false;" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
         
         <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
@@ -445,6 +409,8 @@
         </div>
     </div> 
 
+    <!-- Tutte le modali base (Settings, App, Profilo, Auth, Gestione Accessi) -->
+    
     <div id="settingsModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'settingsModal')">
         <div class="modal-content">
             <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('settingsModal')"></i>
@@ -775,79 +741,127 @@
         </div>
     </div>
 
-    <div id="modal-turni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-turni-main')">
-        <div class="modal-content" style="max-width: 600px; height: 90vh; display: flex; flex-direction: column; padding: 24px;">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s; z-index: 10;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-turni-main')"></i>
-            
-            <h3 style="margin-top: 0; color: var(--text-main); font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
-                <i class="fa-solid fa-rotate" style="color: var(--primary);"></i> Turni Navigazione
-            </h3>
-            
-            <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center; position:relative;">
-                <div style="position:relative; flex:1;">
-                    <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted);"></i>
-                    <input type="text" id="shiftSearch" placeholder="Cerca turno (es. 101, T50)..." style="margin: 0; width:100%; padding: 14px 14px 14px 40px; font-size: 15px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; background: var(--surface-hover); color:var(--text-main); outline:none; transition: var(--transition);" onkeyup="if(window.filtraSuggerimentiTurni) window.filtraSuggerimentiTurni()" onfocus="if(window.filtraSuggerimentiTurni) window.filtraSuggerimentiTurni()" autocomplete="off">
-                    <div id="suggestionsBox" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--surface); border:1px solid var(--border-color); border-radius:var(--radius-md); max-height:200px; overflow-y:auto; z-index:100; box-shadow:var(--shadow-md); margin-top:8px;"></div>
-                </div>
-                <button class="btn-action" style="width:auto; margin:0; padding:14px 20px; border-radius: var(--radius-md);" onclick="window.apriModal('modal-ricerca-corsa')"><i class="fa-solid fa-route"></i></button>
-            </div>
-            
-            <div id="turni-content-area" style="flex:1; overflow-y:auto; padding-right:5px; margin-top:10px;">
-                <div style='text-align:center; padding:20px; color:var(--text-muted);'><i class='fa-solid fa-spinner fa-spin' style='color:var(--primary); font-size:24px;'></i><br><br>Caricamento dati turni...</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-ricerca-corsa" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-ricerca-corsa')">
-        <div class="modal-content" style="max-width: 440px;">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s; z-index: 10;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-ricerca-corsa')"></i>
-            
-            <h3 style="margin-top: 0; color: var(--text-main); font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
-                <i class="fa-solid fa-route" style="color: var(--primary);"></i> Ricerca Corsa
-            </h3>
-            
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <button class="btn-action" style="flex:1; margin:0; background:var(--primary);" onclick="if(window.selezionaTipoRicerca) window.selezionaTipoRicerca('partenza')"><i class="fa-solid fa-plane-departure"></i> Partenza</button>
-                <button class="btn-action" style="flex:1; margin:0; background:var(--success);" onclick="if(window.selezionaTipoRicerca) window.selezionaTipoRicerca('arrivo')"><i class="fa-solid fa-plane-arrival"></i> Arrivo</button>
-            </div>
-            <input type="hidden" id="sc-tipo" value="">
-
-            <div id="sc-rest-form" style="display:none;">
-                <div class="float-wrapper">
-                    <select id="sc-luogo" class="input-field" style="cursor: pointer;" onchange="if(window.aggiornaSuggerimentiOrario) window.aggiornaSuggerimentiOrario()"></select>
-                    <label id="label-luogo" style="top:12px; font-size:11px; color:var(--primary); font-weight:700;">Luogo:</label>
-                </div>
-                <div class="float-wrapper">
-                    <input type="date" id="sc-giorno" class="input-field" placeholder=" ">
-                    <label>Giorno (Opzionale per rotazioni)</label>
-                </div>
-                <div class="float-wrapper" style="position: relative;">
-                    <input type="text" id="sc-orario" class="input-field" inputmode="numeric" placeholder=" " oninput="if(window.formattaOrario) window.formattaOrario(event)" autocomplete="off">
-                    <label id="label-orario">Orario (es. 07.30)</label>
-                    <div id="sc-suggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--surface); border:1px solid var(--border-color); border-radius:var(--radius-md); max-height:200px; overflow-y:auto; z-index:100; box-shadow:var(--shadow-md); margin-top:4px;"></div>
-                </div>
-                <button class="btn-action" style="margin-top: 10px;" onclick="if(window.eseguiRicercaCorsa) window.eseguiRicercaCorsa()"><i class="fa-solid fa-magnifying-glass"></i> Trova Turno</button>
-            </div>
-
-            <div id="sc-risultato" class="risultato-box" style="display:none; margin-top:20px; padding:15px; background:var(--surface-hover); border-radius:var(--radius-md); border:1px solid var(--border-color);"></div>
-        </div>
-    </div>
-
+    <!-- MODALI SEGNALAZIONI -->
     <div id="modal-segnalazioni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-segnalazioni-main')">
-        <div class="modal-content" style="max-width: 600px; height: 90vh; display: flex; flex-direction: column; padding: 24px;">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s; z-index: 10;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-segnalazioni-main')"></i>
+        <div class="modal-content" style="max-width: 460px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-segnalazioni-main')"></i>
+            <h3 style="margin-top: 0; color: var(--info); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-headset"></i> Segnalazioni</h3>
+            <div style="flex: 1; overflow-y: auto; padding-right: 5px;">
+                <button style="background-color: var(--info); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; box-shadow: 0 4px 12px rgba(0, 136, 255, 0.3); width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; transition: all 0.2s; margin-bottom: 15px;" onclick="window.apriModaleNuovaSegnalazione()"><i class="fa-solid fa-paper-plane"></i> Nuova Segnalazione</button>
+                <button id="btn-cronologia-admin" style="display: none; background-color: var(--surface); color: var(--text-main); border: 2px solid var(--border-color); padding: 14px; font-size: 14px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; justify-content: center; align-items: center; gap: 10px; transition: all 0.2s; margin-bottom: 15px;" onclick="window.toggleVistaAdminSegnalazioni()"><i class="fa-solid fa-clock-rotate-left"></i> Mostra Cronologia Risposte</button>
+                <div id="reports-list"></div>
+            </div>
+            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 15px;" onclick="window.chiudiModal('modal-segnalazioni-main')"><i class="fa-solid fa-xmark"></i> Chiudi Finestra</button>
+        </div>
+    </div>
+
+    <div id="modal-nuova-segnalazione" class="modal-overlay" style="z-index: 7500;">
+        <div class="modal-content">
+            <h3 style="margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px; text-align:center;"><i class="fa-solid fa-paper-plane" style="color:var(--info);"></i> Invia Segnalazione</h3>
+            <div class="float-wrapper">
+                <textarea id="rep-messaggio" rows="4" class="input-field" placeholder=" " style="resize: vertical;"></textarea>
+                <label style="top: 20px;">Messaggio / Problema</label>
+            </div>
+            <div class="float-wrapper">
+                <input type="url" id="rep-link" class="input-field" placeholder=" ">
+                <label>Link Allegato (Facoltativo)</label>
+            </div>
+            <button id="btn-salva-rep" class="btn-action" style="background-color: var(--info);" onclick="window.inviaSegnalazione()"><i class="fa-solid fa-paper-plane"></i> Invia ora</button>
+            <button class="btn-modal" style="background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color);" onclick="window.chiudiModaleNuovaSegnalazione()">Annulla</button>
+        </div>
+    </div>
+
+    <div id="modal-risposta-segnalazione" class="modal-overlay" style="z-index: 7500;">
+        <div class="modal-content">
+            <h3 style="margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px; text-align:center;"><i class="fa-solid fa-reply" style="color:var(--success);"></i> Rispondi</h3>
+            <input type="hidden" id="admin-rep-id">
+            <div class="float-wrapper">
+                <textarea id="admin-rep-messaggio" rows="4" class="input-field" placeholder=" " style="resize: vertical;"></textarea>
+                <label style="top: 20px;">Risposta</label>
+            </div>
+            <div class="float-wrapper">
+                <input type="url" id="admin-rep-link" class="input-field" placeholder=" ">
+                <label>Link Allegato (Facoltativo)</label>
+            </div>
+            <button id="btn-invia-risposta" class="btn-action" style="background:var(--success);" onclick="window.inviaRispostaAdmin()"><i class="fa-solid fa-reply"></i> Invia Risposta</button>
+            <button class="btn-modal" style="background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color);" onclick="window.chiudiModaleRispostaSegnalazione()">Annulla</button>
+        </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- MODALE TURNI (Ora identica al layout originale) -->
+    <!-- ========================================================== -->
+    <div id="modal-turni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-turni-main')">
+        <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-turni-main')"></i>
             
-            <h3 style="margin-top: 0; color: var(--text-main); font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
-                <i class="fa-solid fa-headset" style="color: var(--primary);"></i> Segnalazioni
+            <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-rotate"></i> Consultazione Turni
             </h3>
-            
-            <div id="segnalazioni-content-area" style="flex:1; overflow-y:auto; padding-right:5px; margin-top:10px;">
-                <div style='text-align:center; padding:20px; color:var(--text-muted);'><i class='fa-solid fa-spinner fa-spin' style='color:var(--primary); font-size:24px;'></i><br><br>Caricamento segnalazioni...</div>
+
+            <!-- Area scorrevole interna dove turni.js inietterà i bottoni (Identico a "content-area" originale) -->
+            <div id="content-area" style="flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 16px;">
+                <!-- turni.js riempirà questo div con le cartelle o la barra di ricerca -->
             </div>
         </div>
     </div>
 
-    <script type="module" src="index.js"></script>
+    <!-- Modale Cerca Corse (Identica all'originale) -->
+    <div id="searchCorseModal" class="modal-overlay-search" onclick="window.chiudiSeSfondoSearch(event)">
+        <div class="modal-content-search">
+            <i class="fa-solid fa-xmark close-modal" onclick="window.chiudiSearchCorseModal()"></i>
+            <h3 style="margin-top:0; color:var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 20px; font-weight: 700; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-route" style="color: var(--primary);"></i> Cerca Corsa
+            </h3>
+            
+            <div id="sc-status" class="status-message" style="padding: 20px; font-size:14px; display:none; margin-top: 20px;">
+                <i class="fa-solid fa-spinner fa-spin" style="color:var(--primary);"></i> Caricamento dati in corso...
+            </div>
+            
+            <div id="sc-form" style="display:none; margin-top: 24px;">
+                <div class="tipo-toggle-container">
+                    <button id="btn-partenza" class="btn-tipo" onclick="window.selezionaTipo('partenza')"><i class="fa-solid fa-plane-departure"></i> Partenza</button>
+                    <button id="btn-arrivo" class="btn-tipo" onclick="window.selezionaTipo('arrivo')"><i class="fa-solid fa-plane-arrival"></i> Arrivo</button>
+                </div>
+                <input type="hidden" id="sc-tipo" value="">
 
+                <div id="sc-rest-form">
+                    <div class="sc-form-group">
+                        <label id="label-luogo">Luogo:</label>
+                        <select id="sc-luogo" onchange="window.aggiornaSuggerimentiOrario()"></select>
+                    </div>
+                    <div class="sc-form-group">
+                        <label>Giorno (Opz. per rotazioni):</label>
+                        <input type="date" id="sc-giorno">
+                    </div>
+                    <div class="sc-form-group" style="position: relative;">
+                        <label id="label-orario">Orario:</label>
+                        <input type="text" id="sc-orario" inputmode="numeric" placeholder="es. 07.30" oninput="window.formattaOrario(event)" autocomplete="off">
+                        <div id="sc-suggestions"></div>
+                    </div>
+                    <button class="btn-action" style="margin-top: 10px;" onclick="window.eseguiRicercaCorsa()"><i class="fa-solid fa-magnifying-glass"></i> Trova Turno</button>
+                </div>
+
+                <div id="sc-risultato" class="risultato-box" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT CHE GESTISCE TUTTA LA LOGICA -->
+    <script type="module" src="./moduli/index.js"></script>
+
+    <script>
+        // Questa funzione ora chiama semplicemente l'avvio importato dal tuo modulo index.js
+        window.apriModaleTurni = () => {
+            const modale = document.getElementById('modal-turni-main');
+            if (modale) {
+                modale.style.display = 'flex';
+                // L'import e il richiamo della funzione devono essere nel tuo moduli/index.js
+                if(window.avviaMotoreTurniDaIndex) {
+                    window.avviaMotoreTurniDaIndex();
+                }
+            }
+        };
+    </script>
 </body>
 </html>
