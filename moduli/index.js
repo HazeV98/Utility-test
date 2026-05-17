@@ -6,6 +6,7 @@ import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/fir
 // Importiamo i sottomoduli
 import { avviaMotoreSegnalazioni } from './report.js';
 import { avviaMotoreTurni } from './turni.js';
+import { avviaMotoreOrari } from './orari.js';
 
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -62,13 +63,13 @@ const DEFAULT_APPS = [
     { id: "calendario", label: "Calendario", href: "calendario.html", defaultColor: "#0066cc" },
     { id: "statistiche", label: "Statistiche", href: "dati_calendario.html", defaultColor: "#6f42c1" },
     { id: "rotazioni", label: "Rotazioni", href: "rotazioni.html", defaultColor: "#fd7e14" },
-    // MODIFICATO QUI: Ora apre la modale invece della pagina
     { id: "turni", label: "Turni", onclick: "window.apriModaleTurni()", defaultColor: "#20c997" },
     { id: "bachecaturni", label: "Bacheca\nTurni", href: "bacheca_turni.html", defaultColor: "#e83e8c" },
     { id: "barcadvisor", label: "BarcAdvisor", image: "icone_app/iconba.png", href: "barcadvisor.html" },
     { id: "rubrica", label: "Rubrica", href: "rubrica.html", defaultColor: "#343a40" },
     { id: "ferie", label: "Rotazione\nFerie", href: "rotazione_ferie.html", defaultColor: "#ffc107" },
-    { id: "orari", label: "Orari\nNavigaz.", href: "orari.html", defaultColor: "#17a2b8" },
+    // MODIFICATO QUI: Ora apre la modale orari invece della pagina html
+    { id: "orari", label: "Orari\nNavigaz.", onclick: "window.apriModaleOrari()", defaultColor: "#17a2b8" },
     { id: "chebateo", label: "CheBateo", image: "icone_app/iconcb.png", href: "https://m.chebateo.it/" },
     { id: "documenti", label: "Documenti", href: "documenti.html", defaultColor: "#6c757d" },
     { id: "link", label: "Link", href: "link.html", defaultColor: "#495057" },
@@ -102,14 +103,12 @@ window.apriMainModaleSegnalazioni = () => {
     }
 };
 
-// Nuova funzione ponte per aprire i Turni
-window.apriModaleTurni = () => {
+// Funzione ponte per aprire i Turni
+window.avviaMotoreTurniDaIndex = () => {
     if (!auth.currentUser) {
         alert("Devi effettuare il login per accedere ai turni.");
         return;
     }
-    
-    // Controllo permessi turni (bannato o mancante dati)
     if (window.currentUserData) {
         if (window.currentUserData.turni_banned === true) {
             alert("Il tuo accesso alla pagina Turni è stato temporaneamente revocato.");
@@ -121,12 +120,8 @@ window.apriModaleTurni = () => {
             return;
         }
     }
-
-    // Se tutto ok, apro la modale e avvio il motore turni
-    window.apriModal('modal-turni-main');
     avviaMotoreTurni();
     
-    // Aggiorniamo la data di ultimo accesso turni su firebase
     const oggiStr = new Date().toISOString().split('T')[0];
     if (window.currentUserData && (window.currentUserData.turni_access !== true || window.currentUserData.last_turni_access !== oggiStr)) {
         setDoc(doc(db, "utenti", auth.currentUser.uid), { 
@@ -136,6 +131,11 @@ window.apriModaleTurni = () => {
         window.currentUserData.turni_access = true;
         window.currentUserData.last_turni_access = oggiStr;
     }
+};
+
+// Funzione ponte per aprire gli Orari
+window.avviaMotoreOrariDaIndex = () => {
+    avviaMotoreOrari();
 };
 
 window.controllaBacheca = async () => {
