@@ -291,6 +291,17 @@
         .sc-suggestion-item:hover, .sc-suggestion-item:active { background-color: var(--surface-hover); color: var(--primary); padding-left: 20px; transition: padding 0.2s;}
         
         .status-message { text-align: center; color: var(--text-muted); font-size: 15px; padding: 24px; background: var(--surface); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 10px;}
+
+        /* --- STILI SPECIFICI LINK --- */
+        .category-block { display: flex; flex-direction: column; gap: 12px; text-align: left; margin-bottom: 10px; animation: slideInUp 0.4s ease both;}
+        .category-title { font-size: 13px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; margin-top: 16px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; display: flex; align-items: center; gap: 8px;}
+        .link-row { display: flex; gap: 10px; width: 100%; align-items: stretch; }
+        .link-btn { flex-grow: 1; background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); padding: 16px; font-size: 15px; font-weight: 600; border-radius: 14px; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; box-shadow: var(--shadow-sm); }
+        .link-btn:active { background-color: var(--surface-hover); transform: scale(0.98); border-color: var(--primary); color: var(--primary);}
+        .link-btn i.fa-arrow-up-right-from-square { color: var(--primary); font-size: 16px; }
+        .copy-btn { width: 54px; background-color: var(--surface); color: var(--primary); border: 1px solid var(--border-color); border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; box-shadow: var(--shadow-sm); transition: all 0.2s; }
+        .copy-btn:active { background-color: var(--surface-hover); transform: scale(0.95); border-color: var(--primary); color: white; background-color: var(--primary);}
+
     </style>
 </head>
 <body>
@@ -308,7 +319,6 @@
         <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
         <a href="rotazioni.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
         
-        <!-- LINK MENU AGGIORNATO PER APRIRE LA MODALE TURNI -->
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleTurni(); return false;" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
         
         <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
@@ -316,12 +326,14 @@
         <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
         <a href="rotazione_ferie.html" class="sidebar-link"><i class="fa-solid fa-umbrella-beach"></i> Rotazione Ferie</a>
         
-        <!-- LINK MENU AGGIORNATO PER APRIRE LA MODALE ORARI -->
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleOrari(); return false;" class="sidebar-link"><i class="fa-regular fa-clock"></i> Orari Navigazione</a>
         
         <a href="https://m.chebateo.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-water"></i> CheBateo</a>
         <a href="documenti.html" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Documenti</a>
-        <a href="link.html" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
+        
+        <!-- LINK MENU AGGIORNATO PER APRIRE LA MODALE LINK -->
+        <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleLink(); return false;" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
+        
         <a href="contatti.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i> Contatti</a>
         <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
         <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
@@ -794,9 +806,7 @@
         </div>
     </div>
 
-    <!-- ========================================================== -->
     <!-- MODALE TURNI -->
-    <!-- ========================================================== -->
     <div id="modal-turni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-turni-main')">
         <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
             <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-turni-main')"></i>
@@ -851,9 +861,7 @@
         </div>
     </div>
 
-    <!-- ========================================================== -->
     <!-- MODALE ORARI NAVIGAZIONE -->
-    <!-- ========================================================== -->
     <div id="modal-orari-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-orari-main')">
         <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
             <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-orari-main')"></i>
@@ -864,6 +872,23 @@
 
             <!-- Area scorrevole interna dove orari.js inietterà i bottoni -->
             <div id="orari-content-area" style="flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 14px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- MODALE LINK -->
+    <!-- ========================================================== -->
+    <div id="modal-link-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-link-main')">
+        <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-link-main')"></i>
+            
+            <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-link"></i> Link Utili
+            </h3>
+
+            <!-- Area scorrevole interna dove link.js inietterà i bottoni -->
+            <div id="link-content-area" style="flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 14px;">
             </div>
         </div>
     </div>
@@ -889,6 +914,16 @@
                 modale.style.display = 'flex';
                 if(window.avviaMotoreOrariDaIndex) {
                     window.avviaMotoreOrariDaIndex();
+                }
+            }
+        };
+
+        window.apriModaleLink = () => {
+            const modale = document.getElementById('modal-link-main');
+            if (modale) {
+                modale.style.display = 'flex';
+                if(window.avviaMotoreLinkDaIndex) {
+                    window.avviaMotoreLinkDaIndex();
                 }
             }
         };
