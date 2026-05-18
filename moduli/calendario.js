@@ -59,7 +59,6 @@ const RESET_DOPO_AGGIORNAMENTO = {
 // ==========================================
 // FIX INIZIALIZZAZIONE STATO
 // ==========================================
-// Assicuriamoci che se il localStorage è sporco o vuoto, lo stato parta pulito.
 function getInitialState() {
     let savedState = null;
     try {
@@ -88,7 +87,6 @@ function getInitialState() {
     };
 
     if (savedState && typeof savedState === 'object') {
-        // Uniamo lo stato salvato con i default per evitare oggetti mancanti
         return { ...defaultState, ...savedState };
     }
     return defaultState;
@@ -107,17 +105,18 @@ if (!state.permessoSP) state.permessoSP = {};
 if (!state.dispCache) state.dispCache = {};
 if (!state.coloriRotazione) state.coloriRotazione = {}; 
 if (!state.profili) state.profili = []; 
+if (!state.variazioni) state.variazioni = {};
 
 // ==========================================
 // FIX BUG CRASH calcolaTurni / stringToNum
 // ==========================================
-// Funzione stringToNum blindata. Non crasherà mai, se gli passi immondizia restituisce 0.
 function stringToNum(s) { 
     if (!s || typeof s !== 'string') return 0; 
     try {
         let p = s.split('-'); 
-        if(p.length !== 3) return 0; // Se non è nel formato YYYY-MM-DD
-        return Math.floor(Date.UTC(p[0], p[1]-1, p[2]) / 86400000); 
+        if(p.length !== 3) return 0; 
+        let parsedDate = Math.floor(Date.UTC(p[0], p[1]-1, p[2]) / 86400000);
+        return isNaN(parsedDate) ? 0 : parsedDate;
     } catch (e) {
         console.error("Errore stringToNum per valore:", s, e);
         return 0;
@@ -142,7 +141,6 @@ window.chiudiMenuLaterale = function() {
     document.getElementById('sidebar-overlay').style.display = 'none'; 
 };
 
-// --- FUNZIONI MENU DESTRO E MODIFICA MULTIPLA ---
 window.apriMenuDestro = function() {
     document.getElementById('right-sidebar').classList.add('open');
     document.getElementById('sidebar-overlay').style.display = 'block';
@@ -172,14 +170,12 @@ window.cambiaProfilo = function(indexStr) {
     let index = parseInt(indexStr);
     if(isNaN(index) || !state.profili || index < 0 || index >= state.profili.length) return;
     
-    // Salva lo stato corrente nel profilo attivo prima di cambiare
     if (state.profiloAttivo !== undefined && state.profiloAttivo >= 0 && state.profiloAttivo < state.profili.length) {
         state.profili[state.profiloAttivo] = JSON.parse(JSON.stringify(state)); 
     }
     
-    // Carica il nuovo profilo
     let p = state.profili[index];
-    state = { ...p }; // Shallow copy, ma sufficiente
+    state = { ...p }; 
     state.profiloAttivo = index;
     
     salvaERicarica();
@@ -196,7 +192,6 @@ window.eliminaProfilo = function(indexStr, evt) {
     if(confirm("Sei sicuro di voler eliminare questo profilo? L'azione è irreversibile.")) {
         state.profili.splice(index, 1);
         
-        // Se elimino quello attivo, attivo il primo
         if(state.profiloAttivo === index) {
             state.profiloAttivo = 0;
             let p = state.profili[0];
@@ -923,12 +918,11 @@ window.importaDatiDaFile = function(event) {
             try {
                 const newState = JSON.parse(e.target.result);
                 if (newState && typeof newState === 'object') {
-                    // Controlliamo che l'oggetto non sia vuoto e abbia almeno un po' di struttura
                     if (Object.keys(newState).length === 0) {
                          alert("Il file di backup sembra vuoto o non valido.");
                          return;
                     }
-                    state = { ...getInitialState(), ...newState }; // Merge sicuro
+                    state = { ...getInitialState(), ...newState }; 
                     salvaERicarica();
                     alert('Backup caricato con successo!');
                 } else {
@@ -1182,7 +1176,7 @@ function apriModifica(dStr) {
 
     let turnoDisplay = "";
     
-    if (state.variazioni[dStr]) {
+    if (state.variazioni && state.variazioni[dStr]) {
         turnoDisplay = state.variazioni[dStr];
     } else if (isGiornoRiposo(dStr)) {
         turnoDisplay = "RI";
@@ -1463,7 +1457,6 @@ window.salvaAltro = function() {
 };
 
 function calcolaTurni() {
-    // PROTEZIONE EXTRA (evita crash se il setup è assente/saltato in certi punti del codice)
     if (!state.depositoAttivo && !state.setupSkipped) return [];
     
     let turni = [];
@@ -1490,7 +1483,7 @@ function calcolaTurni() {
         let code = "";
         let classColor = "";
 
-        if (state.variazioni[dStr]) {
+        if (state.variazioni && state.variazioni[dStr]) {
             code = state.variazioni[dStr];
             classColor = (code === "RI" || code === "RIPOSO" || code === "AL") ? "bg-riposo" : "bg-modificato";
         } else if (state.setupSkipped) {
@@ -1650,11 +1643,11 @@ function initCalendar() {
                 return { html: `<div style="text-align:center;">${arg.event.title}</div>` };
             }
 
-            if (state.colori[dStr]) {
+            if (state.colori && state.colori[dStr]) {
                 bgColor = state.colori[dStr];
                 colorVal = "#fff"; 
             } else {
-                let varCorr = state.variazioni[dStr];
+                let varCorr = state.variazioni && state.variazioni[dStr];
                 let isRip = (varCorr === "RI" || varCorr === "RIPOSO" || varCorr === "AL") || (!varCorr && isGiornoRiposo(dStr));
                 
                 if (!isRip && !varCorr && state.coloriRotazione) {
@@ -1861,14 +1854,6 @@ async function caricaVarianti() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     
-    // Fix: assicura il redirect se si accede alla vecchia index ma senza sessione
-    const currentPath = window.location.pathname;
-    const utenteEsistente = localStorage.getItem('utenteFirebase');
-    if (!utenteEsistente && (currentPath.endsWith('calendario.html') || currentPath.endsWith('calendario'))) {
-        window.location.href = 'index.html';
-        return;
-    }
-
     onAuthStateChanged(auth, (user) => {
         if (user) {
             window.utenteLoggato = user.uid;
