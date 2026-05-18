@@ -14,7 +14,7 @@
     <title>Calendario Turni</title>
 
     <script>
-        // --- GESTIONE TEMA DA PREFERENZE (Mantenuto qui per evitare sfarfallii visivi al caricamento) ---
+        // --- GESTIONE TEMA DA PREFERENZE ---
         (function applicaTema() {
             try {
                 let prefStr = localStorage.getItem('preferenze_layout_haze');
@@ -36,7 +36,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
@@ -50,20 +50,22 @@
     <style>
         :root { 
             --riposo: #1e8449; --disp: #feb236; --turno: #5e72e4; 
-            --bg: #f7f9fe; --text: #32325d;
+            --bg: #f4f6fa; --text: #32325d;
             --surface: #ffffff;
             --border-color: #e9ecef;
             --primary: #5e72e4;
-            --text-muted: #525f7f;
+            --text-muted: #8898aa;
+            --cell-bg: #f8f9fe;
         }
 
         [data-theme="dark"] {
             --bg: #121212;
             --text: #e0e0e0;
             --surface: #1e1e1e;
-            --border-color: #333333;
+            --border-color: #2c2c2c;
             --primary: #8295e8;
             --text-muted: #a0a0a0;
+            --cell-bg: #252525;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -71,9 +73,10 @@
                 --bg: #121212;
                 --text: #e0e0e0;
                 --surface: #1e1e1e;
-                --border-color: #333333;
+                --border-color: #2c2c2c;
                 --primary: #8295e8;
                 --text-muted: #a0a0a0;
+                --cell-bg: #252525;
             }
         }
         
@@ -84,49 +87,186 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* --- STILI BARRA SUPERIORE MODERNA --- */
         #topBar { 
-            padding: calc(20px + env(safe-area-inset-top)) 20px 15px 20px; 
+            padding: calc(15px + env(safe-area-inset-top)) 20px 10px 20px; 
             display: flex; justify-content: space-between; 
-            align-items: center; background: var(--surface); box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            align-items: center; 
+            background: transparent;
             position: sticky; top: 0; z-index: 100;
+            pointer-events: none; /* Permette il click sugli elementi sotto */
         }
 
-        #calendar { background: var(--surface); padding: 2px; border-radius: 15px; margin: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .topbar-btn {
+            pointer-events: auto; /* Riattiva il click per i bottoni */
+            background: var(--surface);
+            color: var(--text);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            border: 1px solid var(--border-color);
+            font-size: 20px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .topbar-btn:active {
+            transform: scale(0.92);
+        }
 
-        .fc .fc-toolbar-title { font-size: 1.2em !important; text-transform: capitalize; color: var(--text); }
-        .fc .fc-button { padding: 5px 10px !important; font-size: 0.9em !important; }
-        .fc .fc-btnSalto-button { background-color: var(--surface) !important; border-color: var(--border-color) !important; color: var(--text) !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important; }
-        .fc .fc-daygrid-day-frame { min-height: 80px !important; cursor: pointer; }
+        /* --- STILI MENU LATERALE DESTRO (AZIONI) --- */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; backdrop-filter: blur(3px); }
+        .right-sidebar { position: fixed; top: 0; right: -300px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: -5px 0 25px rgba(0,0,0,0.1); z-index: 2001; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; }
+        .right-sidebar.open { right: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: calc(20px + env(safe-area-inset-top)) 20px 20px 20px; background-color: var(--primary); color: white; }
         
+        /* --- STILI CALENDARIO MODERNO --- */
+        #calendar { 
+            background: var(--surface); 
+            padding: 20px 15px; 
+            border-radius: 28px; 
+            margin: 0 15px 20px 15px; 
+            box-shadow: 0 8px 30px rgba(0,0,0,0.04); 
+            border: 1px solid var(--border-color);
+        }
+
+        /* Override FullCalendar Base */
+        .fc-theme-standard td, .fc-theme-standard th, .fc-theme-standard .fc-scrollgrid {
+            border: none !important;
+        }
+        .fc-scrollgrid {
+            border-collapse: separate !important;
+            border-spacing: 6px !important; /* Spazio tra i giorni */
+        }
+        
+        /* Header Giorni (Lun, Mar, ecc) */
+        .fc-col-header-cell {
+            padding: 10px 0 !important;
+        }
+        .fc-col-header-cell-cushion {
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75em;
+            letter-spacing: 0.5px;
+            text-decoration: none !important;
+        }
+
+        /* Celle dei Giorni */
+        .fc-daygrid-day {
+            background: var(--cell-bg);
+            border-radius: 16px !important;
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+        .fc-daygrid-day-frame {
+            min-height: 85px !important; 
+            padding: 4px !important;
+            cursor: pointer;
+        }
+        .fc-daygrid-day-number {
+            font-weight: 600;
+            font-size: 0.9em;
+            padding: 6px !important;
+            color: var(--text);
+            text-decoration: none !important;
+        }
+
+        /* Giorno Corrente */
+        .fc-day-today {
+            background: rgba(94, 114, 228, 0.08) !important;
+            border: 2px solid var(--primary) !important;
+        }
+        .fc-day-today .fc-daygrid-day-number {
+            color: var(--primary) !important;
+            font-weight: 800 !important;
+            background: var(--primary);
+            color: white !important;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin: 4px;
+            padding: 0 !important;
+        }
+
+        /* Toolbar (Mese e Bottoni) */
+        .fc .fc-toolbar.fc-header-toolbar {
+            margin-bottom: 25px;
+            padding: 0 5px;
+        }
+        .fc-toolbar-title { 
+            font-weight: 800 !important; 
+            font-size: 1.5em !important; 
+            text-transform: capitalize; 
+            color: var(--text); 
+            letter-spacing: -0.5px;
+        }
+        .fc .fc-button-primary { 
+            background: var(--surface) !important; 
+            border: 1px solid var(--border-color) !important; 
+            color: var(--text) !important; 
+            border-radius: 12px !important; 
+            text-transform: capitalize !important; 
+            font-weight: 600 !important; 
+            padding: 8px 14px !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02) !important;
+            transition: all 0.2s;
+        }
+        .fc .fc-button-primary:hover {
+            background: var(--bg) !important;
+        }
+        .fc .fc-button-primary:not(:disabled):active, .fc .fc-button-primary:not(:disabled).fc-button-active {
+            background: var(--border-color) !important;
+            color: var(--text) !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05) !important;
+        }
+        
+        /* Eventi / Turni */
         .fc-event { 
-            border: none !important; padding: 6px 4px !important; 
-            margin: 2px 0 !important; border-radius: 6px !important; 
-            font-weight: 700 !important; font-size: 0.85em !important; 
-            text-align: center; cursor: pointer !important;
+            border: none !important; 
+            padding: 6px 4px !important; 
+            margin: 3px 2px !important; 
+            border-radius: 8px !important; 
+            font-weight: 700 !important; 
+            font-size: 0.85em !important; 
+            text-align: center; 
+            cursor: pointer !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
         }
 
         .bg-riposo { background-color: var(--riposo) !important; }
         .bg-disp { background-color: var(--disp) !important; color: #fff !important; }
         .bg-turno { background-color: var(--turno) !important; color: #fff !important; }
         .bg-modificato { background-color: #f5365c !important; color: #fff !important; }
-        .bg-ferie { background-color: #20c997 !important; color: white !important; font-size: 0.75em !important; padding: 2px !important; margin-bottom: 4px !important; }
+        .bg-ferie { background-color: #20c997 !important; color: white !important; font-size: 0.75em !important; padding: 4px 2px !important; margin-bottom: 4px !important; }
 
         .disclaimer-banner {
-            margin: 15px 10px; padding: 15px; background-color: rgba(255, 193, 7, 0.15);
-            border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 12px; color: #856404;
-            font-size: 13px; text-align: center; line-height: 1.4;
+            margin: 15px; padding: 15px; background-color: rgba(255, 193, 7, 0.15);
+            border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 16px; color: #856404;
+            font-size: 13px; text-align: center; line-height: 1.4; font-weight: 500;
         }
         [data-theme="dark"] .disclaimer-banner { color: #ffd861; }
 
-        #welcomeModal, #stepModal, #editModal, #altroModal, #resetModal, #backupModal, #imageModal, #jumpModal, #icsModal, #multiEditModal, #cambioBibbiaModal, #pdfTipo2Modal, #coloriRotazioneModal, #ferieModal, #pdfSyncModal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); }
-        .modal-content { background: var(--surface); color: var(--text); margin: 15% auto; padding: 25px; width: 85%; max-width: 400px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; max-height: 80vh; overflow-y: auto; }
+        /* --- STILI MODALI --- */
+        #welcomeModal, #stepModal, #editModal, #altroModal, #resetModal, #backupModal, #imageModal, #jumpModal, #icsModal, #multiEditModal, #cambioBibbiaModal, #pdfTipo2Modal, #coloriRotazioneModal, #ferieModal, #pdfSyncModal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        .modal-content { background: var(--surface); color: var(--text); margin: 15% auto; padding: 25px; width: 85%; max-width: 400px; border-radius: 28px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); text-align: center; max-height: 80vh; overflow-y: auto; }
 
-        select, input[type="text"], input[type="date"], input[type="number"] { width: 100%; box-sizing: border-box; margin: 15px 0; padding: 15px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 16px; background: var(--bg); color: var(--text); -webkit-appearance: none; font-family: 'Inter', sans-serif; }
-        .btn { padding: 16px; border: none; border-radius: 14px; color: white; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; font-size: 15px; font-family: 'Inter', sans-serif; }
+        select, input[type="text"], input[type="date"], input[type="number"] { width: 100%; box-sizing: border-box; margin: 15px 0; padding: 15px; border: 2px solid var(--border-color); border-radius: 14px; font-size: 16px; background: var(--bg); color: var(--text); -webkit-appearance: none; font-family: 'Inter', sans-serif; font-weight: 500; transition: border-color 0.2s; }
+        select:focus, input:focus { border-color: var(--primary); outline: none; }
+        .btn { padding: 16px; border: none; border-radius: 16px; color: white; cursor: pointer; width: 100%; margin-top: 10px; font-weight: 700; font-size: 15px; font-family: 'Inter', sans-serif; transition: transform 0.1s, opacity 0.2s; }
+        .btn:active { transform: scale(0.97); }
         .btn-reset { padding: 12px 15px; width: auto; font-size: 14px; }
         .instruction-text { font-size: 15px; line-height: 1.6; color: var(--text-muted); margin-bottom: 10px; }
-        .deposito-tag { font-size: 10px; background: rgba(94, 114, 228, 0.1); color: var(--turno); padding: 4px 8px; border-radius: 5px; font-weight: bold; }
-
+        
         .color-circle { width: 40px; height: 40px; border-radius: 50%; display: inline-block; margin: 6px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s, border 0.2s; }
         .color-circle.selected { border: 3px solid var(--text); transform: scale(1.15); box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
         .color-yellow { background: #f1c40f; }
@@ -143,71 +283,25 @@
         @media (max-width: 400px) {
             .fc-event { font-size: 0.75em !important; padding: 4px 2px !important; }
             .modal-content { padding: 20px; }
+            .fc-scrollgrid { border-spacing: 3px !important; }
+            #calendar { padding: 15px 10px; border-radius: 20px; }
         }
-
-        /* --- STILI MENU LATERALE SINISTRO --- */
-        .hamburger-btn { background: none; border: none; font-size: 24px; color: var(--text); cursor: pointer; padding: 0; margin-right: 15px; }
-        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background-color: var(--surface); box-shadow: 2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: left 0.3s ease; display: flex; flex-direction: column; }
-        .sidebar.open { left: 0; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: calc(20px + env(safe-area-inset-top)) 20px 20px 20px; background-color: var(--turno); color: white; }
-        .sidebar-link { padding: 15px 20px; text-decoration: none; color: var(--text); font-size: 16px; border-bottom: 1px solid var(--border-color); display: block; font-weight: 500; }
-        .sidebar-link:active, .sidebar-link:hover { background-color: rgba(0,0,0,0.02); color: var(--turno); font-weight: bold; }
-        [data-theme="dark"] .sidebar-link:active, [data-theme="dark"] .sidebar-link:hover { background-color: rgba(255,255,255,0.05); }
-
-        /* --- STILI MENU LATERALE DESTRO (AZIONI) --- */
-        .right-sidebar { position: fixed; top: 0; right: -280px; width: 250px; height: 100%; background-color: var(--surface); box-shadow: -2px 0 5px rgba(0,0,0,0.2); z-index: 2001; transition: right 0.3s ease; display: flex; flex-direction: column; }
-        .right-sidebar.open { right: 0; }
-        
-        .custom-file-upload { display: inline-block; padding: 15px; cursor: pointer; background: var(--bg); border: 2px dashed var(--border-color); border-radius: 12px; color: var(--text); font-weight: bold; width: 100%; box-sizing: border-box; text-align: center; margin-top: 15px; }
-        .fc-day-today {
-            background-color: rgba(94, 114, 228, 0.08) !important;
-            border: 2px solid var(--primary) !important;
-            border-radius: 14px;
-        }
-        .fc-day-today .fc-daygrid-day-number {
-            color: var(--primary) !important;
-            font-weight: 700 !important;
-        }
-        [data-theme="dark"] .fc-day-today .fc-daygrid-day-number { color: var(--primary) !important; font-weight: bold !important; }
     </style>
 </head>
 <body>
 
-<div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuLaterale(); chiudiMenuDestro();"></div>
-
-<div id="sidebar" class="sidebar">
-    <div class="sidebar-header">
-        <h3 style="margin:0; color:white;">Menu</h3>
-        <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuLaterale()">✕</button>
-    </div>
-    <a href="index.html" class="sidebar-link"><i class="fa-solid fa-house fa-fw"></i> Home Page</a>
-    <a href="calendario.html" class="sidebar-link" style="background-color: rgba(94, 114, 228, 0.1); color: var(--turno); font-weight: bold;"><i class="fa-solid fa-calendar-days fa-fw"></i> Calendario</a>
-    <a href="dati_calendario.html" class="sidebar-link"><i class="fa-solid fa-chart-pie fa-fw"></i> Statistiche Calendario</a>
-    <a href="turni.html" class="sidebar-link"><i class="fa-solid fa-rotate fa-fw"></i> Turni</a>
-    <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-clipboard-list fa-fw"></i> Bacheca Turni</a>
-    <a href="rubrica.html" class="sidebar-link"><i class="fa-solid fa-address-book fa-fw"></i> Rubrica Colleghi</a>
-    <a href="rotazione_ferie.html" class="sidebar-link"><i class="fa-solid fa-umbrella-beach fa-fw"></i> Rotazione Ferie</a>
-    <a href="orari.html" class="sidebar-link"><i class="fa-regular fa-clock fa-fw"></i> Orari</a>
-    <a href="documenti.html" class="sidebar-link"><i class="fa-solid fa-file-pdf fa-fw"></i> Documenti</a>
-    <a href="link.html" class="sidebar-link"><i class="fa-solid fa-link fa-fw"></i> Link</a>
-    <a href="contatti.html" class="sidebar-link"><i class="fa-solid fa-id-card fa-fw"></i> Contatti</a>
-    <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils fa-fw"></i> Buoni Pasto</a>
-    <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-folder-open fa-fw"></i> Archivio DDS</a>
-    <a href="guida.html" class="sidebar-link"><i class="fa-solid fa-book-open fa-fw"></i> Guida</a>
-</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuDestro();"></div>
 
 <div id="right-sidebar" class="right-sidebar">
-    <div class="sidebar-header" style="background-color: var(--primary);">
-        <h3 style="margin:0; color:white;">Azioni</h3>
-        <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuDestro()">✕</button>
+    <div class="sidebar-header">
+        <h3 style="margin:0; font-weight: 700;">Menu Azioni</h3>
+        <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuDestro()"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div style="padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto;">
         
-        <div style="background: var(--bg); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border-color);">
-            <h4 style="margin: 0 0 10px 0; color: var(--text); font-size: 15px;"><i class="fa-solid fa-users"></i> Profili (Bibbie)</h4>
-            <div id="lista-profili-dinamica" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
-                </div>
+        <div style="background: var(--bg); padding: 15px; border-radius: 16px; margin-bottom: 5px; border: 1px solid var(--border-color);">
+            <h4 style="margin: 0 0 12px 0; color: var(--text); font-size: 15px;"><i class="fa-solid fa-users"></i> Profili (Bibbie)</h4>
+            <div id="lista-profili-dinamica" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
             <button class="btn btn-reset" style="background: var(--primary); color: white; margin:0; width:100%; font-weight: bold;" onclick="avviaNuovoProfilo()">
                 <i class="fa-solid fa-plus"></i> Aggiungi Profilo
             </button>
@@ -225,7 +319,7 @@
         <button class="btn btn-reset" style="background: #20c997; margin:0; width:100%;" onclick="apriFerieModal()"><i class="fa-solid fa-umbrella-beach"></i> Ferie Programmate</button>
         
         <input type="file" id="pdfBibbiaInput" style="display:none" accept=".pdf" onchange="elaboraPdfBibbia(event)">
-        <button class="btn btn-reset" style="background: #e83e8c; margin:0; width:100%;" onclick="document.getElementById('pdfBibbiaInput').click()"><i class="fa-solid fa-file-import"></i> Importa Bibbia</button>
+        <button class="btn btn-reset" style="background: #e83e8c; margin:0; width:100%;" onclick="document.getElementById('pdfBibbiaInput').click()"><i class="fa-solid fa-file-import"></i> Sincronizza da PDF</button>
 
         <button class="btn btn-reset" style="background: #f1c40f; color: #32325d; margin:0; width:100%;" onclick="apriCambioBibbia()"><i class="fa-solid fa-rotate"></i> Cambio Bibbia</button>
         <button class="btn btn-reset" style="background: #adb5bd; margin:0; width:100%;" onclick="apriBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup Dati</button>
@@ -234,22 +328,23 @@
 </div>
 
 <div id="topBar">
-    <div style="display: flex; align-items: center;">
-        <button class="hamburger-btn" onclick="apriMenuLaterale()"><i class="fa-solid fa-bars"></i></button>
-        <div>
-            <h2 style="margin:0; font-size: 18px;">Gestione Turni</h2>
-            <span id="activeDepotLabel" class="deposito-tag">In attesa...</span>
-        </div>
-    </div>
-    <button class="hamburger-btn" style="margin-right: 0;" onclick="apriMenuDestro()"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+    <a href="index.html" class="topbar-btn" aria-label="Torna alla Home">
+        <i class="fa-solid fa-house"></i>
+    </a>
+    <div style="flex-grow: 1;"></div>
+    <button class="topbar-btn" onclick="apriMenuDestro()" aria-label="Menu Azioni">
+        <i class="fa-solid fa-ellipsis-vertical"></i>
+    </button>
 </div>
+
+<!-- ================= MODALS ================= -->
 
 <div id="pdfSyncModal">
     <div class="modal-content" style="max-height: 85vh; display: flex; flex-direction: column;">
         <h3 style="color: #e83e8c; margin-top: 0;"><i class="fa-solid fa-file-pdf"></i> Sincronizzazione PDF</h3>
         <p class="instruction-text" style="font-size: 14px;">Seleziona i turni da aggiornare rispetto al calendario attuale:</p>
         
-        <div id="pdfSyncList" style="text-align: left; overflow-y: auto; flex: 1; border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; margin-bottom: 15px;">
+        <div id="pdfSyncList" style="text-align: left; overflow-y: auto; flex: 1; border: 1px solid var(--border-color); border-radius: 14px; padding: 10px; margin-bottom: 15px;">
             </div>
         
         <button class="btn" style="background: #2dce89; margin-top: auto;" onclick="applicaModifichePdf()">Applica Modifiche</button>
@@ -261,9 +356,9 @@
     <div class="modal-content" style="padding: 20px;">
         <h3 style="color: #20c997; margin-top: 0;"><i class="fa-solid fa-umbrella-beach"></i> Ferie Programmate</h3>
         
-        <div style="display: flex; margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 1px solid #20c997;">
-            <button id="btnTabFerieBase" style="flex:1; padding:10px; border:none; background:#20c997; color:white; font-weight:bold; cursor:pointer; font-family:'Inter';" onclick="switchFerieTab('base')">Impostazioni Base</button>
-            <button id="btnTabFerieScambio" style="flex:1; padding:10px; border:none; background:var(--surface); color:#20c997; font-weight:bold; cursor:pointer; font-family:'Inter';" onclick="switchFerieTab('scambio')">Scambio Ferie</button>
+        <div style="display: flex; margin-bottom: 20px; border-radius: 12px; overflow: hidden; border: 1px solid #20c997; padding: 2px;">
+            <button id="btnTabFerieBase" style="flex:1; padding:10px; border:none; background:#20c997; color:white; font-weight:bold; cursor:pointer; font-family:'Inter'; border-radius: 10px;" onclick="switchFerieTab('base')">Impostazioni</button>
+            <button id="btnTabFerieScambio" style="flex:1; padding:10px; border:none; background:transparent; color:#20c997; font-weight:bold; cursor:pointer; font-family:'Inter'; border-radius: 10px;" onclick="switchFerieTab('scambio')">Scambio</button>
         </div>
 
         <div id="ferieBaseSection" style="display: block;">
@@ -311,7 +406,7 @@
 <div id="coloriRotazioneModal">
     <div class="modal-content" style="padding: 20px;">
         <h3 style="color: #11cdef; margin-top: 0;"><i class="fa-solid fa-palette"></i> Colori Rotazione</h3>
-        <p class="instruction-text" style="font-size: 14px; margin-bottom: 20px;">Assegna un colore per ogni giorno lavorativo della tua rotazione (dal 1° al 6° dopo il riposo).</p>
+        <p class="instruction-text" style="font-size: 14px; margin-bottom: 20px;">Assegna un colore per ogni giorno lavorativo della tua rotazione.</p>
         
         <div style="margin-bottom: 12px; text-align: left; padding-bottom: 10px; border-bottom: 2px dashed var(--border-color);">
             <div style="font-weight: bold; color: var(--riposo); font-size: 14px; margin-bottom: 5px;">Giorno di Riposo (RI / AL):</div>
@@ -443,7 +538,7 @@
                 <option value="11">Novembre</option>
                 <option value="12">Dicembre</option>
             </select>
-            <input type="number" id="pdfTipo2Anno" style="flex: 1; margin: 0; padding: 15px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 16px;">
+            <input type="number" id="pdfTipo2Anno" style="flex: 1; margin: 0; padding: 15px;">
         </div>
         
         <button class="btn" style="background: #5e72e4;" onclick="generaPdfTipo2()"><i class="fa-solid fa-download"></i> Scarica PDF</button>
@@ -599,9 +694,9 @@
     <div class="modal-content">
         <h3 id="modalDate" style="margin-top:0;">Data</h3>
         
-        <div id="avvisoVariantiArea" style="display: none; background-color: rgba(255, 193, 7, 0.15); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 10px; color: #856404; padding: 12px; margin-bottom: 15px; font-size: 14px; font-weight: bold; line-height: 1.4; text-align: left;"></div>
+        <div id="avvisoVariantiArea" style="display: none; background-color: rgba(255, 193, 7, 0.15); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 14px; color: #856404; padding: 12px; margin-bottom: 15px; font-size: 14px; font-weight: bold; line-height: 1.4; text-align: left;"></div>
         
-        <div id="infoTurniArea" style="font-size:0.9em; margin-bottom:15px; padding:10px; background:var(--bg); border: 1px solid var(--border-color); border-radius:10px; text-align:left; color:var(--text-muted); display:none;"></div>
+        <div id="infoTurniArea" style="font-size:0.9em; margin-bottom:15px; padding:12px; background:var(--bg); border: 1px solid var(--border-color); border-radius:14px; text-align:left; color:var(--text-muted); display:none;"></div>
         
         <button id="btnVisualizzaTurno" class="btn" style="background: #2dce89; margin-bottom: 15px; display: none;" onclick="apriImmagineTurno()"><i class="fa-regular fa-image"></i> Mostra Immagine Turno</button>
         
@@ -618,7 +713,7 @@
     <div class="modal-content">
         <h3 style="margin-top:0; color: var(--text);"><i class="fa-solid fa-ellipsis"></i> Altre Opzioni</h3>
         
-        <div style="background: var(--bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: left; border: 2px solid var(--border-color);">
+        <div style="background: var(--bg); padding: 15px; border-radius: 16px; margin-bottom: 15px; text-align: left; border: 1px solid var(--border-color);">
             
             <label style="display: flex; align-items: center; font-size: 15px; color: var(--text-muted); margin-bottom: 10px; font-weight: bold; cursor: pointer;">
                 <input type="checkbox" id="checkSospesoRiposoAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #f5365c;">
@@ -641,8 +736,8 @@
             </label>
             
             <div id="straordinarioInputsAltro" style="display: none; margin-top: 10px; flex-direction: row; gap: 10px;">
-                <input type="number" id="oreStraordAltro" placeholder="Ore" min="0" style="flex: 1; padding: 12px; margin: 0; border: 2px solid var(--border-color); border-radius: 10px; font-size: 15px;">
-                <input type="number" id="minutiStraordAltro" placeholder="Minuti" min="0" max="59" style="flex: 1; padding: 12px; margin: 0; border: 2px solid var(--border-color); border-radius: 10px; font-size: 15px;">
+                <input type="number" id="oreStraordAltro" placeholder="Ore" min="0" style="flex: 1; padding: 12px; margin: 0; border: 1px solid var(--border-color); border-radius: 10px; font-size: 15px;">
+                <input type="number" id="minutiStraordAltro" placeholder="Minuti" min="0" max="59" style="flex: 1; padding: 12px; margin: 0; border: 1px solid var(--border-color); border-radius: 10px; font-size: 15px;">
             </div>
 
             <label style="display: flex; align-items: center; font-size: 15px; color: var(--text-muted); margin-top: 15px; font-weight: bold; cursor: pointer;">
@@ -651,14 +746,14 @@
             </label>
             
             <div id="permessoSPInputsAltro" style="display: none; margin-top: 10px; flex-direction: row; gap: 10px;">
-                <input type="number" id="orePermessoSPAltro" placeholder="Ore" min="0" style="flex: 1; padding: 12px; margin: 0; border: 2px solid var(--border-color); border-radius: 10px; font-size: 15px;">
-                <input type="number" id="minutiPermessoSPAltro" placeholder="Minuti" min="0" max="59" style="flex: 1; padding: 12px; margin: 0; border: 2px solid var(--border-color); border-radius: 10px; font-size: 15px;">
+                <input type="number" id="orePermessoSPAltro" placeholder="Ore" min="0" style="flex: 1; padding: 12px; margin: 0; border: 1px solid var(--border-color); border-radius: 10px; font-size: 15px;">
+                <input type="number" id="minutiPermessoSPAltro" placeholder="Minuti" min="0" max="59" style="flex: 1; padding: 12px; margin: 0; border: 1px solid var(--border-color); border-radius: 10px; font-size: 15px;">
             </div>
 
             <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
             
             <label style="display: block; font-size: 15px; color: var(--text-muted); margin-bottom: 8px; font-weight: bold;"><i class="fa-solid fa-clipboard fa-fw"></i> Note:</label>
-            <textarea id="notaAltro" placeholder="Scrivi una nota per questo giorno..." style="width: 100%; box-sizing: border-box; padding: 10px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif; resize: vertical; min-height: 70px; background: var(--bg); color: var(--text);"></textarea>
+            <textarea id="notaAltro" placeholder="Scrivi una nota per questo giorno..." style="width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--border-color); border-radius: 12px; font-size: 14px; font-family: 'Inter', sans-serif; resize: vertical; min-height: 80px; background: var(--surface); color: var(--text);"></textarea>
         </div>
 
         <div style="text-align: left; margin-bottom: 10px; color: var(--text-muted); font-weight: bold; font-size: 15px;">Colore Sfondo:</div>
@@ -672,9 +767,9 @@
             <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreAltro('#11cdef', this)"></div>
             <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreAltro('#2dce89', this)"></div>
         </div>
-        <button class="btn" style="background: var(--border-color); color: var(--text); margin-top: 0; padding: 10px; font-size: 14px;" onclick="selezionaColoreAltro('', null)"><i class="fa-solid fa-eraser"></i> Rimuovi Colore</button>
+        <button class="btn" style="background: var(--surface); color: var(--text); margin-top: 0; padding: 12px; font-size: 14px; border: 1px solid var(--border-color);" onclick="selezionaColoreAltro('', null)"><i class="fa-solid fa-eraser"></i> Rimuovi Colore</button>
 
-        <button class="btn" style="background: var(--text); color: var(--surface); margin-top: 20px;" onclick="salvaAltro()">Salva</button>
+        <button class="btn" style="background: var(--primary); color: white; margin-top: 20px;" onclick="salvaAltro()">Salva</button>
         <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 10px;" onclick="chiudiAltroModal()">Annulla</button>
     </div>
 </div>
@@ -682,13 +777,15 @@
 <div id="imageModal" style="z-index: 10000; overflow: hidden;" onclick="chiudiSeSfondo(event)">
     <div style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; font-size: 35px; color: white; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10001;" onclick="chiudiImageModal()">&times;</div>
     <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px; padding-bottom: 80px; position: relative;">
-        <img id="turnoImage" src="" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain;">
-        <div id="imageBanner" style="position: relative; z-index: 10001; margin-top: 15px; background: rgba(0,0,0,0.7); color: #fff; padding: 10px 20px; border-radius: 12px; font-size: 13px; text-align: center; max-width: 90%; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+        <img id="turnoImage" src="" style="max-width: 100%; max-height: 70vh; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.4); object-fit: contain;">
+        <div id="imageBanner" style="position: relative; z-index: 10001; margin-top: 15px; background: rgba(0,0,0,0.7); color: #fff; padding: 12px 24px; border-radius: 16px; font-size: 13px; text-align: center; max-width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.3); backdrop-filter: blur(5px);">
             ⚠️ Controllare sempre i turni ufficiali e la presenza di eventuali varianti ai turni.
         </div>
     </div>
-    <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #11cdef; color: white; border: none; padding: 12px 24px; border-radius: 20px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 10001;"><i class="fa-solid fa-download"></i> Scarica</button>
+    <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #11cdef; color: white; border: none; padding: 14px 28px; border-radius: 24px; font-weight: bold; font-size: 16px; box-shadow: 0 8px 20px rgba(17, 205, 239, 0.4); cursor: pointer; z-index: 10001;"><i class="fa-solid fa-download"></i> Scarica Immagine</button>
 </div>
+
+<!-- ================= CONTENUTO PRINCIPALE ================= -->
 
 <div id="calendar"></div>
 
@@ -707,7 +804,7 @@
     <i class="fa-solid fa-triangle-exclamation"></i> Questo è uno strumento non ufficiale che può presentare errori. L'ordine dei turni cambia periodicamente, I turni a lungo termine vanno quindi considerati indicativi.
 </div>
 
-<!-- INCLUSIONE DEL NUOVO FILE JAVASCRIPT -->
+<!-- Richiamo dello script separato come concordato -->
 <script type="module" src="moduli/calendario.js"></script>
 
 </body>
