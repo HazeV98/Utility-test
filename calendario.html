@@ -53,7 +53,7 @@
             --bg: #f4f6fa; 
             --text: #32325d;
             --surface: #ffffff;
-            --border-color: #d3d9e0; /* Più scuro per maggiore contrasto in chiara */
+            --border-color: #d3d9e0;
             --primary: #5e72e4;
             --text-muted: #8898aa;
             --cell-bg: #f8f9fe;
@@ -63,7 +63,7 @@
             --bg: #121212;
             --text: #e0e0e0;
             --surface: #1e1e1e;
-            --border-color: #3f3f3f; /* Più visibile in scura */
+            --border-color: #3f3f3f;
             --primary: #8295e8;
             --text-muted: #a0a0a0;
             --cell-bg: #252525;
@@ -110,7 +110,7 @@
             align-items: center;
             text-decoration: none;
             box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-            border: 1px solid var(--border-color); /* Ora visibile */
+            border: 1px solid var(--border-color);
             font-size: 20px;
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -134,7 +134,7 @@
             border-radius: 28px; 
             margin: 0 15px 20px 15px; 
             box-shadow: 0 8px 30px rgba(0,0,0,0.04); 
-            border: 2px solid var(--border-color); /* Più spesso per visibilità */
+            border: 2px solid var(--border-color);
         }
 
         /* Override FullCalendar Base */
@@ -148,14 +148,14 @@
         
         /* Header Giorni (Lun, Mar, ecc) */
         .fc-theme-standard th {
-            background: var(--surface) !important; /* Forza colore di fondo */
+            background: var(--surface) !important;
         }
         .fc-col-header-cell {
             padding: 10px 0 !important;
             background-color: transparent !important;
         }
         .fc-col-header-cell-cushion {
-            color: var(--text) !important; /* Garantisce che si legga bianco su scuro o scuro su chiaro */
+            color: var(--text) !important;
             font-weight: 700;
             text-transform: uppercase;
             font-size: 0.75em;
@@ -167,7 +167,7 @@
         .fc-daygrid-day {
             background: var(--cell-bg) !important;
             border-radius: 12px !important;
-            border: 1px solid var(--border-color) !important; /* Bordo visibile attorno al giorno */
+            border: 1px solid var(--border-color) !important;
             overflow: hidden;
             transition: transform 0.2s;
         }
@@ -207,6 +207,7 @@
         .fc .fc-toolbar.fc-header-toolbar {
             margin-bottom: 25px;
             padding: 0 5px;
+            gap: 10px;
         }
         .fc-toolbar-title { 
             font-weight: 800 !important; 
@@ -285,11 +286,66 @@
         
         #coloriRotazioneModal .color-circle { width: 30px; height: 30px; margin: 4px; }
 
-        @media (max-width: 400px) {
-            .fc-event { font-size: 0.75em !important; padding: 4px 2px !important; }
+        /* --- OTTIMIZZAZIONI MOBILE ESTREME --- */
+        @media (max-width: 500px) {
+            /* Fix Header e allineamento (Mese sopra, Pulsanti sotto) */
+            .fc .fc-toolbar.fc-header-toolbar {
+                flex-direction: column;
+                margin-bottom: 15px;
+            }
+            .fc-toolbar-chunk {
+                display: flex;
+                justify-content: center;
+                width: 100%;
+            }
+            .fc-toolbar-chunk:nth-child(2) {
+                order: -1; /* Sposta il titolo (mese) sempre in alto */
+                margin-bottom: 10px;
+            }
+            .fc-toolbar-title {
+                font-size: 1.35em !important;
+            }
+
+            /* Fix giorni schiacciati (recupero pixel laterali e spaziatura) */
+            #calendar { 
+                padding: 12px 5px; 
+                margin: 0 8px 20px 8px; 
+                border-radius: 20px; 
+            }
+            .fc-scrollgrid { 
+                border-spacing: 2px !important; 
+            }
+            .fc-col-header-cell {
+                padding: 8px 0 !important;
+            }
+            .fc-col-header-cell-cushion {
+                font-size: 0.7em;
+            }
+            .fc-daygrid-day-frame { 
+                min-height: 70px !important; 
+                padding: 2px !important; 
+            }
+            .fc-daygrid-day-number {
+                font-size: 0.8em;
+                padding: 4px !important;
+            }
+            
+            /* Giorno corrente su mobile */
+            .fc-day-today .fc-daygrid-day-number {
+                width: 20px;
+                height: 20px;
+                font-size: 0.8em;
+            }
+
+            /* Eventi adattati */
+            .fc-event { 
+                font-size: 0.7em !important; 
+                padding: 3px 1px !important; 
+                margin: 2px 1px !important; 
+                border-radius: 6px !important;
+            }
+
             .modal-content { padding: 20px; }
-            .fc-scrollgrid { border-spacing: 3px !important; }
-            #calendar { padding: 15px 10px; border-radius: 20px; }
         }
     </style>
 </head>
