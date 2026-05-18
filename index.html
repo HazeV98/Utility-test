@@ -322,52 +322,6 @@
         .date-tag-remove { margin-left: 8px; cursor: pointer; font-weight: bold; color: rgba(255,255,255,0.7); transition: 0.2s;}
         .date-tag-remove:hover { color: white; transform: scale(1.2);}
         .editor-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-align: left; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;}
-
-        /* ================================================================= */
-        /* --- STILI AGGIUNTIVI: BACHECA TURNI, BARCADVISOR E BUONI ---      */
-        /* ================================================================= */
-        
-        /* BACHECA TURNI */
-        .bt-card { background: var(--surface); padding: 20px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); text-align: left; position: relative; transition: transform 0.2s; animation: fadeInUp 0.4s ease forwards;}
-        .bt-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-md);}
-        .bt-card-suggested { background: var(--surface-hover); border: 2px solid var(--warning); padding: 20px; border-radius: var(--radius-md); box-shadow: var(--shadow-md); text-align: left; position: relative; animation: fadeInUp 0.4s ease forwards;}
-        .bt-card-suggested::before { content: "✨ MATCH IDEALE"; position: absolute; top: -12px; right: 20px; background: var(--warning); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; box-shadow: 0 2px 8px rgba(245, 124, 0, 0.4); letter-spacing: 0.5px;}
-        .bt-tabs { display: flex; background: var(--surface-hover); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 24px; border: 1px solid var(--border-color); padding: 4px;}
-        .bt-tab-btn { flex: 1; padding: 12px; text-align: center; font-weight: 600; color: var(--text-muted); cursor: pointer; background: transparent; border: none; transition: 0.2s; border-radius: 10px; font-size: 14px;}
-        .bt-tab-btn.active { background: var(--primary); color: white; box-shadow: var(--shadow-sm); }
-        .badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 6px; border: 1px solid; letter-spacing: 0.5px;}
-        .badge-primo { background: var(--info-light); color: var(--info); border-color: rgba(0, 136, 255, 0.3); } 
-        .badge-mezzo { background: rgba(52, 168, 83, 0.15); color: var(--success); border-color: rgba(52, 168, 83, 0.3); }
-        .badge-terzo { background: var(--danger-light); color: var(--danger); border-color: var(--danger-border); }
-        .badge-riposo { background: rgba(154, 160, 166, 0.15); color: var(--text-muted); border-color: rgba(154, 160, 166, 0.3); }
-
-        /* BARCADVISOR */
-        .ba-category-group { margin-bottom: 16px; animation: fadeInUp 0.4s ease forwards; width: 100%;}
-        .ba-category-header { background: var(--surface); padding: 18px 20px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 16px; color: var(--primary); cursor: pointer; transition: all 0.2s; user-select: none; }
-        .ba-category-header:hover { border-color: var(--primary); }
-        .ba-category-content { padding: 12px 0 0 0; display: none; flex-direction: column; gap: 12px; animation: fadeIn 0.3s ease; }
-        .ba-unit-card { background: var(--surface); border-radius: var(--radius-md); padding: 20px; margin-bottom: 0; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s; }
-        .ba-unit-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--primary); }
-        .ba-stars { display: flex; gap: 8px; font-size: 28px; color: var(--border-color); justify-content: space-between;}
-        .ba-star { cursor: pointer; transition: color 0.2s, transform 0.1s; }
-        .ba-star.active { color: var(--warning); }
-        .ba-star:active { transform: scale(0.8); }
-
-        /* BUONI PASTO */
-        .bp-counter-container { display: flex; align-items: center; justify-content: center; gap: 24px; margin-bottom: 8px; width: 100%; }
-        .bp-btn-counter { background-color: var(--surface); color: var(--primary); border: 2px solid var(--primary); font-size: 32px; width: 64px; height: 64px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); transition: all 0.2s; }
-        .bp-btn-counter:active { transform: scale(0.9); background-color: var(--primary); color: white;}
-        .bp-count-display { font-size: 72px; font-weight: 800; color: var(--text-main); min-width: 100px; text-align: center; letter-spacing: -2px;}
-        .bp-quick-actions { display: flex; gap: 16px; width: 100%; justify-content: center; align-items: center; margin-bottom: 12px; position: relative; }
-        .bp-btn-quick { background-color: var(--surface); color: var(--danger); border: 2px solid var(--danger); width: 58px; height: 58px; border-radius: 50%; font-size: 18px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: var(--shadow-sm); }
-        .bp-btn-quick:active { background-color: var(--danger); color: white; transform: scale(0.90); }
-        .bp-integration-box { background: var(--surface); padding: 20px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); display: flex; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box; border: 1px solid var(--border-color); margin-bottom: 8px;}
-        .bp-switch { position: relative; display: inline-block; width: 54px; height: 30px; }
-        .bp-switch input { opacity: 0; width: 0; height: 0; }
-        .bp-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-color); transition: .4s; border-radius: 34px; }
-        .bp-slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
-        .bp-switch input:checked + .bp-slider { background-color: var(--success); }
-        .bp-switch input:checked + .bp-slider:before { transform: translateX(24px); }
         
     </style>
 </head>
@@ -391,9 +345,10 @@
         
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleTurni(); return false;" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
         
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleBachecaTurni(); return false;" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleBarcadvisor(); return false;" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
+        <a href="bacheca_turni.html" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
+        <a href="barcadvisor.html" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
         
+        <!-- AGGIORNATO: Ora apre la modale della Rubrica invece di andare su rubrica.html -->
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleRubrica(); return false;" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
         
         <a href="rotazione_ferie.html" class="sidebar-link"><i class="fa-solid fa-umbrella-beach"></i> Rotazione Ferie</a>
@@ -408,8 +363,7 @@
         
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleContatti(); return false;" class="sidebar-link"><i class="fa-solid fa-id-card"></i> Contatti</a>
         
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleBuoniPasto(); return false;" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
-        
+        <a href="buoni.html" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
         <a href="promemoria.html" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
         <a href="dds.html" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
         <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
@@ -438,7 +392,7 @@
     </div>
 
     <div id="view-guest" class="view-container" style="display: none; justify-content: center; height: 90vh;">
-        <div class="card-panel" style="text-align: center; padding: 40px 24px; background:var(--surface); border-radius:var(--radius-md); box-shadow:var(--shadow-sm); border:1px solid var(--border-color);">
+        <div class="card-panel" style="text-align: center; padding: 40px 24px;">
             <h1 style="margin: 0 0 25px 0; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 46px; font-weight: 800; letter-spacing: -1px;">
                 <img src="icon-512.png" alt="U" style="height: 50px; margin-right: 4px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">tility
             </h1>
@@ -453,7 +407,7 @@
     </div>
 
     <div id="view-banned" class="view-container" style="display: none; justify-content: center; height: 90vh;">
-        <div class="card-panel" style="background: var(--danger-light); border: 2px solid var(--danger-border); text-align: center; border-radius:var(--radius-md); padding:40px 24px;">
+        <div class="card-panel" style="background: var(--danger-light); border: 2px solid var(--danger-border); text-align: center;">
             <i class="fa-solid fa-ban" style="font-size: 48px; color: var(--danger); margin-bottom: 16px;"></i>
             <h3 style="color: var(--danger); margin-top: 0; font-weight: 700;">Accesso Revocato</h3>
             <p style="color: var(--text-main); font-size: 15px; margin-bottom: 24px;">Sei stato escluso da questa applicazione da un Amministratore.</p>
@@ -835,7 +789,7 @@
 
     <!-- MODALI SEGNALAZIONI -->
     <div id="modal-segnalazioni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-segnalazioni-main')">
-        <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
+        <div class="modal-content" style="max-width: 460px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
             <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-segnalazioni-main')"></i>
             <h3 style="margin-top: 0; color: var(--info); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-headset"></i> Segnalazioni</h3>
             <div style="flex: 1; overflow-y: auto; padding-right: 5px;">
@@ -1242,434 +1196,6 @@
     </div>
 
 
-    <!-- ========================================================== -->
-    <!-- NUOVI MODALI: BACHECA TURNI, BARCADVISOR E BUONI PASTO -->
-    <!-- ========================================================== -->
-
-    <!-- MODALE BACHECA TURNI -->
-    <div id="modal-bachecaturni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-bachecaturni-main')">
-        <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-bachecaturni-main')"></i>
-            
-            <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
-                <i class="fa-solid fa-handshake-angle"></i> Bacheca Turni
-            </h3>
-
-            <div style="flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; width: 100%;">
-                
-                <div id="bt-view-no-auth" style="display:none; flex-direction:column; align-items:center; width: 100%; margin-top: 20px;">
-                    <div style="background: var(--surface-hover); padding: 32px 24px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); text-align: center; width: 100%;">
-                        <i class="fa-solid fa-lock" style="font-size: 48px; color: var(--text-muted); margin-bottom: 16px;"></i>
-                        <h3 style="color: var(--danger); margin-top: 0; font-weight: 800;">Accesso Richiesto</h3>
-                        <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 24px;">Devi effettuare il login per usare la bacheca scambi.</p>
-                        <button class="btn-action" style="background-color: var(--primary); margin: 0 auto; width: auto; padding: 12px 24px;" onclick="window.apriModal('authModal', 'login'); window.chiudiModal('modal-bachecaturni-main');"><i class="fa-solid fa-right-to-bracket"></i> Accedi ora</button>
-                    </div>
-                </div>
-
-                <div id="bt-view-main" style="display:none; flex-direction:column; gap:16px; width:100%;" class="animate-pop">
-                    <button class="btn-action" style="margin-top: 0; margin-bottom: 10px;" onclick="window.apriModaleAnnuncioBT()"><i class="fa-solid fa-plus"></i> Nuovo Scambio</button>
-                    
-                    <div style="background: var(--surface); padding: 20px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--border-color); margin-bottom: 8px;">
-                        <div style="display: flex; gap: 12px;">
-                            <div style="flex: 1;">
-                                <label class="editor-label">Filtra Mansione:</label>
-                                <select id="bt-filtroMansione" class="input-field" style="margin-bottom: 0; text-transform: none;" onchange="window.caricaBachecaTurni()">
-                                    <option value="Tutte">Tutte le mansioni</option>
-                                    <option value="Marinaio">Marinaio</option>
-                                    <option value="Preposto al comando">Preposto al comando</option>
-                                    <option value="Comandante">Comandante</option>
-                                    <option value="Timoniere">Timoniere</option>
-                                    <option value="Marinaio polivalente">Marinaio polivalente</option>
-                                    <option value="Direttore di macchina">Direttore di macchina</option>
-                                </select>
-                            </div>
-                            <div style="flex: 1;">
-                                <label class="editor-label">Filtra Data:</label>
-                                <input type="date" id="bt-filtroData" class="input-field" style="margin-bottom: 0; text-transform: none;" onchange="window.caricaBachecaTurni()">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="bt-suggeriti-bacheca-container" style="display: none; border-bottom: 2px dashed var(--border-color); padding-bottom: 16px; margin-bottom: 16px;">
-                        <div style="font-size: 15px; font-weight: 600; color: var(--warning); text-align: left; margin-bottom: 16px; margin-top: 10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Suggeriti per te (Offrono ciò che cerchi)</div>
-                        <div id="bt-suggeriti-bacheca" style="display:flex; flex-direction: column; gap:12px;"></div>
-                    </div>
-
-                    <div id="bt-lista-annunci" style="display:flex; flex-direction: column; gap:12px;"></div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <div id="bt-profileModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'bt-profileModal')" style="z-index: 7500;">
-        <div class="modal-content">
-            <i id="btnCloseProfileModalBT" class="fa-solid fa-xmark close-modal" style="display:none;" onclick="window.chiudiModaleProfiloBT()"></i>
-            <h3 style="margin-top: 0; color: var(--text-main); text-align: center; display:flex; flex-direction:column; align-items:center; gap:10px;">
-                <i class="fa-solid fa-user-pen" style="color:var(--primary); font-size: 32px;"></i> Dati Profilo
-            </h3>
-            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 20px;">Questi dati verranno mostrati nei tuoi annunci.</p>
-            
-            <input type="text" id="bt-regNome" class="input-field" placeholder="Nome" style="text-transform: capitalize;">
-            <input type="text" id="bt-regCognome" class="input-field" placeholder="Cognome" style="text-transform: capitalize;">
-            <input type="text" id="bt-regProgressivo" class="input-field" placeholder="Numero omonimia es. 02, 03 ecc (facoltativo)" style="text-transform: none;">
-            <input type="text" id="bt-regMatricola" class="input-field" placeholder="Matricola" style="text-transform: uppercase;">
-            <input type="tel" id="bt-regTelefono" class="input-field" placeholder="Telefono (per WhatsApp)" style="text-transform: none;">
-            <select id="bt-regMansione" class="input-field" style="text-transform: none;">
-                <option value="">-- Seleziona Mansione --</option>
-                <option value="Marinaio">Marinaio</option>
-                <option value="Preposto al comando">Preposto al comando</option>
-                <option value="Comandante">Comandante</option>
-                <option value="Timoniere">Timoniere</option>
-                <option value="Marinaio polivalente">Marinaio polivalente</option>
-                <option value="Direttore di macchina">Direttore di macchina</option>
-            </select>
-            <button id="btnSalvaProfiloBT" class="btn-action btn-success" style="margin-top: 10px;" onclick="window.salvaProfiloBT()"><i class="fa-solid fa-check"></i> Salva Dati</button>
-        </div>
-    </div>
-
-    <div id="bt-adModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'bt-adModal')" style="z-index: 7500;">
-        <div class="modal-content">
-            <i class="fa-solid fa-xmark close-modal" onclick="document.getElementById('bt-adModal').style.display='none'"></i>
-            <h3 style="margin-top: 0; margin-bottom: 24px; color: var(--text-main); display:flex; align-items:center; gap:10px;">
-                <i class="fa-solid fa-bullhorn" style="color:var(--primary);"></i> Crea Annuncio
-            </h3>
-            
-            <div class="bt-tabs">
-                <button id="bt-tab-ad-turno" class="bt-tab-btn active" onclick="window.switchAdTabBT('turno')">Cambio Turno</button>
-                <button id="bt-tab-ad-riposo" class="bt-tab-btn" onclick="window.switchAdTabBT('riposo')">Cambio Riposo</button>
-            </div>
-
-            <div id="bt-form-ad-turno">
-                <label class="editor-label">Data del cambio:</label>
-                <input type="date" id="bt-adDataTurno" class="input-field" style="text-transform: none;" onchange="window.verificaTurnoBT()">
-                
-                <div style="display: flex; gap: 12px;">
-                    <div style="flex: 1;">
-                        <label class="editor-label">Cedo:</label>
-                        <select id="bt-adCedoTurno" class="input-field" style="text-transform: none;">
-                            <option value="primo">Primo</option>
-                            <option value="mezzo">Mezzo</option>
-                            <option value="terzo">Terzo</option>
-                        </select>
-                    </div>
-                    <div style="flex: 1;">
-                        <label class="editor-label">Cerco:</label>
-                        <select id="bt-adCercoTurno" class="input-field" style="text-transform: none;">
-                            <option value="primo">Primo</option>
-                            <option value="mezzo">Mezzo</option>
-                            <option value="terzo">Terzo</option>
-                        </select>
-                    </div>
-                </div>
-
-                <hr style="border: 0; border-top: 1px dashed var(--border-color); margin: 20px 0;">
-                
-                <label class="editor-label" style="color: var(--primary);">Codice Turno Ceduto:</label>
-                <input type="text" id="bt-adCodiceTurno" class="input-field" placeholder="es. 1C01, 1B01 ecc..." oninput="this.value = this.value.toUpperCase(); window.verificaTurnoBT()">
-                
-                <label class="editor-label" style="margin-top: 16px;">Info Turno (Facoltativo):</label>
-                
-                <div style="display: flex; gap: 12px;">
-                    <input type="time" id="bt-adOraInizio" class="input-field" placeholder="Ora Inizio" style="flex:1; text-transform: none;">
-                    <input type="text" id="bt-adLuogoInizio" class="input-field" placeholder="Luogo Inizio" style="flex:2; text-transform: none;">
-                </div>
-                <div style="display: flex; gap: 12px;">
-                    <input type="time" id="bt-adOraFine" class="input-field" placeholder="Ora Fine" style="flex:1; text-transform: none;">
-                    <input type="text" id="bt-adLuogoFine" class="input-field" placeholder="Luogo Fine" style="flex:2; text-transform: none;">
-                </div>
-                
-                <input type="hidden" id="bt-adChiaveEsatta">
-                <input type="hidden" id="bt-adDataAttivaDb">
-            </div>
-
-            <div id="bt-form-ad-riposo" style="display: none;">
-                <label class="editor-label">Cerco Riposo il giorno:</label>
-                <input type="date" id="bt-adDataRiposo" class="input-field" style="text-transform: none;">
-                
-                <label class="editor-label" style="margin-top: 16px;">Giorni in cui posso restituirlo (Facoltativo):</label>
-                <input type="date" id="bt-adDataRestituzione1" class="input-field" style="margin-bottom: 8px; text-transform: none;">
-                <input type="date" id="bt-adDataRestituzione2" class="input-field" style="text-transform: none;">
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 0; text-transform: none;">Puoi lasciare vuoto se vuoi concordarlo in chat.</p>
-            </div>
-
-            <hr style="border: 0; border-top: 1px dashed var(--border-color); margin: 20px 0;">
-            <label class="editor-label">Note (Facoltative):</label>
-            <textarea id="bt-adNote" class="input-field" placeholder="Es. Cerco solo mattina, flessibile sull'orario..." style="text-transform: none; resize: vertical; min-height: 80px;"></textarea>
-
-            <button id="bt-btnPubblica" class="btn-action btn-success" style="margin-top: 10px;" onclick="window.pubblicaAnnuncioBT()"><i class="fa-solid fa-paper-plane"></i> Pubblica Annuncio</button>
-            <button class="btn-outline" style="width:100%; margin-top: 12px; justify-content:center;" onclick="window.apriModaleProfiloBT()"><i class="fa-regular fa-user"></i> Controlla i miei Dati</button>
-        </div>
-    </div>
-
-    <div id="imageModal" style="display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); overflow: hidden; animation: fadeIn 0.3s ease;" onclick="window.chiudiImageModalSeSfondoBT(event)">
-        <i class="fa-solid fa-xmark" style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 24px; font-size: 32px; color: white; cursor: pointer; text-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 20001; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" onclick="window.chiudiImageModalBT()"></i>
-        <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px; padding-bottom: 100px; position: relative;">
-            <img id="turnoImage" src="" style="max-width: 100%; max-height: 75vh; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); object-fit: contain; background: white;">
-            
-            <div id="imageBanner" style="position: relative; z-index: 20001; margin-top: 24px; background: rgba(20,20,20,0.85); backdrop-filter: blur(10px); color: #fff; padding: 14px 24px; border-radius: 12px; font-size: 14px; text-align: center; max-width: 90%; box-shadow: 0 8px 20px rgba(0,0,0,0.4); font-weight: 500; border: 1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:10px;">
-                ⚠️ Controllare sempre la presenza di eventuali varianti.
-            </div>
-        </div>
-        <button onclick="window.scaricaImmagineTurnoBT()" style="position: absolute; bottom: calc(40px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: var(--primary); color: white; border: none; padding: 16px 32px; border-radius: 30px; font-weight: 700; font-size: 16px; box-shadow: 0 8px 25px var(--primary-glow); cursor: pointer; z-index: 20001; transition: all 0.2s; display: flex; align-items: center; gap: 10px;">
-            <i class="fa-solid fa-download" style="font-size: 18px;"></i> Scarica Turno
-        </button>
-    </div>
-
-
-    <!-- MODALE BARCADVISOR -->
-    <div id="modal-barcadvisor-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-barcadvisor-main')">
-        <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-barcadvisor-main')"></i>
-            
-            <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
-                <i class="fa-solid fa-ship"></i> BarcAdvisor
-            </h3>
-
-            <div style="flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; width: 100%;">
-                
-                <div class="animate-pop" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-                    <div style="position: relative;">
-                        <input type="text" id="ba-searchInput" class="input-field" placeholder="Cerca unità..." style="margin-bottom:0;" oninput="window.renderUnitsBA()">
-                        <i class="fa-solid fa-magnifying-glass" style="position:absolute; right:16px; top:18px; color:var(--text-muted);"></i>
-                    </div>
-                    <button class="btn-action btn-success" onclick="window.openAddUnitBA()">
-                        <i class="fa-solid fa-plus"></i> Aggiungi Unità
-                    </button>
-                </div>
-
-                <div id="ba-unitsContainer"></div>
-
-            </div>
-        </div>
-    </div>
-
-    <div id="ba-detailViewModal" class="modal-overlay" onclick="window.closeDetailModalBA()" style="z-index: 7500;">
-        <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 440px; height: 90vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; width: 100%;">
-            <header style="padding: 24px; background: var(--surface); border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
-                <h2 id="ba-detailTitle" style="margin: 0; font-size: 22px; color:var(--text-main);"><i class="fa-solid fa-ship" style="color:var(--text-muted); font-size:18px;"></i> Nome</h2>
-                <i class="fa-solid fa-xmark close-modal" style="position:static;" onclick="window.closeDetailModalBA()"></i>
-            </header>
-            
-            <div style="flex: 1; overflow-y: auto; padding: 24px; background: var(--bg-color);">
-                <div style="background: var(--surface); padding: 24px; border-radius: var(--radius-md); margin-bottom: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);">
-                    <div style="display: flex; flex-direction: column; margin-bottom: 20px;">
-                        <div style="font-weight: 600; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); font-size: 15px;">
-                            <span>Potenza <span id="ba-val-potenza" style="font-weight:normal; color:var(--text-muted); margin-left:5px;">-</span></span>
-                            <span id="ba-media-potenza" style="font-size: 12px; color: var(--primary); background: var(--primary-glow); padding: 4px 10px; border-radius: 12px; font-weight: 600;">Media: -</span>
-                        </div>
-                        <div class="ba-stars" data-category="potenza">
-                            <i class="fa-solid fa-star ba-star" data-value="1" onclick="window.votaStarBA(this, 1)"></i>
-                            <i class="fa-solid fa-star ba-star" data-value="2" onclick="window.votaStarBA(this, 2)"></i>
-                            <i class="fa-solid fa-star ba-star" data-value="3" onclick="window.votaStarBA(this, 3)"></i>
-                            <i class="fa-solid fa-star ba-star" data-value="4" onclick="window.votaStarBA(this, 4)"></i>
-                            <i class="fa-solid fa-star ba-star" data-value="5" onclick="window.votaStarBA(this, 5)"></i>
-                        </div>
-                    </div>
-                    <div style="display: flex; flex-direction: column; margin-bottom: 20px;">
-                        <div style="font-weight: 600; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); font-size: 15px;">
-                            <span>Manovrabilità <span id="ba-val-manovrabilita" style="font-weight:normal; color:var(--text-muted); margin-left:5px;">-</span></span>
-                            <span id="ba-media-manovrabilita" style="font-size: 12px; color: var(--primary); background: var(--primary-glow); padding: 4px 10px; border-radius: 12px; font-weight: 600;">Media: -</span>
-                        </div>
-                        <div class="ba-stars" data-category="manovrabilita">
-                            <i class="fa-solid fa-star ba-star" data-value="1" onclick="window.votaStarBA(this, 1)"></i>
-                            <i class="fa-solid fa-star ba-star" data-value="2" onclick="window.votaStarBA(this, 2)"></i>
-                            <i class="fa-solid fa-star ba-star" data-value="3" onclick="window.votaStarBA(this, 3)"></i>
-                            <i class="fa-solid fa-star ba-star" data-value="4" onclick="window.votaStarBA(this, 4)"></i>
-                            <i class="fa-solid fa-star ba-star" data-value="5" onclick="window.votaStarBA(this, 5)"></i>
-                        </div>
-                    </div>
-                    <div style="display: flex; flex-direction: column;">
-                        <div style="font-weight: 600; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); font-size: 15px;">
-                            <span>Stato Generale <span id="ba-val-stato" style="font-weight:normal; color:var(--text-muted); margin-left:5px;">-</span></span>
-                            <span id="ba-media-stato" style="font-size: 12px; color: var(--primary); background: var(--primary-glow); padding: 4px 10px; border-radius: 12px; font-weight: 600;">Media: -</span>
-                        </div>
-                        <div class="ba-stars" data-category="stato">
-                            <i class="fa-solid fa-star ba-star" data-value="1" onclick="window.votaStarBA(this, 1)"></i>
-                            <i class="fa-solid fa-star ba-star" data-value="2" onclick="window.votaStarBA(this, 2)"></i>
-                            <i class="fa-solid fa-star ba-star" data-value="3" onclick="window.votaStarBA(this, 3)"></i>
-                            <i class="fa-solid fa-star ba-star" data-value="4" onclick="window.votaStarBA(this, 4)"></i>
-                            <i class="fa-solid fa-star ba-star" data-value="5" onclick="window.votaStarBA(this, 5)"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <h3 style="margin-top:0; margin-bottom: 16px; color: var(--text-main); font-size: 18px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);"></i> Segnalazioni Problemi</h3>
-                    <div style="display: flex; gap: 10px; margin-bottom: 24px;">
-                        <input type="text" id="ba-newReportInput" class="input-field" placeholder="Descrivi il problema..." style="margin-bottom:0; flex:1;">
-                        <button class="btn-action" style="margin-top:0; width:auto; padding:0 24px;" onclick="window.submitReportBA()"><i class="fa-solid fa-paper-plane"></i></button>
-                    </div>
-                    <div id="ba-reportsContainer"></div>
-                </div>
-            </div>
-
-            <div style="padding: 20px; background: var(--surface); border-top: 1px solid var(--border-color); border-radius: 0 0 var(--radius-lg) var(--radius-lg);">
-                <button class="btn-action btn-danger" style="margin-top:0; margin-bottom:0;" onclick="window.closeDetailModalBA()"><i class="fa-solid fa-check"></i> FATTO</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="ba-modalOverlay" class="modal-overlay" onclick="window.closeModalBA()" style="z-index: 7500;">
-        <div class="modal-content" style="max-width: 380px;" onclick="event.stopPropagation()">
-            <h3 id="ba-modalTitle" style="margin-top:0; margin-bottom:20px; color:var(--text-main); font-size:20px;">Titolo Modal</h3>
-            
-            <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-                <select id="ba-modalPrefix" class="input-field" style="margin-bottom:0; width:auto; padding-right:35px;">
-                    <option value="M/S">M/S</option>
-                    <option value="M/B">M/B</option>
-                    <option value="M/N">M/N</option>
-                    <option value="M/Z">M/Z</option>
-                </select>
-                <input type="text" id="ba-modalInput" class="input-field" style="margin-bottom:0;" placeholder="Nome/Numero">
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
-                <button id="ba-modalConfirmBtn" class="btn-action btn-success" style="margin-top:0; margin-bottom:0;"><i class="fa-solid fa-check"></i> Conferma</button>
-                <button onclick="window.closeModalBA()" class="btn-outline" style="width:100%; justify-content:center; margin-bottom:0;">Annulla</button>
-                <button id="ba-modalDeleteBtn" class="btn-action btn-danger" style="margin-bottom:0; display:none;"><i class="fa-solid fa-trash-can"></i> Elimina Unità</button>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- MODALE BUONI PASTO -->
-    <div id="modal-buoni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-buoni-main')">
-        <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-buoni-main')"></i>
-            
-            <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;">
-                <i class="fa-solid fa-utensils"></i> Buoni Pasto
-            </h3>
-
-            <div style="flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; width: 100%;">
-                
-                <div class="bp-counter-container animate-pop">
-                    <button class="bp-btn-counter" onclick="window.modificaBuoniBP(-1)"><i class="fa-solid fa-minus"></i></button>
-                    <div class="bp-count-display" id="bp-buoni-count">0</div>
-                    <button class="bp-btn-counter" onclick="window.modificaBuoniBP(1)"><i class="fa-solid fa-plus"></i></button>
-                </div>
-
-                <div class="bp-quick-actions animate-pop">
-                    <button class="bp-btn-quick" id="bp-btn-quick-1" onclick="window.modificaBuoniBP(-2)">-2</button>
-                    <button class="bp-btn-quick" id="bp-btn-quick-2" onclick="window.modificaBuoniBP(-5)">-5</button>
-                    <button class="bp-btn-quick" id="bp-btn-quick-3" onclick="window.modificaBuoniBP(-10)">-10</button>
-                    <button class="settings-btn" style="position: absolute; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: transform 0.2s, color 0.2s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.apriImpostazioniBP()"><i class="fa-solid fa-gear"></i></button>
-                </div>
-
-                <div class="bp-integration-box animate-pop">
-                    <div style="text-align: left; flex-grow: 1;">
-                        <div style="font-weight: 700; color: var(--text-main); font-size: 16px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-bolt" style="color:var(--warning);"></i> Calcolo Automatico</div>
-                        <div style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">Sincronizza con il Calendario</div>
-                    </div>
-                    <label class="bp-switch">
-                        <input type="checkbox" id="bp-toggleInt" onchange="window.gestisciToggleIntegrazioneBP()">
-                        <span class="bp-slider"></span>
-                    </label>
-                </div>
-
-                <div style="padding: 16px; background-color: var(--surface-hover); border-left: 4px solid var(--primary); border-radius: var(--radius-md); color: var(--text-main); font-size: 14px; line-height: 1.5; width: 100%; box-sizing: border-box; border: 1px solid var(--border-color); margin-bottom: 15px;" class="animate-pop">
-                    <i class="fa-solid fa-circle-info" style="color:var(--primary); margin-bottom: 8px; font-size:16px;"></i><br>
-                    <strong>Nota Bene:</strong> I buoni pasto non maturano in presenza di Riposi (<strong>RI, AL</strong>), Ferie (<strong>FER, FEP, FES</strong>), Malattia (<strong>KMAL</strong>) o permessi vari (<strong>PRT, KNOP, AVIS, KINF</strong>).
-                </div>
-
-                <button class="btn-action animate-pop" style="margin-top: 0; margin-bottom: 15px;" onclick="window.apriCalcolatoreBP()"><i class="fa-solid fa-calculator"></i> Calcolatore Buoni</button>
-
-                <div style="margin-top: 4px; padding: 16px; background-color: var(--danger-light); border: 1px dashed var(--danger-border); border-radius: var(--radius-md); color: var(--danger); font-size: 13px; text-align: center; line-height: 1.5; width: 100%; box-sizing: border-box; font-weight: 500;" class="animate-pop">
-                    <i class="fa-solid fa-triangle-exclamation"></i> La responsabilità dell'inserimento e della verifica dei dati è unicamente dell'utente.
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <div id="bp-modal-settings" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'bp-modal-settings')" style="z-index: 7500;">
-        <div class="modal-content">
-            <h3 style="margin-top:0; margin-bottom:20px; color:var(--text-main); display:flex; justify-content:center; align-items:center; gap:10px; border-bottom:1px solid var(--border-color); padding-bottom:15px;"><i class="fa-solid fa-gear" style="color:var(--text-muted);"></i> Impostazioni</h3>
-            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6; text-align:center;">Personalizza i valori da sottrarre con i 3 pulsanti rapidi rossi.</p>
-            <div style="display: flex; flex-direction: row; gap: 12px; margin-bottom: 24px;">
-                <div style="flex: 1; text-align: center;">
-                    <label style="display: block; margin-bottom: 8px; font-size:13px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Tasto 1</label>
-                    <input type="number" id="bp-quick-val-1" class="input-field" style="text-align: center; font-weight: 700; color: var(--danger); font-size: 20px; margin-bottom:0;">
-                </div>
-                <div style="flex: 1; text-align: center;">
-                    <label style="display: block; margin-bottom: 8px; font-size:13px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Tasto 2</label>
-                    <input type="number" id="bp-quick-val-2" class="input-field" style="text-align: center; font-weight: 700; color: var(--danger); font-size: 20px; margin-bottom:0;">
-                </div>
-                <div style="flex: 1; text-align: center;">
-                    <label style="display: block; margin-bottom: 8px; font-size:13px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Tasto 3</label>
-                    <input type="number" id="bp-quick-val-3" class="input-field" style="text-align: center; font-weight: 700; color: var(--danger); font-size: 20px; margin-bottom:0;">
-                </div>
-            </div>
-            <button class="btn-action btn-success" onclick="window.salvaImpostazioniBP()"><i class="fa-solid fa-check"></i> Salva Impostazioni</button>
-            <button class="btn-outline" style="width:100%; justify-content:center; margin-top: 10px;" onclick="window.chiudiImpostazioniBP()">Chiudi</button>
-        </div>
-    </div>
-
-    <div id="bp-wizard-step1" class="modal-overlay" style="z-index: 7500;">
-        <div class="modal-content" style="text-align:center;">
-            <i class="fa-solid fa-triangle-exclamation" style="font-size: 48px; color: var(--warning); margin-bottom: 16px;"></i>
-            <h3 style="color: var(--text-main); margin-top:0;">Attenzione</h3>
-            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6;">
-                Attivando l'integrazione, l'app aggiungerà <b>automaticamente</b> i buoni pasto in base ai turni presenti nel tuo calendario.<br><br>
-                Affinché il calcolo sia esatto, assicurati di aggiornare sempre il calendario inserendo <b>Ferie, Malattie, Sospesi Riposo, ecc.</b><br><br>Sei pronto per iniziare?
-            </p>
-            <button class="btn-action btn-success" onclick="window.vaiAWizard2BP()">Sì, continua</button>
-            <button class="btn-outline" style="width:100%; justify-content:center; margin-top: 10px;" onclick="window.chiudiWizardBP()">Annulla</button>
-        </div>
-    </div>
-
-    <div id="bp-wizard-step2" class="modal-overlay" style="z-index: 7500;">
-        <div class="modal-content" style="text-align:center;">
-            <h3 style="color: var(--text-main); margin-top:0;"><i class="fa-solid fa-wallet" style="color:var(--success);"></i> Saldo Attuale</h3>
-            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6;">
-                Conosci già quanti buoni pasto hai a disposizione attualmente (compreso il turno di oggi)?
-            </p>
-            <div id="bp-scelta-saldo-btn">
-                <button class="btn-action btn-success" onclick="window.mostraInputSaldoBP()">Sì, inserisco il numero</button>
-                <button class="btn-outline" style="width:100%; justify-content:center; margin-top: 10px;" onclick="window.passaACalcolatoreBP()"><i class="fa-solid fa-calculator"></i> No, calcoliamolo</button>
-            </div>
-            
-            <div id="bp-input-saldo-area" style="display: none;">
-                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; text-align: left;">
-                    <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Inserisci i buoni a tua disposizione:</label>
-                    <input type="number" id="bp-wizard-buoni-manuali" class="input-field" placeholder="Es. 12" style="font-size: 24px; text-align: center; font-weight: 700; color: var(--primary);">
-                </div>
-                <button class="btn-action" style="margin-top:0;" onclick="window.salvaSaldoEAttivaBP()"><i class="fa-solid fa-bolt"></i> Salva e Attiva Integrazione</button>
-            </div>
-            
-            <button class="btn-outline" style="width:100%; justify-content:center; margin-top: 15px; border-color:var(--text-muted); color:var(--text-muted);" onclick="window.chiudiWizardBP()">Annulla</button>
-        </div>
-    </div>
-
-    <div id="bp-modal-calcolatore" class="modal-overlay" style="z-index: 7500;">
-        <div class="modal-content">
-            <h3 style="margin-top:0; margin-bottom:20px; color:var(--text-main); display:flex; justify-content:center; align-items:center; gap:10px; border-bottom:1px solid var(--border-color); padding-bottom:15px;"><i class="fa-solid fa-calculator" style="color:var(--primary);"></i> Calcolatore Buoni</h3>
-            
-            <button class="btn-outline" onclick="window.precompilaDaCalendarioBP()" style="font-size: 14px; padding: 12px; margin-bottom: 24px; width:100%; justify-content:center;"><i class="fa-solid fa-wand-magic-sparkles"></i> Precompila con dati Calendario</button>
-
-            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; text-align: left;">
-                <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Presenze mese corrente</label>
-                <input type="number" id="bp-pres-corrente" class="input-field" placeholder="0" style="margin-bottom:0;">
-                
-                <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-top:10px;">Presenze mese passato</label>
-                <input type="number" id="bp-pres-passato" class="input-field" placeholder="0" style="margin-bottom:0;">
-                
-                <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-top:10px;">Buoni caricati sulla tessera</label>
-                <input type="number" id="bp-buoni-tessera" class="input-field" placeholder="0" style="margin-bottom:0;">
-            </div>
-
-            <button class="btn-action btn-success" style="margin-top:0;" onclick="window.eseguiCalcoloBP()"><i class="fa-solid fa-equals"></i> Calcola Risultato</button>
-            <div id="bp-btn-attiva-dopo-calcolo" style="display: none; margin-top:10px;">
-                <button class="btn-action" style="margin-top:0;" onclick="window.salvaCalcoloEAttivaBP()"><i class="fa-solid fa-bolt"></i> Salva e Attiva Integrazione</button>
-            </div>
-            <button class="btn-outline" style="width:100%; justify-content:center; margin-top: 10px;" onclick="window.chiudiCalcolatoreBP()">Chiudi</button>
-            
-            <div id="bp-risultato-calcolo" style="margin-top: 20px; font-size: 24px; font-weight: 800; color: var(--primary); background: var(--primary-glow); padding: 16px; border-radius: var(--radius-md); text-align:center;"></div>
-        </div>
-    </div>
-
-
     <!-- SCRIPT CHE GESTISCE TUTTA LA LOGICA -->
     <script type="module" src="./moduli/index.js"></script>
 
@@ -1702,20 +1228,6 @@
         window.apriModaleRubrica = () => {
             const modale = document.getElementById('modal-rubrica-main');
             if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreRubricaDaIndex) window.avviaMotoreRubricaDaIndex(); }
-        };
-
-        // NUOVE FUNZIONI PONTE
-        window.apriModaleBachecaTurni = () => {
-            const modale = document.getElementById('modal-bachecaturni-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreBachecaTurniDaIndex) window.avviaMotoreBachecaTurniDaIndex(); }
-        };
-        window.apriModaleBarcadvisor = () => {
-            const modale = document.getElementById('modal-barcadvisor-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreBarcadvisorDaIndex) window.avviaMotoreBarcadvisorDaIndex(); }
-        };
-        window.apriModaleBuoniPasto = () => {
-            const modale = document.getElementById('modal-buoni-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreBuoniPastoDaIndex) window.avviaMotoreBuoniPastoDaIndex(); }
         };
     </script>
 </body>
