@@ -14,6 +14,11 @@ import { avviaMotoreContatti } from './contatti.js';
 import { avviaMotoreBachecaUtility } from './bacheca_utility.js';
 import { avviaMotoreRubrica } from './rubrica.js';
 
+// Nuovi sottomoduli convertiti a modale
+import { avviaMotoreBachecaTurni } from './bacheca_turni.js';
+import { avviaMotoreBarcadvisor } from './barcadvisor.js';
+import { avviaMotoreBuoniPasto } from './buoni_pasto.js';
+
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
     authDomain: "utility-haze.firebaseapp.com", 
@@ -73,10 +78,10 @@ const DEFAULT_APPS = [
     { id: "statistiche", label: "Statistiche", href: "dati_calendario.html", defaultColor: "#6f42c1" },
     { id: "rotazioni", label: "Rotazioni", href: "rotazioni.html", defaultColor: "#fd7e14" },
     { id: "turni", label: "Turni", onclick: "window.apriModaleTurni()", defaultColor: "#20c997" },
-    { id: "bachecaturni", label: "Bacheca\nTurni", href: "bacheca_turni.html", defaultColor: "#e83e8c" },
-    { id: "barcadvisor", label: "BarcAdvisor", image: "icone_app/iconba.png", href: "barcadvisor.html" },
     
-    // QUI ABBIAMO MODIFICATO L'APP RUBRICA PER FAR APRIRE LA MODALE INVECE DEL LINK HREF
+    // Convertite a onclick per aprire le modali
+    { id: "bachecaturni", label: "Bacheca\nTurni", onclick: "window.apriModaleBachecaTurni()", defaultColor: "#e83e8c" },
+    { id: "barcadvisor", label: "BarcAdvisor", image: "icone_app/iconba.png", onclick: "window.apriModaleBarcadvisor()" },
     { id: "rubrica", label: "Rubrica", onclick: "window.apriModaleRubrica()", defaultColor: "#343a40" },
     
     { id: "ferie", label: "Rotazione\nFerie", href: "rotazione_ferie.html", defaultColor: "#ffc107" },
@@ -85,7 +90,10 @@ const DEFAULT_APPS = [
     { id: "documenti", label: "Documenti", onclick: "window.apriModaleDocumenti()", defaultColor: "#6c757d" },
     { id: "link", label: "Link", onclick: "window.apriModaleLink()", defaultColor: "#495057" },
     { id: "contatti", label: "Contatti", onclick: "window.apriModaleContatti()", defaultColor: "#2c3e50" },
-    { id: "buoni", label: "Buoni\nPasto", href: "buoni.html", defaultColor: "#d63384" },
+    
+    // Convertito a onclick per aprire la modale
+    { id: "buoni", label: "Buoni\nPasto", onclick: "window.apriModaleBuoniPasto()", defaultColor: "#d63384" },
+    
     { id: "promemoria", label: "Promemoria", href: "promemoria.html", defaultColor: "#0dcaf0" },
     { id: "dds", label: "Archivio\nDDS", href: "dds.html", defaultColor: "#5856d6" },
     { id: "report", label: "Segnalazioni", onclick: "window.apriMainModaleSegnalazioni()", defaultColor: "#0088ff" },
@@ -193,21 +201,42 @@ window.avviaMotoreContattiDaIndex = () => {
 };
 
 window.avviaMotoreBachecaUtilityDaIndex = () => {
-    // Il modulo bacheca viene caricato e inizializzato tramite questa funzione ponte HTML
-    // Per ora non facciamo un check ferreo del login per far vedere le robe pubbliche
     const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
     avviaMotoreBachecaUtility(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
 };
 
-// --- NUOVA FUNZIONE PONTE PER LA RUBRICA ---
 window.avviaMotoreRubricaDaIndex = () => {
-    // Non blocchiamo qui chi non ha il login, così il modulo può mostrare il lucchetto "Accesso Richiesto"
     if (window.currentUserData && window.currentUserData.app_banned === true) {
         alert("L'accesso alle funzioni ti è stato revocato."); 
         return;
     }
-    // Avviamo il modulo rubrica passando i dati aggiornati
     avviaMotoreRubrica(db, auth, window.currentUserData, globalIsAdmin);
+};
+
+// --- NUOVE FUNZIONI PONTE ---
+
+window.avviaMotoreBachecaTurniDaIndex = () => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) {
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return;
+    }
+    avviaMotoreBachecaTurni(db, auth, window.currentUserData, globalIsAdmin);
+};
+
+window.avviaMotoreBarcadvisorDaIndex = () => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) {
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return;
+    }
+    avviaMotoreBarcadvisor(db, auth, window.currentUserData, globalIsAdmin);
+};
+
+window.avviaMotoreBuoniPastoDaIndex = () => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) {
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return;
+    }
+    avviaMotoreBuoniPasto(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 
