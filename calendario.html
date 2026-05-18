@@ -288,29 +288,47 @@
 
         /* --- OTTIMIZZAZIONI MOBILE ESTREME --- */
         @media (max-width: 500px) {
-            /* Fix Header e allineamento (Mese sopra, Tutti i Pulsanti sulla stessa riga sotto) */
             .fc .fc-toolbar.fc-header-toolbar {
+                display: flex;
                 flex-wrap: wrap;
-                justify-content: center !important;
+                justify-content: space-between !important;
+                align-items: center;
                 margin-bottom: 15px;
-                gap: 5px; /* Spazio tra i gruppi di bottoni */
+                gap: 10px 0; /* Gap verticale tra la riga del Mese e la riga dei pulsanti */
             }
             .fc-toolbar-chunk {
                 display: flex;
                 align-items: center;
-                width: auto !important; /* Permette ai bottoni (prev/next e cerca) di stare affiancati */
             }
+            /* 1) Il Titolo (Mese) occupa l'intera larghezza, spinto in cima (Riga 1) */
             .fc-toolbar-chunk:nth-child(2) {
-                width: 100% !important; /* Forza il titolo (Mese) a prendere tutta la prima riga */
-                order: -1; 
-                justify-content: center;
-                margin-bottom: 10px;
+                width: 100% !important;
+                order: 1 !important; 
+                justify-content: center !important;
             }
+            /* 2) Chunk Frecce a Destra (Riga 2) */
+            .fc-toolbar-chunk:has(.fc-prev-button) {
+                order: 3 !important; 
+                justify-content: flex-end !important;
+            }
+            /* 3) Chunk Cerca e Oggi a Sinistra (Riga 2) */
+            .fc-toolbar-chunk:has(.fc-today-button), 
+            .fc-toolbar-chunk:not(:nth-child(2)):not(:has(.fc-prev-button)) {
+                order: 2 !important; 
+                justify-content: flex-start !important;
+            }
+            
+            /* Fallback di sicurezza per vecchi browser */
+            @supports not selector(:has(a)) {
+                .fc-toolbar-chunk:nth-child(1) { order: 3; justify-content: flex-end; }
+                .fc-toolbar-chunk:nth-child(3) { order: 2; justify-content: flex-start; }
+            }
+
             .fc-toolbar-title {
                 font-size: 1.35em !important;
             }
             .fc .fc-button-primary { 
-                padding: 6px 10px !important; /* Riduce leggermente i bottoni per farli entrare tutti in una riga */
+                padding: 6px 12px !important; 
                 font-size: 0.9em !important;
             }
 
@@ -875,6 +893,20 @@
 
 <!-- Richiamo dello script separato come concordato -->
 <script type="module" src="moduli/calendario.js"></script>
+
+<!-- Script utility per iniettare le icone FA nei bottoni del calendario -->
+<script>
+    setInterval(() => {
+        const buttons = document.querySelectorAll('.fc-button');
+        buttons.forEach(btn => {
+            const testoLower = btn.innerText.toLowerCase().trim();
+            // Trova il bottone di ricerca (sia che si chiami "Cerca", "Vai" o usi la lente Emoji)
+            if ((testoLower === 'cerca' || testoLower === 'vai' || btn.innerText.includes('🔍')) && !btn.querySelector('.fa-magnifying-glass')) {
+                btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
+            }
+        });
+    }, 500);
+</script>
 
 </body>
 </html>
