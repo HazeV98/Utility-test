@@ -91,15 +91,7 @@ let tempColoreAltro = "";
 let variantiData = {};
 
 // --- FUNZIONI MENU LATERALE ---
-function apriMenuLaterale() { 
-    document.getElementById('sidebar').classList.add('open'); 
-    document.getElementById('sidebar-overlay').style.display = 'block'; 
-}
-
-function chiudiMenuLaterale() { 
-    document.getElementById('sidebar').classList.remove('open'); 
-    document.getElementById('sidebar-overlay').style.display = 'none'; 
-}
+// (Rimosse perché la sidebar HTML è stata eliminata)
 
 // --- FUNZIONI MENU DESTRO E MODIFICA MULTIPLA ---
 function apriMenuDestro() {
@@ -654,7 +646,7 @@ function controllaEmptyState() {
     if (!state.depositoAttivo && state.setupSkipped) {
         document.getElementById('calendar').style.display = 'none';
         document.getElementById('empty-state-calendario').style.display = 'block';
-        document.getElementById('activeDepotLabel').innerText = "In attesa";
+        // Rimosso il riferimento ad 'activeDepotLabel' che non esiste più
     } else {
         document.getElementById('calendar').style.display = 'block';
         document.getElementById('empty-state-calendario').style.display = 'none';
@@ -1368,7 +1360,7 @@ async function gestisciInterazione(date) {
             let turniSenzaVariazioni = calcolaTurni();
             let turnoOrigObj = turniSenzaVariazioni.find(e => e.start === date && !e.title.includes('FERIE') && e.title !== 'FEP');
             let origPulito = turnoOrigObj ? turnoOrigObj.title.replace(/<i[^>]*><\/i>/g, '').replace(/\(Sospeso\)/g, '').trim() : "Nessun turno";
-            htmlInfo += `<br><span style="font-size: 0.9em; color: var(--text-muted);"><b>Turno originale:</b> ${origPulito}</span>`;
+            htmlInfo += `<br><span style="font-size: 0.9em; color: var(--text-muted);"><b>Turno original:</b> ${origPulito}</span>`;
             state.variazioni[date] = tempVar;
             
             if (localStorage.getItem('auth_rotazioni')) {
@@ -2170,7 +2162,8 @@ function resetGiornoSingolo() {
 }
 
 function aggiornaUI() { 
-    document.getElementById('activeDepotLabel').innerText = state.depositoAttivo || "Configurazione"; 
+    // rimosso document.getElementById('activeDepotLabel').innerText = state.depositoAttivo || "Configurazione";
+    // Questa funzione rimane vuota per compatibilità futura, o la possiamo rimuovere del tutto se non serve altro.
 }
 
 function apriReset() { 
@@ -2350,8 +2343,6 @@ function inizializzaCalendario() {
 }
 
 // --- ESPORTAZIONE DELLE FUNZIONI GLOBALI (NECESSARIO PERCHÈ SIAMO IN UN MODULE) ---
-window.apriMenuLaterale = apriMenuLaterale;
-window.chiudiMenuLaterale = chiudiMenuLaterale;
 window.apriMenuDestro = apriMenuDestro;
 window.chiudiMenuDestro = chiudiMenuDestro;
 window.apriMultiEdit = apriMultiEdit;
