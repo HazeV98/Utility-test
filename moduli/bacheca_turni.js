@@ -1,11 +1,27 @@
 import { doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, where, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-const LISTA_FILE_INFO = ["info_turni_2026-03-02.json", "info_turni_2026-03-28.json"];
+let LISTA_FILE_INFO = [];
 let localDbCache = {};
 let dbCachePrecaricata = false;
 
 async function precaricaTuttiDB() {
     if (dbCachePrecaricata) return;
+    
+    // --- LETTURA DINAMICA DELLA MAPPA ---
+    try {
+        const resMappa = await fetch("mappa_file.json?v=" + new Date().getTime());
+        if (resMappa.ok) {
+            const mappa = await resMappa.json();
+            if (mappa.albero) {
+                // Filtra automaticamente tutti i file che rispettano il formato info_turni_YYYY-MM-DD.json
+                LISTA_FILE_INFO = mappa.albero.filter(file => /^info_turni_\d{4}-\d{2}-\d{2}\.json$/.test(file));
+            }
+        }
+    } catch(e) { 
+        console.warn("Impossibile caricare mappa_file.json", e); 
+    }
+    // ------------------------------------
+
     for (let file of LISTA_FILE_INFO) {
         const match = file.match(/\d{4}-\d{2}-\d{2}/);
         const dataInizio = match ? match[0] : null;
@@ -395,7 +411,14 @@ export async function avviaMotoreBachecaTurni(db, auth, userDataPrivate, isAdmin
         let codicePulito = codiceTurno.toUpperCase().trim();
         caricaDbCorrenteSincrono(dataScambio); 
 
-        let dataAttiva = dataAttivaDb || "2026-03-02"; 
+        // --- CALCOLO DATA ATTIVA DINAMICO ---
+        let dataAttiva = dataAttivaDb;
+        if (!dataAttiva) {
+            const cacheKeys = Object.keys(localDbCache).sort();
+            dataAttiva = cacheKeys.length > 0 ? cacheKeys[cacheKeys.length - 1] : "";
+        }
+        // ------------------------------------
+        
         let chiaveTrovata = trovaChiaveEsatta(dbInUso, codicePulito, dataScambio);
 
         if (chiaveTrovata && chiaveTrovata !== codicePulito && dbInUso && dbInUso[chiaveTrovata]) { 
