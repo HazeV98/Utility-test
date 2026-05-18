@@ -12,12 +12,6 @@ import { avviaMotoreLink } from './link.js';
 import { avviaMotoreDocumenti } from './documenti.js';
 import { avviaMotoreContatti } from './contatti.js';
 import { avviaMotoreBachecaUtility } from './bacheca_utility.js';
-import { avviaMotoreRubrica } from './rubrica.js';
-
-// Nuovi sottomoduli convertiti a modale
-import { avviaMotoreBachecaTurni } from './bacheca_turni.js';
-import { avviaMotoreBarcadvisor } from './barcadvisor.js';
-import { avviaMotoreBuoniPasto } from './buoni_pasto.js';
 
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -78,22 +72,16 @@ const DEFAULT_APPS = [
     { id: "statistiche", label: "Statistiche", href: "dati_calendario.html", defaultColor: "#6f42c1" },
     { id: "rotazioni", label: "Rotazioni", href: "rotazioni.html", defaultColor: "#fd7e14" },
     { id: "turni", label: "Turni", onclick: "window.apriModaleTurni()", defaultColor: "#20c997" },
-    
-    // Convertite a onclick per aprire le modali
-    { id: "bachecaturni", label: "Bacheca\nTurni", onclick: "window.apriModaleBachecaTurni()", defaultColor: "#e83e8c" },
-    { id: "barcadvisor", label: "BarcAdvisor", image: "icone_app/iconba.png", onclick: "window.apriModaleBarcadvisor()" },
-    { id: "rubrica", label: "Rubrica", onclick: "window.apriModaleRubrica()", defaultColor: "#343a40" },
-    
+    { id: "bachecaturni", label: "Bacheca\nTurni", href: "bacheca_turni.html", defaultColor: "#e83e8c" },
+    { id: "barcadvisor", label: "BarcAdvisor", image: "icone_app/iconba.png", href: "barcadvisor.html" },
+    { id: "rubrica", label: "Rubrica", href: "rubrica.html", defaultColor: "#343a40" },
     { id: "ferie", label: "Rotazione\nFerie", href: "rotazione_ferie.html", defaultColor: "#ffc107" },
     { id: "orari", label: "Orari\nNavigaz.", onclick: "window.apriModaleOrari()", defaultColor: "#17a2b8" },
     { id: "chebateo", label: "CheBateo", image: "icone_app/iconcb.png", href: "https://m.chebateo.it/" },
     { id: "documenti", label: "Documenti", onclick: "window.apriModaleDocumenti()", defaultColor: "#6c757d" },
     { id: "link", label: "Link", onclick: "window.apriModaleLink()", defaultColor: "#495057" },
     { id: "contatti", label: "Contatti", onclick: "window.apriModaleContatti()", defaultColor: "#2c3e50" },
-    
-    // Convertito a onclick per aprire la modale
-    { id: "buoni", label: "Buoni\nPasto", onclick: "window.apriModaleBuoniPasto()", defaultColor: "#d63384" },
-    
+    { id: "buoni", label: "Buoni\nPasto", href: "buoni.html", defaultColor: "#d63384" },
     { id: "promemoria", label: "Promemoria", href: "promemoria.html", defaultColor: "#0dcaf0" },
     { id: "dds", label: "Archivio\nDDS", href: "dds.html", defaultColor: "#5856d6" },
     { id: "report", label: "Segnalazioni", onclick: "window.apriMainModaleSegnalazioni()", defaultColor: "#0088ff" },
@@ -199,46 +187,6 @@ window.avviaMotoreContattiDaIndex = () => {
         window.currentUserData.contatti_access = true; window.currentUserData.last_contatti_access = oggiStr;
     }
 };
-
-window.avviaMotoreBachecaUtilityDaIndex = () => {
-    const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
-    avviaMotoreBachecaUtility(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
-};
-
-window.avviaMotoreRubricaDaIndex = () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
-    }
-    avviaMotoreRubrica(db, auth, window.currentUserData, globalIsAdmin);
-};
-
-// --- NUOVE FUNZIONI PONTE ---
-
-window.avviaMotoreBachecaTurniDaIndex = () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
-    }
-    avviaMotoreBachecaTurni(db, auth, window.currentUserData, globalIsAdmin);
-};
-
-window.avviaMotoreBarcadvisorDaIndex = () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
-    }
-    avviaMotoreBarcadvisor(db, auth, window.currentUserData, globalIsAdmin);
-};
-
-window.avviaMotoreBuoniPastoDaIndex = () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
-    }
-    avviaMotoreBuoniPasto(db, auth, window.currentUserData, globalIsAdmin);
-};
-
 
 window.controllaBacheca = async () => {
     if (!auth.currentUser) return;
@@ -824,6 +772,21 @@ window.LayoutEngine = {
 window.apriModal = (id, authMode) => { document.getElementById(id).style.display = 'flex'; if(id === 'authModal' && authMode) { currentAuthMode = authMode; window.aggiornaUIAuth(); } };
 window.chiudiModal = (id) => { document.getElementById(id).style.display = 'none'; };
 window.chiudiSuSfondo = (e, id) => { if (e.target.id === id) window.chiudiModal(id); };
+
+window.apriBachecaUtility = () => {
+    const timestamp = Date.now(); localStorage.setItem('ultimo_accesso_bacheca', timestamp);
+    document.getElementById('badge-messaggi').style.display = 'none'; 
+    document.getElementById('banner-nuovo-messaggio').style.display = 'none';
+    if (auth.currentUser) setDoc(doc(db, "utenti", auth.currentUser.uid), { ultimo_accesso_bacheca: timestamp }, { merge: true });
+    
+    window.apriModal('modal-bacheca-utility-main');
+    
+    // Innesca il caricamento tramite il nuovo engine della bacheca (se l'utente è loggato)
+    if(auth.currentUser) {
+        const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
+        avviaMotoreBachecaUtility(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
+    }
+};
 
 window.apriGestioneAccessi = async () => {
     window.apriModal('modal-gestione');
