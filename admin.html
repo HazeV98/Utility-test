@@ -525,7 +525,7 @@
             statusLog.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Download configurazione...";
             statusLog.style.color = "var(--text-main)";
 
-            const url = `https://api.github.com/repos/${owner}/${repo}/contents/calendario.html?t=${new Date().getTime()}`;
+            const url = `https://api.github.com/repos/${owner}/${repo}/contents/moduli/calendario.js?t=${new Date().getTime()}`;
             
             try {
                 let response = await fetch(url, { headers: { 'Authorization': `token ${token}` } });
