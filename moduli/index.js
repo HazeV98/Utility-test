@@ -16,7 +16,19 @@ import { avviaMotoreRubrica } from './rubrica.js';
 import { avviaMotoreBachecaTurni } from './bacheca_turni.js';
 import { avviaMotoreBarcadvisor } from './barcadvisor.js';
 import { avviaMotoreBuoniPasto } from './buoni_pasto.js';
+
+// Importiamo tutte le interfacce UI estratte
 import { initUIBuoniPasto } from './ui_buoniPasto.js';
+import { initUITurni } from './ui_turni.js';
+import { initUIBachecaTurni } from './ui_bacheca_turni.js';
+import { initUIBarcadvisor } from './ui_barcadvisor.js';
+import { initUIBachecaUtility } from './ui_bacheca_utility.js';
+import { initUIContatti } from './ui_contatti.js';
+import { initUIDocumenti } from './ui_documenti.js';
+import { initUILink } from './ui_link.js';
+import { initUIOrari } from './ui_orari.js';
+import { initUISegnalazioni } from './ui_report.js';
+import { initUIRubrica } from './ui_rubrica.js';
 
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -32,8 +44,18 @@ const auth = getAuth(app);
 const db = getFirestore(app); 
 const provider = new GoogleAuthProvider();
 
-// Inizializziamo le UI estratte dall'index
+// Inizializziamo le UI nel DOM
 initUIBuoniPasto();
+initUITurni();
+initUIBachecaTurni();
+initUIBarcadvisor();
+initUIBachecaUtility();
+initUIContatti();
+initUIDocumenti();
+initUILink();
+initUIOrari();
+initUISegnalazioni();
+initUIRubrica();
 
 // Inizializziamo il sottomodulo di Autenticazione e Profilo
 avviaMotoreAuth(auth, db, provider);
