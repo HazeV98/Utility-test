@@ -16,6 +16,7 @@ import { avviaMotoreRubrica } from './rubrica.js';
 import { avviaMotoreBachecaTurni } from './bacheca_turni.js';
 import { avviaMotoreBarcadvisor } from './barcadvisor.js';
 import { avviaMotoreBuoniPasto } from './buoni_pasto.js';
+import { initUIBuoniPasto } from './ui_buoniPasto.js';
 
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -30,6 +31,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app); 
 const db = getFirestore(app); 
 const provider = new GoogleAuthProvider();
+
+// Inizializziamo le UI estratte dall'index
+initUIBuoniPasto();
 
 // Inizializziamo il sottomodulo di Autenticazione e Profilo
 avviaMotoreAuth(auth, db, provider);
