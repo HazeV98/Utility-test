@@ -25,61 +25,6 @@ window.deleteCloudData = async () => {
     }
 };
 
-const CALENDARIO_STATE_KEYS = [
-    'version', 'variazioni', 'colori', 'nebbia', 'straordinario', 'sospesoRiposo', 'note', 'buonoPasto', 'permessoSP',
-    'setupStep', 'ferie', 'profiliSalvati', 'profiloAttivoId', 'depositoAttivo', 'setupSkipped', 'history', 'rotazioneStart',
-    'riposoStart', 'turnoIndex', 'tcPattern', 'futureConfig', 'baseDataFutura', 'coloriRotazione', 'lastUpdate'
-];
-
-window.syncToCloud = async (copiaDati) => {
-    if (!window.utenteLoggato) return;
-    try {
-        copiaDati.lastUpdate = copiaDati.lastUpdate || new Date().getTime();
-        await setDoc(doc(db, "utenti", window.utenteLoggato), copiaDati, { merge: true });
-    } catch (e) {
-        console.error("Errore Sync Cloud Calendario:", e);
-    }
-};
-
-async function caricaDatiDaCloud() {
-    if (!window.utenteLoggato) return false;
-    try {
-        const docRef = doc(db, "utenti", window.utenteLoggato);
-        const docSnap = await getDoc(docRef);
-        if (!docSnap.exists()) return false;
-
-        const datiCloud = docSnap.data();
-        const datiLocali = JSON.parse(localStorage.getItem('myTurniApp')) || {};
-        const cloudTime = datiCloud.lastUpdate || 0;
-        const localTime = datiLocali.lastUpdate || 0;
-
-        if (cloudTime > localTime) {
-            const stateFromCloud = {};
-            CALENDARIO_STATE_KEYS.forEach((key) => {
-                if (datiCloud[key] !== undefined) {
-                    stateFromCloud[key] = datiCloud[key];
-                }
-            });
-            const merged = { ...datiLocali, ...stateFromCloud };
-            localStorage.setItem('myTurniApp', JSON.stringify(merged));
-            return true;
-        }
-    } catch (e) {
-        console.error("Errore caricamento dati cloud calendario:", e);
-    }
-    return false;
-}
-
-onAuthStateChanged(auth, async (user) => {
-    window.utenteLoggato = user ? user.uid : null;
-    if (!user) return;
-
-    const datiCaricati = await caricaDatiDaCloud();
-    if (datiCaricati) {
-        location.reload();
-    }
-});
-
 // --- VARIABILI GLOBALI ---
 let ROT_FERIE_INV = [];
 let ROT_FERIE_EST = [];
