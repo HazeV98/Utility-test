@@ -25,6 +25,14 @@ window.deleteCloudData = async () => {
     }
 };
 
+window.syncToCloud = async (dati) => {
+    if (window.utenteLoggato) {
+        try {
+            await setDoc(doc(db, "utenti", window.utenteLoggato), dati);
+        } catch(e) { console.error("Errore salvataggio Cloud:", e); }
+    }
+};
+
 // --- VARIABILI GLOBALI ---
 let ROT_FERIE_INV = [];
 let ROT_FERIE_EST = [];
@@ -1233,12 +1241,6 @@ async function inizializzaApp() {
     }
 }
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', inizializzaApp);
-} else {
-    inizializzaApp();
-}
-
 function confermaRotazione() {
     if (!state.depositoAttivo) { 
         state.depositoAttivo = document.getElementById('depotSelectMain').value; 
@@ -2414,3 +2416,58 @@ window.importaDatiDaFile = importaDatiDaFile;
 window.apriIcsModal = apriIcsModal;
 window.chiudiIcsModal = chiudiIcsModal;
 window.esportaICS = esportaICS;
+
+// --- INIZIALIZZAZIONE GESTITA DA FIREBASE (Risoluzione Bug Nuovi Browser) ---
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        window.utenteLoggato = user.uid;
+        try {
+            const docSnap = await getDoc(doc(db, "utenti", user.uid));
+            if (docSnap.exists()) {
+                const cloudData = docSnap.data();
+                const localData = JSON.parse(localStorage.getItem('myTurniApp'));
+                
+                // Filtro "Anti-Corruzione" e priorità
+                // Diamo priorità a Firebase se il localStorage locale è vuoto
+                // o se i dati su Firebase risultano più recenti rispetto al salvataggio locale.
+                let usaCloud = false;
+                if (!localData || Object.keys(localData).length <= 2) {
+                    usaCloud = true;
+                } else if (cloudData.lastUpdate && (!localData.lastUpdate || cloudData.lastUpdate > localData.lastUpdate)) {
+                    usaCloud = true;
+                }
+
+                if (usaCloud) {
+                    // Sovrascriviamo in RAM lo stato unendo i dati recuperati dal Cloud
+                    state = { ...state, ...cloudData };
+                    
+                    // Salviamo fisicamente sul localStorage locale per allineare il browser
+                    let copiaDati = JSON.parse(JSON.stringify(state));
+                    delete copiaDati.dbCache;
+                    delete copiaDati.rotCache;
+                    delete copiaDati.dispCache;
+                    localStorage.setItem('myTurniApp', JSON.stringify(copiaDati));
+                } else if (localData && (!cloudData.lastUpdate || localData.lastUpdate > cloudData.lastUpdate)) {
+                    // Se la priorità ce l'ha il browser, aggiorniamo il cloud (opzionale ma consigliato)
+                    let copiaDati = JSON.parse(JSON.stringify(state));
+                    delete copiaDati.dbCache;
+                    delete copiaDati.rotCache;
+                    delete copiaDati.dispCache;
+                    window.syncToCloud(copiaDati);
+                }
+            }
+        } catch(e) {
+            console.error("Errore lettura dati da Cloud:", e);
+        }
+    } else {
+        window.utenteLoggato = null;
+    }
+
+    // A questo punto Firebase ha finito (e se c'erano dati vecchi, li abbiamo appena ripristinati).
+    // SOLO ORA avviamo graficamente il calendario.
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', inizializzaApp);
+    } else {
+        inizializzaApp();
+    }
+});
