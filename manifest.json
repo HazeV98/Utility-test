@@ -1,0 +1,57 @@
+{
+  "short_name": "Utility",
+  "name": "Utility",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "index.html",
+  "background_color": "#f4f7f6",
+  "display": "standalone",
+  "scope": "./",
+  "theme_color": "#0056b3",
+  "shortcuts": [
+    {
+      "name": "Calendario Turni",
+      "short_name": "Calendario",
+      "description": "Apri il calendario mensile",
+      "url": "calendario.html",
+      "icons": [
+        {
+          "src": "icon-512.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Database Turni",
+      "short_name": "Turni",
+      "description": "Visualizza il database turni",
+      "url": "turni.html",
+      "icons": [
+        {
+          "src": "icon-512.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Rubrica Colleghi",
+      "short_name": "Rubrica",
+      "description": "Cerca i numeri dei colleghi",
+      "url": "rubrica.html",
+      "icons": [
+        {
+          "src": "icon-512.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

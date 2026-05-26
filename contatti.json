@@ -1,0 +1,55 @@
+{
+  "contatti": [
+    {
+      "categoria": "Centrale Operativa",
+      "elementi": [
+        { "nome": "Centrale operativa verde", "valore": "800 845 065", "tipo": "telefono" },
+        { "nome": "Centrale operativa - capo zona", "valore": "041 272 2478", "tipo": "telefono" },
+        { "nome": "Centrale operativa - capo deposito", "valore": "041 272 2479", "tipo": "telefono" }
+      ]
+    },
+    {
+      "categoria": "Uffici Capo Zona",
+      "elementi": [
+        { "nome": "Capo Fondamente nove", "valore": "041 272 2290", "tipo": "telefono" },
+        { "nome": "Capo Piazzale Roma", "valore": "041 272 2246", "tipo": "telefono" }
+      ]
+    },
+    {
+      "categoria": "Salette Sosta",
+      "elementi": [
+        { "nome": "Saletta Fondamente nove", "valore": "041 272 2289", "tipo": "telefono" },
+        { "nome": "Saletta Fondamente nove capitani", "valore": "041 272 2298", "tipo": "telefono" },
+        { "nome": "Saletta Lido", "valore": "041 272 2203", "tipo": "telefono" },
+        { "nome": "Saletta San Zaccaria", "valore": "041 272 2230", "tipo": "telefono" },
+        { "nome": "Saletta Tronchetto", "valore": "041 272 2272", "tipo": "telefono" }
+      ]
+    },
+    {
+      "categoria": "Uffici",
+      "elementi": [
+        { "nome": "Centralino", "valore": "041 272 2111", "tipo": "telefono" },
+        { "nome": "Ufficio turni piloti", "valore": "041 272 2401", "tipo": "telefono" },
+        { "nome": "Ufficio turni mariani", "valore": "041 272 2402", "tipo": "telefono" },
+        { "nome": "Ufficio turni macchina", "valore": "041 272 2408", "tipo": "telefono" },
+        { "nome": "Ufficio bibbie", "valore": "041 272 2404", "tipo": "telefono" },
+        { "nome": "Ufficio programmazione", "valore": "041 272 2404", "tipo": "telefono" },
+        { "nome": "Portineria Tronchetto", "valore": "041 272 2181", "tipo": "telefono" },
+        { "nome": "Ufficio cove", "valore": "041 272 2473", "tipo": "telefono" },
+        { "nome": "Ufficio formazione", "valore": "041 272 2142", "tipo": "telefono" },
+        { "nome": "Ufficio infortuni", "valore": "041 272 2094", "tipo": "telefono" },
+        { "nome": "Ufficio malattie", "valore": "041 272 2091", "tipo": "telefono" },
+        { "nome": "Rendicontazione", "valore": "041 272 2707", "tipo": "telefono" },
+        { "nome": "Ufficio gestione titoli e libretti", "valore": "041 272 2037", "tipo": "telefono" },
+        { "nome": "Ufficio paghe", "valore": "041 272 2126", "tipo": "telefono" },
+        { "nome": "Ufficio personale", "valore": "041 272 2117", "tipo": "telefono" },
+        { "nome": "Ufficio presenze", "valore": "041 272 2451", "tipo": "telefono" },
+        { "nome": "Ufficio buoni e visite mediche", "valore": "041 272 2161", "tipo": "telefono" },
+        { "nome": "Vendite Marinai", "valore": "vendita.marinai@actv.it", "tipo": "email" },
+        { "nome": "Ufficio protocollo", "valore": "protocollo@pec.actv.it", "tipo": "email" },
+        { "nome": "Ufficio vestiario", "valore": "vestiario@avmspa.it", "tipo": "email" }
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,34 @@
+{
+  "AD04": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "22:20",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "5:24"
+    }
+  ],
+  "AD14": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "22:20",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "5:24"
+    }
+  ],
+  "AD15": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "22:20",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "5:24"
+    }
+  ],
+  "AD19": [
+    {
+      "partenza_luogo": "DEP. CHIOGGIA",
+      "partenza_ora": "4:50",
+      "arrivo_luogo": "DEP. CHIOGGIA",
+      "arrivo_ora": "11:54"
+    }
+  ]
+}

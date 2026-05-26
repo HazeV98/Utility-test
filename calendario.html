@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="theme-color" content="#f7f9fe">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Calendario">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    
+    <title>Calendario Turni</title>
+
+    <script>
+        // --- GESTIONE TEMA DA PREFERENZE ---
+        (function applicaTema() {
+            try {
+                let prefStr = localStorage.getItem('preferenze_layout_haze');
+                if (prefStr) {
+                    let prefs = JSON.parse(prefStr);
+                    let theme = prefs.theme || 'system';
+                    if (theme !== 'system') {
+                        document.documentElement.setAttribute('data-theme', theme);
+                    } else {
+                        document.documentElement.removeAttribute('data-theme');
+                    }
+                } else {
+                    const oldTheme = localStorage.getItem('theme');
+                    if (oldTheme && oldTheme !== 'system') document.documentElement.setAttribute('data-theme', oldTheme);
+                }
+            } catch(e) {}
+        })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+
+    <style>
+        :root { 
+            --riposo: #1e8449; --disp: #feb236; --turno: #5e72e4; 
+            --bg: #f4f6fa; 
+            --text: #32325d;
+            --surface: #ffffff;
+            --border-color: #d3d9e0;
+            --primary: #5e72e4;
+            --text-muted: #8898aa;
+            --cell-bg: #f8f9fe;
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212;
+            --text: #e0e0e0;
+            --surface: #1e1e1e;
+            --border-color: #3f3f3f;
+            --primary: #8295e8;
+            --text-muted: #a0a0a0;
+            --cell-bg: #252525;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #121212;
+                --text: #e0e0e0;
+                --surface: #1e1e1e;
+                --border-color: #3f3f3f;
+                --primary: #8295e8;
+                --text-muted: #a0a0a0;
+                --cell-bg: #252525;
+            }
+        }
+        
+        body { 
+            font-family: 'Inter', Roboto, Helvetica, Arial, sans-serif; 
+            margin: 0; background: var(--bg); color: var(--text);
+            padding-bottom: env(safe-area-inset-bottom); overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- STILI BARRA SUPERIORE MODERNA --- */
+        #topBar { 
+            padding: calc(15px + env(safe-area-inset-top)) 20px 10px 20px; 
+            display: flex; justify-content: space-between; 
+            align-items: center; 
+            background: transparent;
+            position: sticky; top: 0; z-index: 100;
+            pointer-events: none;
+        }
+
+        .topbar-btn {
+            pointer-events: auto;
+            background: var(--surface);
+            color: var(--text);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            border: 1px solid var(--border-color);
+            font-size: 20px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .topbar-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* --- STILI MENU LATERALE DESTRO (AZIONI) --- */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 2000; backdrop-filter: blur(3px); }
+        .right-sidebar { position: fixed; top: 0; right: -300px; width: 280px; height: 100%; background-color: var(--surface); box-shadow: -5px 0 25px rgba(0,0,0,0.1); z-index: 2001; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; }
+        .right-sidebar.open { right: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: calc(20px + env(safe-area-inset-top)) 20px 20px 20px; background-color: var(--primary); color: white; }
+        
+        /* --- STILI CALENDARIO MODERNO --- */
+        #calendar { 
+            background: var(--surface); 
+            padding: 20px 15px; 
+            border-radius: 28px; 
+            margin: 0 15px 20px 15px; 
+            box-shadow: 0 8px 30px rgba(0,0,0,0.04); 
+            border: 2px solid var(--border-color);
+        }
+
+        /* Override FullCalendar Base */
+        .fc-theme-standard td, .fc-theme-standard th, .fc-theme-standard .fc-scrollgrid {
+            border: none !important;
+        }
+        .fc-scrollgrid {
+            border-collapse: separate !important;
+            border-spacing: 6px !important;
+        }
+        
+        /* Header Giorni (Lun, Mar, ecc) */
+        .fc-theme-standard th {
+            background: var(--surface) !important;
+        }
+        .fc-col-header-cell {
+            padding: 10px 0 !important;
+            background-color: transparent !important;
+        }
+        .fc-col-header-cell-cushion {
+            color: var(--text) !important;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75em;
+            letter-spacing: 0.5px;
+            text-decoration: none !important;
+        }
+
+        /* Celle dei Giorni */
+        .fc-daygrid-day {
+            background: var(--cell-bg) !important;
+            border-radius: 12px !important;
+            border: 1px solid var(--border-color) !important;
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+        .fc-daygrid-day-frame {
+            min-height: 85px !important; 
+            padding: 4px !important;
+            cursor: pointer;
+        }
+        .fc-daygrid-day-number {
+            font-weight: 600;
+            font-size: 0.9em;
+            padding: 6px !important;
+            color: var(--text);
+            text-decoration: none !important;
+        }
+
+        /* Giorno Corrente */
+        .fc-day-today {
+            background: rgba(94, 114, 228, 0.08) !important;
+            border: 2px solid var(--primary) !important;
+        }
+        .fc-day-today .fc-daygrid-day-number {
+            font-weight: 800 !important;
+            background: var(--primary);
+            color: white !important;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin: 4px;
+            padding: 0 !important;
+        }
+
+        /* Toolbar (Mese e Bottoni) */
+        .fc .fc-toolbar.fc-header-toolbar {
+            margin-bottom: 25px;
+            padding: 0 5px;
+            gap: 10px;
+        }
+        .fc-toolbar-title { 
+            font-weight: 800 !important; 
+            font-size: 1.5em !important; 
+            text-transform: capitalize; 
+            color: var(--text); 
+            letter-spacing: -0.5px;
+        }
+        .fc .fc-button-primary { 
+            background: var(--surface) !important; 
+            border: 1px solid var(--border-color) !important; 
+            color: var(--text) !important; 
+            border-radius: 12px !important; 
+            text-transform: capitalize !important; 
+            font-weight: 600 !important; 
+            padding: 8px 14px !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02) !important;
+            transition: all 0.2s;
+        }
+        .fc .fc-button-primary:hover {
+            background: var(--bg) !important;
+        }
+        .fc .fc-button-primary:not(:disabled):active, .fc .fc-button-primary:not(:disabled).fc-button-active {
+            background: var(--border-color) !important;
+            color: var(--text) !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05) !important;
+        }
+        
+        /* Eventi / Turni */
+        .fc-event { 
+            border: none !important; 
+            padding: 6px 4px !important; 
+            margin: 3px 2px !important; 
+            border-radius: 8px !important; 
+            font-weight: 700 !important; 
+            font-size: 0.85em !important; 
+            text-align: center; 
+            cursor: pointer !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+        .bg-riposo { background-color: var(--riposo) !important; }
+        .bg-disp { background-color: var(--disp) !important; color: #fff !important; }
+        .bg-turno { background-color: var(--turno) !important; color: #fff !important; }
+        .bg-modificato { background-color: #f5365c !important; color: #fff !important; }
+        .bg-ferie { background-color: #20c997 !important; color: white !important; font-size: 0.75em !important; padding: 4px 2px !important; margin-bottom: 4px !important; }
+
+        .disclaimer-banner {
+            margin: 15px; padding: 15px; background-color: rgba(255, 193, 7, 0.15);
+            border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 16px; color: #856404;
+            font-size: 13px; text-align: center; line-height: 1.4; font-weight: 500;
+        }
+        [data-theme="dark"] .disclaimer-banner { color: #ffd861; }
+
+        /* --- STILI MODALI --- */
+        #welcomeModal, #stepModal, #editModal, #altroModal, #resetModal, #backupModal, #imageModal, #jumpModal, #icsModal, #multiEditModal, #cambioBibbiaModal, #pdfTipo2Modal, #coloriRotazioneModal, #ferieModal, #pdfSyncModal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        .modal-content { background: var(--surface); color: var(--text); margin: 15% auto; padding: 25px; width: 85%; max-width: 400px; border-radius: 28px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); text-align: center; max-height: 80vh; overflow-y: auto; border: 1px solid var(--border-color); }
+
+        select, input[type="text"], input[type="date"], input[type="number"] { width: 100%; box-sizing: border-box; margin: 15px 0; padding: 15px; border: 2px solid var(--border-color); border-radius: 14px; font-size: 16px; background: var(--bg); color: var(--text); -webkit-appearance: none; font-family: 'Inter', sans-serif; font-weight: 500; transition: border-color 0.2s; }
+        select:focus, input:focus { border-color: var(--primary); outline: none; }
+        .btn { padding: 16px; border: none; border-radius: 16px; color: white; cursor: pointer; width: 100%; margin-top: 10px; font-weight: 700; font-size: 15px; font-family: 'Inter', sans-serif; transition: transform 0.1s, opacity 0.2s; }
+        .btn:active { transform: scale(0.97); }
+        .btn-reset { padding: 12px 15px; width: auto; font-size: 14px; }
+        .instruction-text { font-size: 15px; line-height: 1.6; color: var(--text-muted); margin-bottom: 10px; }
+        
+        .color-circle { width: 40px; height: 40px; border-radius: 50%; display: inline-block; margin: 6px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s, border 0.2s; }
+        .color-circle.selected { border: 3px solid var(--text); transform: scale(1.15); box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
+        .color-yellow { background: #f1c40f; }
+        .color-orange { background: #fd7e14; }
+        .color-red { background: #f5365c; }
+        .color-pink { background: #e83e8c; }
+        .color-purple { background: #8965e0; }
+        .color-blue { background: #5e72e4; }
+        .color-teal { background: #11cdef; }
+        .color-green { background: #2dce89; }
+        
+        #coloriRotazioneModal .color-circle { width: 30px; height: 30px; margin: 4px; }
+
+        /* --- OTTIMIZZAZIONI MOBILE ESTREME --- */
+        @media (max-width: 500px) {
+            .fc .fc-toolbar.fc-header-toolbar {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between !important;
+                align-items: center;
+                margin-bottom: 15px;
+                gap: 10px 0; /* Gap verticale tra la riga del Mese e la riga dei pulsanti */
+            }
+            .fc-toolbar-chunk {
+                display: flex;
+                align-items: center;
+            }
+            /* 1) Il Titolo (Mese) occupa l'intera larghezza, spinto in cima (Riga 1) */
+            .fc-toolbar-chunk:nth-child(2) {
+                width: 100% !important;
+                order: 1 !important; 
+                justify-content: center !important;
+            }
+            /* 2) Chunk Frecce a Destra (Riga 2) */
+            .fc-toolbar-chunk:has(.fc-prev-button) {
+                order: 3 !important; 
+                justify-content: flex-end !important;
+            }
+            /* 3) Chunk Cerca e Oggi a Sinistra (Riga 2) */
+            .fc-toolbar-chunk:has(.fc-today-button), 
+            .fc-toolbar-chunk:not(:nth-child(2)):not(:has(.fc-prev-button)) {
+                order: 2 !important; 
+                justify-content: flex-start !important;
+            }
+            
+            /* Fallback di sicurezza per vecchi browser */
+            @supports not selector(:has(a)) {
+                .fc-toolbar-chunk:nth-child(1) { order: 3; justify-content: flex-end; }
+                .fc-toolbar-chunk:nth-child(3) { order: 2; justify-content: flex-start; }
+            }
+
+            .fc-toolbar-title {
+                font-size: 1.35em !important;
+            }
+            .fc .fc-button-primary { 
+                padding: 6px 12px !important; 
+                font-size: 0.9em !important;
+            }
+
+            /* Fix giorni schiacciati (recupero pixel laterali e spaziatura) */
+            #calendar { 
+                padding: 12px 5px; 
+                margin: 0 8px 20px 8px; 
+                border-radius: 20px; 
+            }
+            .fc-scrollgrid { 
+                border-spacing: 2px !important; 
+            }
+            .fc-col-header-cell {
+                padding: 8px 0 !important;
+            }
+            .fc-col-header-cell-cushion {
+                font-size: 0.7em;
+            }
+            .fc-daygrid-day-frame { 
+                min-height: 70px !important; 
+                padding: 2px !important; 
+            }
+            .fc-daygrid-day-number {
+                font-size: 0.8em;
+                padding: 4px !important;
+            }
+            
+            /* Giorno corrente su mobile */
+            .fc-day-today .fc-daygrid-day-number {
+                width: 20px;
+                height: 20px;
+                font-size: 0.8em;
+            }
+
+            /* Eventi adattati */
+            .fc-event { 
+                font-size: 0.7em !important; 
+                padding: 3px 1px !important; 
+                margin: 2px 1px !important; 
+                border-radius: 6px !important;
+            }
+
+            .modal-content { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="chiudiMenuDestro();"></div>
+
+<div id="right-sidebar" class="right-sidebar">
+    <div class="sidebar-header">
+        <h3 style="margin:0; font-weight: 700;">Menu Azioni</h3>
+        <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer;" onclick="chiudiMenuDestro()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div style="padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto;">
+        
+        <div style="background: var(--bg); padding: 15px; border-radius: 16px; margin-bottom: 5px; border: 1px solid var(--border-color);">
+            <h4 style="margin: 0 0 12px 0; color: var(--text); font-size: 15px;"><i class="fa-solid fa-users"></i> Profili (Bibbie)</h4>
+            <div id="lista-profili-dinamica" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
+            <button class="btn btn-reset" style="background: var(--primary); color: white; margin:0; width:100%; font-weight: bold;" onclick="avviaNuovoProfilo()">
+                <i class="fa-solid fa-plus"></i> Aggiungi Profilo
+            </button>
+        </div>
+        <button class="btn btn-reset" style="background: #2dce89; margin:0; width:100%;" onclick="apriMultiEdit()"><i class="fa-solid fa-pen-to-square"></i> Modifica Multipla</button>
+        <button class="btn btn-reset" style="background: #11cdef; margin:0; width:100%;" onclick="apriColoriRotazione()"><i class="fa-solid fa-palette"></i> Colori Rotazione</button>
+        <hr style="width: 100%; border: 0; border-top: 1px solid var(--border-color);">
+        
+        <button class="btn btn-reset" style="background: #5e72e4; margin:0; width:100%;" onclick="scaricaPDF()"><i class="fa-solid fa-file-pdf"></i> Esporta PDF (Tipo 1)</button>
+        <button class="btn btn-reset" style="background: #5e72e4; margin:0; width:100%;" onclick="apriPdfTipo2Modal()"><i class="fa-solid fa-file-pdf"></i> Esporta PDF (Tipo 2)</button>
+        
+        <button class="btn btn-reset" style="background: #5e72e4; margin:0; width:100%;" onclick="apriIcsModal()"><i class="fa-solid fa-calendar-arrow-down"></i> Esporta ICS</button>
+        <hr style="width: 100%; border: 0; border-top: 1px solid var(--border-color);">
+        
+        <button class="btn btn-reset" style="background: #20c997; margin:0; width:100%;" onclick="apriFerieModal()"><i class="fa-solid fa-umbrella-beach"></i> Ferie Programmate</button>
+        
+        <input type="file" id="pdfBibbiaInput" style="display:none" accept=".pdf" onchange="elaboraPdfBibbia(event)">
+        <button class="btn btn-reset" style="background: #e83e8c; margin:0; width:100%;" onclick="document.getElementById('pdfBibbiaInput').click()"><i class="fa-solid fa-file-import"></i> Sincronizza da PDF</button>
+
+        <button class="btn btn-reset" style="background: #f1c40f; color: #32325d; margin:0; width:100%;" onclick="apriCambioBibbia()"><i class="fa-solid fa-rotate"></i> Cambio Bibbia</button>
+        <button class="btn btn-reset" style="background: #adb5bd; margin:0; width:100%;" onclick="apriBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup Dati</button>
+        <button class="btn btn-reset" style="background: #f5365c; margin:0; width:100%;" onclick="apriReset()"><i class="fa-solid fa-trash-can"></i> Reset Totale</button>
+    </div>
+</div>
+
+<div id="topBar">
+    <a href="index.html" class="topbar-btn" aria-label="Torna alla Home">
+        <i class="fa-solid fa-house"></i>
+    </a>
+    <div style="flex-grow: 1;"></div>
+    <button class="topbar-btn" onclick="apriMenuDestro()" aria-label="Menu Azioni">
+        <i class="fa-solid fa-ellipsis-vertical"></i>
+    </button>
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<div id="pdfSyncModal">
+    <div class="modal-content" style="max-height: 85vh; display: flex; flex-direction: column;">
+        <h3 style="color: #e83e8c; margin-top: 0;"><i class="fa-solid fa-file-pdf"></i> Sincronizzazione PDF</h3>
+        <p class="instruction-text" style="font-size: 14px;">Seleziona i turni da aggiornare rispetto al calendario attuale:</p>
+        
+        <div id="pdfSyncList" style="text-align: left; overflow-y: auto; flex: 1; border: 1px solid var(--border-color); border-radius: 14px; padding: 10px; margin-bottom: 15px;">
+            </div>
+        
+        <button class="btn" style="background: #2dce89; margin-top: auto;" onclick="applicaModifichePdf()">Applica Modifiche</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 10px;" onclick="chiudiPdfSyncModal()">Annulla</button>
+    </div>
+</div>
+
+<div id="ferieModal">
+    <div class="modal-content" style="padding: 20px;">
+        <h3 style="color: #20c997; margin-top: 0;"><i class="fa-solid fa-umbrella-beach"></i> Ferie Programmate</h3>
+        
+        <div style="display: flex; margin-bottom: 20px; border-radius: 12px; overflow: hidden; border: 1px solid #20c997; padding: 2px;">
+            <button id="btnTabFerieBase" style="flex:1; padding:10px; border:none; background:#20c997; color:white; font-weight:bold; cursor:pointer; font-family:'Inter'; border-radius: 10px;" onclick="switchFerieTab('base')">Impostazioni</button>
+            <button id="btnTabFerieScambio" style="flex:1; padding:10px; border:none; background:transparent; color:#20c997; font-weight:bold; cursor:pointer; font-family:'Inter'; border-radius: 10px;" onclick="switchFerieTab('scambio')">Scambio</button>
+        </div>
+
+        <div id="ferieBaseSection" style="display: block;">
+            <p class="instruction-text" style="font-size: 14px; margin-bottom: 15px;">Imposta il tuo gruppo base. Gli anni successivi verranno calcolati in automatico.</p>
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label style="font-weight: bold; font-size: 14px; color: var(--text-muted);">Anno di partenza (Base):</label>
+                <input type="number" id="ferieAnnoBase" placeholder="Es. 2026">
+                
+                <label style="font-weight: bold; font-size: 14px; color: var(--text-muted); margin-top: 10px; display: block;">Periodo Estivo Base:</label>
+                <select id="ferieEstiveBase">
+                    <option value="-1">Nessuna / Non lo so</option>
+                </select>
+                
+                <label style="font-weight: bold; font-size: 14px; color: var(--text-muted); margin-top: 10px; display: block;">Periodo Invernale Base:</label>
+                <select id="ferieInvernaliBase">
+                    <option value="-1">Nessuna / Non lo so</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="ferieScambioSection" style="display: none;">
+            <p style="font-size: 13px; color: var(--text-muted); text-align: left; margin-bottom: 15px;">Sostituisci il periodo calcolato in automatico per un singolo anno (es. scambio con collega).</p>
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label style="font-weight: bold; font-size: 14px; color: var(--text-muted);">Anno dello scambio:</label>
+                <input type="number" id="ferieScambioAnno" placeholder="Es. 2026">
+                
+                <label style="font-weight: bold; font-size: 14px; color: var(--text-muted); margin-top: 10px; display: block;">Nuovo Periodo Estivo:</label>
+                <select id="ferieEstiveScambio">
+                    <option value="-1">Mantieni Automatico</option>
+                </select>
+                
+                <label style="font-weight: bold; font-size: 14px; color: var(--text-muted); margin-top: 10px; display: block;">Nuovo Periodo Invernale:</label>
+                <select id="ferieInvernaliScambio">
+                    <option value="-1">Mantieni Automatico</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn" style="background: #20c997; margin-top: 10px;" onclick="salvaFerie()">Salva Configurazioni</button>
+        <button class="btn" style="background: #f5365c; margin-top: 10px;" onclick="resetFerie()">Reset Dati Ferie</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 10px;" onclick="chiudiFerieModal()">Chiudi</button>
+    </div>
+</div>
+
+<div id="coloriRotazioneModal">
+    <div class="modal-content" style="padding: 20px;">
+        <h3 style="color: #11cdef; margin-top: 0;"><i class="fa-solid fa-palette"></i> Colori Rotazione</h3>
+        <p class="instruction-text" style="font-size: 14px; margin-bottom: 20px;">Assegna un colore per ogni giorno lavorativo della tua rotazione.</p>
+        
+        <div style="margin-bottom: 12px; text-align: left; padding-bottom: 10px; border-bottom: 2px dashed var(--border-color);">
+            <div style="font-weight: bold; color: var(--riposo); font-size: 14px; margin-bottom: 5px;">Giorno di Riposo (RI / AL):</div>
+            <div class="day-riposo" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
+                <div class="color-circle" style="background: var(--bg); border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text);" data-color="" onclick="selezionaColoreRotazione('riposo', '', this)"><i class="fa-solid fa-xmark"></i></div>
+                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione('riposo', '#f1c40f', this)"></div>
+                <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione('riposo', '#fd7e14', this)"></div>
+                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione('riposo', '#f5365c', this)"></div>
+                <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreRotazione('riposo', '#e83e8c', this)"></div>
+                <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreRotazione('riposo', '#8965e0', this)"></div>
+                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreRotazione('riposo', '#5e72e4', this)"></div>
+                <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreRotazione('riposo', '#11cdef', this)"></div>
+                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreRotazione('riposo', '#2dce89', this)"></div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 12px; text-align: left;">
+            <div style="font-weight: bold; color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">1° Giorno:</div>
+            <div class="day-1" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
+                <div class="color-circle" style="background: var(--bg); border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text);" data-color="" onclick="selezionaColoreRotazione(1, '', this)"><i class="fa-solid fa-xmark"></i></div>
+                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(1, '#f1c40f', this)"></div>
+                <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(1, '#fd7e14', this)"></div>
+                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(1, '#f5365c', this)"></div>
+                <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreRotazione(1, '#e83e8c', this)"></div>
+                <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreRotazione(1, '#8965e0', this)"></div>
+                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreRotazione(1, '#5e72e4', this)"></div>
+                <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreRotazione(1, '#11cdef', this)"></div>
+                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreRotazione(1, '#2dce89', this)"></div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 12px; text-align: left;">
+            <div style="font-weight: bold; color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">2° Giorno:</div>
+            <div class="day-2" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
+                <div class="color-circle" style="background: var(--bg); border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text);" data-color="" onclick="selezionaColoreRotazione(2, '', this)"><i class="fa-solid fa-xmark"></i></div>
+                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(2, '#f1c40f', this)"></div>
+                <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(2, '#fd7e14', this)"></div>
+                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(2, '#f5365c', this)"></div>
+                <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreRotazione(2, '#e83e8c', this)"></div>
+                <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreRotazione(2, '#8965e0', this)"></div>
+                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreRotazione(2, '#5e72e4', this)"></div>
+                <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreRotazione(2, '#11cdef', this)"></div>
+                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreRotazione(2, '#2dce89', this)"></div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 12px; text-align: left;">
+            <div style="font-weight: bold; color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">3° Giorno:</div>
+            <div class="day-3" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
+                <div class="color-circle" style="background: var(--bg); border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text);" data-color="" onclick="selezionaColoreRotazione(3, '', this)"><i class="fa-solid fa-xmark"></i></div>
+                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(3, '#f1c40f', this)"></div>
+                <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(3, '#fd7e14', this)"></div>
+                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(3, '#f5365c', this)"></div>
+                <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreRotazione(3, '#e83e8c', this)"></div>
+                <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreRotazione(3, '#8965e0', this)"></div>
+                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreRotazione(3, '#5e72e4', this)"></div>
+                <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreRotazione(3, '#11cdef', this)"></div>
+                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreRotazione(3, '#2dce89', this)"></div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 12px; text-align: left;">
+            <div style="font-weight: bold; color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">4° Giorno:</div>
+            <div class="day-4" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
+                <div class="color-circle" style="background: var(--bg); border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text);" data-color="" onclick="selezionaColoreRotazione(4, '', this)"><i class="fa-solid fa-xmark"></i></div>
+                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(4, '#f1c40f', this)"></div>
+                <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(4, '#fd7e14', this)"></div>
+                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(4, '#f5365c', this)"></div>
+                <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreRotazione(4, '#e83e8c', this)"></div>
+                <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreRotazione(4, '#8965e0', this)"></div>
+                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreRotazione(4, '#5e72e4', this)"></div>
+                <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreRotazione(4, '#11cdef', this)"></div>
+                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreRotazione(4, '#2dce89', this)"></div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 12px; text-align: left;">
+            <div style="font-weight: bold; color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">5° Giorno:</div>
+            <div class="day-5" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
+                <div class="color-circle" style="background: var(--bg); border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text);" data-color="" onclick="selezionaColoreRotazione(5, '', this)"><i class="fa-solid fa-xmark"></i></div>
+                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(5, '#f1c40f', this)"></div>
+                <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(5, '#fd7e14', this)"></div>
+                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(5, '#f5365c', this)"></div>
+                <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreRotazione(5, '#e83e8c', this)"></div>
+                <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreRotazione(5, '#8965e0', this)"></div>
+                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreRotazione(5, '#5e72e4', this)"></div>
+                <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreRotazione(5, '#11cdef', this)"></div>
+                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreRotazione(5, '#2dce89', this)"></div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 12px; text-align: left;">
+            <div style="font-weight: bold; color: var(--text-muted); font-size: 14px; margin-bottom: 5px;">6° Giorno:</div>
+            <div class="day-6" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
+                <div class="color-circle" style="background: var(--bg); border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--text);" data-color="" onclick="selezionaColoreRotazione(6, '', this)"><i class="fa-solid fa-xmark"></i></div>
+                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreRotazione(6, '#f1c40f', this)"></div>
+                <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreRotazione(6, '#fd7e14', this)"></div>
+                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreRotazione(6, '#f5365c', this)"></div>
+                <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreRotazione(6, '#e83e8c', this)"></div>
+                <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreRotazione(6, '#8965e0', this)"></div>
+                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreRotazione(6, '#5e72e4', this)"></div>
+                <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreRotazione(6, '#11cdef', this)"></div>
+                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreRotazione(6, '#2dce89', this)"></div>
+            </div>
+        </div>
+        
+        <button class="btn" style="background: #11cdef; margin-top: 15px;" onclick="salvaColoriRotazione()">Salva Modifiche</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 10px;" onclick="chiudiColoriRotazione()">Annulla</button>
+    </div>
+</div>
+
+<div id="pdfTipo2Modal">
+    <div class="modal-content">
+        <h3 style="color: #5e72e4; margin-top: 0;"><i class="fa-solid fa-file-pdf"></i> Esporta PDF (Tipo 2)</h3>
+        <p class="instruction-text" style="font-size: 14px;">Seleziona mese e anno per esportare la lista dei turni.</p>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <select id="pdfTipo2Mese" style="flex: 1; margin: 0;">
+                <option value="01">Gennaio</option>
+                <option value="02">Febbraio</option>
+                <option value="03">Marzo</option>
+                <option value="04">Aprile</option>
+                <option value="05">Maggio</option>
+                <option value="06">Giugno</option>
+                <option value="07">Luglio</option>
+                <option value="08">Agosto</option>
+                <option value="09">Settembre</option>
+                <option value="10">Ottobre</option>
+                <option value="11">Novembre</option>
+                <option value="12">Dicembre</option>
+            </select>
+            <input type="number" id="pdfTipo2Anno" style="flex: 1; margin: 0; padding: 15px;">
+        </div>
+        
+        <button class="btn" style="background: #5e72e4;" onclick="generaPdfTipo2()"><i class="fa-solid fa-download"></i> Scarica PDF</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiPdfTipo2Modal()">Annulla</button>
+    </div>
+</div>
+
+<div id="multiEditModal">
+    <div class="modal-content">
+        <h3 style="color: #2dce89; margin-top: 0;"><i class="fa-solid fa-pen-to-square"></i> Modifica Multipla</h3>
+        <p class="instruction-text" style="font-size: 14px;">Applica lo stesso turno a più giorni consecutivi (es. FERIE).</p>
+        
+        <label style="font-size: 14px; color: var(--text-muted); text-align: left; display: block; margin-top: 10px; font-weight:bold;">Da (Inizio):</label>
+        <input type="date" id="multiStart">
+        
+        <label style="font-size: 14px; color: var(--text-muted); text-align: left; display: block; margin-top: 10px; font-weight:bold;">A (Fine):</label>
+        <input type="date" id="multiEnd">
+        
+        <label style="font-size: 14px; color: var(--text-muted); text-align: left; display: block; margin-top: 10px; font-weight:bold;">Turno da inserire:</label>
+        <input type="text" id="multiTurno" placeholder="Es. FER, KMAL..." oninput="this.value = this.value.toUpperCase();">
+        
+        <label style="display: flex; align-items: center; font-size: 14px; color: var(--text-muted); margin-top: 15px; font-weight: bold; cursor: pointer; text-align: left;">
+            <input type="checkbox" id="checkEscludiRiposi" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #2dce89;" checked>
+            Escludi i Riposi (RI / AL)
+        </label>
+        
+        <button class="btn" style="background: #2dce89; margin-top: 20px;" onclick="salvaModificaMultipla()">Salva Modifiche</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiMultiEdit()">Annulla</button>
+    </div>
+</div>
+
+<div id="cambioBibbiaModal">
+    <div class="modal-content">
+        <h3 style="color: #f1c40f; margin-top: 0;"><i class="fa-solid fa-rotate"></i> Cambio Bibbia</h3>
+        <p class="instruction-text">Vuoi configurare una nuova rotazione? <b>I tuoi turni manuali, straordinari, colori e note verranno mantenuti.</b> Verrà ripristinata solo la rotazione calcolata automaticamente.</p>
+        <button class="btn" style="background: #f1c40f; color: #32325d;" onclick="confermaCambioBibbia()">Sì, configura nuova ruota</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiCambioBibbia()">Annulla</button>
+    </div>
+</div>
+
+<div id="resetModal">
+    <div class="modal-content">
+        <h3 style="color: #f5365c; margin-top: 0;"><i class="fa-solid fa-triangle-exclamation"></i> Attenzione!</h3>
+        <p class="instruction-text">Vuoi cancellare DEFINITIVAMENTE tutti i dati e i turni salvati?</p>
+        <button class="btn" style="background: #f5365c;" onclick="confermaReset()">Sì, cancella tutto</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiReset()">Annulla</button>
+    </div>
+</div>
+
+<div id="backupModal">
+    <div class="modal-content">
+        <h3 style="color: var(--turno); margin-top: 0;"><i class="fa-solid fa-floppy-disk"></i> Backup Dati</h3>
+        <p class="instruction-text" style="font-size: 14px;">Gestisci i tuoi dati tramite file per non perdere i tuoi turni.</p>
+        <input type="file" id="fileInput" style="display:none" accept=".json" onchange="importaDatiDaFile(event)">
+        <button class="btn" style="background: var(--turno);" onclick="esportaDatiSuFile()">Scarica Backup (Esporta)</button>
+        <button class="btn" style="background: var(--riposo);" onclick="document.getElementById('fileInput').click()">Carica Backup (Importa)</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiBackup()">Chiudi</button>
+    </div>
+</div>
+
+<div id="icsModal">
+    <div class="modal-content">
+        <h3 style="color: #5e72e4; margin-top: 0;"><i class="fa-solid fa-calendar-arrow-down"></i> Esporta in ICS</h3>
+        <p class="instruction-text" style="font-size: 14px;">Seleziona il periodo da esportare.</p>
+        <label style="font-size: 14px; color: var(--text-muted); text-align: left; display: block; margin-top: 10px;">Da:</label>
+        <input type="date" id="icsStartDate">
+        <label style="font-size: 14px; color: var(--text-muted); text-align: left; display: block; margin-top: 10px;">A:</label>
+        <input type="date" id="icsEndDate">
+        <button class="btn" style="background: #5e72e4;" onclick="esportaICS()">Scarica .ics</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiIcsModal()">Chiudi</button>
+    </div>
+</div>
+
+<div id="jumpModal">
+    <div class="modal-content">
+        <h3 style="color: var(--turno); margin-top: 0;"><i class="fa-solid fa-magnifying-glass"></i> Vai alla data</h3>
+        <div style="display: flex; gap: 10px;">
+            <select id="jumpMonth" style="flex: 1;">
+                <option value="01">Gennaio</option>
+                <option value="02">Febbraio</option>
+                <option value="03">Marzo</option>
+                <option value="04">Aprile</option>
+                <option value="05">Maggio</option>
+                <option value="06">Giugno</option>
+                <option value="07">Luglio</option>
+                <option value="08">Agosto</option>
+                <option value="09">Settembre</option>
+                <option value="10">Ottobre</option>
+                <option value="11">Novembre</option>
+                <option value="12">Dicembre</option>
+            </select>
+            <select id="jumpYear" style="flex: 1;"></select>
+        </div>
+        <button class="btn" style="background: var(--turno);" onclick="eseguiSalto()">Vai</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiJumpModal()">Annulla</button>
+    </div>
+</div>
+
+<div id="welcomeModal">
+    <div class="modal-content">
+        <h3 id="welcomeTitle" style="color: var(--turno); margin-top: 0;">Benvenuto</h3>
+        <p id="welcomeDesc" class="instruction-text">Scegli la tua rotazione:</p>
+        <select id="depotSelectMain">
+            <option value="" disabled selected>Scegli...</option>
+            <optgroup label="Disponibili">
+                <option value="disp_indet">Disponibile 6-2-6-1</option>
+                <option value="disp_det">Disponibile 5-1</option>
+            </optgroup>
+            <optgroup label="Rotazioni">
+                <option value="rot_fnove">Rotazione F.Nove</option>
+                <option value="spez_fnove">Spezzati F.Nove</option>
+                <option value="tc_spez_fnove">T.C. Spezzati F.Nove</option>
+                <option value="rot_proma">Rotazione P.Roma</option>
+                <option value="spez_proma">Spezzati P.Roma</option>
+                <option value="ris_proma">Riserva P.Roma</option>
+                <option value="rot_szaccaria">Rotazione S.Zaccaria</option>
+                <option value="spez_szaccaria">Spezzati S.Zaccaria</option>
+                <option value="tc_spez_szaccaria">T.C. Spezzati S.Zaccaria</option>
+                <option value="rot_lido">Rotazione Lido</option>
+                <option value="spez_lido">Spezzati Lido</option>
+                <option value="tc_spez_lido">T.C. Spezzati Lido</option>
+                <option value="rot_linea12">Rotazione Linea 12</option>
+                <option value="rot_linea13">Rotazione Linea 13</option> 
+                <option value="rot_linea14">Rotazione Linea 14 M/N</option>
+                <option value="rot_linea14_mb">Rotazione Linea 14 M/B</option>
+                <option value="rot_17sn">Rotazione Linea 17 S. Nicolò</option>
+                <option value="tc_rot_17sn">T.C. Rotazione 17 S. Nicolò</option>
+                <option value="rot_17tr">Rotazione Linea 17 Tron.</option>
+                <option value="tc_rot_17tr">T.C. Rotazione Linea 17 Tronc.</option>
+            </optgroup>
+        </select>
+        <button id="btnConfRot" class="btn" style="background: var(--border-color); color: var(--text-muted);" onclick="confermaRotazione()" disabled>Prosegui</button>
+        <button id="btnSaltaSetup" class="btn" style="background: transparent; color: var(--text-muted); border: 2px solid var(--border-color); margin-top: 10px;" onclick="saltaConfigurazione()">Salta per ora (Usa i Menu)</button>
+    </div>
+</div>
+
+<div id="stepModal">
+    <div class="modal-content">
+        <h3 id="stepTitle" style="color: var(--turno); margin-top: 0;">Configurazione</h3>
+        <span id="stepDateDisplay" style="font-weight:bold; color:var(--turno); display:block; margin-bottom:10px;"></span>
+        <p id="stepDesc" class="instruction-text"></p>
+        <div id="stepActionArea"></div>
+        <div id="stepButtons">
+            <button id="btnConfirmDate" class="btn" style="background: var(--riposo); display:none;" onclick="procediConfigurazione()">Sì, conferma data</button>
+            <button id="btnConfirmFinal" class="btn" style="background: var(--riposo); display:none;" onclick="attivaRotazioneFinale()">Conferma e Attiva</button>
+            <button id="btnBackStep" class="btn" style="background: var(--border-color); color: var(--text-muted); display:none;" onclick="tornaAllaRotazione()">Indietro (Cambia Rotazione)</button>
+            <button id="btnCloseStep" class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiStep()">Chiudi</button>
+        </div>
+    </div>
+</div>
+
+<div id="editModal" onclick="chiudiEditSeSfondo(event)">
+    <div class="modal-content">
+        <h3 id="modalDate" style="margin-top:0;">Data</h3>
+        
+        <div id="avvisoVariantiArea" style="display: none; background-color: rgba(255, 193, 7, 0.15); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 14px; color: #856404; padding: 12px; margin-bottom: 15px; font-size: 14px; font-weight: bold; line-height: 1.4; text-align: left;"></div>
+        
+        <div id="infoTurniArea" style="font-size:0.9em; margin-bottom:15px; padding:12px; background:var(--bg); border: 1px solid var(--border-color); border-radius:14px; text-align:left; color:var(--text-muted); display:none;"></div>
+        
+        <button id="btnVisualizzaTurno" class="btn" style="background: #2dce89; margin-bottom: 15px; display: none;" onclick="apriImmagineTurno()"><i class="fa-regular fa-image"></i> Mostra Immagine Turno</button>
+        
+        <input type="text" id="singleTurnoSelect" placeholder="Inserisci il turno" oninput="this.value = this.value.toUpperCase(); abilitaSalvataggio();" onkeydown="if(event.key === 'Enter') salvaCambioSingolo();">
+        
+        <button id="btnSalvaCambio" class="btn" style="background: var(--text); color: var(--surface);" onclick="salvaCambioSingolo()" disabled>Salva Cambio</button>
+        <button class="btn" style="background: var(--border-color); color: var(--text);" onclick="resetGiornoSingolo()"><i class="fa-solid fa-rotate-left"></i> Ripristina Originale</button>
+        <button class="btn" style="background: #11cdef;" onclick="apriAltroModal()"><i class="fa-solid fa-ellipsis"></i> Altro (Note, Nebbia, Straord...)</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiEdit()">Chiudi</button>
+    </div>
+</div>
+
+<div id="altroModal" onclick="chiudiAltroSeSfondo(event)">
+    <div class="modal-content">
+        <h3 style="margin-top:0; color: var(--text);"><i class="fa-solid fa-ellipsis"></i> Altre Opzioni</h3>
+        
+        <div style="background: var(--bg); padding: 15px; border-radius: 16px; margin-bottom: 15px; text-align: left; border: 1px solid var(--border-color);">
+            
+            <label style="display: flex; align-items: center; font-size: 15px; color: var(--text-muted); margin-bottom: 10px; font-weight: bold; cursor: pointer;">
+                <input type="checkbox" id="checkSospesoRiposoAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #f5365c;">
+                Sospeso Riposo
+            </label>
+
+            <label style="display: flex; align-items: center; font-size: 15px; color: var(--text-muted); margin-bottom: 10px; font-weight: bold; cursor: pointer;">
+                <input type="checkbox" id="checkNebbiaAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #5e72e4;">
+                <i class="fa-solid fa-smog fa-fw" style="margin-right: 5px;"></i> Indennità Nebbia
+            </label>
+            
+            <label style="display: flex; align-items: center; font-size: 15px; color: var(--text-muted); margin-bottom: 10px; font-weight: bold; cursor: pointer;">
+                <input type="checkbox" id="checkBuonoPastoAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #f1c40f;">
+                <i class="fa-solid fa-utensils fa-fw" style="margin-right: 5px;"></i> Buono Pasto Utilizzato
+            </label>
+
+            <label style="display: flex; align-items: center; font-size: 15px; color: var(--text-muted); font-weight: bold; cursor: pointer;">
+                <input type="checkbox" id="checkStraordinarioAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #5e72e4;" onchange="toggleStraordinarioAltro()">
+                <i class="fa-solid fa-stopwatch fa-fw" style="margin-right: 5px;"></i> Straordinario
+            </label>
+            
+            <div id="straordinarioInputsAltro" style="display: none; margin-top: 10px; flex-direction: row; gap: 10px;">
+                <input type="number" id="oreStraordAltro" placeholder="Ore" min="0" style="flex: 1; padding: 12px; margin: 0; border: 1px solid var(--border-color); border-radius: 10px; font-size: 15px;">
+                <input type="number" id="minutiStraordAltro" placeholder="Minuti" min="0" max="59" style="flex: 1; padding: 12px; margin: 0; border: 1px solid var(--border-color); border-radius: 10px; font-size: 15px;">
+            </div>
+
+            <label style="display: flex; align-items: center; font-size: 15px; color: var(--text-muted); margin-top: 15px; font-weight: bold; cursor: pointer;">
+                <input type="checkbox" id="checkPermessoSPAltro" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #f5365c;" onchange="togglePermessoSPAltro()">
+                <i class="fa-solid fa-money-bill-wave fa-fw" style="margin-right: 5px;"></i> Permesso Senza Paga
+            </label>
+            
+            <div id="permessoSPInputsAltro" style="display: none; margin-top: 10px; flex-direction: row; gap: 10px;">
+                <input type="number" id="orePermessoSPAltro" placeholder="Ore" min="0" style="flex: 1; padding: 12px; margin: 0; border: 1px solid var(--border-color); border-radius: 10px; font-size: 15px;">
+                <input type="number" id="minutiPermessoSPAltro" placeholder="Minuti" min="0" max="59" style="flex: 1; padding: 12px; margin: 0; border: 1px solid var(--border-color); border-radius: 10px; font-size: 15px;">
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
+            
+            <label style="display: block; font-size: 15px; color: var(--text-muted); margin-bottom: 8px; font-weight: bold;"><i class="fa-solid fa-clipboard fa-fw"></i> Note:</label>
+            <textarea id="notaAltro" placeholder="Scrivi una nota per questo giorno..." style="width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--border-color); border-radius: 12px; font-size: 14px; font-family: 'Inter', sans-serif; resize: vertical; min-height: 80px; background: var(--surface); color: var(--text);"></textarea>
+        </div>
+
+        <div style="text-align: left; margin-bottom: 10px; color: var(--text-muted); font-weight: bold; font-size: 15px;">Colore Sfondo:</div>
+        <div style="display: flex; justify-content: center; flex-wrap: wrap; margin-bottom: 15px;">
+            <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreAltro('#f1c40f', this)"></div>
+            <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreAltro('#fd7e14', this)"></div>
+            <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreAltro('#f5365c', this)"></div>
+            <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreAltro('#e83e8c', this)"></div>
+            <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreAltro('#8965e0', this)"></div>
+            <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreAltro('#5e72e4', this)"></div>
+            <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreAltro('#11cdef', this)"></div>
+            <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreAltro('#2dce89', this)"></div>
+        </div>
+        <button class="btn" style="background: var(--surface); color: var(--text); margin-top: 0; padding: 12px; font-size: 14px; border: 1px solid var(--border-color);" onclick="selezionaColoreAltro('', null)"><i class="fa-solid fa-eraser"></i> Rimuovi Colore</button>
+
+        <button class="btn" style="background: var(--primary); color: white; margin-top: 20px;" onclick="salvaAltro()">Salva</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 10px;" onclick="chiudiAltroModal()">Annulla</button>
+    </div>
+</div>
+
+<div id="imageModal" style="z-index: 10000; overflow: hidden;" onclick="chiudiSeSfondo(event)">
+    <div style="position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 20px; font-size: 35px; color: white; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10001;" onclick="chiudiImageModal()">&times;</div>
+    <div id="imageFlexContainer" style="display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; padding:20px; padding-bottom: 80px; position: relative;">
+        <img id="turnoImage" src="" style="max-width: 100%; max-height: 70vh; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.4); object-fit: contain;">
+        <div id="imageBanner" style="position: relative; z-index: 10001; margin-top: 15px; background: rgba(0,0,0,0.7); color: #fff; padding: 12px 24px; border-radius: 16px; font-size: 13px; text-align: center; max-width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.3); backdrop-filter: blur(5px);">
+            ⚠️ Controllare sempre i turni ufficiali e la presenza di eventuali varianti ai turni.
+        </div>
+    </div>
+    <button onclick="scaricaImmagineTurno()" style="position: absolute; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #11cdef; color: white; border: none; padding: 14px 28px; border-radius: 24px; font-weight: bold; font-size: 16px; box-shadow: 0 8px 20px rgba(17, 205, 239, 0.4); cursor: pointer; z-index: 10001;"><i class="fa-solid fa-download"></i> Scarica Immagine</button>
+</div>
+
+<!-- ================= CONTENUTO PRINCIPALE ================= -->
+
+<div id="calendar"></div>
+
+<div id="empty-state-calendario" style="display: none; padding: 40px 20px; text-align: center; margin: 20px;">
+    <div style="font-size: 60px; margin-bottom: 20px; opacity: 0.8;">📅</div>
+    <h3 style="color: var(--text); margin-top: 0; font-size: 22px;">Nessun turno attivo</h3>
+    <p style="color: var(--text-muted); font-size: 16px; line-height: 1.6; max-width: 400px; margin: 0 auto 20px auto;">
+        Usa il menu in alto a destra <b>(⋮)</b> per: <br>
+        • Gestire i Profili (Bibbie)<br>
+        • Importare un Backup
+    </p>
+    <button class="btn" style="background: var(--turno); max-width: 250px;" onclick="document.getElementById('welcomeModal').style.display = 'block';">Avvia Configurazione</button>
+</div>
+
+<div class="disclaimer-banner">
+    <i class="fa-solid fa-triangle-exclamation"></i> Questo è uno strumento non ufficiale che può presentare errori. L'ordine dei turni cambia periodicamente, I turni a lungo termine vanno quindi considerati indicativi.
+</div>
+
+<!-- Richiamo dello script separato come concordato -->
+<script type="module" src="moduli/calendario.js"></script>
+
+
+</body>
+</html>
