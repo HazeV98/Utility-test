@@ -2353,7 +2353,7 @@ function inizializzaCalendario() {
         height: 'auto', 
         eventOrder: 'myOrder', 
         buttonText: { today: 'Oggi' }, 
-        customButtons: { btnSalto: { text: '🔍', click: apriJumpModal } }, 
+        customButtons: { btnSalto: { text: '<i class="fa-solid fa-magnifying-glass"></i>', click: apriJumpModal } }, 
         headerToolbar: { left: 'prev,next', center: 'title', right: 'btnSalto today' }, 
         eventContent: function(arg) {
             return { html: arg.event.title };
