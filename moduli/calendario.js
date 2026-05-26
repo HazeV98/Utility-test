@@ -2353,7 +2353,7 @@ function inizializzaCalendario() {
         height: 'auto', 
         eventOrder: 'myOrder', 
         buttonText: { today: 'Oggi' }, 
-        customButtons: { btnSalto: { text: '<i class="fa-solid fa-magnifying-glass"></i>', click: apriJumpModal } }, 
+        customButtons: { btnSalto: { text: '🔍', click: apriJumpModal } }, 
         headerToolbar: { left: 'prev,next', center: 'title', right: 'btnSalto today' }, 
         eventContent: function(arg) {
             return { html: arg.event.title };
@@ -2363,6 +2363,15 @@ function inizializzaCalendario() {
         events: (i, success) => success(calcolaTurni())
     });
     calendar.render();
+    const calendarEl = document.getElementById('calendar');
+    if (calendarEl) {
+        const btns = calendarEl.querySelectorAll('.fc-button');
+        btns.forEach(btn => {
+            if (btn.textContent.trim() === '🔍') {
+                btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
+            }
+        });
+    }
 }
 
 // --- ESPORTAZIONE DELLE FUNZIONI GLOBALI ---
