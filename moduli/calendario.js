@@ -36,7 +36,7 @@ window.syncToCloud = async (dati) => {
 // --- VARIABILI GLOBALI ---
 let ROT_FERIE_INV = [];
 let ROT_FERIE_EST = [];
-const VERSIONE_TURNI = "1.0.1"; 
+const VERSIONE_TURNI = "1.0.2"; 
 let VERSIONE_FERIE = "1.0.0"; 
 const DATA_INIZIO_NUOVI_TURNI = "2026-05-28"; 
 const AVVISO_VARIANTI = true;
