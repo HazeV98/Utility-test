@@ -20,9 +20,7 @@ window.utenteLoggato = null;
 window.deleteCloudData = async () => {
     if (window.utenteLoggato) {
         try {
-            // 1. Sovrascriviamo con un flag "deleted" per sicurezza estrema
             await setDoc(doc(db, "utenti", window.utenteLoggato), { deleted: true, lastUpdate: new Date().getTime() });
-            // 2. Cancelliamo fisicamente il documento
             await deleteDoc(doc(db, "utenti", window.utenteLoggato));
         } catch(e) { console.error("Errore eliminazione Cloud:", e); }
     }
@@ -1211,7 +1209,6 @@ async function inizializzaApp() {
             document.getElementById('btnConfRot').style.background = 'var(--turno)';
             document.getElementById('btnConfRot').innerText = "Avvia Aggiornamento";
             
-            // FIX: NASCONDI AUTOMATICAMENTE IL PULSANTE "SALTA" DURANTE L'AGGIORNAMENTO
             const btnSalta = document.querySelector('button[onclick="saltaConfigurazione()"]');
             if (btnSalta) btnSalta.style.display = 'none';
             
@@ -1248,12 +1245,13 @@ function confermaRotazione() {
     if (!state.depositoAttivo) { 
         state.depositoAttivo = document.getElementById('depotSelectMain').value; 
         state.setupStep = 1; 
-        state.setupSkipped = false; // FIX: resettiamo il flag di "salto"
+        state.setupSkipped = false;
     } else if (state.version !== VERSIONE_TURNI) { 
         state.history = { 
             riposoStart: state.riposoStart, 
             rotazioneStart: state.rotazioneStart,
-            depositoAttivo: state.depositoAttivo, 
+            depositoAttivo: state.depositoAttivo,
+            turnoIndex: state.turnoIndex, 
             tcPattern: state.tcPattern 
         }; 
     }
@@ -1263,7 +1261,7 @@ function confermaRotazione() {
     
     if (!state.riposoStart || state.setupStep < 3) { 
         aggiornaUI(); 
-        controllaEmptyState(); // FIX: Sblocca il container invisibile PRIMA del calendario
+        controllaEmptyState();
         inizializzaCalendario(); 
         checkGuida(); 
         let boost = new Date().getTime() + 5000;
@@ -1817,7 +1815,7 @@ function attivaRotazioneFinale() {
         
         while(isGiornoRiposo(dStr)) { 
             d.setDate(d.getDate() + 1); 
-            dStr = dateToLocalISO(dStr); 
+            dStr = dateToLocalISO(d); 
         }
         
         tempRotDate = dStr; 
@@ -2190,18 +2188,13 @@ function chiudiReset() {
 async function confermaReset() { 
     document.body.style.opacity = "0.5";
     
-    // Attende fisicamente che Firebase cancelli i dati (e metta il flag tombale)
     if(typeof window.deleteCloudData === 'function') {
         await window.deleteCloudData();
     }
     
-    // Svuota il database locale
     localStorage.removeItem('myTurniApp'); 
-    
-    // Inseriamo un "promemoria" nel browser per far capire al prossimo avvio che abbiamo forzato un reset 
     localStorage.setItem('app_just_reset', 'true');
     
-    // Aspettiamo meno di 1 secondo per essere sicuri che la rete non venga troncata brutalmente
     setTimeout(() => {
         location.reload(); 
     }, 800);
@@ -2431,25 +2424,22 @@ window.apriIcsModal = apriIcsModal;
 window.chiudiIcsModal = chiudiIcsModal;
 window.esportaICS = esportaICS;
 
-// --- INIZIALIZZAZIONE GESTITA DA FIREBASE (Risoluzione Bug Nuovi Browser & Reset) ---
+// --- INIZIALIZZAZIONE GESTITA DA FIREBASE ---
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         window.utenteLoggato = user.uid;
         
-        // Controllo "Promemoria di Reset"
         const appenaResettato = localStorage.getItem('app_just_reset') === 'true';
         if (appenaResettato) {
-            localStorage.removeItem('app_just_reset'); // Puliamo il promemoria
+            localStorage.removeItem('app_just_reset'); 
         }
 
         try {
             const docSnap = await getDoc(doc(db, "utenti", user.uid));
             
-            // Scarichiamo dal Cloud SOLO se esiste e NON abbiamo appena fatto un reset manuale
             if (docSnap.exists() && !appenaResettato) {
                 const cloudData = docSnap.data();
                 
-                // Ignoriamo anche i dati Cloud se hanno il flag "deleted" (Pietra tombale)
                 if (!cloudData.deleted) {
                     const localData = JSON.parse(localStorage.getItem('myTurniApp'));
                     let usaCloud = false;
@@ -2461,7 +2451,6 @@ onAuthStateChanged(auth, async (user) => {
                     }
 
                     if (usaCloud) {
-                        // Sovrascriviamo in RAM lo stato unendo i dati recuperati dal Cloud
                         state = { ...state, ...cloudData };
                         
                         let copiaDati = JSON.parse(JSON.stringify(state));
@@ -2485,7 +2474,6 @@ onAuthStateChanged(auth, async (user) => {
         window.utenteLoggato = null;
     }
 
-    // Terminate tutte le verifiche avviamo finalmente l'app (sia che sia piena o resettata)
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', inizializzaApp);
     } else {
