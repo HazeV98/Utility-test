@@ -37,33 +37,33 @@ window.syncToCloud = async (dati) => {
 // --- VARIABILI GLOBALI ---
 let ROT_FERIE_INV = [];
 let ROT_FERIE_EST = [];
-const VERSIONE_TURNI = "1.0.1"; 
+const VERSIONE_TURNI = "1.0.2"; 
 let VERSIONE_FERIE = "1.0.0"; 
-const DATA_INIZIO_NUOVI_TURNI = "2026-05-28"; 
+const DATA_INIZIO_NUOVI_TURNI = "2026-06-01"; 
 const AVVISO_VARIANTI = true;
 
 const RESET_DOPO_AGGIORNAMENTO = {
-    rot_fnove: true,
-    spez_fnove: false,
-    rot_proma: true,
-    spez_proma: false,
-    ris_proma: false, 
-    rot_szaccaria: false,
-    spez_szaccaria: false,
-    rot_lido: false,
-    spez_lido: false,
-    rot_linea14: false,
-    rot_linea14_mb: true,
-    rot_linea13: false,
-    rot_17sn: false,
-    rot_17tr: false,
-    rot_linea12: true,
-    tc_spez_fnove: false,
-    tc_spez_szaccaria: false,
-    tc_spez_lido: false,
-    tc_rot_17sn: false,
-    tc_rot_17tr: false
-};
+        rot_fnove: false,
+        spez_fnove: false,
+        rot_proma: true,
+        spez_proma: true,
+        ris_proma: false,
+        rot_szaccaria: true,
+        spez_szaccaria: false,
+        rot_lido: false,
+        spez_lido: false,
+        rot_linea14: true,
+        rot_linea14_mb: true,
+        rot_linea13: false,
+        rot_17sn: false,
+        rot_17tr: false,
+        rot_linea12: false,
+        tc_spez_fnove: false,
+        tc_spez_szaccaria: false,
+        tc_spez_lido: false,
+        tc_rot_17sn: false,
+        tc_rot_17tr: false
+    };
 
 let state = JSON.parse(localStorage.getItem('myTurniApp')) || { 
     version: "0", 
