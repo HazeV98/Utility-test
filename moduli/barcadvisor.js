@@ -235,12 +235,12 @@ export function avviaMotoreBarcadvisor(db, auth, userDataPrivate, isAdmin) {
                             </div>
                         `;
                     } else {
-                        // SEGNALAZIONI IN CRONOLOGIA (RISOLTE)
+                        // SEGNALAZIONI IN CRONOLOGIA (RISOLTE) - Tolto il text-decoration: line-through;
                         histCount++;
                         if(historyList) {
                             historyList.innerHTML += `
                                 <div style="background: var(--bg-color); padding: 12px; margin-bottom: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); opacity: 0.8;">
-                                    <span style="display: block; margin-bottom: 4px; font-weight: 500; font-size: 14px; color: var(--text-main); text-decoration: line-through;">${data.testo}</span>
+                                    <span style="display: block; margin-bottom: 4px; font-weight: 500; font-size: 14px; color: var(--text-main);">${data.testo}</span>
                                     <span style="font-size: 11px; color: var(--text-muted); display:flex; align-items:center; gap:6px;"><i class="fa-regular fa-user"></i> ${data.autore} - <i class="fa-regular fa-calendar"></i> ${new Date(data.data).toLocaleDateString('it-IT')}</span>
                                 </div>
                             `;
