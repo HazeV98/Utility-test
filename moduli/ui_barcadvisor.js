@@ -79,10 +79,19 @@ export function initUIBarcadvisor() {
 
                 <div>
                     <h3 style="margin-top:0; margin-bottom: 16px; color: var(--text-main); font-size: 18px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);"></i> Segnalazioni Problemi</h3>
-                    <div style="display: flex; gap: 10px; margin-bottom: 24px;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 16px;">
                         <input type="text" id="ba-newReportInput" class="input-field" placeholder="Descrivi il problema..." style="margin-bottom:0; flex:1;">
                         <button class="btn-action" style="margin-top:0; width:auto; padding:0 24px;" onclick="window.submitReportBA()"><i class="fa-solid fa-paper-plane"></i></button>
                     </div>
+                    
+                    <button id="ba-toggleHistoryBtn" class="btn-outline" style="width:100%; margin-bottom:20px; justify-content:center; font-size: 13px; padding: 8px;" onclick="window.toggleHistoryBA()">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Cronologia segnalazioni
+                    </button>
+                    
+                    <div id="ba-historyContainer" style="display: none; margin-bottom: 20px; padding-top: 12px; border-top: 1px dashed var(--border-color);">
+                        <div id="ba-historyList"></div>
+                    </div>
+
                     <div id="ba-reportsContainer"></div>
                 </div>
             </div>
@@ -117,4 +126,4 @@ export function initUIBarcadvisor() {
     `;
 
     document.body.insertAdjacentHTML('beforeend', uiHTML);
-} 
+}
