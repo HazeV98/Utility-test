@@ -38,7 +38,8 @@ export function avviaMotoreBarcadvisor(db, auth, userDataPrivate, isAdmin) {
             window.reportsCount = {};
             snapshot.docs.forEach(d => {
                 const data = d.data();
-                if(data.unitId) {
+                // CONTEGGIA SOLO LE SEGNALAZIONI NON RISOLTE
+                if(data.unitId && !data.risolto) {
                     window.reportsCount[data.unitId] = (window.reportsCount[data.unitId] || 0) + 1;
                 }
             });
@@ -172,6 +173,10 @@ export function avviaMotoreBarcadvisor(db, auth, userDataPrivate, isAdmin) {
         
         document.getElementById('ba-detailTitle').innerHTML = `<i class="fa-solid ${iconaBarca}" style="color:var(--text-muted); font-size:18px;"></i> ${displayId}`;
         document.getElementById('ba-detailViewModal').style.display = 'flex';
+        
+        // Assicurati che la cronologia sia nascosta all'apertura
+        const histContainer = document.getElementById('ba-historyContainer');
+        if(histContainer) histContainer.style.display = 'none';
 
         const voteId = `${unitId}_${currentUser.uid}`;
         if(unsubUserVote) unsubUserVote();
@@ -206,27 +211,50 @@ export function avviaMotoreBarcadvisor(db, auth, userDataPrivate, isAdmin) {
         const q = query(collection(db, "flotta_segnalazioni"), orderBy("data", "desc"));
         unsubReports = onSnapshot(q, (snapshot) => {
             const container = document.getElementById('ba-reportsContainer');
+            const historyList = document.getElementById('ba-historyList');
+            
             container.innerHTML = '';
+            if(historyList) historyList.innerHTML = '';
             
             let repCount = 0;
+            let histCount = 0;
+
             snapshot.docs.forEach(d => {
                 const data = d.data();
                 if (data.unitId === unitId) {
-                    repCount++;
-                    const btnRisolto = `<button style="background: var(--surface-hover); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; float: right; cursor: pointer; color: var(--text-main); transition: 0.2s;" onmouseover="this.style.background='var(--success)'; this.style.color='white'; this.style.borderColor='var(--success)';" onmouseout="this.style.background='var(--surface-hover)'; this.style.color='var(--text-main)'; this.style.borderColor='var(--border-color)';" onclick="window.deleteReportBA('${d.id}')"><i class="fa-solid fa-check"></i> Risolto</button>`;
+                    if (!data.risolto) {
+                        // SEGNALAZIONI ATTIVE
+                        repCount++;
+                        const btnElimina = `<button style="background: var(--surface-hover); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; float: right; cursor: pointer; color: var(--danger); transition: 0.2s;" onmouseover="this.style.background='var(--danger)'; this.style.color='white'; this.style.borderColor='var(--danger)';" onmouseout="this.style.background='var(--surface-hover)'; this.style.color='var(--danger)'; this.style.borderColor='var(--border-color)';" onclick="window.deleteReportBA('${d.id}')"><i class="fa-solid fa-trash-can"></i> Elimina</button>`;
 
-                    container.innerHTML += `
-                        <div style="background: var(--surface); border-left: 4px solid var(--danger); padding: 16px; margin-bottom: 12px; border-radius: var(--radius-md); position: relative; box-shadow: var(--shadow-sm); border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
-                            ${btnRisolto}
-                            <span style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 15px; color: var(--text-main);">${data.testo}</span>
-                            <span style="font-size: 12px; color: var(--text-muted); display:flex; align-items:center; gap:6px;"><i class="fa-regular fa-user"></i> ${data.autore} - <i class="fa-regular fa-calendar"></i> ${new Date(data.data).toLocaleDateString('it-IT')}</span>
-                        </div>
-                    `;
+                        container.innerHTML += `
+                            <div style="background: var(--surface); border-left: 4px solid var(--danger); padding: 16px; margin-bottom: 12px; border-radius: var(--radius-md); position: relative; box-shadow: var(--shadow-sm); border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+                                ${btnElimina}
+                                <span style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 15px; color: var(--text-main);">${data.testo}</span>
+                                <span style="font-size: 12px; color: var(--text-muted); display:flex; align-items:center; gap:6px;"><i class="fa-regular fa-user"></i> ${data.autore} - <i class="fa-regular fa-calendar"></i> ${new Date(data.data).toLocaleDateString('it-IT')}</span>
+                            </div>
+                        `;
+                    } else {
+                        // SEGNALAZIONI IN CRONOLOGIA (RISOLTE)
+                        histCount++;
+                        if(historyList) {
+                            historyList.innerHTML += `
+                                <div style="background: var(--bg-color); padding: 12px; margin-bottom: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); opacity: 0.8;">
+                                    <span style="display: block; margin-bottom: 4px; font-weight: 500; font-size: 14px; color: var(--text-main); text-decoration: line-through;">${data.testo}</span>
+                                    <span style="font-size: 11px; color: var(--text-muted); display:flex; align-items:center; gap:6px;"><i class="fa-regular fa-user"></i> ${data.autore} - <i class="fa-regular fa-calendar"></i> ${new Date(data.data).toLocaleDateString('it-IT')}</span>
+                                </div>
+                            `;
+                        }
+                    }
                 }
             });
             
             if(repCount === 0) {
                 container.innerHTML = `<div style="color:var(--text-muted); font-size:14px; text-align:center; padding:15px; background:var(--surface); border-radius:8px; border:1px solid var(--border-color);"><i class="fa-regular fa-circle-check" style="color:var(--success); font-size:24px; margin-bottom:8px; display:block;"></i>Nessun problema segnalato per questa unità.</div>`;
+            }
+
+            if(historyList && histCount === 0) {
+                historyList.innerHTML = `<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:10px;">Nessuna segnalazione archiviata.</div>`;
             }
         });
     };
@@ -316,14 +344,29 @@ export function avviaMotoreBarcadvisor(db, auth, userDataPrivate, isAdmin) {
             testo: input.value,
             autore: userName,
             uid: currentUser.uid,
-            data: Date.now()
+            data: Date.now(),
+            risolto: false // Aggiunto flag di default
         });
         input.value = '';
     };
 
     window.deleteReportBA = async function(id) {
-        if (confirm("Confermi che il problema è stato risolto? La segnalazione verrà eliminata.")) {
-            await deleteDoc(doc(db, "flotta_segnalazioni", id));
+        if (confirm("Confermi di voler eliminare la segnalazione e spostarla nella cronologia?")) {
+            // Aggiorna il documento settando risolto a true invece di eliminarlo
+            await updateDoc(doc(db, "flotta_segnalazioni", id), {
+                risolto: true
+            });
+        }
+    };
+
+    window.toggleHistoryBA = function() {
+        const container = document.getElementById('ba-historyContainer');
+        if(container) {
+            if(container.style.display === 'none') {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
         }
     };
 
@@ -389,4 +432,4 @@ export function avviaMotoreBarcadvisor(db, auth, userDataPrivate, isAdmin) {
 
     // Avvia l'inizializzazione al primo caricamento del modulo
     initApp();
-            } 
+}
