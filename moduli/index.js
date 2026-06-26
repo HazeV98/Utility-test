@@ -3,11 +3,8 @@ import { getAuth, onAuthStateChanged, GoogleAuthProvider } from "https://www.gst
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
-// Importiamo SOLTANTO il sottomodulo di Autenticazione staticamente, perché serve subito all'avvio
+// Importiamo SOLTANTO il sottomodulo di Autenticazione staticamente all'avvio
 import { avviaMotoreAuth } from './auth.js';
-
-// TUTTE le altre app e interfacce sono state rimosse da qui e vengono
-// caricate tramite Lazy Loading al momento del click.
 
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -107,346 +104,228 @@ window.chiudiMenuLaterale = () => {
 
 
 // ============================================================================
-// GESTIONE LAZY LOADING GLOBALE CORRETTA
+// LOGICA LAZY LOADING GESTITA TRAMITE PROXY (INTERCETTATORI)
 // ============================================================================
 window.loadedModules = {}; 
 
+window.createLazyLoadProxy = (moduleKey, uiFile, jsFile, initUiFuncName, origFuncName) => {
+    // Intercettiamo la funzione che le icone cercano di eseguire
+    window[origFuncName] = async () => {
+        const myProxyRef = window[origFuncName]; // Memorizza il riferimento al proxy
+        
+        if (!window.loadedModules[moduleKey]) {
+            document.body.style.cursor = 'wait';
+            try {
+                // Importa e inietta i file HTML
+                const uiMod = await import(uiFile);
+                // Importa la logica
+                const jsMod = await import(jsFile);
+                
+                // Inizializza l'interfaccia
+                if (uiMod[initUiFuncName]) uiMod[initUiFuncName]();
+                
+                // Assicura che le funzioni del motore (.js) siano accessibili globalmente 
+                // così da poter essere chiamate dai vari controlli
+                for (let key in jsMod) {
+                    window[key] = jsMod[key];
+                }
+                
+                window.loadedModules[moduleKey] = true;
+            } catch(e) {
+                console.error("Errore Lazy Load per " + moduleKey, e);
+                alert("Errore di caricamento app.");
+            }
+            document.body.style.cursor = 'default';
+        }
+        
+        // Se scaricando il file, la funzione originale "apriModale..." si è sovrascritta (com'è giusto che sia),
+        // allora eseguiamola istantaneamente!
+        if (window[origFuncName] !== myProxyRef) {
+            window[origFuncName]();
+        } else {
+            console.warn(`Attenzione: Il modulo ${jsFile} non ha definito ${origFuncName}`);
+        }
+    };
+};
+
+// Generiamo tutti i proxy per intercettare i click provenienti dal Layout Engine:
+window.createLazyLoadProxy('statistiche', './ui_statistiche.js', './statistiche.js', 'initUIStatistiche', 'apriModaleStatistiche');
+window.createLazyLoadProxy('rotazioni', './ui_rotazioni.js', './rotazioni.js', 'initUIRotazioni', 'apriModaleRotazioni');
+window.createLazyLoadProxy('turni', './ui_turni.js', './turni.js', 'initUITurni', 'apriModaleTurni');
+window.createLazyLoadProxy('bacheca_turni', './ui_bacheca_turni.js', './bacheca_turni.js', 'initUIBachecaTurni', 'apriModaleBachecaTurni');
+window.createLazyLoadProxy('barcadvisor', './ui_barcadvisor.js', './barcadvisor.js', 'initUIBarcadvisor', 'apriModaleBarcadvisor');
+window.createLazyLoadProxy('rubrica', './ui_rubrica.js', './rubrica.js', 'initUIRubrica', 'apriModaleRubrica');
+window.createLazyLoadProxy('rotazione_ferie', './ui_rotazione_ferie.js', './rotazione_ferie.js', 'initUIRotazioneFerie', 'apriModaleRotazioneFerie');
+window.createLazyLoadProxy('orari', './ui_orari.js', './orari.js', 'initUIOrari', 'apriModaleOrari');
+window.createLazyLoadProxy('documenti', './ui_documenti.js', './documenti.js', 'initUIDocumenti', 'apriModaleDocumenti');
+window.createLazyLoadProxy('link', './ui_link.js', './link.js', 'initUILink', 'apriModaleLink');
+window.createLazyLoadProxy('contatti', './ui_contatti.js', './contatti.js', 'initUIContatti', 'apriModaleContatti');
+window.createLazyLoadProxy('buoni_pasto', './ui_buoniPasto.js', './buoni_pasto.js', 'initUIBuoniPasto', 'apriModaleBuoniPasto');
+window.createLazyLoadProxy('promemoria', './ui_promemoria.js', './promemoria.js', 'initUIPromemoria', 'apriModalePromemoria');
+window.createLazyLoadProxy('dds', './ui_dds.js', './dds.js', 'initUIDDS', 'apriModaleDDS');
+window.createLazyLoadProxy('guida', './ui_guida.js', './guida.js', 'initUIGuida', 'apriModaleGuida');
+window.createLazyLoadProxy('admin', './ui_admin.js', './admin.js', 'initUIAdmin', 'apriModaleAdmin');
+
+// --- LE APP CON CARICAMENTO LAZY MANUALE (perchè non richiamate tramite apriModale) ---
+
 window.apriMainModaleSegnalazioni = async () => {
-    try {
-        if (!window.loadedModules['segnalazioni']) {
-            document.body.style.cursor = 'wait';
-            const { initUISegnalazioni } = await import('./ui_report.js');
-            const { avviaMotoreSegnalazioni } = await import('./report.js');
-            initUISegnalazioni();
-            window.avviaMotoreSegnalazioni = avviaMotoreSegnalazioni;
+    if (!window.loadedModules['segnalazioni']) {
+        document.body.style.cursor = 'wait';
+        try {
+            const ui = await import('./ui_report.js');
+            const js = await import('./report.js');
+            if(ui.initUISegnalazioni) ui.initUISegnalazioni();
+            if(js.avviaMotoreSegnalazioni) window.avviaMotoreSegnalazioni = js.avviaMotoreSegnalazioni;
             window.loadedModules['segnalazioni'] = true;
-            document.body.style.cursor = 'default';
-        }
-        if (typeof window.avviaMotoreSegnalazioni === 'function') {
-            window.apriModal('modal-segnalazioni-main');
-            if (auth.currentUser) { window.avviaMotoreSegnalazioni(db, auth, auth.currentUser.uid, globalIsAdmin); }
-        }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
-};
-
-window.avviaMotoreTurniDaIndex = async () => {
-    if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai turni."); return; }
-    if (window.currentUserData) {
-        if (window.currentUserData.turni_banned === true) { alert("Il tuo accesso alla pagina Turni è stato revocato."); return; }
-        if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined || window.currentUserData.matricola === "") {
-            alert("Completa il profilo prima di visualizzare i turni."); window.apriModal('profileModal'); return;
-        }
+        } catch(e) {}
+        document.body.style.cursor = 'default';
     }
-    
-    try {
-        if (!window.loadedModules['turni']) {
-            document.body.style.cursor = 'wait';
-            const { initUITurni } = await import('./ui_turni.js');
-            const { avviaMotoreTurni } = await import('./turni.js');
-            initUITurni();
-            window.avviaMotoreTurni = avviaMotoreTurni;
-            window.loadedModules['turni'] = true;
-            document.body.style.cursor = 'default';
-        }
-        if (typeof window.avviaMotoreTurni === 'function') {
-            window.avviaMotoreTurni();
-            const oggiStr = new Date().toISOString().split('T')[0];
-            if (window.currentUserData && (window.currentUserData.turni_access !== true || window.currentUserData.last_turni_access !== oggiStr)) {
-                setDoc(doc(db, "utenti", auth.currentUser.uid), { turni_access: true, last_turni_access: oggiStr }, { merge: true });
-                window.currentUserData.turni_access = true; window.currentUserData.last_turni_access = oggiStr;
-            }
-        }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
-};
-
-window.avviaMotoreOrariDaIndex = async () => {
-    try {
-        if (!window.loadedModules['orari']) {
-            document.body.style.cursor = 'wait';
-            const { initUIOrari } = await import('./ui_orari.js');
-            const { avviaMotoreOrari } = await import('./orari.js');
-            initUIOrari();
-            window.avviaMotoreOrari = avviaMotoreOrari;
-            window.loadedModules['orari'] = true;
-            document.body.style.cursor = 'default';
-        }
-        if (typeof window.avviaMotoreOrari === 'function') { window.avviaMotoreOrari(); }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
-};
-
-window.avviaMotoreLinkDaIndex = async () => {
-    if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai link."); return; }
-    if (window.currentUserData) {
-        if (window.currentUserData.link_banned === true) { alert("Accesso revocato."); return; }
-        if (!window.currentUserData.nome || window.currentUserData.matricola === undefined) { alert("Completa il profilo."); window.apriModal('profileModal'); return; }
-    }
-    try {
-        if (!window.loadedModules['link']) {
-            document.body.style.cursor = 'wait';
-            const { initUILink } = await import('./ui_link.js');
-            const { avviaMotoreLink } = await import('./link.js');
-            initUILink();
-            window.avviaMotoreLink = avviaMotoreLink;
-            window.loadedModules['link'] = true;
-            document.body.style.cursor = 'default';
-        }
-        if (typeof window.avviaMotoreLink === 'function') {
-            window.avviaMotoreLink();
-            const oggiStr = new Date().toISOString().split('T')[0];
-            if (window.currentUserData && (window.currentUserData.link_access !== true || window.currentUserData.last_link_access !== oggiStr)) {
-                setDoc(doc(db, "utenti", auth.currentUser.uid), { link_access: true, last_link_access: oggiStr }, { merge: true });
-                window.currentUserData.link_access = true; window.currentUserData.last_link_access = oggiStr;
-            }
-        }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
-};
-
-window.avviaMotoreDocumentiDaIndex = async () => {
-    if (!auth.currentUser) { alert("Devi effettuare il login."); return; }
-    if (window.currentUserData) {
-        if (window.currentUserData.documenti_banned === true) { alert("Accesso revocato."); return; }
-        if (!window.currentUserData.nome || window.currentUserData.matricola === undefined) { alert("Completa il profilo."); window.apriModal('profileModal'); return; }
-    }
-    try {
-        if (!window.loadedModules['documenti']) {
-            document.body.style.cursor = 'wait';
-            const { initUIDocumenti } = await import('./ui_documenti.js');
-            const { avviaMotoreDocumenti } = await import('./documenti.js');
-            initUIDocumenti();
-            window.avviaMotoreDocumenti = avviaMotoreDocumenti;
-            window.loadedModules['documenti'] = true;
-            document.body.style.cursor = 'default';
-        }
-        if (typeof window.avviaMotoreDocumenti === 'function') {
-            window.avviaMotoreDocumenti();
-            const oggiStr = new Date().toISOString().split('T')[0];
-            if (window.currentUserData && (window.currentUserData.documenti_access !== true || window.currentUserData.last_documenti_access !== oggiStr)) {
-                setDoc(doc(db, "utenti", auth.currentUser.uid), { documenti_access: true, last_documenti_access: oggiStr }, { merge: true });
-                window.currentUserData.documenti_access = true; window.currentUserData.last_documenti_access = oggiStr;
-            }
-        }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
-};
-
-window.avviaMotoreContattiDaIndex = async () => {
-    if (!auth.currentUser) { alert("Devi effettuare il login."); return; }
-    if (window.currentUserData) {
-        if (window.currentUserData.contatti_banned === true) { alert("Accesso revocato."); return; }
-        if (!window.currentUserData.nome || window.currentUserData.matricola === undefined) { alert("Completa il profilo."); window.apriModal('profileModal'); return; }
-    }
-    try {
-        if (!window.loadedModules['contatti']) {
-            document.body.style.cursor = 'wait';
-            const { initUIContatti } = await import('./ui_contatti.js');
-            const { avviaMotoreContatti } = await import('./contatti.js');
-            initUIContatti();
-            window.avviaMotoreContatti = avviaMotoreContatti;
-            window.loadedModules['contatti'] = true;
-            document.body.style.cursor = 'default';
-        }
-        if (typeof window.avviaMotoreContatti === 'function') {
-            window.avviaMotoreContatti();
-            const oggiStr = new Date().toISOString().split('T')[0];
-            if (window.currentUserData && (window.currentUserData.contatti_access !== true || window.currentUserData.last_contatti_access !== oggiStr)) {
-                setDoc(doc(db, "utenti", auth.currentUser.uid), { contatti_access: true, last_contatti_access: oggiStr }, { merge: true });
-                window.currentUserData.contatti_access = true; window.currentUserData.last_contatti_access = oggiStr;
-            }
-        }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
+    window.apriModal('modal-segnalazioni-main');
+    if (auth.currentUser && window.avviaMotoreSegnalazioni) { window.avviaMotoreSegnalazioni(db, auth, auth.currentUser.uid, globalIsAdmin); }
 };
 
 window.avviaMotoreBachecaUtilityDaIndex = async () => {
-    try {
-        if (!window.loadedModules['bacheca_utility']) {
-            document.body.style.cursor = 'wait';
-            const { initUIBachecaUtility } = await import('./ui_bacheca_utility.js');
-            const { avviaMotoreBachecaUtility } = await import('./bacheca_utility.js');
-            initUIBachecaUtility();
-            window.avviaMotoreBachecaUtility = avviaMotoreBachecaUtility;
+    if (!window.loadedModules['bacheca_utility']) {
+        document.body.style.cursor = 'wait';
+        try {
+            const ui = await import('./ui_bacheca_utility.js');
+            const js = await import('./bacheca_utility.js');
+            if(ui.initUIBachecaUtility) ui.initUIBachecaUtility();
+            if(js.avviaMotoreBachecaUtility) window.avviaMotoreBachecaUtility = js.avviaMotoreBachecaUtility;
             window.loadedModules['bacheca_utility'] = true;
-            document.body.style.cursor = 'default';
-        }
-        if (typeof window.avviaMotoreBachecaUtility === 'function') {
-            const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
-            window.avviaMotoreBachecaUtility(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
-        }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
+        } catch(e) {}
+        document.body.style.cursor = 'default';
+    }
+    const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
+    if(window.avviaMotoreBachecaUtility) window.avviaMotoreBachecaUtility(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
 };
 
-window.avviaMotoreRubricaDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
-    try {
-        if (!window.loadedModules['rubrica']) {
-            document.body.style.cursor = 'wait';
-            const { initUIRubrica } = await import('./ui_rubrica.js');
-            const { avviaMotoreRubrica } = await import('./rubrica.js');
-            initUIRubrica();
-            window.avviaMotoreRubrica = avviaMotoreRubrica;
-            window.loadedModules['rubrica'] = true;
-            document.body.style.cursor = 'default';
+// ============================================================================
+// CONTROLLI DI SICUREZZA ORIGINALI (Chiamati all'apertura delle app)
+// ============================================================================
+
+window.avviaMotoreTurniDaIndex = () => {
+    if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai turni."); return; }
+    if (window.currentUserData) {
+        if (window.currentUserData.turni_banned === true) { alert("Il tuo accesso alla pagina Turni è stato temporaneamente revocato."); return; }
+        if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined || window.currentUserData.matricola === "") {
+            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per visualizzare i turni.");
+            window.apriModal('profileModal'); return;
         }
-        if (typeof window.avviaMotoreRubrica === 'function') { window.avviaMotoreRubrica(db, auth, window.currentUserData, globalIsAdmin); }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
+    }
+    if(window.avviaMotoreTurni) window.avviaMotoreTurni();
+    const oggiStr = new Date().toISOString().split('T')[0];
+    if (window.currentUserData && (window.currentUserData.turni_access !== true || window.currentUserData.last_turni_access !== oggiStr)) {
+        setDoc(doc(db, "utenti", auth.currentUser.uid), { turni_access: true, last_turni_access: oggiStr }, { merge: true });
+        window.currentUserData.turni_access = true; window.currentUserData.last_turni_access = oggiStr;
+    }
 };
 
-window.avviaMotoreBachecaTurniDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
-    try {
-        if (!window.loadedModules['bacheca_turni']) {
-            document.body.style.cursor = 'wait';
-            const { initUIBachecaTurni } = await import('./ui_bacheca_turni.js');
-            const { avviaMotoreBachecaTurni } = await import('./bacheca_turni.js');
-            initUIBachecaTurni();
-            window.avviaMotoreBachecaTurni = avviaMotoreBachecaTurni;
-            window.loadedModules['bacheca_turni'] = true;
-            document.body.style.cursor = 'default';
-        }
-        if (typeof window.avviaMotoreBachecaTurni === 'function') { window.avviaMotoreBachecaTurni(db, auth, window.currentUserData, globalIsAdmin); }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
+window.avviaMotoreOrariDaIndex = () => {
+    if(window.avviaMotoreOrari) window.avviaMotoreOrari();
 };
 
-window.avviaMotoreBarcadvisorDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
-    try {
-        if (!window.loadedModules['barcadvisor']) {
-            document.body.style.cursor = 'wait';
-            const { initUIBarcadvisor } = await import('./ui_barcadvisor.js');
-            const { avviaMotoreBarcadvisor } = await import('./barcadvisor.js');
-            initUIBarcadvisor();
-            window.avviaMotoreBarcadvisor = avviaMotoreBarcadvisor;
-            window.loadedModules['barcadvisor'] = true;
-            document.body.style.cursor = 'default';
+window.avviaMotoreLinkDaIndex = () => {
+    if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai link aziendali."); return; }
+    if (window.currentUserData) {
+        if (window.currentUserData.link_banned === true) { alert("L'accesso ai Link ti è stato revocato da un Amministratore."); return; }
+        if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined) {
+            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per accedere."); window.apriModal('profileModal'); return;
         }
-        if (typeof window.avviaMotoreBarcadvisor === 'function') { window.avviaMotoreBarcadvisor(db, auth, window.currentUserData, globalIsAdmin); }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
+    }
+    if(window.avviaMotoreLink) window.avviaMotoreLink();
+    const oggiStr = new Date().toISOString().split('T')[0];
+    if (window.currentUserData && (window.currentUserData.link_access !== true || window.currentUserData.last_link_access !== oggiStr)) {
+        setDoc(doc(db, "utenti", auth.currentUser.uid), { link_access: true, last_link_access: oggiStr }, { merge: true });
+        window.currentUserData.link_access = true; window.currentUserData.last_link_access = oggiStr;
+    }
 };
 
-window.avviaMotoreBuoniPastoDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
-    try {
-        if (!window.loadedModules['buoni_pasto']) {
-            document.body.style.cursor = 'wait';
-            const { initUIBuoniPasto } = await import('./ui_buoniPasto.js');
-            const { avviaMotoreBuoniPasto } = await import('./buoni_pasto.js');
-            initUIBuoniPasto();
-            window.avviaMotoreBuoniPasto = avviaMotoreBuoniPasto;
-            window.loadedModules['buoni_pasto'] = true;
-            document.body.style.cursor = 'default';
+window.avviaMotoreDocumentiDaIndex = () => {
+    if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai documenti."); return; }
+    if (window.currentUserData) {
+        if (window.currentUserData.documenti_banned === true) { alert("L'accesso ai Documenti ti è stato revocato da un Amministratore."); return; }
+        if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined) {
+            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per accedere all'archivio."); window.apriModal('profileModal'); return;
         }
-        if (typeof window.avviaMotoreBuoniPasto === 'function') { window.avviaMotoreBuoniPasto(db, auth, window.currentUserData, globalIsAdmin); }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
+    }
+    if(window.avviaMotoreDocumenti) window.avviaMotoreDocumenti();
+    const oggiStr = new Date().toISOString().split('T')[0];
+    if (window.currentUserData && (window.currentUserData.documenti_access !== true || window.currentUserData.last_documenti_access !== oggiStr)) {
+        setDoc(doc(db, "utenti", auth.currentUser.uid), { documenti_access: true, last_documenti_access: oggiStr }, { merge: true });
+        window.currentUserData.documenti_access = true; window.currentUserData.last_documenti_access = oggiStr;
+    }
 };
 
-window.avviaMotoreStatisticheDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
-    try {
-        if (!window.loadedModules['statistiche']) {
-            document.body.style.cursor = 'wait';
-            const { initUIStatistiche } = await import('./ui_statistiche.js');
-            const { avviaMotoreStatistiche } = await import('./statistiche.js');
-            initUIStatistiche();
-            window.avviaMotoreStatistiche = avviaMotoreStatistiche;
-            window.loadedModules['statistiche'] = true;
-            document.body.style.cursor = 'default';
+window.avviaMotoreContattiDaIndex = () => {
+    if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai contatti aziendali."); return; }
+    if (window.currentUserData) {
+        if (window.currentUserData.contatti_banned === true) { alert("L'accesso ai Contatti ti è stato revocato da un Amministratore."); return; }
+        if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined) {
+            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per accedere ai contatti."); window.apriModal('profileModal'); return;
         }
-        if (typeof window.avviaMotoreStatistiche === 'function') { window.avviaMotoreStatistiche(db, auth, window.currentUserData, globalIsAdmin); }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
+    }
+    if(window.avviaMotoreContatti) window.avviaMotoreContatti();
+    const oggiStr = new Date().toISOString().split('T')[0];
+    if (window.currentUserData && (window.currentUserData.contatti_access !== true || window.currentUserData.last_contatti_access !== oggiStr)) {
+        setDoc(doc(db, "utenti", auth.currentUser.uid), { contatti_access: true, last_contatti_access: oggiStr }, { merge: true });
+        window.currentUserData.contatti_access = true; window.currentUserData.last_contatti_access = oggiStr;
+    }
 };
 
-window.avviaMotoreRotazioniDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
-    try {
-        if (!window.loadedModules['rotazioni']) {
-            document.body.style.cursor = 'wait';
-            const { initUIRotazioni } = await import('./ui_rotazioni.js');
-            const { avviaMotoreRotazioni } = await import('./rotazioni.js');
-            initUIRotazioni();
-            window.avviaMotoreRotazioni = avviaMotoreRotazioni;
-            window.loadedModules['rotazioni'] = true;
-            document.body.style.cursor = 'default';
-        }
-        if (typeof window.avviaMotoreRotazioni === 'function') { window.avviaMotoreRotazioni(db, auth, window.currentUserData, globalIsAdmin); }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
+window.avviaMotoreRubricaDaIndex = () => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
+    if(window.avviaMotoreRubrica) window.avviaMotoreRubrica(db, auth, window.currentUserData, globalIsAdmin);
 };
 
-window.avviaMotoreRotazioneFerieDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
-    try {
-        if (!window.loadedModules['rotazione_ferie']) {
-            document.body.style.cursor = 'wait';
-            const { initUIRotazioneFerie } = await import('./ui_rotazione_ferie.js');
-            const { avviaMotoreRotazioneFerie } = await import('./rotazione_ferie.js');
-            initUIRotazioneFerie();
-            window.avviaMotoreRotazioneFerie = avviaMotoreRotazioneFerie;
-            window.loadedModules['rotazione_ferie'] = true;
-            document.body.style.cursor = 'default';
-        }
-        if (typeof window.avviaMotoreRotazioneFerie === 'function') { window.avviaMotoreRotazioneFerie(db, auth, window.currentUserData, globalIsAdmin); }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
+window.avviaMotoreBachecaTurniDaIndex = () => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
+    if(window.avviaMotoreBachecaTurni) window.avviaMotoreBachecaTurni(db, auth, window.currentUserData, globalIsAdmin);
 };
 
-window.avviaMotorePromemoriaDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
-    try {
-        if (!window.loadedModules['promemoria']) {
-            document.body.style.cursor = 'wait';
-            const { initUIPromemoria } = await import('./ui_promemoria.js');
-            const { avviaMotorePromemoria } = await import('./promemoria.js');
-            initUIPromemoria();
-            window.avviaMotorePromemoria = avviaMotorePromemoria;
-            window.loadedModules['promemoria'] = true;
-            document.body.style.cursor = 'default';
-        }
-        if (typeof window.avviaMotorePromemoria === 'function') { window.avviaMotorePromemoria(db, auth, window.currentUserData, globalIsAdmin); }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
+window.avviaMotoreBarcadvisorDaIndex = () => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
+    if(window.avviaMotoreBarcadvisor) window.avviaMotoreBarcadvisor(db, auth, window.currentUserData, globalIsAdmin);
 };
 
-window.avviaMotoreDDSDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
-    try {
-        if (!window.loadedModules['dds']) {
-            document.body.style.cursor = 'wait';
-            const { initUIDDS } = await import('./ui_dds.js');
-            const { avviaMotoreDDS } = await import('./dds.js');
-            initUIDDS();
-            window.avviaMotoreDDS = avviaMotoreDDS;
-            window.loadedModules['dds'] = true;
-            document.body.style.cursor = 'default';
-        }
-        if (typeof window.avviaMotoreDDS === 'function') { window.avviaMotoreDDS(db, auth, window.currentUserData, globalIsAdmin); }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
+window.avviaMotoreBuoniPastoDaIndex = () => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
+    if(window.avviaMotoreBuoniPasto) window.avviaMotoreBuoniPasto(db, auth, window.currentUserData, globalIsAdmin);
 };
 
-window.avviaMotoreGuidaDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
-    try {
-        if (!window.loadedModules['guida']) {
-            document.body.style.cursor = 'wait';
-            const { initUIGuida } = await import('./ui_guida.js');
-            const { avviaMotoreGuida } = await import('./guida.js');
-            initUIGuida();
-            window.avviaMotoreGuida = avviaMotoreGuida;
-            window.loadedModules['guida'] = true;
-            document.body.style.cursor = 'default';
-        }
-        if (typeof window.avviaMotoreGuida === 'function') { window.avviaMotoreGuida(db, auth, window.currentUserData, globalIsAdmin); }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
+window.avviaMotoreStatisticheDaIndex = () => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
+    if(window.avviaMotoreStatistiche) window.avviaMotoreStatistiche(db, auth, window.currentUserData, globalIsAdmin);
 };
 
-window.avviaMotoreAdminDaIndex = async () => {
-    if (!globalIsAdmin) { alert("Accesso negato."); return; }
-    try {
-        if (!window.loadedModules['admin']) {
-            document.body.style.cursor = 'wait';
-            const { initUIAdmin } = await import('./ui_admin.js');
-            const { avviaMotoreAdmin } = await import('./admin.js');
-            initUIAdmin();
-            window.avviaMotoreAdmin = avviaMotoreAdmin;
-            window.loadedModules['admin'] = true;
-            document.body.style.cursor = 'default';
-        }
-        if (typeof window.avviaMotoreAdmin === 'function') { window.avviaMotoreAdmin(db, auth, window.currentUserData, globalIsAdmin); }
-    } catch(e) { document.body.style.cursor = 'default'; console.error(e); alert("Errore di caricamento."); }
+window.avviaMotoreRotazioniDaIndex = () => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
+    if(window.avviaMotoreRotazioni) window.avviaMotoreRotazioni(db, auth, window.currentUserData, globalIsAdmin);
+};
+
+window.avviaMotoreRotazioneFerieDaIndex = () => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
+    if(window.avviaMotoreRotazioneFerie) window.avviaMotoreRotazioneFerie(db, auth, window.currentUserData, globalIsAdmin);
+};
+
+window.avviaMotorePromemoriaDaIndex = () => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
+    if(window.avviaMotorePromemoria) window.avviaMotorePromemoria(db, auth, window.currentUserData, globalIsAdmin);
+};
+
+window.avviaMotoreDDSDaIndex = () => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
+    if(window.avviaMotoreDDS) window.avviaMotoreDDS(db, auth, window.currentUserData, globalIsAdmin);
+};
+
+window.avviaMotoreGuidaDaIndex = () => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
+    if(window.avviaMotoreGuida) window.avviaMotoreGuida(db, auth, window.currentUserData, globalIsAdmin);
+};
+
+window.avviaMotoreAdminDaIndex = () => {
+    if (!globalIsAdmin) { alert("Accesso negato. Solo gli amministratori possono accedere a questa sezione."); return; }
+    if(window.avviaMotoreAdmin) window.avviaMotoreAdmin(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 // ============================================================================
