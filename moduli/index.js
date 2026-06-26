@@ -3,47 +3,11 @@ import { getAuth, onAuthStateChanged, GoogleAuthProvider } from "https://www.gst
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
-// Importiamo tutti i sottomoduli della SPA
+// Importiamo SOLTANTO il sottomodulo di Autenticazione staticamente, perché serve subito all'avvio
 import { avviaMotoreAuth } from './auth.js';
-import { avviaMotoreSegnalazioni } from './report.js';
-import { avviaMotoreTurni } from './turni.js';
-import { avviaMotoreOrari } from './orari.js';
-import { avviaMotoreLink } from './link.js';
-import { avviaMotoreDocumenti } from './documenti.js';
-import { avviaMotoreContatti } from './contatti.js';
-import { avviaMotoreBachecaUtility } from './bacheca_utility.js';
-import { avviaMotoreRubrica } from './rubrica.js';
-import { avviaMotoreBachecaTurni } from './bacheca_turni.js';
-import { avviaMotoreBarcadvisor } from './barcadvisor.js';
-import { avviaMotoreBuoniPasto } from './buoni_pasto.js';
-import { avviaMotoreStatistiche } from './statistiche.js';
-import { avviaMotoreRotazioni } from './rotazioni.js';
-import { avviaMotoreRotazioneFerie } from './rotazione_ferie.js';
-import { avviaMotorePromemoria } from './promemoria.js';
-import { avviaMotoreDDS } from './dds.js';
-import { avviaMotoreGuida } from './guida.js';
-import { avviaMotoreAdmin } from './admin.js';
 
-// Importiamo tutte le interfacce UI estratte
-import { initUIBuoniPasto } from './ui_buoniPasto.js';
-import { initUITurni } from './ui_turni.js';
-import { initUIBachecaTurni } from './ui_bacheca_turni.js';
-import { initUIBarcadvisor } from './ui_barcadvisor.js';
-import { initUIBachecaUtility } from './ui_bacheca_utility.js';
-import { initUIContatti } from './ui_contatti.js';
-import { initUIDocumenti } from './ui_documenti.js';
-import { initUILink } from './ui_link.js';
-import { initUIOrari } from './ui_orari.js';
-import { initUISegnalazioni } from './ui_report.js';
-import { initUIRubrica } from './ui_rubrica.js';
-import { initUIStatistiche } from './ui_statistiche.js';
-import { initUIRotazioni } from './ui_rotazioni.js';
-import { initUIRotazioneFerie } from './ui_rotazione_ferie.js';
-import { initUIPromemoria } from './ui_promemoria.js';
-import { initUIDDS } from './ui_dds.js';
-import { initUIGuida } from './ui_guida.js';
-import { initUIAdmin } from './ui_admin.js';
-
+// TUTTE le altre app e interfacce sono state rimosse da qui. 
+// Verranno caricate dinamicamente (Lazy Loading) al primo click dell'utente.
 
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -58,28 +22,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app); 
 const db = getFirestore(app); 
 const provider = new GoogleAuthProvider();
-
-// Inizializziamo le UI nel DOM
-initUIBuoniPasto();
-initUITurni();
-initUIBachecaTurni();
-initUIBarcadvisor();
-initUIBachecaUtility();
-initUIContatti();
-initUIDocumenti();
-initUILink();
-initUIOrari();
-initUISegnalazioni();
-initUIRubrica();
-
-// INIZIALIZZAZIONE NUOVE UI
-initUIStatistiche();
-initUIRotazioni();
-initUIRotazioneFerie();
-initUIPromemoria();
-initUIDDS();
-initUIGuida();
-initUIAdmin();
 
 // Inizializziamo il sottomodulo di Autenticazione e Profilo
 avviaMotoreAuth(auth, db, provider);
@@ -120,7 +62,6 @@ const EMOJI_MAP = {
     report: "🎧", impostazioni: "⚙️", guida: "📖", admin: "🔒", accessi: "👨‍💻"
 };
 
-// AGGIORNATO: Tutte le nuove app ora puntano ai rispettivi onclick invece che agli href
 const DEFAULT_APPS = [
     { id: "oggi", label: "Oggi", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
     { id: "calendario", label: "Calendario", href: "calendario.html", defaultColor: "#0066cc" },
@@ -164,14 +105,32 @@ window.chiudiMenuLaterale = () => {
     const o = document.getElementById('sidebar-overlay'); if(o) o.style.display = 'none'; 
 };
 
-window.apriMainModaleSegnalazioni = () => {
-    window.apriModal('modal-segnalazioni-main');
-    if (auth.currentUser) {
-        avviaMotoreSegnalazioni(db, auth, auth.currentUser.uid, globalIsAdmin);
+// ============================================================================
+// GESTIONE LAZY LOADING GLOBALE
+// ============================================================================
+window.loadedModules = {}; // Tracker globale per i moduli già caricati
+
+window.apriMainModaleSegnalazioni = async () => {
+    try {
+        if (!window.loadedModules['segnalazioni']) {
+            document.body.style.cursor = 'wait';
+            const { initUISegnalazioni } = await import('./ui_report.js');
+            const { avviaMotoreSegnalazioni } = await import('./report.js');
+            initUISegnalazioni();
+            window.avviaMotoreSegnalazioni = avviaMotoreSegnalazioni;
+            window.loadedModules['segnalazioni'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.apriModal('modal-segnalazioni-main');
+        if (auth.currentUser) {
+            window.avviaMotoreSegnalazioni(db, auth, auth.currentUser.uid, globalIsAdmin);
+        }
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
     }
 };
 
-window.avviaMotoreTurniDaIndex = () => {
+window.avviaMotoreTurniDaIndex = async () => {
     if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai turni."); return; }
     if (window.currentUserData) {
         if (window.currentUserData.turni_banned === true) {
@@ -182,19 +141,47 @@ window.avviaMotoreTurniDaIndex = () => {
             window.apriModal('profileModal'); return;
         }
     }
-    avviaMotoreTurni();
-    const oggiStr = new Date().toISOString().split('T')[0];
-    if (window.currentUserData && (window.currentUserData.turni_access !== true || window.currentUserData.last_turni_access !== oggiStr)) {
-        setDoc(doc(db, "utenti", auth.currentUser.uid), { turni_access: true, last_turni_access: oggiStr }, { merge: true });
-        window.currentUserData.turni_access = true; window.currentUserData.last_turni_access = oggiStr;
+    
+    try {
+        if (!window.loadedModules['turni']) {
+            document.body.style.cursor = 'wait';
+            const { initUITurni } = await import('./ui_turni.js');
+            const { avviaMotoreTurni } = await import('./turni.js');
+            initUITurni();
+            window.avviaMotoreTurni = avviaMotoreTurni;
+            window.loadedModules['turni'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.avviaMotoreTurni();
+        
+        const oggiStr = new Date().toISOString().split('T')[0];
+        if (window.currentUserData && (window.currentUserData.turni_access !== true || window.currentUserData.last_turni_access !== oggiStr)) {
+            setDoc(doc(db, "utenti", auth.currentUser.uid), { turni_access: true, last_turni_access: oggiStr }, { merge: true });
+            window.currentUserData.turni_access = true; window.currentUserData.last_turni_access = oggiStr;
+        }
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
     }
 };
 
-window.avviaMotoreOrariDaIndex = () => {
-    avviaMotoreOrari();
+window.avviaMotoreOrariDaIndex = async () => {
+    try {
+        if (!window.loadedModules['orari']) {
+            document.body.style.cursor = 'wait';
+            const { initUIOrari } = await import('./ui_orari.js');
+            const { avviaMotoreOrari } = await import('./orari.js');
+            initUIOrari();
+            window.avviaMotoreOrari = avviaMotoreOrari;
+            window.loadedModules['orari'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.avviaMotoreOrari();
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
+    }
 };
 
-window.avviaMotoreLinkDaIndex = () => {
+window.avviaMotoreLinkDaIndex = async () => {
     if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai link aziendali."); return; }
     if (window.currentUserData) {
         if (window.currentUserData.link_banned === true) {
@@ -205,15 +192,30 @@ window.avviaMotoreLinkDaIndex = () => {
             window.apriModal('profileModal'); return;
         }
     }
-    avviaMotoreLink();
-    const oggiStr = new Date().toISOString().split('T')[0];
-    if (window.currentUserData && (window.currentUserData.link_access !== true || window.currentUserData.last_link_access !== oggiStr)) {
-        setDoc(doc(db, "utenti", auth.currentUser.uid), { link_access: true, last_link_access: oggiStr }, { merge: true });
-        window.currentUserData.link_access = true; window.currentUserData.last_link_access = oggiStr;
+    
+    try {
+        if (!window.loadedModules['link']) {
+            document.body.style.cursor = 'wait';
+            const { initUILink } = await import('./ui_link.js');
+            const { avviaMotoreLink } = await import('./link.js');
+            initUILink();
+            window.avviaMotoreLink = avviaMotoreLink;
+            window.loadedModules['link'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.avviaMotoreLink();
+        
+        const oggiStr = new Date().toISOString().split('T')[0];
+        if (window.currentUserData && (window.currentUserData.link_access !== true || window.currentUserData.last_link_access !== oggiStr)) {
+            setDoc(doc(db, "utenti", auth.currentUser.uid), { link_access: true, last_link_access: oggiStr }, { merge: true });
+            window.currentUserData.link_access = true; window.currentUserData.last_link_access = oggiStr;
+        }
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
     }
 };
 
-window.avviaMotoreDocumentiDaIndex = () => {
+window.avviaMotoreDocumentiDaIndex = async () => {
     if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai documenti."); return; }
     if (window.currentUserData) {
         if (window.currentUserData.documenti_banned === true) {
@@ -224,15 +226,30 @@ window.avviaMotoreDocumentiDaIndex = () => {
             window.apriModal('profileModal'); return;
         }
     }
-    avviaMotoreDocumenti();
-    const oggiStr = new Date().toISOString().split('T')[0];
-    if (window.currentUserData && (window.currentUserData.documenti_access !== true || window.currentUserData.last_documenti_access !== oggiStr)) {
-        setDoc(doc(db, "utenti", auth.currentUser.uid), { documenti_access: true, last_documenti_access: oggiStr }, { merge: true });
-        window.currentUserData.documenti_access = true; window.currentUserData.last_documenti_access = oggiStr;
+
+    try {
+        if (!window.loadedModules['documenti']) {
+            document.body.style.cursor = 'wait';
+            const { initUIDocumenti } = await import('./ui_documenti.js');
+            const { avviaMotoreDocumenti } = await import('./documenti.js');
+            initUIDocumenti();
+            window.avviaMotoreDocumenti = avviaMotoreDocumenti;
+            window.loadedModules['documenti'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.avviaMotoreDocumenti();
+        
+        const oggiStr = new Date().toISOString().split('T')[0];
+        if (window.currentUserData && (window.currentUserData.documenti_access !== true || window.currentUserData.last_documenti_access !== oggiStr)) {
+            setDoc(doc(db, "utenti", auth.currentUser.uid), { documenti_access: true, last_documenti_access: oggiStr }, { merge: true });
+            window.currentUserData.documenti_access = true; window.currentUserData.last_documenti_access = oggiStr;
+        }
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
     }
 };
 
-window.avviaMotoreContattiDaIndex = () => {
+window.avviaMotoreContattiDaIndex = async () => {
     if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai contatti aziendali."); return; }
     if (window.currentUserData) {
         if (window.currentUserData.contatti_banned === true) {
@@ -243,110 +260,267 @@ window.avviaMotoreContattiDaIndex = () => {
             window.apriModal('profileModal'); return;
         }
     }
-    avviaMotoreContatti();
-    const oggiStr = new Date().toISOString().split('T')[0];
-    if (window.currentUserData && (window.currentUserData.contatti_access !== true || window.currentUserData.last_contatti_access !== oggiStr)) {
-        setDoc(doc(db, "utenti", auth.currentUser.uid), { contatti_access: true, last_contatti_access: oggiStr }, { merge: true });
-        window.currentUserData.contatti_access = true; window.currentUserData.last_contatti_access = oggiStr;
+
+    try {
+        if (!window.loadedModules['contatti']) {
+            document.body.style.cursor = 'wait';
+            const { initUIContatti } = await import('./ui_contatti.js');
+            const { avviaMotoreContatti } = await import('./contatti.js');
+            initUIContatti();
+            window.avviaMotoreContatti = avviaMotoreContatti;
+            window.loadedModules['contatti'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.avviaMotoreContatti();
+        
+        const oggiStr = new Date().toISOString().split('T')[0];
+        if (window.currentUserData && (window.currentUserData.contatti_access !== true || window.currentUserData.last_contatti_access !== oggiStr)) {
+            setDoc(doc(db, "utenti", auth.currentUser.uid), { contatti_access: true, last_contatti_access: oggiStr }, { merge: true });
+            window.currentUserData.contatti_access = true; window.currentUserData.last_contatti_access = oggiStr;
+        }
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
     }
 };
 
-window.avviaMotoreBachecaUtilityDaIndex = () => {
-    const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
-    avviaMotoreBachecaUtility(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
+window.avviaMotoreBachecaUtilityDaIndex = async () => {
+    try {
+        if (!window.loadedModules['bacheca_utility']) {
+            document.body.style.cursor = 'wait';
+            const { initUIBachecaUtility } = await import('./ui_bacheca_utility.js');
+            const { avviaMotoreBachecaUtility } = await import('./bacheca_utility.js');
+            initUIBachecaUtility();
+            window.avviaMotoreBachecaUtility = avviaMotoreBachecaUtility;
+            window.loadedModules['bacheca_utility'] = true;
+            document.body.style.cursor = 'default';
+        }
+        const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
+        window.avviaMotoreBachecaUtility(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
+    }
 };
 
-window.avviaMotoreRubricaDaIndex = () => {
+window.avviaMotoreRubricaDaIndex = async () => {
     if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
+        alert("L'accesso alle funzioni ti è stato revocato."); return;
     }
-    avviaMotoreRubrica(db, auth, window.currentUserData, globalIsAdmin);
+    try {
+        if (!window.loadedModules['rubrica']) {
+            document.body.style.cursor = 'wait';
+            const { initUIRubrica } = await import('./ui_rubrica.js');
+            const { avviaMotoreRubrica } = await import('./rubrica.js');
+            initUIRubrica();
+            window.avviaMotoreRubrica = avviaMotoreRubrica;
+            window.loadedModules['rubrica'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.avviaMotoreRubrica(db, auth, window.currentUserData, globalIsAdmin);
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
+    }
 };
 
-window.avviaMotoreBachecaTurniDaIndex = () => {
+window.avviaMotoreBachecaTurniDaIndex = async () => {
     if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
+        alert("L'accesso alle funzioni ti è stato revocato."); return;
     }
-    avviaMotoreBachecaTurni(db, auth, window.currentUserData, globalIsAdmin);
+    try {
+        if (!window.loadedModules['bacheca_turni']) {
+            document.body.style.cursor = 'wait';
+            const { initUIBachecaTurni } = await import('./ui_bacheca_turni.js');
+            const { avviaMotoreBachecaTurni } = await import('./bacheca_turni.js');
+            initUIBachecaTurni();
+            window.avviaMotoreBachecaTurni = avviaMotoreBachecaTurni;
+            window.loadedModules['bacheca_turni'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.avviaMotoreBachecaTurni(db, auth, window.currentUserData, globalIsAdmin);
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
+    }
 };
 
-window.avviaMotoreBarcadvisorDaIndex = () => {
+window.avviaMotoreBarcadvisorDaIndex = async () => {
     if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
+        alert("L'accesso alle funzioni ti è stato revocato."); return;
     }
-    avviaMotoreBarcadvisor(db, auth, window.currentUserData, globalIsAdmin);
+    try {
+        if (!window.loadedModules['barcadvisor']) {
+            document.body.style.cursor = 'wait';
+            const { initUIBarcadvisor } = await import('./ui_barcadvisor.js');
+            const { avviaMotoreBarcadvisor } = await import('./barcadvisor.js');
+            initUIBarcadvisor();
+            window.avviaMotoreBarcadvisor = avviaMotoreBarcadvisor;
+            window.loadedModules['barcadvisor'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.avviaMotoreBarcadvisor(db, auth, window.currentUserData, globalIsAdmin);
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
+    }
 };
 
-window.avviaMotoreBuoniPastoDaIndex = () => {
+window.avviaMotoreBuoniPastoDaIndex = async () => {
     if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
+        alert("L'accesso alle funzioni ti è stato revocato."); return;
     }
-    avviaMotoreBuoniPasto(db, auth, window.currentUserData, globalIsAdmin);
+    try {
+        if (!window.loadedModules['buoni_pasto']) {
+            document.body.style.cursor = 'wait';
+            const { initUIBuoniPasto } = await import('./ui_buoniPasto.js');
+            const { avviaMotoreBuoniPasto } = await import('./buoni_pasto.js');
+            initUIBuoniPasto();
+            window.avviaMotoreBuoniPasto = avviaMotoreBuoniPasto;
+            window.loadedModules['buoni_pasto'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.avviaMotoreBuoniPasto(db, auth, window.currentUserData, globalIsAdmin);
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
+    }
 };
 
-// ============================================================================
-// NUOVE FUNZIONI PONTE AGGIUNTE
-// ============================================================================
-
-window.avviaMotoreStatisticheDaIndex = () => {
+window.avviaMotoreStatisticheDaIndex = async () => {
     if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
+        alert("L'accesso alle funzioni ti è stato revocato."); return;
     }
-    avviaMotoreStatistiche(db, auth, window.currentUserData, globalIsAdmin);
+    try {
+        if (!window.loadedModules['statistiche']) {
+            document.body.style.cursor = 'wait';
+            const { initUIStatistiche } = await import('./ui_statistiche.js');
+            const { avviaMotoreStatistiche } = await import('./statistiche.js');
+            initUIStatistiche();
+            window.avviaMotoreStatistiche = avviaMotoreStatistiche;
+            window.loadedModules['statistiche'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.avviaMotoreStatistiche(db, auth, window.currentUserData, globalIsAdmin);
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
+    }
 };
 
-window.avviaMotoreRotazioniDaIndex = () => {
+window.avviaMotoreRotazioniDaIndex = async () => {
     if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
+        alert("L'accesso alle funzioni ti è stato revocato."); return;
     }
-    avviaMotoreRotazioni(db, auth, window.currentUserData, globalIsAdmin);
+    try {
+        if (!window.loadedModules['rotazioni']) {
+            document.body.style.cursor = 'wait';
+            const { initUIRotazioni } = await import('./ui_rotazioni.js');
+            const { avviaMotoreRotazioni } = await import('./rotazioni.js');
+            initUIRotazioni();
+            window.avviaMotoreRotazioni = avviaMotoreRotazioni;
+            window.loadedModules['rotazioni'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.avviaMotoreRotazioni(db, auth, window.currentUserData, globalIsAdmin);
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
+    }
 };
 
-window.avviaMotoreRotazioneFerieDaIndex = () => {
+window.avviaMotoreRotazioneFerieDaIndex = async () => {
     if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
+        alert("L'accesso alle funzioni ti è stato revocato."); return;
     }
-    avviaMotoreRotazioneFerie(db, auth, window.currentUserData, globalIsAdmin);
+    try {
+        if (!window.loadedModules['rotazione_ferie']) {
+            document.body.style.cursor = 'wait';
+            const { initUIRotazioneFerie } = await import('./ui_rotazione_ferie.js');
+            const { avviaMotoreRotazioneFerie } = await import('./rotazione_ferie.js');
+            initUIRotazioneFerie();
+            window.avviaMotoreRotazioneFerie = avviaMotoreRotazioneFerie;
+            window.loadedModules['rotazione_ferie'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.avviaMotoreRotazioneFerie(db, auth, window.currentUserData, globalIsAdmin);
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
+    }
 };
 
-window.avviaMotorePromemoriaDaIndex = () => {
+window.avviaMotorePromemoriaDaIndex = async () => {
     if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
+        alert("L'accesso alle funzioni ti è stato revocato."); return;
     }
-    avviaMotorePromemoria(db, auth, window.currentUserData, globalIsAdmin);
+    try {
+        if (!window.loadedModules['promemoria']) {
+            document.body.style.cursor = 'wait';
+            const { initUIPromemoria } = await import('./ui_promemoria.js');
+            const { avviaMotorePromemoria } = await import('./promemoria.js');
+            initUIPromemoria();
+            window.avviaMotorePromemoria = avviaMotorePromemoria;
+            window.loadedModules['promemoria'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.avviaMotorePromemoria(db, auth, window.currentUserData, globalIsAdmin);
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
+    }
 };
 
-window.avviaMotoreDDSDaIndex = () => {
+window.avviaMotoreDDSDaIndex = async () => {
     if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
+        alert("L'accesso alle funzioni ti è stato revocato."); return;
     }
-    avviaMotoreDDS(db, auth, window.currentUserData, globalIsAdmin);
+    try {
+        if (!window.loadedModules['dds']) {
+            document.body.style.cursor = 'wait';
+            const { initUIDDS } = await import('./ui_dds.js');
+            const { avviaMotoreDDS } = await import('./dds.js');
+            initUIDDS();
+            window.avviaMotoreDDS = avviaMotoreDDS;
+            window.loadedModules['dds'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.avviaMotoreDDS(db, auth, window.currentUserData, globalIsAdmin);
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
+    }
 };
 
-window.avviaMotoreGuidaDaIndex = () => {
+window.avviaMotoreGuidaDaIndex = async () => {
     if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
+        alert("L'accesso alle funzioni ti è stato revocato."); return;
     }
-    avviaMotoreGuida(db, auth, window.currentUserData, globalIsAdmin);
+    try {
+        if (!window.loadedModules['guida']) {
+            document.body.style.cursor = 'wait';
+            const { initUIGuida } = await import('./ui_guida.js');
+            const { avviaMotoreGuida } = await import('./guida.js');
+            initUIGuida();
+            window.avviaMotoreGuida = avviaMotoreGuida;
+            window.loadedModules['guida'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.avviaMotoreGuida(db, auth, window.currentUserData, globalIsAdmin);
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
+    }
 };
 
-window.avviaMotoreAdminDaIndex = () => {
+window.avviaMotoreAdminDaIndex = async () => {
     if (!globalIsAdmin) {
-        alert("Accesso negato. Solo gli amministratori possono accedere a questa sezione."); 
-        return;
+        alert("Accesso negato. Solo gli amministratori possono accedere a questa sezione."); return;
     }
-    avviaMotoreAdmin(db, auth, window.currentUserData, globalIsAdmin);
+    try {
+        if (!window.loadedModules['admin']) {
+            document.body.style.cursor = 'wait';
+            const { initUIAdmin } = await import('./ui_admin.js');
+            const { avviaMotoreAdmin } = await import('./admin.js');
+            initUIAdmin();
+            window.avviaMotoreAdmin = avviaMotoreAdmin;
+            window.loadedModules['admin'] = true;
+            document.body.style.cursor = 'default';
+        }
+        window.avviaMotoreAdmin(db, auth, window.currentUserData, globalIsAdmin);
+    } catch(e) {
+        document.body.style.cursor = 'default'; console.error(e); alert("Errore di rete durante il caricamento dell'app.");
+    }
 };
+
 // ============================================================================
 
 
