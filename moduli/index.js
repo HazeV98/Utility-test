@@ -125,7 +125,7 @@ const DEFAULT_APPS = [
     { id: "oggi", label: "Oggi", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
     { id: "calendario", label: "Calendario", href: "calendario.html", defaultColor: "#0066cc" },
     
-    { id: "statistiche", label: "Statistiche", onclick: "window.apriModaleStatistiche()", defaultColor: "#6f42c1" },
+    { id: "statistiche", label: "Statistiche\nCalendario", onclick: "window.apriModaleStatistiche()", defaultColor: "#6f42c1" },
     { id: "rotazioni", label: "Rotazioni", onclick: "window.apriModaleRotazioni()", defaultColor: "#fd7e14" },
     
     { id: "turni", label: "Turni", onclick: "window.apriModaleTurni()", defaultColor: "#20c997" },
@@ -135,7 +135,7 @@ const DEFAULT_APPS = [
     
     { id: "ferie", label: "Rotazione\nFerie", onclick: "window.apriModaleRotazioneFerie()", defaultColor: "#ffc107" },
     
-    { id: "orari", label: "Orari\nNavigaz.", onclick: "window.apriModaleOrari()", defaultColor: "#17a2b8" },
+    { id: "orari", label: "Orari\nNavigazione", onclick: "window.apriModaleOrari()", defaultColor: "#17a2b8" },
     { id: "chebateo", label: "CheBateo", image: "icone_app/iconcb.png", href: "https://m.chebateo.it/" },
     { id: "documenti", label: "Documenti", onclick: "window.apriModaleDocumenti()", defaultColor: "#6c757d" },
     { id: "link", label: "Link", onclick: "window.apriModaleLink()", defaultColor: "#495057" },
@@ -145,7 +145,7 @@ const DEFAULT_APPS = [
     { id: "promemoria", label: "Promemoria", onclick: "window.apriModalePromemoria()", defaultColor: "#0dcaf0" },
     { id: "dds", label: "Archivio\nDDS", onclick: "window.apriModaleDDS()", defaultColor: "#5856d6" },
     
-    { id: "report", label: "Segnalazioni", onclick: "window.apriMainModaleSegnalazioni()", defaultColor: "#0088ff" },
+    { id: "report", label: "Assistenza\nApp", onclick: "window.apriMainModaleSegnalazioni()", defaultColor: "#0088ff" },
     { id: "impostazioni", label: "Impostazioni", onclick: "window.apriModal('settingsModal')", defaultColor: "#8e8e93" },
     { id: "spriss", label: "Spriss", image: "icone_app/iconspriss.png", href: "https://spriss.avmspa.it/" },
     
@@ -456,21 +456,35 @@ window.addEventListener('bacheca-utility-letta', async () => {
 window.controllaRichiesteSospese = async () => {
     if (!globalIsAdmin && !globalIsCollab) return;
     try {
-        const q = query(collection(db, "utenti"), where("stato_richiesta", "==", "pending"));
+        // Se l'utente è un collaboratore, recupero prima i suoi permessi_gestione dalla nuova raccolta
+        let permessiGestione = [];
+        if (globalIsCollab && auth.currentUser) {
+            const myPermsSnap = await getDoc(doc(db, "permessi_rotazioni", auth.currentUser.uid));
+            if (myPermsSnap.exists() && myPermsSnap.data().permessi_gestione) {
+                permessiGestione = myPermsSnap.data().permessi_gestione;
+            }
+        }
+
+        const q = query(collection(db, "permessi_rotazioni"), where("stato_richiesta", "==", "pending"));
         const snap = await getDocs(q);
         let count = 0;
+        
         snap.forEach(d => {
-            const u = d.data();
-            if (globalIsAdmin) count++;
-            else if (globalIsCollab && (window.currentUserData?.permessi_gestione || []).includes(u.rotazione_richiesta)) count++;
+            const p = d.data();
+            if (globalIsAdmin) {
+                count++;
+            } else if (globalIsCollab && permessiGestione.includes(p.rotazione_richiesta)) {
+                count++;
+            }
         });
+        
         const btnRot = document.getElementById('btn-rotazioni');
         if (btnRot) {
             let b = btnRot.querySelector('.badge-notif');
             if (b) b.remove();
             if (count > 0) btnRot.insertAdjacentHTML('beforeend', `<div class="badge-notif">${count}</div>`);
         }
-    } catch(e) {}
+    } catch(e) { console.error("Errore check richieste rotazioni:", e); }
 };
 
 window.controllaPromemoria = async () => {

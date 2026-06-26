@@ -30,6 +30,22 @@ function caricaFiles(dir) {
         area.appendChild(b);
     }
 
+    // --- NUOVO PULSANTE: Orari in tempo reale ---
+    const rowRt = document.createElement('div');
+    rowRt.className = "file-row";
+    rowRt.style.animationDelay = "0s";
+    
+    const aRt = document.createElement('a');
+    aRt.className = "file-btn";
+    aRt.style.flex = "1"; // Permette al pulsante di occupare tutto lo spazio orizzontale
+    aRt.innerHTML = `<i class="fa-solid fa-satellite-dish" style="color: #2ecc71; font-size: 20px;"></i> Orari in tempo reale`;
+    aRt.href = "https://oraritemporeale.actv.it/nav/stops/";
+    aRt.target = "_blank";
+    
+    rowRt.appendChild(aRt);
+    area.appendChild(rowRt);
+    // --------------------------------------------
+
     if (pdfs.length === 0) {
         const msg = document.createElement('div');
         msg.className = "status-message";
@@ -57,7 +73,8 @@ function caricaFiles(dir) {
         
         const row = document.createElement('div'); 
         row.className = "file-row";
-        row.style.animationDelay = `${index * 0.05}s`;
+        // Aggiungiamo un leggero delay in più per compensare il pulsante tempo reale inserito sopra
+        row.style.animationDelay = `${(index + 1) * 0.05}s`;
 
         const aOpen = document.createElement('a');
         aOpen.className = "file-btn"; 
