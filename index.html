@@ -844,75 +844,92 @@
 
     <script>
         // Funzioni ponte per chiamare i moduli dall'interfaccia utente (HTML onClick)
-        window.apriModaleTurni = () => {
+        window.apriModaleTurni = async () => {
+            if (window.avviaMotoreTurniDaIndex) await window.avviaMotoreTurniDaIndex();
             const modale = document.getElementById('modal-turni-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreTurniDaIndex) window.avviaMotoreTurniDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
-        window.apriModaleOrari = () => {
+        window.apriModaleOrari = async () => {
+            if (window.avviaMotoreOrariDaIndex) await window.avviaMotoreOrariDaIndex();
             const modale = document.getElementById('modal-orari-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreOrariDaIndex) window.avviaMotoreOrariDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
-        window.apriModaleLink = () => {
+        window.apriModaleLink = async () => {
+            if (window.avviaMotoreLinkDaIndex) await window.avviaMotoreLinkDaIndex();
             const modale = document.getElementById('modal-link-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreLinkDaIndex) window.avviaMotoreLinkDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
-        window.apriModaleDocumenti = () => {
+        window.apriModaleDocumenti = async () => {
+            if (window.avviaMotoreDocumentiDaIndex) await window.avviaMotoreDocumentiDaIndex();
             const modale = document.getElementById('modal-documenti-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreDocumentiDaIndex) window.avviaMotoreDocumentiDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
-        window.apriModaleContatti = () => {
+        window.apriModaleContatti = async () => {
+            if (window.avviaMotoreContattiDaIndex) await window.avviaMotoreContattiDaIndex();
             const modale = document.getElementById('modal-contatti-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreContattiDaIndex) window.avviaMotoreContattiDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
-        window.apriBachecaUtility = () => {
+        window.apriBachecaUtility = async () => {
+            if (window.avviaMotoreBachecaUtilityDaIndex) await window.avviaMotoreBachecaUtilityDaIndex();
             const modale = document.getElementById('modal-bacheca-utility-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreBachecaUtilityDaIndex) window.avviaMotoreBachecaUtilityDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
-        window.apriModaleRubrica = () => {
+        window.apriModaleRubrica = async () => {
+            if (window.avviaMotoreRubricaDaIndex) await window.avviaMotoreRubricaDaIndex();
             const modale = document.getElementById('modal-rubrica-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreRubricaDaIndex) window.avviaMotoreRubricaDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
-        window.apriModaleBachecaTurni = () => {
+        window.apriModaleBachecaTurni = async () => {
+            if (window.avviaMotoreBachecaTurniDaIndex) await window.avviaMotoreBachecaTurniDaIndex();
             const modale = document.getElementById('modal-bachecaturni-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreBachecaTurniDaIndex) window.avviaMotoreBachecaTurniDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
-        window.apriModaleBarcadvisor = () => {
+        window.apriModaleBarcadvisor = async () => {
+            if (window.avviaMotoreBarcadvisorDaIndex) await window.avviaMotoreBarcadvisorDaIndex();
             const modale = document.getElementById('modal-barcadvisor-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreBarcadvisorDaIndex) window.avviaMotoreBarcadvisorDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
-        window.apriModaleBuoniPasto = () => {
+        window.apriModaleBuoniPasto = async () => {
+            if (window.avviaMotoreBuoniPastoDaIndex) await window.avviaMotoreBuoniPastoDaIndex();
             const modale = document.getElementById('modal-buoni-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreBuoniPastoDaIndex) window.avviaMotoreBuoniPastoDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
 
         // --- NUOVE FUNZIONI PONTE AGGIUNTE ---
-        window.apriModaleStatistiche = () => {
+        window.apriModaleStatistiche = async () => {
+            if (window.avviaMotoreStatisticheDaIndex) await window.avviaMotoreStatisticheDaIndex();
             const modale = document.getElementById('modal-statistiche-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreStatisticheDaIndex) window.avviaMotoreStatisticheDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
-        window.apriModaleRotazioni = () => {
+        window.apriModaleRotazioni = async () => {
+            if (window.avviaMotoreRotazioniDaIndex) await window.avviaMotoreRotazioniDaIndex();
             const modale = document.getElementById('modal-rotazioni-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreRotazioniDaIndex) window.avviaMotoreRotazioniDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
-        window.apriModaleRotazioneFerie = () => {
+        window.apriModaleRotazioneFerie = async () => {
+            if (window.avviaMotoreRotazioneFerieDaIndex) await window.avviaMotoreRotazioneFerieDaIndex();
             const modale = document.getElementById('modal-rotazione-ferie-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreRotazioneFerieDaIndex) window.avviaMotoreRotazioneFerieDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
-        window.apriModalePromemoria = () => {
+        window.apriModalePromemoria = async () => {
+            if (window.avviaMotorePromemoriaDaIndex) await window.avviaMotorePromemoriaDaIndex();
             const modale = document.getElementById('modal-promemoria-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotorePromemoriaDaIndex) window.avviaMotorePromemoriaDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
-        window.apriModaleDDS = () => {
+        window.apriModaleDDS = async () => {
+            if (window.avviaMotoreDDSDaIndex) await window.avviaMotoreDDSDaIndex();
             const modale = document.getElementById('modal-dds-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreDDSDaIndex) window.avviaMotoreDDSDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
-        window.apriModaleGuida = () => {
+        window.apriModaleGuida = async () => {
+            if (window.avviaMotoreGuidaDaIndex) await window.avviaMotoreGuidaDaIndex();
             const modale = document.getElementById('modal-guida-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreGuidaDaIndex) window.avviaMotoreGuidaDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
-        window.apriModaleAdmin = () => {
+        window.apriModaleAdmin = async () => {
+            if (window.avviaMotoreAdminDaIndex) await window.avviaMotoreAdminDaIndex();
             const modale = document.getElementById('modal-admin-main');
-            if (modale) { modale.style.display = 'flex'; if(window.avviaMotoreAdminDaIndex) window.avviaMotoreAdminDaIndex(); }
+            if (modale) modale.style.display = 'flex';
         };
     </script>
 </body>

@@ -7,6 +7,9 @@ const ModuliLazyLoader = {
     // Cache per memorizzare i moduli già caricati
     cache: new Map(),
     
+    // Set dei moduli UI già inizializzati
+    initializedUIs: new Set(),
+    
     // Map dei moduli disponibili
     moduli: {
         turni: { motore: './turni.js', ui: './ui_turni.js', exports: ['avviaMotoreTurni', 'initUITurni'] },
@@ -35,16 +38,28 @@ const ModuliLazyLoader = {
      * @returns {Promise<Object>} Oggetto con le funzioni esportate dal modulo
      */
     async caricaModulo(nomeModulo) {
-        // Controlla se il modulo è già in cache
-        if (this.cache.has(nomeModulo)) {
-            console.log(`✓ Modulo '${nomeModulo}' caricato da cache`);
-            return this.cache.get(nomeModulo);
-        }
-        
         const config = this.moduli[nomeModulo];
         if (!config) {
             console.error(`✗ Modulo '${nomeModulo}' non trovato`);
             return null;
+        }
+
+        // Controlla se il modulo è già in cache
+        if (this.cache.has(nomeModulo)) {
+            const cached = this.cache.get(nomeModulo);
+            if (config.exports.some(f => f.startsWith('initUI')) && !this.initializedUIs.has(nomeModulo)) {
+                const initFunc = config.exports.find(f => f.startsWith('initUI'));
+                if (cached[initFunc]) {
+                    try {
+                        cached[initFunc]();
+                        this.initializedUIs.add(nomeModulo);
+                    } catch (initError) {
+                        console.warn(`⚠️ Errore init UI cached '${nomeModulo}':`, initError);
+                    }
+                }
+            }
+            console.log(`✓ Modulo '${nomeModulo}' caricato da cache`);
+            return cached;
         }
         
         try {
@@ -65,6 +80,18 @@ const ModuliLazyLoader = {
             
             // Salva in cache
             this.cache.set(nomeModulo, esporta);
+
+            // Inizializza l'interfaccia UI una sola volta
+            const initFunc = config.exports.find(f => f.startsWith('initUI'));
+            if (initFunc && esporta[initFunc] && !this.initializedUIs.has(nomeModulo)) {
+                try {
+                    esporta[initFunc]();
+                    this.initializedUIs.add(nomeModulo);
+                } catch (initError) {
+                    console.warn(`⚠️ Errore init UI '${nomeModulo}':`, initError);
+                }
+            }
+            
             console.log(`✓ Modulo '${nomeModulo}' caricato con successo`);
             
             return esporta;
