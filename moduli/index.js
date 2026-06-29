@@ -3,8 +3,47 @@ import { getAuth, onAuthStateChanged, GoogleAuthProvider } from "https://www.gst
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
-// Importiamo SOLTANTO il sottomodulo di Autenticazione staticamente all'avvio
+// Importiamo tutti i sottomoduli della SPA
 import { avviaMotoreAuth } from './auth.js';
+import { avviaMotoreSegnalazioni } from './report.js';
+import { avviaMotoreTurni } from './turni.js';
+import { avviaMotoreOrari } from './orari.js';
+import { avviaMotoreLink } from './link.js';
+import { avviaMotoreDocumenti } from './documenti.js';
+import { avviaMotoreContatti } from './contatti.js';
+import { avviaMotoreBachecaUtility } from './bacheca_utility.js';
+import { avviaMotoreRubrica } from './rubrica.js';
+import { avviaMotoreBachecaTurni } from './bacheca_turni.js';
+import { avviaMotoreBarcadvisor } from './barcadvisor.js';
+import { avviaMotoreBuoniPasto } from './buoni_pasto.js';
+import { avviaMotoreStatistiche } from './statistiche.js';
+import { avviaMotoreRotazioni } from './rotazioni.js';
+import { avviaMotoreRotazioneFerie } from './rotazione_ferie.js';
+import { avviaMotorePromemoria } from './promemoria.js';
+import { avviaMotoreDDS } from './dds.js';
+import { avviaMotoreGuida } from './guida.js';
+import { avviaMotoreAdmin } from './admin.js';
+
+// Importiamo tutte le interfacce UI estratte
+import { initUIBuoniPasto } from './ui_buoniPasto.js';
+import { initUITurni } from './ui_turni.js';
+import { initUIBachecaTurni } from './ui_bacheca_turni.js';
+import { initUIBarcadvisor } from './ui_barcadvisor.js';
+import { initUIBachecaUtility } from './ui_bacheca_utility.js';
+import { initUIContatti } from './ui_contatti.js';
+import { initUIDocumenti } from './ui_documenti.js';
+import { initUILink } from './ui_link.js';
+import { initUIOrari } from './ui_orari.js';
+import { initUISegnalazioni } from './ui_report.js';
+import { initUIRubrica } from './ui_rubrica.js';
+import { initUIStatistiche } from './ui_statistiche.js';
+import { initUIRotazioni } from './ui_rotazioni.js';
+import { initUIRotazioneFerie } from './ui_rotazione_ferie.js';
+import { initUIPromemoria } from './ui_promemoria.js';
+import { initUIDDS } from './ui_dds.js';
+import { initUIGuida } from './ui_guida.js';
+import { initUIAdmin } from './ui_admin.js';
+
 
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -19,6 +58,28 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app); 
 const db = getFirestore(app); 
 const provider = new GoogleAuthProvider();
+
+// Inizializziamo le UI nel DOM
+initUIBuoniPasto();
+initUITurni();
+initUIBachecaTurni();
+initUIBarcadvisor();
+initUIBachecaUtility();
+initUIContatti();
+initUIDocumenti();
+initUILink();
+initUIOrari();
+initUISegnalazioni();
+initUIRubrica();
+
+// INIZIALIZZAZIONE NUOVE UI
+initUIStatistiche();
+initUIRotazioni();
+initUIRotazioneFerie();
+initUIPromemoria();
+initUIDDS();
+initUIGuida();
+initUIAdmin();
 
 // Inizializziamo il sottomodulo di Autenticazione e Profilo
 avviaMotoreAuth(auth, db, provider);
@@ -59,6 +120,7 @@ const EMOJI_MAP = {
     report: "🎧", impostazioni: "⚙️", guida: "📖", admin: "🔒", accessi: "👨‍💻"
 };
 
+// AGGIORNATO: Tutte le nuove app ora puntano ai rispettivi onclick invece che agli href
 const DEFAULT_APPS = [
     { id: "oggi", label: "Oggi", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
     { id: "calendario", label: "Calendario", href: "calendario.html", defaultColor: "#0066cc" },
@@ -102,118 +164,25 @@ window.chiudiMenuLaterale = () => {
     const o = document.getElementById('sidebar-overlay'); if(o) o.style.display = 'none'; 
 };
 
-
-// ============================================================================
-// LOGICA LAZY LOADING GESTITA TRAMITE PROXY (INTERCETTATORI)
-// ============================================================================
-window.loadedModules = {}; 
-
-window.createLazyLoadProxy = (moduleKey, uiFile, jsFile, initUiFuncName, origFuncName) => {
-    // Intercettiamo la funzione che le icone cercano di eseguire
-    window[origFuncName] = async () => {
-        const myProxyRef = window[origFuncName]; // Memorizza il riferimento al proxy
-        
-        if (!window.loadedModules[moduleKey]) {
-            document.body.style.cursor = 'wait';
-            try {
-                // Importa e inietta i file HTML
-                const uiMod = await import(uiFile);
-                // Importa la logica
-                const jsMod = await import(jsFile);
-                
-                // Inizializza l'interfaccia
-                if (uiMod[initUiFuncName]) uiMod[initUiFuncName]();
-                
-                // Assicura che le funzioni del motore (.js) siano accessibili globalmente 
-                // così da poter essere chiamate dai vari controlli
-                for (let key in jsMod) {
-                    window[key] = jsMod[key];
-                }
-                
-                window.loadedModules[moduleKey] = true;
-            } catch(e) {
-                console.error("Errore Lazy Load per " + moduleKey, e);
-                alert("Errore di caricamento app.");
-            }
-            document.body.style.cursor = 'default';
-        }
-        
-        // Se scaricando il file, la funzione originale "apriModale..." si è sovrascritta (com'è giusto che sia),
-        // allora eseguiamola istantaneamente!
-        if (window[origFuncName] !== myProxyRef) {
-            window[origFuncName]();
-        } else {
-            console.warn(`Attenzione: Il modulo ${jsFile} non ha definito ${origFuncName}`);
-        }
-    };
-};
-
-// Generiamo tutti i proxy per intercettare i click provenienti dal Layout Engine:
-window.createLazyLoadProxy('statistiche', './ui_statistiche.js', './statistiche.js', 'initUIStatistiche', 'apriModaleStatistiche');
-window.createLazyLoadProxy('rotazioni', './ui_rotazioni.js', './rotazioni.js', 'initUIRotazioni', 'apriModaleRotazioni');
-window.createLazyLoadProxy('turni', './ui_turni.js', './turni.js', 'initUITurni', 'apriModaleTurni');
-window.createLazyLoadProxy('bacheca_turni', './ui_bacheca_turni.js', './bacheca_turni.js', 'initUIBachecaTurni', 'apriModaleBachecaTurni');
-window.createLazyLoadProxy('barcadvisor', './ui_barcadvisor.js', './barcadvisor.js', 'initUIBarcadvisor', 'apriModaleBarcadvisor');
-window.createLazyLoadProxy('rubrica', './ui_rubrica.js', './rubrica.js', 'initUIRubrica', 'apriModaleRubrica');
-window.createLazyLoadProxy('rotazione_ferie', './ui_rotazione_ferie.js', './rotazione_ferie.js', 'initUIRotazioneFerie', 'apriModaleRotazioneFerie');
-window.createLazyLoadProxy('orari', './ui_orari.js', './orari.js', 'initUIOrari', 'apriModaleOrari');
-window.createLazyLoadProxy('documenti', './ui_documenti.js', './documenti.js', 'initUIDocumenti', 'apriModaleDocumenti');
-window.createLazyLoadProxy('link', './ui_link.js', './link.js', 'initUILink', 'apriModaleLink');
-window.createLazyLoadProxy('contatti', './ui_contatti.js', './contatti.js', 'initUIContatti', 'apriModaleContatti');
-window.createLazyLoadProxy('buoni_pasto', './ui_buoniPasto.js', './buoni_pasto.js', 'initUIBuoniPasto', 'apriModaleBuoniPasto');
-window.createLazyLoadProxy('promemoria', './ui_promemoria.js', './promemoria.js', 'initUIPromemoria', 'apriModalePromemoria');
-window.createLazyLoadProxy('dds', './ui_dds.js', './dds.js', 'initUIDDS', 'apriModaleDDS');
-window.createLazyLoadProxy('guida', './ui_guida.js', './guida.js', 'initUIGuida', 'apriModaleGuida');
-window.createLazyLoadProxy('admin', './ui_admin.js', './admin.js', 'initUIAdmin', 'apriModaleAdmin');
-
-// --- LE APP CON CARICAMENTO LAZY MANUALE (perchè non richiamate tramite apriModale) ---
-
-window.apriMainModaleSegnalazioni = async () => {
-    if (!window.loadedModules['segnalazioni']) {
-        document.body.style.cursor = 'wait';
-        try {
-            const ui = await import('./ui_report.js');
-            const js = await import('./report.js');
-            if(ui.initUISegnalazioni) ui.initUISegnalazioni();
-            if(js.avviaMotoreSegnalazioni) window.avviaMotoreSegnalazioni = js.avviaMotoreSegnalazioni;
-            window.loadedModules['segnalazioni'] = true;
-        } catch(e) {}
-        document.body.style.cursor = 'default';
-    }
+window.apriMainModaleSegnalazioni = () => {
     window.apriModal('modal-segnalazioni-main');
-    if (auth.currentUser && window.avviaMotoreSegnalazioni) { window.avviaMotoreSegnalazioni(db, auth, auth.currentUser.uid, globalIsAdmin); }
-};
-
-window.avviaMotoreBachecaUtilityDaIndex = async () => {
-    if (!window.loadedModules['bacheca_utility']) {
-        document.body.style.cursor = 'wait';
-        try {
-            const ui = await import('./ui_bacheca_utility.js');
-            const js = await import('./bacheca_utility.js');
-            if(ui.initUIBachecaUtility) ui.initUIBachecaUtility();
-            if(js.avviaMotoreBachecaUtility) window.avviaMotoreBachecaUtility = js.avviaMotoreBachecaUtility;
-            window.loadedModules['bacheca_utility'] = true;
-        } catch(e) {}
-        document.body.style.cursor = 'default';
+    if (auth.currentUser) {
+        avviaMotoreSegnalazioni(db, auth, auth.currentUser.uid, globalIsAdmin);
     }
-    const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
-    if(window.avviaMotoreBachecaUtility) window.avviaMotoreBachecaUtility(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
 };
-
-// ============================================================================
-// CONTROLLI DI SICUREZZA ORIGINALI (Chiamati all'apertura delle app)
-// ============================================================================
 
 window.avviaMotoreTurniDaIndex = () => {
     if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai turni."); return; }
     if (window.currentUserData) {
-        if (window.currentUserData.turni_banned === true) { alert("Il tuo accesso alla pagina Turni è stato temporaneamente revocato."); return; }
+        if (window.currentUserData.turni_banned === true) {
+            alert("Il tuo accesso alla pagina Turni è stato temporaneamente revocato."); return;
+        }
         if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined || window.currentUserData.matricola === "") {
             alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per visualizzare i turni.");
             window.apriModal('profileModal'); return;
         }
     }
-    if(window.avviaMotoreTurni) window.avviaMotoreTurni();
+    avviaMotoreTurni();
     const oggiStr = new Date().toISOString().split('T')[0];
     if (window.currentUserData && (window.currentUserData.turni_access !== true || window.currentUserData.last_turni_access !== oggiStr)) {
         setDoc(doc(db, "utenti", auth.currentUser.uid), { turni_access: true, last_turni_access: oggiStr }, { merge: true });
@@ -222,18 +191,21 @@ window.avviaMotoreTurniDaIndex = () => {
 };
 
 window.avviaMotoreOrariDaIndex = () => {
-    if(window.avviaMotoreOrari) window.avviaMotoreOrari();
+    avviaMotoreOrari();
 };
 
 window.avviaMotoreLinkDaIndex = () => {
     if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai link aziendali."); return; }
     if (window.currentUserData) {
-        if (window.currentUserData.link_banned === true) { alert("L'accesso ai Link ti è stato revocato da un Amministratore."); return; }
+        if (window.currentUserData.link_banned === true) {
+            alert("L'accesso ai Link ti è stato revocato da un Amministratore."); return;
+        }
         if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined) {
-            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per accedere."); window.apriModal('profileModal'); return;
+            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per accedere.");
+            window.apriModal('profileModal'); return;
         }
     }
-    if(window.avviaMotoreLink) window.avviaMotoreLink();
+    avviaMotoreLink();
     const oggiStr = new Date().toISOString().split('T')[0];
     if (window.currentUserData && (window.currentUserData.link_access !== true || window.currentUserData.last_link_access !== oggiStr)) {
         setDoc(doc(db, "utenti", auth.currentUser.uid), { link_access: true, last_link_access: oggiStr }, { merge: true });
@@ -244,12 +216,15 @@ window.avviaMotoreLinkDaIndex = () => {
 window.avviaMotoreDocumentiDaIndex = () => {
     if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai documenti."); return; }
     if (window.currentUserData) {
-        if (window.currentUserData.documenti_banned === true) { alert("L'accesso ai Documenti ti è stato revocato da un Amministratore."); return; }
+        if (window.currentUserData.documenti_banned === true) {
+            alert("L'accesso ai Documenti ti è stato revocato da un Amministratore."); return;
+        }
         if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined) {
-            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per accedere all'archivio."); window.apriModal('profileModal'); return;
+            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per accedere all'archivio.");
+            window.apriModal('profileModal'); return;
         }
     }
-    if(window.avviaMotoreDocumenti) window.avviaMotoreDocumenti();
+    avviaMotoreDocumenti();
     const oggiStr = new Date().toISOString().split('T')[0];
     if (window.currentUserData && (window.currentUserData.documenti_access !== true || window.currentUserData.last_documenti_access !== oggiStr)) {
         setDoc(doc(db, "utenti", auth.currentUser.uid), { documenti_access: true, last_documenti_access: oggiStr }, { merge: true });
@@ -260,12 +235,15 @@ window.avviaMotoreDocumentiDaIndex = () => {
 window.avviaMotoreContattiDaIndex = () => {
     if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai contatti aziendali."); return; }
     if (window.currentUserData) {
-        if (window.currentUserData.contatti_banned === true) { alert("L'accesso ai Contatti ti è stato revocato da un Amministratore."); return; }
+        if (window.currentUserData.contatti_banned === true) {
+            alert("L'accesso ai Contatti ti è stato revocato da un Amministratore."); return;
+        }
         if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined) {
-            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per accedere ai contatti."); window.apriModal('profileModal'); return;
+            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per accedere ai contatti.");
+            window.apriModal('profileModal'); return;
         }
     }
-    if(window.avviaMotoreContatti) window.avviaMotoreContatti();
+    avviaMotoreContatti();
     const oggiStr = new Date().toISOString().split('T')[0];
     if (window.currentUserData && (window.currentUserData.contatti_access !== true || window.currentUserData.last_contatti_access !== oggiStr)) {
         setDoc(doc(db, "utenti", auth.currentUser.uid), { contatti_access: true, last_contatti_access: oggiStr }, { merge: true });
@@ -273,67 +251,109 @@ window.avviaMotoreContattiDaIndex = () => {
     }
 };
 
+window.avviaMotoreBachecaUtilityDaIndex = () => {
+    const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
+    avviaMotoreBachecaUtility(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
+};
+
 window.avviaMotoreRubricaDaIndex = () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
-    if(window.avviaMotoreRubrica) window.avviaMotoreRubrica(db, auth, window.currentUserData, globalIsAdmin);
+    if (window.currentUserData && window.currentUserData.app_banned === true) {
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return;
+    }
+    avviaMotoreRubrica(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreBachecaTurniDaIndex = () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
-    if(window.avviaMotoreBachecaTurni) window.avviaMotoreBachecaTurni(db, auth, window.currentUserData, globalIsAdmin);
+    if (window.currentUserData && window.currentUserData.app_banned === true) {
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return;
+    }
+    avviaMotoreBachecaTurni(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreBarcadvisorDaIndex = () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
-    if(window.avviaMotoreBarcadvisor) window.avviaMotoreBarcadvisor(db, auth, window.currentUserData, globalIsAdmin);
+    if (window.currentUserData && window.currentUserData.app_banned === true) {
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return;
+    }
+    avviaMotoreBarcadvisor(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreBuoniPastoDaIndex = () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
-    if(window.avviaMotoreBuoniPasto) window.avviaMotoreBuoniPasto(db, auth, window.currentUserData, globalIsAdmin);
+    if (window.currentUserData && window.currentUserData.app_banned === true) {
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return;
+    }
+    avviaMotoreBuoniPasto(db, auth, window.currentUserData, globalIsAdmin);
 };
 
+// ============================================================================
+// NUOVE FUNZIONI PONTE AGGIUNTE
+// ============================================================================
+
 window.avviaMotoreStatisticheDaIndex = () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
-    if(window.avviaMotoreStatistiche) window.avviaMotoreStatistiche(db, auth, window.currentUserData, globalIsAdmin);
+    if (window.currentUserData && window.currentUserData.app_banned === true) {
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return;
+    }
+    avviaMotoreStatistiche(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreRotazioniDaIndex = () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
-    if(window.avviaMotoreRotazioni) window.avviaMotoreRotazioni(db, auth, window.currentUserData, globalIsAdmin);
+    if (window.currentUserData && window.currentUserData.app_banned === true) {
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return;
+    }
+    avviaMotoreRotazioni(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreRotazioneFerieDaIndex = () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
-    if(window.avviaMotoreRotazioneFerie) window.avviaMotoreRotazioneFerie(db, auth, window.currentUserData, globalIsAdmin);
+    if (window.currentUserData && window.currentUserData.app_banned === true) {
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return;
+    }
+    avviaMotoreRotazioneFerie(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotorePromemoriaDaIndex = () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
-    if(window.avviaMotorePromemoria) window.avviaMotorePromemoria(db, auth, window.currentUserData, globalIsAdmin);
+    if (window.currentUserData && window.currentUserData.app_banned === true) {
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return;
+    }
+    avviaMotorePromemoria(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreDDSDaIndex = () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
-    if(window.avviaMotoreDDS) window.avviaMotoreDDS(db, auth, window.currentUserData, globalIsAdmin);
+    if (window.currentUserData && window.currentUserData.app_banned === true) {
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return;
+    }
+    avviaMotoreDDS(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreGuidaDaIndex = () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
-    if(window.avviaMotoreGuida) window.avviaMotoreGuida(db, auth, window.currentUserData, globalIsAdmin);
+    if (window.currentUserData && window.currentUserData.app_banned === true) {
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return;
+    }
+    avviaMotoreGuida(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreAdminDaIndex = () => {
-    if (!globalIsAdmin) { alert("Accesso negato. Solo gli amministratori possono accedere a questa sezione."); return; }
-    if(window.avviaMotoreAdmin) window.avviaMotoreAdmin(db, auth, window.currentUserData, globalIsAdmin);
+    if (!globalIsAdmin) {
+        alert("Accesso negato. Solo gli amministratori possono accedere a questa sezione."); 
+        return;
+    }
+    avviaMotoreAdmin(db, auth, window.currentUserData, globalIsAdmin);
 };
-
 // ============================================================================
 
 
 window.controllaBacheca = async () => {
     if (!auth.currentUser) return;
     try {
+        // CORREZIONE 1: Scegliamo SEMPRE il timestamp più recente tra quello scaricato dal DB e quello nel telefono.
         let fbAccess = parseInt(window.currentUserData?.ultimo_accesso_bacheca || 0);
         let localAccess = parseInt(localStorage.getItem('ultimo_accesso_bacheca') || 0);
         let ultimoAccesso = Math.max(fbAccess, localAccess);
@@ -360,7 +380,10 @@ window.controllaBacheca = async () => {
                 if (!rotazioneUtente || !m.target.includes(rotazioneUtente)) return;
             }
 
+            // CORREZIONE 2: Assicuriamoci che il singolo messaggio non sia mai stato già visualizzato localmente
             const giaLetto = localStorage.getItem('letto_' + d.id);
+
+            // Aggiungiamo il !giaLetto alla condizione
             if (m.timestamp > ultimoAccesso && !giaLetto) {
                 if (m.tipo === "dds") avvisiDDS.push(m.titolo_dds);
                 else avvisiNormali++;
@@ -369,6 +392,7 @@ window.controllaBacheca = async () => {
 
         let totali = avvisiNormali + avvisiDDS.length;
 
+        // CORREZIONE 3: Obblighiamo il sistema a nascondere fisicamente banner e badge se il totale calcolato è zero
         const badge = document.getElementById('badge-messaggi');
         if (badge) { 
             if (totali > 0) { badge.innerText = totali; badge.style.display = 'flex'; }
@@ -395,7 +419,11 @@ window.controllaBacheca = async () => {
     } catch(e) { console.error("Errore check bacheca:", e); }
 };
 
+// ============================================================================
+// --- INIZIO AGGIUNTA: GESTIONE RIMOZIONE E SALVATAGGIO AVVISI VISIVI ALL'APERTURA DELLA BACHECA ---
+// ============================================================================
 window.addEventListener('bacheca-utility-letta', async () => {
+    // 1. Nascondiamo visivamente gli elementi
     const badge = document.getElementById('badge-messaggi');
     if (badge) badge.style.display = 'none';
     
@@ -405,18 +433,30 @@ window.addEventListener('bacheca-utility-letta', async () => {
     const bannerDDS = document.getElementById('banner-dds-alert');
     if (bannerDDS) bannerDDS.style.display = 'none';
 
+    // 2. Salviamo il nuovo timestamp per impedire che ricompaiano al refresh della pagina
     const now = Date.now();
     localStorage.setItem('ultimo_accesso_bacheca', now);
     
-    if (window.currentUserData) { window.currentUserData.ultimo_accesso_bacheca = now; }
+    if (window.currentUserData) {
+        window.currentUserData.ultimo_accesso_bacheca = now;
+    }
+    
     if (auth.currentUser) {
-        try { await setDoc(doc(db, "utenti", auth.currentUser.uid), { ultimo_accesso_bacheca: now }, { merge: true }); } catch(e) {}
+        try {
+            await setDoc(doc(db, "utenti", auth.currentUser.uid), { ultimo_accesso_bacheca: now }, { merge: true });
+        } catch(e) {
+            console.error("Errore salvataggio ultimo accesso bacheca:", e);
+        }
     }
 });
+// ============================================================================
+// --- FINE AGGIUNTA ---
+// ============================================================================
 
 window.controllaRichiesteSospese = async () => {
     if (!globalIsAdmin && !globalIsCollab) return;
     try {
+        // Se l'utente è un collaboratore, recupero prima i suoi permessi_gestione dalla nuova raccolta
         let permessiGestione = [];
         if (globalIsCollab && auth.currentUser) {
             const myPermsSnap = await getDoc(doc(db, "permessi_rotazioni", auth.currentUser.uid));
@@ -431,7 +471,11 @@ window.controllaRichiesteSospese = async () => {
         
         snap.forEach(d => {
             const p = d.data();
-            if (globalIsAdmin) { count++; } else if (globalIsCollab && permessiGestione.includes(p.rotazione_richiesta)) { count++; }
+            if (globalIsAdmin) {
+                count++;
+            } else if (globalIsCollab && permessiGestione.includes(p.rotazione_richiesta)) {
+                count++;
+            }
         });
         
         const btnRot = document.getElementById('btn-rotazioni');
@@ -440,7 +484,7 @@ window.controllaRichiesteSospese = async () => {
             if (b) b.remove();
             if (count > 0) btnRot.insertAdjacentHTML('beforeend', `<div class="badge-notif">${count}</div>`);
         }
-    } catch(e) { console.error("Errore check richieste:", e); }
+    } catch(e) { console.error("Errore check richieste rotazioni:", e); }
 };
 
 window.controllaPromemoria = async () => {
@@ -558,7 +602,10 @@ window.inizializzaNotificheSeNativa = async (userData) => {
             const PushNotifications = window.Capacitor.Plugins.PushNotifications;
             PushNotifications.addListener('registration', async (token) => {
                 if (auth.currentUser) {
-                    await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: token.value, device_type: 'android_app' }, { merge: true });
+                    await setDoc(doc(db, "utenti", auth.currentUser.uid), {
+                        fcm_token: token.value,
+                        device_type: 'android_app'
+                    }, { merge: true });
                     aggiornaGraficaPermessi(true);
                 }
             });
@@ -578,10 +625,15 @@ window.inizializzaNotificheSeNativa = async (userData) => {
                         serviceWorkerRegistration: swRegistration
                     });
                     if (token && auth.currentUser) {
-                        await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: token, device_type: 'pwa_web' }, { merge: true });
+                        await setDoc(doc(db, "utenti", auth.currentUser.uid), {
+                            fcm_token: token,
+                            device_type: 'pwa_web'
+                        }, { merge: true });
                     }
                 } catch (e) { console.warn("Nessun token web ottenuto:", e); }
-            } else { aggiornaGraficaPermessi(false); }
+            } else {
+                aggiornaGraficaPermessi(false);
+            }
         }
     }
 };
@@ -620,7 +672,10 @@ window.gestisciNotificheNative = async () => {
                         serviceWorkerRegistration: swRegistration
                     });
                     if (token && auth.currentUser) {
-                        await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: token, device_type: 'pwa_web' }, { merge: true });
+                        await setDoc(doc(db, "utenti", auth.currentUser.uid), {
+                            fcm_token: token,
+                            device_type: 'pwa_web'
+                        }, { merge: true });
                     }
                 } catch (e) { console.error("Errore recupero token FCM Web:", e); }
             } else {
@@ -640,7 +695,9 @@ window.disattivaNotifiche = async () => {
     statusText.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Disattivazione in corso...";
     
     try {
-        if (auth.currentUser) { await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: null, device_type: null }, { merge: true }); }
+        if (auth.currentUser) {
+            await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: null, device_type: null }, { merge: true });
+        }
         const isWeb = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
         if (isWeb) {
             try { const messaging = getMessaging(app); await deleteToken(messaging); } 
