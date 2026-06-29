@@ -47,14 +47,21 @@ function renderizzaContatti(filtroTestuale) {
     }
 
     const termineRicerca = filtroTestuale.toLowerCase().trim();
+    // Versione senza spazi per permettere di cercare numeri formattati diversamente
+    const termineSenzaSpazi = termineRicerca.replace(/\s+/g, '');
     let contattiTrovati = 0;
 
     datiContattiCache.contatti.forEach(categoriaObj => {
         // Filtra in base al nome o al valore (numero/email)
         const elementiFiltrati = categoriaObj.elementi.filter(contatto => {
             if (!termineRicerca) return true;
-            return contatto.nome.toLowerCase().includes(termineRicerca) || 
-                   contatto.valore.toLowerCase().includes(termineRicerca);
+            
+            const matchNome = contatto.nome.toLowerCase().includes(termineRicerca);
+            // Tolgo gli spazi anche dal valore in rubrica per un confronto corretto
+            const valoreSenzaSpazi = contatto.valore.toLowerCase().replace(/\s+/g, '');
+            const matchValore = valoreSenzaSpazi.includes(termineSenzaSpazi);
+            
+            return matchNome || matchValore;
         });
 
         if (elementiFiltrati.length === 0) return; // Salta la categoria se vuota dopo il filtro
@@ -74,36 +81,28 @@ function renderizzaContatti(filtroTestuale) {
             row.className = "contact-row";
             row.style.animationDelay = `${index * 0.05}s`;
             
-            // Impostiamo stili inline per garantire la disposizione a rubrica (senza toccare il tuo CSS)
+            // Layout a colonna: Nome sopra, poi contenitore flex per Numero + Bottoni
             row.style.display = "flex";
-            row.style.justifyContent = "space-between";
-            row.style.alignItems = "center";
-            row.style.gap = "10px";
+            row.style.flexDirection = "column";
+            row.style.gap = "6px";
 
-            // --- Blocco Informazioni (Nome sopra, Valore sotto) ---
-            const infoContainer = document.createElement('div');
-            infoContainer.style.display = "flex";
-            infoContainer.style.flexDirection = "column";
-            infoContainer.style.flex = "1";
-            infoContainer.style.overflow = "hidden"; // Previene sfasamenti per testi lunghi
-
+            // --- Riga 1: Nome (libero di andare a capo, non tagliato) ---
             const nomeEl = document.createElement('div');
             nomeEl.style.fontWeight = "bold";
             nomeEl.style.color = "var(--text-color)";
             nomeEl.style.fontSize = "15px";
-            nomeEl.style.whiteSpace = "nowrap";
-            nomeEl.style.overflow = "hidden";
-            nomeEl.style.textOverflow = "ellipsis";
             nomeEl.textContent = contatto.nome;
+
+            // --- Riga 2: Valore e Azioni ---
+            const bottomRow = document.createElement('div');
+            bottomRow.style.display = "flex";
+            bottomRow.style.justifyContent = "space-between";
+            bottomRow.style.alignItems = "center";
 
             const valoreEl = document.createElement('div');
             valoreEl.style.color = "var(--text-muted)";
-            valoreEl.style.fontSize = "13px";
-            valoreEl.style.marginTop = "2px";
+            valoreEl.style.fontSize = "14px";
             valoreEl.textContent = contatto.valore;
-
-            infoContainer.appendChild(nomeEl);
-            infoContainer.appendChild(valoreEl);
 
             // --- Blocco Azioni (Bottoni a destra) ---
             const actionContainer = document.createElement('div');
@@ -112,7 +111,7 @@ function renderizzaContatti(filtroTestuale) {
 
             const btn = document.createElement('a');
             btn.className = "link-btn";
-            // Rendiamo compatti i bottoni rispetto allo stile precedente
+            // Rendiamo compatti i bottoni
             btn.style.padding = "8px 12px";
             btn.style.margin = "0";
             btn.style.display = "flex";
@@ -146,9 +145,12 @@ function renderizzaContatti(filtroTestuale) {
             actionContainer.appendChild(btn);
             actionContainer.appendChild(copyBtn);
 
-            // Aggiunta alla riga
-            row.appendChild(infoContainer);
-            row.appendChild(actionContainer);
+            // Composizione
+            bottomRow.appendChild(valoreEl);
+            bottomRow.appendChild(actionContainer);
+
+            row.appendChild(nomeEl);
+            row.appendChild(bottomRow);
             block.appendChild(row);
         });
 
