@@ -470,7 +470,10 @@
         <div class="header">
             <div class="header-side">
                 <button id="btnOpenLogin" class="btn-header-alt" style="display:none; color: var(--danger); border-color: var(--danger);" onclick="window.apriModal('authModal', 'login')"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
-                <button id="btnOpenProfile" class="btn-header-alt" onclick="window.apriModal('profileModal')"><i class="fa-solid fa-user-astronaut"></i> Profilo</button>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fa-solid fa-circle-question" style="font-size: 26px; cursor: pointer; color: var(--primary); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="window.apriModaleGuida()"></i>
+                    <i id="btnOpenProfile" class="fa-solid fa-circle-user" style="font-size: 26px; cursor: pointer; color: var(--primary); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="window.apriModal('profileModal')"></i>
+                </div>
             </div>
             <div class="header-center">
                 <h2 id="main-title"><img src="icon-512.png" alt="U">tility</h2>
