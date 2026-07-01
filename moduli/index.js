@@ -281,16 +281,6 @@ window.chiudiMenuLaterale = () => {
     const o = document.getElementById('sidebar-overlay'); if(o) o.style.display = 'none'; 
 };
 
-window.apriMainModaleSegnalazioni = async () => {
-    window.apriModal('modal-segnalazioni-main');
-    if (auth.currentUser) {
-        const modulo = await ModuliLazyLoader.avviaMotore('report');
-        if (modulo) {
-            modulo(db, auth, auth.currentUser.uid, globalIsAdmin);
-        }
-    }
-};
-
 window.avviaMotoreTurniDaIndex = async () => {
     if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai turni."); return; }
     if (window.currentUserData) {
@@ -421,6 +411,19 @@ window.avviaMotoreBuoniPastoDaIndex = async () => {
 // ============================================================================
 // NUOVE FUNZIONI PONTE AGGIUNTE (CON LAZY LOADING)
 // ============================================================================
+
+window.avviaMotoreSegnalazioniDaIndex = async () => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) {
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return;
+    }
+    if (auth.currentUser) {
+        const modulo = await ModuliLazyLoader.avviaMotore('report');
+        if (modulo) {
+            modulo(db, auth, auth.currentUser.uid, globalIsAdmin);
+        }
+    }
+};
 
 window.avviaMotoreStatisticheDaIndex = async () => {
     if (window.currentUserData && window.currentUserData.app_banned === true) {
