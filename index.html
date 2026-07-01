@@ -930,8 +930,6 @@
             const modale = document.getElementById('modal-buoni-main');
             if (modale) modale.style.display = 'flex';
         };
-
-        // --- NUOVE FUNZIONI PONTE AGGIUNTE ---
         window.apriModaleStatistiche = async () => {
             if (window.avviaMotoreStatisticheDaIndex) await window.avviaMotoreStatisticheDaIndex();
             const modale = document.getElementById('modal-statistiche-main');
@@ -965,6 +963,13 @@
         window.apriModaleAdmin = async () => {
             if (window.avviaMotoreAdminDaIndex) await window.avviaMotoreAdminDaIndex();
             const modale = document.getElementById('modal-admin-main');
+            if (modale) modale.style.display = 'flex';
+        };
+
+        // --- FUNZIONE AGGIUNTA PER SEGNALAZIONI (REPORT) ---
+        window.apriMainModaleSegnalazioni = async () => {
+            if (window.avviaMotoreSegnalazioniDaIndex) await window.avviaMotoreSegnalazioniDaIndex();
+            const modale = document.getElementById('modal-segnalazioni-main') || document.getElementById('modal-segnalazione-main');
             if (modale) modale.style.display = 'flex';
         };
     </script>
