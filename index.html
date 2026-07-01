@@ -132,10 +132,11 @@
         :root[data-theme="dark"] .skeleton { background: linear-gradient(90deg, var(--surface) 25%, #2f333d 50%, var(--surface) 75%); background-size: 200% 100%; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-        .view-container { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; animation: fadeSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-        #view-app { position: fixed !important; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 440px; height: 100vh; height: 100dvh; margin: 0; padding: 0; z-index: 50; }
-
+        /* --- CONTENITORI RESPONSIVI --- */
+        .view-container { width: 100%; max-width: 1200px; display: none; flex-direction: column; align-items: center; animation: fadeSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        #view-app { position: fixed !important; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 1200px; height: 100vh; height: 100dvh; margin: 0; padding: 0; z-index: 50; }
+        .card-panel { width: 100%; max-width: 440px; margin: 0 auto; }
+        
         #view-app .header { position: absolute; top: 0; left: 0; width: 100%; padding: calc(20px + env(safe-area-inset-top, 0px)) 20px 10px 20px; margin: 0; box-sizing: border-box; z-index: 100; background: transparent; display: flex; justify-content: space-between; align-items: center; }
 
         .scroll-area { width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; padding: calc(95px + env(safe-area-inset-top, 0px)) 20px 40px 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; -webkit-mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(65px + env(safe-area-inset-top, 0px)), black calc(120px + env(safe-area-inset-top, 0px)), black 100%); mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(65px + env(safe-area-inset-top, 0px)), black calc(120px + env(safe-area-inset-top, 0px)), black 100%); -ms-overflow-style: none; scrollbar-width: none; }
@@ -156,7 +157,7 @@
         .btn-header-alt:active { transform: scale(0.92) translateY(2px); }
         .btn-header-alt:hover { border-color: var(--primary); color: var(--primary); box-shadow: 0 6px 12px var(--primary-glow); }
 
-        #app-container { width: 100%; max-width: 440px; }
+        #app-container { width: 100%; max-width: 1200px; margin: 0 auto; }
         .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px 0; justify-items: center; padding: 10px 0; width: 100%; }
         
         .app-grid .app-btn { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-decoration: none; cursor: pointer; position: relative; width: 100%; min-width: 0; animation: slideInUpBouncy 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
@@ -234,7 +235,7 @@
 
         .badge-notif { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; min-width: 22px; height: 22px; padding: 0 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(217,48,37,0.4); border: 2px solid var(--surface); z-index: 20; pointer-events: none; }
 
-        .banner-alert { padding: 14px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 20px; width: 100%; max-width: 440px; cursor: pointer; box-shadow: var(--shadow-md); display:flex; align-items:center; justify-content:center; gap:10px; transition: var(--transition); animation: slideInUpBouncy 0.5s ease both, breathe 3s infinite ease-in-out 0.5s;}
+        .banner-alert { padding: 14px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 20px; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; cursor: pointer; box-shadow: var(--shadow-md); display:flex; align-items:center; justify-content:center; gap:10px; transition: var(--transition); animation: slideInUpBouncy 0.5s ease both, breathe 3s infinite ease-in-out 0.5s;}
         .banner-alert:active { transform: scale(0.96); }
         .banner-yellow { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
         .banner-red { background: var(--danger); color: white; }
@@ -368,6 +369,26 @@
         .bp-slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
         .bp-switch input:checked + .bp-slider { background-color: var(--success); }
         .bp-switch input:checked + .bp-slider:before { transform: translateX(24px); }
+
+        /* ================================================================= */
+        /* --- RESPONSIVITÀ PER TABLET E DESKTOP ---                         */
+        /* ================================================================= */
+        @media (min-width: 576px) {
+            .app-grid { grid-template-columns: repeat(5, 1fr); gap: 32px 0; }
+        }
+        @media (min-width: 768px) {
+            .app-grid { grid-template-columns: repeat(6, 1fr); gap: 36px 0; }
+            .app-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; align-items: start; }
+            .app-list .app-btn { width: 100%; margin: 0; }
+        }
+        @media (min-width: 992px) {
+            .app-grid { grid-template-columns: repeat(8, 1fr); gap: 42px 0; }
+            .app-list { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (min-width: 1200px) {
+            .app-grid { grid-template-columns: repeat(10, 1fr); gap: 48px 0; }
+            .app-list { grid-template-columns: repeat(4, 1fr); }
+        }
         
     </style>
 </head>
@@ -424,13 +445,13 @@
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleAdmin(); return false;" class="sidebar-link" id="menu-admin" style="display:none; color: var(--danger); font-weight: bold;"><i class="fa-solid fa-lock" style="color: var(--danger);"></i> Admin</a>
     </div>
 
-    <div id="view-loading" class="view-container" style="display: flex; justify-content: flex-start; align-items: center; height: 100vh; width: 100%; padding-top: 60px;">
-        <div style="width: 100%; max-width: 440px; padding: 20px; display:flex; justify-content:space-between; align-items:center;">
+    <div id="view-loading" class="view-container" style="display: flex; justify-content: flex-start; align-items: center; height: 100vh; padding-top: 60px;">
+        <div style="width: 100%; padding: 20px; display:flex; justify-content:space-between; align-items:center;">
             <div class="skeleton" style="width: 80px; height: 35px; border-radius: 20px;"></div>
             <div class="skeleton" style="width: 120px; height: 35px; border-radius: 8px;"></div>
             <div class="skeleton" style="width: 90px; height: 35px; border-radius: 20px;"></div>
         </div>
-        <div style="width: 100%; max-width: 440px; padding: 10px 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px 0; justify-items: center; margin-top:20px;">
+        <div class="app-grid" style="width: 100%; margin-top:20px;">
             <div style="display:flex; flex-direction:column; align-items:center;"><div class="skeleton" style="width:62px; height:62px; border-radius:18px; margin-bottom:10px;"></div><div class="skeleton" style="width:50px; height:12px; border-radius:4px;"></div></div>
             <div style="display:flex; flex-direction:column; align-items:center;"><div class="skeleton" style="width:62px; height:62px; border-radius:18px; margin-bottom:10px;"></div><div class="skeleton" style="width:50px; height:12px; border-radius:4px;"></div></div>
             <div style="display:flex; flex-direction:column; align-items:center;"><div class="skeleton" style="width:62px; height:62px; border-radius:18px; margin-bottom:10px;"></div><div class="skeleton" style="width:50px; height:12px; border-radius:4px;"></div></div>
@@ -518,7 +539,7 @@
             </div>
 
             <div id="app-container" class="app-grid"></div>
-            <button id="btn-salva-layout" class="btn-action" style="display: none; background: #ff9800; color: white; margin-top: 30px; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4); width:100%; max-width:440px;" onclick="window.LayoutEngine.toggleEditMode()"><i class="fa-solid fa-check"></i> Fatto (Salva Layout)</button>
+            <button id="btn-salva-layout" class="btn-action" style="display: none; background: #ff9800; color: white; margin-top: 30px; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4); width:100%; max-width:440px; margin-left: auto; margin-right: auto;" onclick="window.LayoutEngine.toggleEditMode()"><i class="fa-solid fa-check"></i> Fatto (Salva Layout)</button>
         </div>
     </div> 
 
