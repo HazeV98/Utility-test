@@ -228,14 +228,14 @@ const ICON_MAP = {
     rubrica: "fa-solid fa-address-book", ferie: "fa-solid fa-umbrella-beach", orari: "fa-regular fa-clock",
     documenti: "fa-solid fa-file-lines", link: "fa-solid fa-link", contatti: "fa-solid fa-id-card",
     buoni: "fa-solid fa-utensils", promemoria: "fa-solid fa-stopwatch", dds: "fa-solid fa-box-archive",
-    report: "fa-solid fa-headset", impostazioni: "fa-solid fa-gear", guida: "fa-solid fa-book", admin: "fa-solid fa-lock", accessi: "fa-solid fa-users-gear"
+    report: "fa-solid fa-headset", impostazioni: "fa-solid fa-gear", admin: "fa-solid fa-lock", accessi: "fa-solid fa-users-gear"
 };
 
 const EMOJI_MAP = {
     oggi: "🎯", calendario: "📅", statistiche: "📊", rotazioni: "👥", turni: "🔄",
     bachecaturni: "🤝", rubrica: "📒", ferie: "⛱️", orari: "🕒", documenti: "📄",
     link: "🔗", contatti: "🪪", buoni: "🍽️", promemoria: "⏱️", dds: "🗃️",
-    report: "🎧", impostazioni: "⚙️", guida: "📖", admin: "🔒", accessi: "👨‍💻"
+    report: "🎧", impostazioni: "⚙️", admin: "🔒", accessi: "👨‍💻"
 };
 
 // AGGIORNATO: Tutte le nuove app ora puntano ai rispettivi onclick invece che agli href
@@ -267,7 +267,6 @@ const DEFAULT_APPS = [
     { id: "impostazioni", label: "Impostazioni", onclick: "window.apriModal('settingsModal')", defaultColor: "#8e8e93" },
     { id: "spriss", label: "Spriss", image: "icone_app/iconspriss.png", href: "https://spriss.avmspa.it/" },
     
-    { id: "guida", label: "Guida", onclick: "window.apriModaleGuida()", defaultColor: "#34c759" },
     { id: "admin", label: "Admin", onclick: "window.apriModaleAdmin()", condition: "admin", defaultColor: "#ff3b30" },
     
     { id: "accessi", label: "Accessi", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#1c1c1e" }
@@ -491,7 +490,6 @@ window.avviaMotoreAdminDaIndex = async () => {
 window.controllaBacheca = async () => {
     if (!auth.currentUser) return;
     try {
-        // CORREZIONE 1: Scegliamo SEMPRE il timestamp più recente tra quello scaricato dal DB e quello nel telefono.
         let fbAccess = parseInt(window.currentUserData?.ultimo_accesso_bacheca || 0);
         let localAccess = parseInt(localStorage.getItem('ultimo_accesso_bacheca') || 0);
         let ultimoAccesso = Math.max(fbAccess, localAccess);
@@ -518,10 +516,8 @@ window.controllaBacheca = async () => {
                 if (!rotazioneUtente || !m.target.includes(rotazioneUtente)) return;
             }
 
-            // CORREZIONE 2: Assicuriamoci che il singolo messaggio non sia mai stato già visualizzato localmente
             const giaLetto = localStorage.getItem('letto_' + d.id);
 
-            // Aggiungiamo il !giaLetto alla condizione
             if (m.timestamp > ultimoAccesso && !giaLetto) {
                 if (m.tipo === "dds") avvisiDDS.push(m.titolo_dds);
                 else avvisiNormali++;
@@ -530,7 +526,6 @@ window.controllaBacheca = async () => {
 
         let totali = avvisiNormali + avvisiDDS.length;
 
-        // CORREZIONE 3: Obblighiamo il sistema a nascondere fisicamente banner e badge se il totale calcolato è zero
         const badge = document.getElementById('badge-messaggi');
         if (badge) { 
             if (totali > 0) { badge.innerText = totali; badge.style.display = 'flex'; }
@@ -557,11 +552,7 @@ window.controllaBacheca = async () => {
     } catch(e) { console.error("Errore check bacheca:", e); }
 };
 
-// ============================================================================
-// --- INIZIO AGGIUNTA: GESTIONE RIMOZIONE E SALVATAGGIO AVVISI VISIVI ALL'APERTURA DELLA BACHECA ---
-// ============================================================================
 window.addEventListener('bacheca-utility-letta', async () => {
-    // 1. Nascondiamo visivamente gli elementi
     const badge = document.getElementById('badge-messaggi');
     if (badge) badge.style.display = 'none';
     
@@ -571,7 +562,6 @@ window.addEventListener('bacheca-utility-letta', async () => {
     const bannerDDS = document.getElementById('banner-dds-alert');
     if (bannerDDS) bannerDDS.style.display = 'none';
 
-    // 2. Salviamo il nuovo timestamp per impedire che ricompaiano al refresh della pagina
     const now = Date.now();
     localStorage.setItem('ultimo_accesso_bacheca', now);
     
@@ -587,14 +577,10 @@ window.addEventListener('bacheca-utility-letta', async () => {
         }
     }
 });
-// ============================================================================
-// --- FINE AGGIUNTA ---
-// ============================================================================
 
 window.controllaRichiesteSospese = async () => {
     if (!globalIsAdmin && !globalIsCollab) return;
     try {
-        // Se l'utente è un collaboratore, recupero prima i suoi permessi_gestione dalla nuova raccolta
         let permessiGestione = [];
         if (globalIsCollab && auth.currentUser) {
             const myPermsSnap = await getDoc(doc(db, "permessi_rotazioni", auth.currentUser.uid));
@@ -880,6 +866,10 @@ window.LayoutEngine = {
             try { 
                 let parsed = JSON.parse(targetStr);
                 this.prefs = { ...this.prefs, ...parsed };
+                
+                // Rimuove forzatamente l'app "guida" se presente nelle preferenze salvate dagli utenti
+                this.prefs.apps = this.prefs.apps.filter(app => app.id !== 'guida');
+                
                 this.mergeWithDefaults();
             } catch(e) {}
         } else { this.prefs.apps = JSON.parse(JSON.stringify(DEFAULT_APPS)); }
