@@ -61,3 +61,4 @@ export function initUISegnalazioni() {
     `;
     document.body.insertAdjacentHTML('beforeend', uiHTML);
 }
+
