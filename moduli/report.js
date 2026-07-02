@@ -1,16 +1,14 @@
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDoc, onSnapshot, query, where, orderBy, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Variabili globali interne al modulo
 let db;
 let auth;
 let currentUid;
 let isAdmin = false;
 let vistaCronologia = false;
 let unsubscribeReports = null;
-let segnalazioniLocali = {}; // Salva i dati in locale per la chat
-let chatApertaId = null;     // ID della chat attualmente aperta in modale
+let segnalazioniLocali = {}; 
+let chatApertaId = null;     
 
-// Funzione principale esposta a index.js per avviare il modulo
 export function avviaMotoreSegnalazioni(database, authentication, uid, userIsAdmin) {
     db = database;
     auth = authentication;
@@ -26,8 +24,6 @@ export function avviaMotoreSegnalazioni(database, authentication, uid, userIsAdm
     ascoltaSegnalazioni();
 }
 
-// --- GESTIONE INTERFACCIA MODALI SECONDARIE ---
-
 window.apriModaleNuovaSegnalazione = () => { 
     document.getElementById('modal-nuova-segnalazione').style.display = 'flex'; 
 };
@@ -36,13 +32,24 @@ window.chiudiModaleNuovaSegnalazione = () => {
 };
 
 window.apriChatSegnalazione = (id) => {
-    chatApertaId = id;
-    document.getElementById('modal-chat-segnalazione').style.display = 'flex';
-    renderizzaChatInterna(id);
+    try {
+        chatApertaId = id;
+        const modal = document.getElementById('modal-chat-segnalazione');
+        if (modal) {
+            modal.style.display = 'flex';
+            renderizzaChatInterna(id);
+        } else {
+            console.error("Modale chat non trovata nel DOM!");
+        }
+    } catch(e) {
+        console.error("Errore apertura chat:", e);
+    }
 };
+
 window.chiudiChatModal = () => {
     chatApertaId = null;
-    document.getElementById('modal-chat-segnalazione').style.display = 'none';
+    const modal = document.getElementById('modal-chat-segnalazione');
+    if (modal) modal.style.display = 'none';
 };
 
 window.toggleVistaAdminSegnalazioni = () => {
@@ -60,12 +67,10 @@ window.toggleVistaAdminSegnalazioni = () => {
     }
 
     btn.innerHTML = vistaCronologia 
-        ? '<i class="fa-solid fa-list-ul"></i> Torna a Segnalazioni in Attesa' 
+        ? '<i class="fa-solid fa-list-ul"></i> Torna a Chat Attive' 
         : '<i class="fa-solid fa-clock-rotate-left"></i> Mostra Cronologia Risolte';
     ascoltaSegnalazioni();
 };
-
-// --- GESTIONE DATI FIREBASE ---
 
 function ascoltaSegnalazioni() {
     if (!currentUid || !db) return;
@@ -75,7 +80,6 @@ function ascoltaSegnalazioni() {
     let q;
 
     if (isAdmin) {
-        // Uso i vecchi stati DB per non rompere gli indici Firestore, ma concettualmente sono Aperte / Risolte
         const statoTarget = vistaCronologia ? "risposto" : "in_attesa";
         q = query(colRef, where("stato", "==", statoTarget), orderBy("timestamp_creazione", "desc"));
     } else {
@@ -87,27 +91,26 @@ function ascoltaSegnalazioni() {
         if(!listContainer) return;
 
         listContainer.innerHTML = '';
-        segnalazioniLocali = {}; // Resetta l'array locale ad ogni snapshot
+        segnalazioniLocali = {}; 
 
         if (snapshot.empty) {
-            listContainer.innerHTML = `<div style="text-align:center; padding:40px 20px; color:var(--text-muted); font-size:15px; background:var(--surface-hover); border-radius:12px; border:1px dashed var(--border-color); margin-top:10px;">Nessuna segnalazione trovata.</div>`;
+            listContainer.innerHTML = `<div style="text-align:center; padding:40px 20px; color:var(--text-muted); font-size:15px; background:var(--surface-hover); border-radius:12px; border:1px dashed var(--border-color); margin-top:10px;">Nessuna conversazione trovata.</div>`;
             return;
         }
 
         snapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            segnalazioniLocali[docSnap.id] = data; // Salvo per la modale chat
+            segnalazioniLocali[docSnap.id] = data; 
             creaCardSegnalazione(docSnap.id, data, listContainer);
             
-            // Gestione notifiche/lettura
+            // Auto-lettura quando la schermata è aperta
             if (isAdmin && !vistaCronologia && data.letta_da_admin === false) {
                 updateDoc(doc(db, "segnalazioni", docSnap.id), { letta_da_admin: true });
-            } else if (!isAdmin && data.letta_da_utente === false) { // Rimosso vincolo "risposto" per leggere i nuovi messaggi
+            } else if (!isAdmin && data.letta_da_utente === false) {
                 updateDoc(doc(db, "segnalazioni", docSnap.id), { letta_da_utente: true });
             }
         });
 
-        // Se l'utente ha la chat aperta, aggiorna la vista messaggi in tempo reale
         if (chatApertaId && segnalazioniLocali[chatApertaId]) {
             renderizzaChatInterna(chatApertaId);
         }
@@ -123,10 +126,9 @@ function creaCardSegnalazione(id, data, container) {
     const card = document.createElement('div');
     card.style.cssText = `background: var(--surface); padding: 20px; border-radius: 14px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 12px; border-left: 6px solid ${cardBorderColor}; position: relative; margin-bottom: 15px; animation: slideInUp 0.3s ease both;`;
     
-    // Tasto o Badge Risolto in alto a destra
     let statusBadge = isRisolto 
         ? '<div style="position:absolute; top:16px; right:16px; font-size:11px; font-weight:700; padding:4px 8px; border-radius:6px; text-transform:uppercase; background:rgba(15,157,88,0.15); color:var(--success);">Risolto</div>' 
-        : `<button style="position:absolute; top:16px; right:16px; font-size:11px; font-weight:700; padding:4px 8px; border-radius:6px; text-transform:uppercase; background:var(--success); color:white; border:none; cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s;" onclick="window.segnaRisolto('${id}')"><i class="fa-solid fa-check"></i> Segna Risolto</button>`;
+        : `<button style="position:absolute; top:16px; right:16px; font-size:11px; font-weight:700; padding:4px 8px; border-radius:6px; text-transform:uppercase; background:var(--success); color:white; border:none; cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s; box-shadow:0 2px 5px rgba(0,0,0,0.2);" onclick="window.segnaRisolto('${id}')"><i class="fa-solid fa-check"></i> Segna Risolto</button>`;
     
     let dot = "";
     if (isAdmin && !vistaCronologia && !data.letta_da_admin) dot = '<span style="width:10px; height:10px; background:var(--danger); border-radius:50%; display:inline-block; margin-left:5px; box-shadow:0 0 5px var(--danger);"></span>';
@@ -154,8 +156,7 @@ function creaCardSegnalazione(id, data, container) {
         </div>`;
     }
 
-    // Costruzione array chat con retrocompatibilità per i vecchi ticket
-    let chat = data.storico_chat || [];
+    let chat = [...(data.storico_chat || [])];
     if (chat.length === 0) {
         chat.push({ autore: 'user', testo: data.messaggio, timestamp: data.timestamp_creazione, link: data.link_allegato });
         if (data.risposta_admin) {
@@ -176,7 +177,6 @@ function creaCardSegnalazione(id, data, container) {
 
     let deleteBtn = `<button style="background:var(--surface); color:var(--danger); border:1px solid var(--danger); padding:10px; border-radius:10px; font-weight:600; font-size:13px; cursor:pointer; flex:1; display:flex; justify-content:center; align-items:center; gap:6px;" onclick="window.eliminaSegnalazione('${id}')"><i class="fa-solid fa-trash"></i> Elimina</button>`;
     
-    // Controlli inferiori (Barra risposta rapida se aperta, solo pulsanti se risolta)
     let actionsHtml = isRisolto ? `
         <div style="display:flex; gap:10px; margin-top:5px;">
             <button style="background:var(--surface-hover); color:var(--info); border:1px solid var(--info); padding:10px; border-radius:10px; font-weight:600; font-size:13px; cursor:pointer; flex:2; display:flex; justify-content:center; align-items:center; gap:6px;" onclick="window.apriChatSegnalazione('${id}')"><i class="fa-solid fa-comments"></i> Cronologia Messaggi</button>
@@ -210,9 +210,10 @@ function renderizzaChatInterna(id) {
     const data = segnalazioniLocali[id];
     if (!data) return;
     const container = document.getElementById('chat-messages-container');
+    if (!container) return;
     container.innerHTML = '';
     
-    let chat = data.storico_chat || [];
+    let chat = [...(data.storico_chat || [])];
     if (chat.length === 0) {
         chat.push({ autore: 'user', testo: data.messaggio, timestamp: data.timestamp_creazione, link: data.link_allegato });
         if (data.risposta_admin) {
@@ -239,13 +240,12 @@ function renderizzaChatInterna(id) {
         `;
     });
     
-    // Auto-scroll in basso
     setTimeout(() => { container.scrollTop = container.scrollHeight; }, 50);
 
     const btnSend = document.getElementById('btn-invia-chat-modal');
     const inputField = document.getElementById('input-chat-modal');
+    if(!btnSend || !inputField) return;
     
-    // Ricrea il bottone per eliminare i vecchi event listeners
     const newBtnSend = btnSend.cloneNode(true);
     btnSend.parentNode.replaceChild(newBtnSend, btnSend);
     
@@ -262,7 +262,6 @@ function renderizzaChatInterna(id) {
         newBtnSend.style.opacity = '1';
         newBtnSend.onclick = () => window.inviaRispostaChat(id, 'input-chat-modal');
         
-        // Permette invio con tasto Enter (senza Shift)
         inputField.onkeypress = (e) => {
             if(e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -271,8 +270,6 @@ function renderizzaChatInterna(id) {
         };
     }
 }
-
-// --- AZIONI DATABASE ESPOSTE TRAMITE WINDOW ---
 
 window.inviaSegnalazione = async () => {
     const btn = document.getElementById('btn-salva-rep');
@@ -291,7 +288,7 @@ window.inviaSegnalazione = async () => {
             mittente_matricola: ud.matricola || "N/D",
             mittente_email: auth.currentUser.email,
             mittente_telefono: ud.telefono || null,
-            messaggio: msg, // Mantenuto per non rompere script vecchi/dashboard
+            messaggio: msg, 
             link_allegato: link || null,
             storico_chat: [{ 
                 autore: 'user', 
@@ -315,12 +312,13 @@ window.inviaSegnalazione = async () => {
 
 window.inviaRispostaChat = async (id, inputId) => {
     const input = document.getElementById(inputId);
+    if(!input) return;
     const msg = input.value.trim();
     if (!msg) return;
 
     input.disabled = true;
     try {
-        await updateDoc(doc(db, "segnalazioni", id), {
+        const updateData = {
             storico_chat: arrayUnion({ 
                 autore: isAdmin ? 'admin' : 'user', 
                 testo: msg, 
@@ -328,7 +326,14 @@ window.inviaRispostaChat = async (id, inputId) => {
             }),
             letta_da_admin: isAdmin,
             letta_da_utente: !isAdmin
-        });
+        };
+
+        // Se è l'utente a scrivere in una vecchia chat risolta, la riapre e avvisa l'admin
+        if (!isAdmin) {
+            updateData.stato = "in_attesa"; 
+        }
+
+        await updateDoc(doc(db, "segnalazioni", id), updateData);
         input.value = "";
     } catch(e) { 
         console.error("Errore invio chat:", e); 
@@ -342,7 +347,7 @@ window.segnaRisolto = async (id) => {
         try {
             await updateDoc(doc(db, "segnalazioni", id), {
                 stato: "risposto",
-                letta_da_utente: false // Genera il pallino rosso per notificare all'utente la chiusura
+                letta_da_utente: false // Notifica all'utente la chiusura
             });
             if(chatApertaId === id) window.chiudiChatModal();
         } catch(e) {
