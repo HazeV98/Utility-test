@@ -263,7 +263,8 @@ const DEFAULT_APPS = [
     { id: "promemoria", label: "Promemoria", onclick: "window.apriModalePromemoria()", defaultColor: "#0dcaf0" },
     { id: "dds", label: "Archivio\nDDS", onclick: "window.apriModaleDDS()", defaultColor: "#5856d6" },
     
-    { id: "report", label: "Assistenza\nApp", onclick: "window.apriMainModaleSegnalazioni()", defaultColor: "#0088ff" },
+    // Aggiornato con la nuova funzione corretta
+    { id: "report", label: "Assistenza\nApp", onclick: "window.avviaMotoreSegnalazioniDaIndex()", defaultColor: "#0088ff" },
     { id: "impostazioni", label: "Impostazioni", onclick: "window.apriModal('settingsModal')", defaultColor: "#8e8e93" },
     { id: "spriss", label: "Spriss", image: "icone_app/iconspriss.png", href: "https://spriss.avmspa.it/" },
     
@@ -421,6 +422,17 @@ window.avviaMotoreSegnalazioniDaIndex = async () => {
         const modulo = await ModuliLazyLoader.avviaMotore('report');
         if (modulo) {
             modulo(db, auth, auth.currentUser.uid, globalIsAdmin);
+            // Dopo l'avvio, chiamiamo l'apertura modale specifica (che salva anche l'ultimo accesso)
+            if(window.apriModaleSegnalazioni) {
+                window.apriModaleSegnalazioni();
+                
+                // Sincronizziamo la cache utente in modo che il badge si spenga istantaneamente
+                const now = Date.now();
+                if (globalIsAdmin) window.currentUserData.ultimo_accesso_segnalazioni_admin = now;
+                else window.currentUserData.ultimo_accesso_segnalazioni = now;
+                
+                window.controllaSegnalazioni(); 
+            }
         }
     }
 };
@@ -645,6 +657,9 @@ window.controllaPromemoria = async () => {
     } catch(e) { console.error("Errore check promemoria:", e); }
 };
 
+// ============================================================================
+// AGGIORNATO: GESTIONE NOTIFICHE CHAT / SEGNALAZIONI
+// ============================================================================
 window.controllaSegnalazioni = async () => {
     if (!auth.currentUser) return;
     try {
@@ -652,32 +667,57 @@ window.controllaSegnalazioni = async () => {
         let messaggioBanner = "";
         
         if (globalIsAdmin) {
-            const q = query(collection(db, "segnalazioni"), where("stato", "==", "in_attesa"), where("letta_da_admin", "==", false));
+            const ultimoAccesso = window.currentUserData?.ultimo_accesso_segnalazioni_admin || 0;
+            const q = query(collection(db, "segnalazioni"), where("stato", "==", "in_attesa"));
             const snap = await getDocs(q);
-            count = snap.size;
-            if (count > 0) messaggioBanner = count === 1 ? "Hai 1 nuova segnalazione in attesa!" : `Hai ${count} nuove segnalazioni in attesa!`;
+            
+            snap.forEach(d => {
+                const data = d.data();
+                const ts = data.timestamp_ultimo_messaggio || data.timestamp_creazione || 0;
+                // Notifica se timestamp > ultimo accesso e se l'ultimo a scrivere NON è l'admin
+                if (ts > ultimoAccesso && data.letta_da_admin === false) count++;
+            });
+            
+            if (count > 0) messaggioBanner = count === 1 ? "Hai 1 nuovo messaggio nei ticket!" : `Hai ${count} nuovi messaggi nei ticket!`;
         } else {
-            const q = query(collection(db, "segnalazioni"), where("mittente_uid", "==", auth.currentUser.uid), where("stato", "==", "risposto"), where("letta_da_utente", "==", false));
+            const ultimoAccesso = window.currentUserData?.ultimo_accesso_segnalazioni || 0;
+            const q = query(collection(db, "segnalazioni"), where("mittente_uid", "==", auth.currentUser.uid));
             const snap = await getDocs(q);
-            count = snap.size;
-            if (count > 0) messaggioBanner = count === 1 ? "L'Admin ha risposto alla tua segnalazione!" : `L'Admin ha risposto a ${count} tue segnalazioni!`;
+            
+            snap.forEach(d => {
+                const data = d.data();
+                const ts = data.timestamp_ultimo_messaggio || data.timestamp_creazione || 0;
+                // Notifica se timestamp > ultimo accesso e se l'ultimo a scrivere è l'admin
+                if (ts > ultimoAccesso && data.letta_da_utente === false) count++;
+            });
+            
+            if (count > 0) messaggioBanner = count === 1 ? "L'Admin ha risposto al tuo ticket!" : `L'Admin ha risposto a ${count} tuoi ticket!`;
         }
 
+        const banner = document.getElementById('banner-segnalazioni-alert');
+        const btn = document.getElementById('btn-report');
+        
         if (count > 0) {
-            const banner = document.getElementById('banner-segnalazioni-alert');
             if (banner) {
                 document.getElementById('testo-segnalazione-banner').innerText = messaggioBanner;
                 banner.style.display = 'flex';
             }
-            const btn = document.getElementById('btn-report');
             if (btn) {
                 let b = btn.querySelector('.badge-notif');
                 if (b) b.remove();
                 btn.insertAdjacentHTML('beforeend', `<div class="badge-notif" style="background:var(--danger);">${count}</div>`);
             }
+        } else {
+            if (banner) banner.style.display = 'none';
+            if (btn) {
+                let b = btn.querySelector('.badge-notif');
+                if (b) b.remove();
+            }
         }
     } catch(e) { console.error("Errore check segnalazioni:", e); }
 };
+// ============================================================================
+
 
 window.inizializzaNotificheSeNativa = async (userData) => {
     const isNative = window.Capacitor && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins.PushNotifications;
