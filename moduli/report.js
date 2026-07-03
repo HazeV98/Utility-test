@@ -24,19 +24,16 @@ export function avviaMotoreSegnalazioni(database, authentication, uid, userIsAdm
     ascoltaSegnalazioni();
 }
 
-// Helper per stampare date e ore in formato leggibile
 function formattaData(ts) {
     if (!ts) return '';
     const d = new Date(ts);
     return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' alle ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 }
 
-// --- NUOVA FUNZIONE: Apre la modale e salva l'orario di accesso ---
 window.apriModaleSegnalazioni = async () => {
     const modal = document.getElementById('modal-segnalazioni-main');
     if (modal) modal.style.display = 'flex';
     
-    // Aggiorna l'orario di ultimo accesso nel documento dell'utente
     if (currentUid && db) {
         try {
             const updateData = isAdmin ? 
@@ -104,11 +101,12 @@ function ascoltaSegnalazioni() {
     const colRef = collection(db, "segnalazioni");
     let q;
 
+    // USIAMO "timestamp_creazione" COME PRIMA, COSI' FIREBASE NON VA IN ERRORE PER L'INDICE MANCANTE
     if (isAdmin) {
         const statoTarget = vistaCronologia ? "risposto" : "in_attesa";
-        q = query(colRef, where("stato", "==", statoTarget), orderBy("timestamp_ultimo_messaggio", "desc"));
+        q = query(colRef, where("stato", "==", statoTarget), orderBy("timestamp_creazione", "desc"));
     } else {
-        q = query(colRef, where("mittente_uid", "==", currentUid), orderBy("timestamp_ultimo_messaggio", "desc"));
+        q = query(colRef, where("mittente_uid", "==", currentUid), orderBy("timestamp_creazione", "desc"));
     }
 
     unsubscribeReports = onSnapshot(q, (snapshot) => {
@@ -123,19 +121,26 @@ function ascoltaSegnalazioni() {
             return;
         }
 
+        // CARICHIAMO I TICKET IN UN ARRAY PER ORDINARLI IN LOCALE TRAMITE JAVASCRIPT
+        let ticketList = [];
         snapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            // Fallback per vecchi ticket che non hanno timestamp_ultimo_messaggio
             if(!data.timestamp_ultimo_messaggio) data.timestamp_ultimo_messaggio = data.timestamp_creazione;
+            ticketList.push({ id: docSnap.id, data: data });
+        });
+
+        // ORDINAMENTO IN TEMPO REALE (CHAT PIÙ RECENTE IN ALTO)
+        ticketList.sort((a, b) => b.data.timestamp_ultimo_messaggio - a.data.timestamp_ultimo_messaggio);
+
+        // STAMPIAMO I TICKET SULLO SCHERMO
+        ticketList.forEach(ticket => {
+            segnalazioniLocali[ticket.id] = ticket.data; 
+            creaCardSegnalazione(ticket.id, ticket.data, listContainer);
             
-            segnalazioniLocali[docSnap.id] = data; 
-            creaCardSegnalazione(docSnap.id, data, listContainer);
-            
-            // Logica auto-lettura (mantenuta come backup visivo)
-            if (isAdmin && !vistaCronologia && data.letta_da_admin === false) {
-                updateDoc(doc(db, "segnalazioni", docSnap.id), { letta_da_admin: true });
-            } else if (!isAdmin && data.letta_da_utente === false) {
-                updateDoc(doc(db, "segnalazioni", docSnap.id), { letta_da_utente: true });
+            if (isAdmin && !vistaCronologia && ticket.data.letta_da_admin === false) {
+                updateDoc(doc(db, "segnalazioni", ticket.id), { letta_da_admin: true });
+            } else if (!isAdmin && ticket.data.letta_da_utente === false) {
+                updateDoc(doc(db, "segnalazioni", ticket.id), { letta_da_utente: true });
             }
         });
 
@@ -301,8 +306,10 @@ function renderizzaChatInterna(id) {
 
 window.inviaSegnalazione = async () => {
     const btn = document.getElementById('btn-salva-rep');
-    const msg = document.getElementById('rep-messaggio').value.trim();
-    const link = document.getElementById('rep-link').value.trim();
+    const msgInput = document.getElementById('rep-messaggio');
+    const linkInput = document.getElementById('rep-link');
+    const msg = msgInput.value.trim();
+    const link = linkInput.value.trim();
     if (!msg) return;
 
     btn.disabled = true;
@@ -326,14 +333,14 @@ window.inviaSegnalazione = async () => {
                 link: link || null 
             }],
             timestamp_creazione: now,
-            timestamp_ultimo_messaggio: now, // Aggiornato
+            timestamp_ultimo_messaggio: now, 
             stato: "in_attesa",
             letta_da_admin: false,
             letta_da_utente: true
         });
         window.chiudiModaleNuovaSegnalazione();
-        document.getElementById('rep-messaggio').value = ""; 
-        document.getElementById('rep-link').value = "";
+        msgInput.value = ""; 
+        linkInput.value = "";
     } catch(e) { 
         console.error("Errore invio:", e); 
     }
@@ -347,6 +354,10 @@ window.inviaRispostaChat = async (id, inputId) => {
     if (!msg) return;
 
     input.disabled = true;
+    
+    // Svuotiamo IMMEDIATAMENTE il campo di testo per dare feedback visivo
+    input.value = "";
+
     try {
         const now = Date.now();
         const updateData = {
@@ -355,7 +366,7 @@ window.inviaRispostaChat = async (id, inputId) => {
                 testo: msg, 
                 timestamp: now 
             }),
-            timestamp_ultimo_messaggio: now, // Aggiornato
+            timestamp_ultimo_messaggio: now, 
             letta_da_admin: isAdmin,
             letta_da_utente: !isAdmin
         };
@@ -365,12 +376,19 @@ window.inviaRispostaChat = async (id, inputId) => {
         }
 
         await updateDoc(doc(db, "segnalazioni", id), updateData);
-        input.value = "";
     } catch(e) { 
         console.error("Errore invio chat:", e); 
+        // Se c'è stato un errore, rimettiamo il testo
+        const currentInput = document.getElementById(inputId);
+        if(currentInput) currentInput.value = msg;
     }
-    input.disabled = false;
-    input.focus();
+    
+    // Ripristiniamo la possibilità di scrivere usando l'elemento nel DOM aggiornato
+    const currentInput = document.getElementById(inputId);
+    if(currentInput) {
+        currentInput.disabled = false;
+        currentInput.focus();
+    }
 };
 
 window.segnaRisolto = async (id) => {
@@ -379,7 +397,7 @@ window.segnaRisolto = async (id) => {
             await updateDoc(doc(db, "segnalazioni", id), {
                 stato: "risposto",
                 letta_da_utente: false, 
-                timestamp_ultimo_messaggio: Date.now() // Aggiornato
+                timestamp_ultimo_messaggio: Date.now() 
             });
             if(chatApertaId === id) window.chiudiChatModal();
         } catch(e) {
