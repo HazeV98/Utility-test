@@ -24,6 +24,31 @@ export function avviaMotoreSegnalazioni(database, authentication, uid, userIsAdm
     ascoltaSegnalazioni();
 }
 
+// Helper per stampare date e ore in formato leggibile
+function formattaData(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' alle ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+}
+
+// --- NUOVA FUNZIONE: Apre la modale e salva l'orario di accesso ---
+window.apriModaleSegnalazioni = async () => {
+    const modal = document.getElementById('modal-segnalazioni-main');
+    if (modal) modal.style.display = 'flex';
+    
+    // Aggiorna l'orario di ultimo accesso nel documento dell'utente
+    if (currentUid && db) {
+        try {
+            const updateData = isAdmin ? 
+                { ultimo_accesso_segnalazioni_admin: Date.now() } : 
+                { ultimo_accesso_segnalazioni: Date.now() };
+            await updateDoc(doc(db, "utenti", currentUid), updateData);
+        } catch(e) {
+            console.error("Errore salvataggio accesso report:", e);
+        }
+    }
+};
+
 window.apriModaleNuovaSegnalazione = () => { 
     document.getElementById('modal-nuova-segnalazione').style.display = 'flex'; 
 };
@@ -81,9 +106,9 @@ function ascoltaSegnalazioni() {
 
     if (isAdmin) {
         const statoTarget = vistaCronologia ? "risposto" : "in_attesa";
-        q = query(colRef, where("stato", "==", statoTarget), orderBy("timestamp_creazione", "desc"));
+        q = query(colRef, where("stato", "==", statoTarget), orderBy("timestamp_ultimo_messaggio", "desc"));
     } else {
-        q = query(colRef, where("mittente_uid", "==", currentUid), orderBy("timestamp_creazione", "desc"));
+        q = query(colRef, where("mittente_uid", "==", currentUid), orderBy("timestamp_ultimo_messaggio", "desc"));
     }
 
     unsubscribeReports = onSnapshot(q, (snapshot) => {
@@ -100,10 +125,13 @@ function ascoltaSegnalazioni() {
 
         snapshot.forEach((docSnap) => {
             const data = docSnap.data();
+            // Fallback per vecchi ticket che non hanno timestamp_ultimo_messaggio
+            if(!data.timestamp_ultimo_messaggio) data.timestamp_ultimo_messaggio = data.timestamp_creazione;
+            
             segnalazioniLocali[docSnap.id] = data; 
             creaCardSegnalazione(docSnap.id, data, listContainer);
             
-            // Auto-lettura quando la schermata è aperta
+            // Logica auto-lettura (mantenuta come backup visivo)
             if (isAdmin && !vistaCronologia && data.letta_da_admin === false) {
                 updateDoc(doc(db, "segnalazioni", docSnap.id), { letta_da_admin: true });
             } else if (!isAdmin && data.letta_da_utente === false) {
@@ -198,7 +226,7 @@ function creaCardSegnalazione(id, data, container) {
     card.innerHTML = `
         ${statusBadge}
         <div style="font-weight:800; font-size:16px; color:var(--info); display:flex; align-items:center; gap:6px; margin-top: 10px;"><i class="fa-solid fa-circle-user"></i> ${headerName} ${dot}</div>
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:${isAdmin ? '12px' : '0'};">${new Date(data.timestamp_creazione).toLocaleString()}</div>
+        <div style="font-size:11px; color:var(--text-muted); margin-bottom:${isAdmin ? '12px' : '0'}; display:flex; gap:5px; align-items:center;"><i class="fa-regular fa-clock"></i> Aggiornato: ${formattaData(data.timestamp_ultimo_messaggio)}</div>
         ${infoUtente}
         ${chatPreviewHtml}
         ${actionsHtml}
@@ -235,7 +263,7 @@ function renderizzaChatInterna(id) {
                     ${msg.testo}
                     ${msg.link ? `<br><a href="${msg.link}" target="_blank" style="font-size:12px; color:${isMe ? '#fff' : 'var(--info)'}; text-decoration:underline; display:inline-flex; align-items:center; gap:5px; margin-top:5px;"><i class="fa-solid fa-link"></i> Link</a>` : ''}
                 </div>
-                <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">${new Date(msg.timestamp).toLocaleString()}</div>
+                <div style="font-size:10px; color:var(--text-muted); margin-top:4px; font-weight: 500;">${formattaData(msg.timestamp)}</div>
             </div>
         `;
     });
@@ -281,6 +309,7 @@ window.inviaSegnalazione = async () => {
     try {
         const uDoc = await getDoc(doc(db, "utenti", currentUid));
         const ud = uDoc.data() || {};
+        const now = Date.now();
         
         await addDoc(collection(db, "segnalazioni"), {
             mittente_uid: currentUid,
@@ -293,10 +322,11 @@ window.inviaSegnalazione = async () => {
             storico_chat: [{ 
                 autore: 'user', 
                 testo: msg, 
-                timestamp: Date.now(), 
+                timestamp: now, 
                 link: link || null 
             }],
-            timestamp_creazione: Date.now(),
+            timestamp_creazione: now,
+            timestamp_ultimo_messaggio: now, // Aggiornato
             stato: "in_attesa",
             letta_da_admin: false,
             letta_da_utente: true
@@ -318,17 +348,18 @@ window.inviaRispostaChat = async (id, inputId) => {
 
     input.disabled = true;
     try {
+        const now = Date.now();
         const updateData = {
             storico_chat: arrayUnion({ 
                 autore: isAdmin ? 'admin' : 'user', 
                 testo: msg, 
-                timestamp: Date.now() 
+                timestamp: now 
             }),
+            timestamp_ultimo_messaggio: now, // Aggiornato
             letta_da_admin: isAdmin,
             letta_da_utente: !isAdmin
         };
 
-        // Se è l'utente a scrivere in una vecchia chat risolta, la riapre e avvisa l'admin
         if (!isAdmin) {
             updateData.stato = "in_attesa"; 
         }
@@ -347,7 +378,8 @@ window.segnaRisolto = async (id) => {
         try {
             await updateDoc(doc(db, "segnalazioni", id), {
                 stato: "risposto",
-                letta_da_utente: false // Notifica all'utente la chiusura
+                letta_da_utente: false, 
+                timestamp_ultimo_messaggio: Date.now() // Aggiornato
             });
             if(chatApertaId === id) window.chiudiChatModal();
         } catch(e) {
