@@ -238,7 +238,6 @@ const EMOJI_MAP = {
     report: "🎧", impostazioni: "⚙️", admin: "🔒", accessi: "👨‍💻"
 };
 
-// AGGIORNATO: Tutte le nuove app ora puntano ai rispettivi onclick invece che agli href
 const DEFAULT_APPS = [
     { id: "oggi", label: "Oggi", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
     { id: "calendario", label: "Calendario", href: "calendario.html", defaultColor: "#0066cc" },
@@ -263,7 +262,6 @@ const DEFAULT_APPS = [
     { id: "promemoria", label: "Promemoria", onclick: "window.apriModalePromemoria()", defaultColor: "#0dcaf0" },
     { id: "dds", label: "Archivio\nDDS", onclick: "window.apriModaleDDS()", defaultColor: "#5856d6" },
     
-    // Aggiornato con la nuova funzione corretta
     { id: "report", label: "Assistenza\nApp", onclick: "window.avviaMotoreSegnalazioniDaIndex()", defaultColor: "#0088ff" },
     { id: "impostazioni", label: "Impostazioni", onclick: "window.apriModal('settingsModal')", defaultColor: "#8e8e93" },
     { id: "spriss", label: "Spriss", image: "icone_app/iconspriss.png", href: "https://spriss.avmspa.it/" },
@@ -409,34 +407,6 @@ window.avviaMotoreBuoniPastoDaIndex = async () => {
     if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin);
 };
 
-// ============================================================================
-// NUOVE FUNZIONI PONTE AGGIUNTE (CON LAZY LOADING)
-// ============================================================================
-
-window.avviaMotoreSegnalazioniDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
-    }
-    if (auth.currentUser) {
-        const modulo = await ModuliLazyLoader.avviaMotore('report');
-        if (modulo) {
-            modulo(db, auth, auth.currentUser.uid, globalIsAdmin);
-            // Dopo l'avvio, chiamiamo l'apertura modale specifica (che salva anche l'ultimo accesso)
-            if(window.apriModaleSegnalazioni) {
-                window.apriModaleSegnalazioni();
-                
-                // Sincronizziamo la cache utente in modo che il badge si spenga istantaneamente
-                const now = Date.now();
-                if (globalIsAdmin) window.currentUserData.ultimo_accesso_segnalazioni_admin = now;
-                else window.currentUserData.ultimo_accesso_segnalazioni = now;
-                
-                window.controllaSegnalazioni(); 
-            }
-        }
-    }
-};
-
 window.avviaMotoreStatisticheDaIndex = async () => {
     if (window.currentUserData && window.currentUserData.app_banned === true) {
         alert("L'accesso alle funzioni ti è stato revocato."); 
@@ -498,6 +468,87 @@ window.avviaMotoreAdminDaIndex = async () => {
     }
     const modulo = await ModuliLazyLoader.avviaMotore('admin');
     if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin);
+};
+
+
+// ============================================================================
+// AGGIORNATO: GESTIONE DEFINITIVA NOTIFICHE SEGNALAZIONI
+// ============================================================================
+
+// Questa è la funzione che scatta quando premi sull'app "Assistenza App"
+window.avviaMotoreSegnalazioniDaIndex = async () => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) {
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return;
+    }
+    if (auth.currentUser) {
+        const modulo = await ModuliLazyLoader.avviaMotore('report');
+        if (modulo) {
+            modulo(db, auth, auth.currentUser.uid, globalIsAdmin);
+            
+            // Dopo l'avvio, chiamiamo l'apertura modale
+            if(window.apriModaleSegnalazioni) {
+                window.apriModaleSegnalazioni();
+                
+                // SPEGNE IL BADGE ISTANTANEAMENTE SULL'INTERFACCIA APPENA APRI!
+                const btn = document.getElementById('btn-report');
+                if (btn) {
+                    let b = btn.querySelector('.badge-notif');
+                    if (b) b.remove();
+                }
+                const banner = document.getElementById('banner-segnalazioni-alert');
+                if (banner) banner.style.display = 'none';
+            }
+        }
+    }
+};
+
+window.controllaSegnalazioni = async () => {
+    if (!auth.currentUser) return;
+    try {
+        let count = 0;
+        let messaggioBanner = "";
+        
+        if (globalIsAdmin) {
+            // Conta solo i ticket in attesa dove la variabile letta_da_admin è "false"
+            const q = query(collection(db, "segnalazioni"), where("stato", "==", "in_attesa"));
+            const snap = await getDocs(q);
+            snap.forEach(d => {
+                if (d.data().letta_da_admin === false) count++;
+            });
+            if (count > 0) messaggioBanner = count === 1 ? "Hai 1 nuovo messaggio nei ticket!" : `Hai ${count} nuovi messaggi nei ticket!`;
+        } else {
+            // Conta tutti i ticket dell'utente dove letta_da_utente è "false"
+            const q = query(collection(db, "segnalazioni"), where("mittente_uid", "==", auth.currentUser.uid));
+            const snap = await getDocs(q);
+            snap.forEach(d => {
+                if (d.data().letta_da_utente === false) count++;
+            });
+            if (count > 0) messaggioBanner = count === 1 ? "L'Admin ha risposto al tuo ticket!" : `L'Admin ha risposto a ${count} tuoi ticket!`;
+        }
+
+        const banner = document.getElementById('banner-segnalazioni-alert');
+        const btn = document.getElementById('btn-report');
+        
+        if (count > 0) {
+            if (banner) {
+                const testo = document.getElementById('testo-segnalazione-banner');
+                if(testo) testo.innerText = messaggioBanner;
+                banner.style.display = 'flex';
+            }
+            if (btn) {
+                let b = btn.querySelector('.badge-notif');
+                if (b) b.remove();
+                btn.insertAdjacentHTML('beforeend', `<div class="badge-notif" style="background:var(--danger);">${count}</div>`);
+            }
+        } else {
+            if (banner) banner.style.display = 'none';
+            if (btn) {
+                let b = btn.querySelector('.badge-notif');
+                if (b) b.remove();
+            }
+        }
+    } catch(e) { console.error("Errore check segnalazioni:", e); }
 };
 // ============================================================================
 
@@ -656,68 +707,6 @@ window.controllaPromemoria = async () => {
         }
     } catch(e) { console.error("Errore check promemoria:", e); }
 };
-
-// ============================================================================
-// AGGIORNATO: GESTIONE NOTIFICHE CHAT / SEGNALAZIONI
-// ============================================================================
-window.controllaSegnalazioni = async () => {
-    if (!auth.currentUser) return;
-    try {
-        let count = 0;
-        let messaggioBanner = "";
-        
-        if (globalIsAdmin) {
-            const ultimoAccesso = window.currentUserData?.ultimo_accesso_segnalazioni_admin || 0;
-            const q = query(collection(db, "segnalazioni"), where("stato", "==", "in_attesa"));
-            const snap = await getDocs(q);
-            
-            snap.forEach(d => {
-                const data = d.data();
-                const ts = data.timestamp_ultimo_messaggio || data.timestamp_creazione || 0;
-                // Notifica se timestamp > ultimo accesso e se l'ultimo a scrivere NON è l'admin
-                if (ts > ultimoAccesso && data.letta_da_admin === false) count++;
-            });
-            
-            if (count > 0) messaggioBanner = count === 1 ? "Hai 1 nuovo messaggio nei ticket!" : `Hai ${count} nuovi messaggi nei ticket!`;
-        } else {
-            const ultimoAccesso = window.currentUserData?.ultimo_accesso_segnalazioni || 0;
-            const q = query(collection(db, "segnalazioni"), where("mittente_uid", "==", auth.currentUser.uid));
-            const snap = await getDocs(q);
-            
-            snap.forEach(d => {
-                const data = d.data();
-                const ts = data.timestamp_ultimo_messaggio || data.timestamp_creazione || 0;
-                // Notifica se timestamp > ultimo accesso e se l'ultimo a scrivere è l'admin
-                if (ts > ultimoAccesso && data.letta_da_utente === false) count++;
-            });
-            
-            if (count > 0) messaggioBanner = count === 1 ? "L'Admin ha risposto al tuo ticket!" : `L'Admin ha risposto a ${count} tuoi ticket!`;
-        }
-
-        const banner = document.getElementById('banner-segnalazioni-alert');
-        const btn = document.getElementById('btn-report');
-        
-        if (count > 0) {
-            if (banner) {
-                document.getElementById('testo-segnalazione-banner').innerText = messaggioBanner;
-                banner.style.display = 'flex';
-            }
-            if (btn) {
-                let b = btn.querySelector('.badge-notif');
-                if (b) b.remove();
-                btn.insertAdjacentHTML('beforeend', `<div class="badge-notif" style="background:var(--danger);">${count}</div>`);
-            }
-        } else {
-            if (banner) banner.style.display = 'none';
-            if (btn) {
-                let b = btn.querySelector('.badge-notif');
-                if (b) b.remove();
-            }
-        }
-    } catch(e) { console.error("Errore check segnalazioni:", e); }
-};
-// ============================================================================
-
 
 window.inizializzaNotificheSeNativa = async (userData) => {
     const isNative = window.Capacitor && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins.PushNotifications;
@@ -1349,17 +1338,10 @@ if (!isStandalone) {
 // LAZY LOADING: INIZIALIZZAZIONE E PRECARIO MODULI FREQUENTI
 // ============================================================================
 
-// Rendi il loader disponibile globalmente per debug e utilizzo globale
 window.ModuliLazyLoader = ModuliLazyLoader;
 
-// Precario i moduli frequenti quando la pagina ha finito di caricarsi
-// Questo massimizza la performance: il menu appare subito, poi carica i moduli in background
 document.addEventListener('DOMContentLoaded', () => {
-    // Precaria i 4 moduli più usati dopo 2 secondi dal caricamento della pagina
     ModuliLazyLoader.precarica(['turni', 'rotazioni', 'statistiche', 'orari']);
-    
     console.log('✅ Lazy Loading System inizializzato');
-    console.log('📱 Menu principale ottimizzato - Moduli caricati su richiesta');
 });
-
 // ============================================================================
