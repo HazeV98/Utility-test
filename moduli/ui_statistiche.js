@@ -111,7 +111,7 @@ export function initUIStatistiche() {
     const container = document.createElement('div');
     container.id = 'modal-statistiche-main';
     container.className = 'modal-overlay';
-    container.style.display = 'flex';
+    // FIX: Rimosso "container.style.display = 'flex'" così non si apre da sola
     container.onclick = (e) => { window.chiudiSuSfondo(e, 'modal-statistiche-main') };
 
     container.innerHTML = `
@@ -184,7 +184,7 @@ export function initUIStatistiche() {
                         </div>
                     </div>
 
-                    <!-- Nuovi Bottoni Aggiuntivi -->
+                    <!-- Bottoni Aggiuntivi -->
                     <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
                         <button class="btn-action" style="background-color: var(--warning); color: #fff; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);" onclick="window.apriModalLimiteMalattia()">
                             <i class="fa-solid fa-notes-medical"></i> Dati limite malattia
@@ -206,7 +206,6 @@ export function initUIStatistiche() {
 // ==========================================
 
 window.apriModalLimiteMalattia = () => {
-    // FIX: Rimuove la modale se esiste già così da ricrearla visibile
     let existingModal = document.getElementById('modal-limite-malattia');
     if (existingModal) existingModal.remove();
 
@@ -249,7 +248,6 @@ window.apriModalLimiteMalattia = () => {
 window.apriCalcolatoreManualeMalattia = () => {
     window.chiudiModal('modal-limite-malattia');
 
-    // FIX: Ricrea se esiste
     let existingModal = document.getElementById('modal-calcolo-manuale-malattia');
     if (existingModal) existingModal.remove();
 
@@ -352,13 +350,26 @@ window.apriModalRicercaTurni = () => {
             </p>
 
             <div class="stat-card-panel" style="margin-bottom: 20px; padding: 20px;">
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <div style="flex: 1;">
+                        <label class="stat-editor-label">Da (Inizio):</label>
+                        <input type="date" id="dateStartRicerca" class="input-field" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 14px; background-color: var(--surface); color: var(--text-main); font-family: inherit;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label class="stat-editor-label">A (Fine):</label>
+                        <input type="date" id="dateEndRicerca" class="input-field" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 14px; background-color: var(--surface); color: var(--text-main); font-family: inherit;">
+                    </div>
+                </div>
+                <div class="stat-input-help" style="margin-bottom: 20px;">Lascia le date vuote per cercare in tutto il calendario.</div>
+                
                 <label class="stat-editor-label">Nome del turno da cercare:</label>
-                <div style="display:flex; gap: 10px;">
-                    <input type="text" id="inputRicercaTurno" class="input-field" placeholder="Es. M2, P1, NOTTE..." style="flex: 1; padding: 12px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 15px; background-color: var(--surface); color: var(--text-main); text-transform: uppercase;">
-                    <button class="btn-action" style="background-color: var(--info); color: white; border: none; padding: 12px 20px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer;" onclick="window.cercaTurnoManuale()">Cerca</button>
+                <div style="display:flex; flex-direction: column; gap: 12px;">
+                    <input type="text" id="inputRicercaTurno" class="input-field" placeholder="Es. M2, P1, NOTTE..." style="width: 100%; padding: 14px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 16px; background-color: var(--surface); color: var(--text-main); text-transform: uppercase;">
+                    <button class="btn-action" style="background-color: var(--info); color: white; border: none; padding: 14px 20px; font-size: 16px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer;" onclick="window.cercaTurnoManuale()">Cerca</button>
                 </div>
                 
-                <div id="risultatoRicercaTurno" style="margin-top: 15px; font-size: 15px; color: var(--text-main); text-align:center; min-height: 24px;">
+                <div id="risultatoRicercaTurno" style="margin-top: 20px; font-size: 15px; color: var(--text-main); text-align:center; min-height: 24px;">
                     <!-- Il risultato apparirà qui -->
                 </div>
             </div>
