@@ -122,33 +122,61 @@ export function avviaMotoreStatistiche(db, auth) {
     };
 
     // ==========================================
-    // FUNZIONE PER CALCOLO TOTALE MALATTIA (Per nuova finestra, ultimi 42 mesi)
+    // FUNZIONE PER CALCOLO TOTALE MALATTIA (Ultimi 42 mesi)
     // ==========================================
     window.getTotaleMalattiaCalendario = () => {
         let state = JSON.parse(localStorage.getItem('myTurniApp')) || {};
         let totaleMalattia = 0;
         
-        // Calcola la data limite: oggi meno 42 mesi (3 anni e mezzo)
         let dataOggi = new Date();
-        dataOggi.setHours(23, 59, 59, 999); // Fine della giornata di oggi
+        dataOggi.setHours(23, 59, 59, 999); 
         
         let dataLimite = new Date();
         dataLimite.setMonth(dataLimite.getMonth() - 42);
-        dataLimite.setHours(0, 0, 0, 0); // Inizio della giornata limite
+        dataLimite.setHours(0, 0, 0, 0); 
 
         if (state.variazioni) {
-            for (const [date, varTurno] of Object.entries(state.variazioni)) {
+            for (const [dateString, varTurno] of Object.entries(state.variazioni)) {
                 let v = varTurno.toUpperCase();
                 if (v.includes("KMAL") || v === "MALATTIA") {
-                    // Controlla se la data rientra nel range temporale (ultimi 42 mesi fino ad oggi)
-                    let dataRegistrata = new Date(date);
-                    if (dataRegistrata >= dataLimite && dataRegistrata <= dataOggi) {
-                        totaleMalattia++;
+                    // Fix Fuso orario: scompone la stringa YYYY-MM-DD per creare una data locale esatta
+                    let parts = dateString.split('-');
+                    if (parts.length === 3) {
+                        let dataRegistrata = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                        if (dataRegistrata >= dataLimite && dataRegistrata <= dataOggi) {
+                            totaleMalattia++;
+                        }
                     }
                 }
             }
         }
         return totaleMalattia;
+    };
+
+    // ==========================================
+    // FUNZIONE PER RICERCA TURNI SPECIFICI
+    // ==========================================
+    window.cercaTurnoManuale = () => {
+        let testoRicerca = document.getElementById('inputRicercaTurno').value.trim().toUpperCase();
+        let boxRisultato = document.getElementById('risultatoRicercaTurno');
+        
+        if (!testoRicerca) {
+            boxRisultato.innerHTML = '<span style="color: var(--danger);">Inserisci un testo da cercare.</span>';
+            return;
+        }
+
+        let state = JSON.parse(localStorage.getItem('myTurniApp')) || {};
+        let conteggio = 0;
+
+        if (state.variazioni) {
+            for (const [date, varTurno] of Object.entries(state.variazioni)) {
+                if (varTurno.toUpperCase().includes(testoRicerca)) {
+                    conteggio++;
+                }
+            }
+        }
+        
+        boxRisultato.innerHTML = `Il turno <strong>${testoRicerca}</strong> è stato trovato <strong style="font-size:18px; color:var(--primary);">${conteggio}</strong> volte nel calendario.`;
     };
 
     // ==========================================
@@ -164,14 +192,12 @@ export function avviaMotoreStatistiche(db, auth) {
                     let datiCloud = docSnap.data();
                     let datiLocali = JSON.parse(localStorage.getItem('myTurniApp')) || {};
                     
-                    // Fonde i dati per mantenere sincronizzate le statistiche in tempo reale
                     let stateAggiornato = { ...datiLocali, ...datiCloud }; 
                     localStorage.setItem('myTurniApp', JSON.stringify(stateAggiornato)); 
                 }
             } catch(e) { console.error("Errore Sync Cloud Statistiche:", e); }
         }
         
-        // Calcola istantaneamente appena la modale viene avviata
         setTimeout(() => {
             if (typeof window.calcolaStatistiche === 'function') {
                 window.calcolaStatistiche(true);
