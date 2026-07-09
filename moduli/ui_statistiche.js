@@ -1,11 +1,12 @@
 export function initUIStatistiche() {
-    if (document.getElementById('modal-statistiche-main')) return;
+    let existingMain = document.getElementById('modal-statistiche-main');
+    if (existingMain) existingMain.remove();
 
-    // Iniezione CSS specifico per le Statistiche e Modali Malattia
+    // Iniezione CSS specifico
     const style = document.createElement('style');
     style.innerHTML = `
         /* FIX FORZATO: Modale a finestra al centro dello schermo */
-        #modal-statistiche-main, #modal-limite-malattia, #modal-calcolo-manuale-malattia {
+        #modal-statistiche-main, #modal-limite-malattia, #modal-calcolo-manuale-malattia, #modal-ricerca-turni {
             background-color: rgba(0, 0, 0, 0.5) !important;
             align-items: center !important;
             justify-content: center !important;
@@ -81,7 +82,6 @@ export function initUIStatistiche() {
         .color-straord { color: var(--primary); }
         .color-sp { color: var(--text-muted); }
 
-        /* Stili per il calcolatore manuale */
         .manual-calc-header {
             position: sticky;
             top: 0;
@@ -111,6 +111,7 @@ export function initUIStatistiche() {
     const container = document.createElement('div');
     container.id = 'modal-statistiche-main';
     container.className = 'modal-overlay';
+    container.style.display = 'flex';
     container.onclick = (e) => { window.chiudiSuSfondo(e, 'modal-statistiche-main') };
 
     container.innerHTML = `
@@ -124,7 +125,6 @@ export function initUIStatistiche() {
                 </h2>
             </div>
 
-            <!-- Area scrollabile -->
             <div style="flex: 1; min-height: 0; overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; padding-bottom: 20px;">
                 
                 <p class="stat-description">
@@ -184,9 +184,16 @@ export function initUIStatistiche() {
                         </div>
                     </div>
 
-                    <button class="btn-action" style="background-color: var(--warning); color: #fff; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; margin-top: 10px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);" onclick="window.apriModalLimiteMalattia()">
-                        <i class="fa-solid fa-notes-medical"></i> Dati limite malattia
-                    </button>
+                    <!-- Nuovi Bottoni Aggiuntivi -->
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                        <button class="btn-action" style="background-color: var(--warning); color: #fff; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);" onclick="window.apriModalLimiteMalattia()">
+                            <i class="fa-solid fa-notes-medical"></i> Dati limite malattia
+                        </button>
+                        
+                        <button class="btn-action" style="background-color: var(--info); color: #fff; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);" onclick="window.apriModalRicercaTurni()">
+                            <i class="fa-solid fa-magnifying-glass"></i> Cerca altro
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -195,11 +202,13 @@ export function initUIStatistiche() {
 }
 
 // ==========================================
-// FUNZIONI GLOBALI PER FINESTRE MALATTIA
+// FUNZIONI GLOBALI PER FINESTRE SECONDARIE
 // ==========================================
 
 window.apriModalLimiteMalattia = () => {
-    if (document.getElementById('modal-limite-malattia')) return;
+    // FIX: Rimuove la modale se esiste già così da ricrearla visibile
+    let existingModal = document.getElementById('modal-limite-malattia');
+    if (existingModal) existingModal.remove();
 
     let totaleMalattia = 0;
     if (typeof window.getTotaleMalattiaCalendario === 'function') {
@@ -238,19 +247,18 @@ window.apriModalLimiteMalattia = () => {
 };
 
 window.apriCalcolatoreManualeMalattia = () => {
-    // Chiude la modale precedente per pulizia
     window.chiudiModal('modal-limite-malattia');
 
-    if (document.getElementById('modal-calcolo-manuale-malattia')) return;
+    // FIX: Ricrea se esiste
+    let existingModal = document.getElementById('modal-calcolo-manuale-malattia');
+    if (existingModal) existingModal.remove();
 
-    // Generazione dei 42 mesi a ritroso
     let mesiHtml = '';
     let oggi = new Date();
     
     for (let i = 0; i < 42; i++) {
         let d = new Date(oggi.getFullYear(), oggi.getMonth() - i, 1);
         let nomeMese = d.toLocaleString('it-IT', { month: 'long', year: 'numeric' });
-        // Capitalizza la prima lettera
         nomeMese = nomeMese.charAt(0).toUpperCase() + nomeMese.slice(1);
         
         mesiHtml += `
@@ -288,7 +296,6 @@ window.apriCalcolatoreManualeMalattia = () => {
                 </div>
             </div>
 
-            <!-- Area scrollabile dei 42 mesi -->
             <div style="flex: 1; min-height: 0; overflow-y: auto; padding-right: 10px; padding-bottom: 20px;">
                 <p style="font-size: 13px; color: var(--text-muted); margin-top: 0; margin-bottom: 15px;">
                     Inserisci i giorni di malattia fatti nei mesi precedenti per verificare la somma totale degli ultimi 3 anni e mezzo.
@@ -314,11 +321,48 @@ window.aggiornaTotaleManualeMalattia = () => {
     let totEl = document.getElementById('totaleManualeTesto');
     if(totEl) {
         totEl.innerText = totale;
-        // Se supera i 180 diventa rosso per avvisare l'utente
         if (totale > 180) {
             totEl.style.color = 'var(--danger)';
         } else {
             totEl.style.color = 'var(--text-main)';
         }
     }
+};
+
+window.apriModalRicercaTurni = () => {
+    let existingModal = document.getElementById('modal-ricerca-turni');
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'modal-ricerca-turni';
+    modal.className = 'modal-overlay';
+    modal.style.display = 'flex';
+    modal.onclick = (e) => { window.chiudiSuSfondo(e, 'modal-ricerca-turni') };
+
+    modal.innerHTML = `
+        <div class="modal-content animate-pop" style="max-width: 450px; padding: 24px; position: relative;">
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="window.chiudiModal('modal-ricerca-turni')"></i>
+            
+            <h2 style="margin-top: 0; color: var(--text-main); font-size: 22px; margin-bottom: 15px; display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-magnifying-glass" style="color:var(--info);"></i> Cerca turno
+            </h2>
+            
+            <p class="stat-description" style="border-left-color: var(--info);">
+                I risultati verranno trovati <strong>solo fra i turni scritti manualmente</strong> nel calendario. I turni calcolati automaticamente non verranno trovati.
+            </p>
+
+            <div class="stat-card-panel" style="margin-bottom: 20px; padding: 20px;">
+                <label class="stat-editor-label">Nome del turno da cercare:</label>
+                <div style="display:flex; gap: 10px;">
+                    <input type="text" id="inputRicercaTurno" class="input-field" placeholder="Es. M2, P1, NOTTE..." style="flex: 1; padding: 12px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 15px; background-color: var(--surface); color: var(--text-main); text-transform: uppercase;">
+                    <button class="btn-action" style="background-color: var(--info); color: white; border: none; padding: 12px 20px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer;" onclick="window.cercaTurnoManuale()">Cerca</button>
+                </div>
+                
+                <div id="risultatoRicercaTurno" style="margin-top: 15px; font-size: 15px; color: var(--text-main); text-align:center; min-height: 24px;">
+                    <!-- Il risultato apparirà qui -->
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
 };
