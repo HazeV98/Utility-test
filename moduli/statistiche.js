@@ -122,6 +122,36 @@ export function avviaMotoreStatistiche(db, auth) {
     };
 
     // ==========================================
+    // FUNZIONE PER CALCOLO TOTALE MALATTIA (Per nuova finestra, ultimi 42 mesi)
+    // ==========================================
+    window.getTotaleMalattiaCalendario = () => {
+        let state = JSON.parse(localStorage.getItem('myTurniApp')) || {};
+        let totaleMalattia = 0;
+        
+        // Calcola la data limite: oggi meno 42 mesi (3 anni e mezzo)
+        let dataOggi = new Date();
+        dataOggi.setHours(23, 59, 59, 999); // Fine della giornata di oggi
+        
+        let dataLimite = new Date();
+        dataLimite.setMonth(dataLimite.getMonth() - 42);
+        dataLimite.setHours(0, 0, 0, 0); // Inizio della giornata limite
+
+        if (state.variazioni) {
+            for (const [date, varTurno] of Object.entries(state.variazioni)) {
+                let v = varTurno.toUpperCase();
+                if (v.includes("KMAL") || v === "MALATTIA") {
+                    // Controlla se la data rientra nel range temporale (ultimi 42 mesi fino ad oggi)
+                    let dataRegistrata = new Date(date);
+                    if (dataRegistrata >= dataLimite && dataRegistrata <= dataOggi) {
+                        totaleMalattia++;
+                    }
+                }
+            }
+        }
+        return totaleMalattia;
+    };
+
+    // ==========================================
     // SYNC DATI FIREBASE (Avviato automaticamente)
     // ==========================================
     const eseguiSincronizzazione = async () => {
@@ -150,4 +180,4 @@ export function avviaMotoreStatistiche(db, auth) {
     };
 
     eseguiSincronizzazione();
-} 
+}
