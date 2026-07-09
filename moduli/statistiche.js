@@ -154,10 +154,12 @@ export function avviaMotoreStatistiche(db, auth) {
     };
 
     // ==========================================
-    // FUNZIONE PER RICERCA TURNI SPECIFICI
+    // FUNZIONE PER RICERCA TURNI SPECIFICI (Con Date)
     // ==========================================
     window.cercaTurnoManuale = () => {
         let testoRicerca = document.getElementById('inputRicercaTurno').value.trim().toUpperCase();
+        let startStr = document.getElementById('dateStartRicerca').value;
+        let endStr = document.getElementById('dateEndRicerca').value;
         let boxRisultato = document.getElementById('risultatoRicercaTurno');
         
         if (!testoRicerca) {
@@ -165,18 +167,47 @@ export function avviaMotoreStatistiche(db, auth) {
             return;
         }
 
+        if ((startStr && !endStr) || (!startStr && endStr)) {
+            alert("Seleziona entrambe le date, oppure lasciale entrambe vuote per cercare in tutto il calendario.");
+            return;
+        }
+
+        if (startStr && endStr && startStr > endStr) {
+            alert("La data d'inizio deve essere precedente alla fine!");
+            return;
+        }
+
         let state = JSON.parse(localStorage.getItem('myTurniApp')) || {};
         let conteggio = 0;
 
         if (state.variazioni) {
-            for (const [date, varTurno] of Object.entries(state.variazioni)) {
+            for (const [dateStr, varTurno] of Object.entries(state.variazioni)) {
                 if (varTurno.toUpperCase().includes(testoRicerca)) {
-                    conteggio++;
+                    let matchesDate = true;
+                    // Confronto stringhe YYYY-MM-DD (sicuro e veloce)
+                    if (startStr && endStr) {
+                        if (dateStr < startStr || dateStr > endStr) {
+                            matchesDate = false;
+                        }
+                    }
+                    if (matchesDate) {
+                        conteggio++;
+                    }
                 }
             }
         }
         
-        boxRisultato.innerHTML = `Il turno <strong>${testoRicerca}</strong> è stato trovato <strong style="font-size:18px; color:var(--primary);">${conteggio}</strong> volte nel calendario.`;
+        // Formattazione del testo per il risultato
+        let periodoTesto = "";
+        if (startStr && endStr) {
+            let sDate = startStr.split('-').reverse().join('/');
+            let eDate = endStr.split('-').reverse().join('/');
+            periodoTesto = `dal ${sDate} al ${eDate}`;
+        } else {
+            periodoTesto = `nel calendario`;
+        }
+        
+        boxRisultato.innerHTML = `Il turno <strong>${testoRicerca}</strong> è stato trovato <strong style="font-size:18px; color:var(--primary);">${conteggio}</strong> volte ${periodoTesto}.`;
     };
 
     // ==========================================
