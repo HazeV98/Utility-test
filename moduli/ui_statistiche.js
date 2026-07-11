@@ -365,7 +365,7 @@ window.apriModalRicercaTurni = () => {
                 
                 <label class="stat-editor-label">Nome del turno da cercare:</label>
                 <div style="display:flex; flex-direction: column; gap: 12px;">
-                    <input type="text" id="inputRicercaTurno" class="input-field" placeholder="Es. M2, P1, NOTTE..." style="width: 100%; padding: 14px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 16px; background-color: var(--surface); color: var(--text-main); text-transform: uppercase;">
+                    <input type="text" id="inputRicercaTurno" class="input-field" placeholder="Es. PRT, 1C01 ECC..." style="width: 100%; padding: 14px; border: 2px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-size: 16px; background-color: var(--surface); color: var(--text-main); text-transform: uppercase;">
                     <button class="btn-action" style="background-color: var(--info); color: white; border: none; padding: 14px 20px; font-size: 16px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer;" onclick="window.cercaTurnoManuale()">Cerca</button>
                 </div>
                 
