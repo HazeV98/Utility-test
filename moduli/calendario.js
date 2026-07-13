@@ -333,7 +333,11 @@ async function elaboraPdfBibbia(event) {
             }
         });
 
-        let turniAttuali = calcolaTurni();
+        // Ottimizzazione: calcoliamo i turni solo per il mese interessato dal PDF
+        let dStart = new Date(anno, mese - 1, 1);
+        let dEnd = new Date(anno, mese, 1);
+        let turniAttuali = calcolaTurni(dStart, dEnd);
+        
         window.pendingPdfChanges = [];
         
         for (let dStr in turniLetti) {
@@ -541,7 +545,11 @@ function generaPdfTipo2() {
             <tbody>
     `;
 
-    const turni = calcolaTurni();
+    // Ottimizzazione: Calcoliamo solo il mese di interesse
+    let dStart = new Date(anno, parseInt(mese)-1, 1);
+    let dEnd = new Date(anno, parseInt(mese), 1);
+    const turni = calcolaTurni(dStart, dEnd);
+    
     const dateChiavi = Object.keys(state.dbCache || {}).sort();
     const giorniInMese = new Date(anno, mese, 0).getDate();
     const giorniSettimana = ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
@@ -1322,7 +1330,13 @@ async function gestisciInterazione(date) {
         }
         
         let infoArea = document.getElementById('infoTurniArea'); 
-        let turniCalc = calcolaTurni();
+        
+        // Ottimizzazione: Calcoliamo solo per la singola data selezionata
+        let dateObj = creaDataSicura(date);
+        let endDateObj = new Date(dateObj);
+        endDateObj.setDate(endDateObj.getDate() + 1);
+        
+        let turniCalc = calcolaTurni(dateObj, endDateObj);
         let turnoCorrenteObj = turniCalc.find(e => e.start === date && !e.title.includes('FERIE') && e.title !== 'FEP');
         let nomeTurnoCompleto = turnoCorrenteObj ? turnoCorrenteObj.title : "Nessun turno";
         let nomeTurnoPulito = nomeTurnoCompleto.replace(/<i[^>]*><\/i>/g, '').replace(/\(Sospeso\)/g, '').trim();
@@ -1368,7 +1382,10 @@ async function gestisciInterazione(date) {
         if (state.variazioni[date]) {
             let tempVar = state.variazioni[date]; 
             delete state.variazioni[date];
-            let turniSenzaVariazioni = calcolaTurni();
+            
+            // Ottimizzazione
+            let turniSenzaVariazioni = calcolaTurni(dateObj, endDateObj);
+            
             let turnoOrigObj = turniSenzaVariazioni.find(e => e.start === date && !e.title.includes('FERIE') && e.title !== 'FEP');
             let origPulito = turnoOrigObj ? turnoOrigObj.title.replace(/<i[^>]*><\/i>/g, '').replace(/\(Sospeso\)/g, '').trim() : "Nessun turno";
             htmlInfo += `<br><span style="font-size: 0.9em; color: var(--text-muted);"><b>Turno original:</b> ${origPulito}</span>`;
@@ -1862,32 +1879,41 @@ function attivaRotazioneFinale() {
     salvaERicarica(); 
 }
 
-function calcolaTurni() {
+// --- OTTIMIZZAZIONE LAZY LOADING IMPLEMENTATA QUI ---
+function calcolaTurni(vistaStartObj = null, vistaEndObj = null) {
     if (!state.riposoStart) return [];
     let evs = []; 
+    
+    // Default: se non vengono passate date (es. da alcune funzioni esterne), prendiamo da -60gg a +365gg
+    let start = vistaStartObj ? new Date(vistaStartObj) : new Date();
+    if (!vistaStartObj) start.setDate(start.getDate() - 60);
+
+    let end = vistaEndObj ? new Date(vistaEndObj) : new Date();
+    if (!vistaEndObj) end.setDate(end.getDate() + 365);
+
+    start.setHours(12, 0, 0, 0);
+    end.setHours(12, 0, 0, 0);
+    
     let today = new Date(); 
     today.setHours(12, 0, 0, 0); 
-    
-    let limitTurni = 365; 
-    let limitRiposi = 1825; 
     let todayNum = stringToNum(dateToLocalISO(today)); 
     
+    // Calcoliamo i limiti solo per evitare rendering infiniti, ma usiamo il ciclo While tra Start e End
+    let limitTurniNum = todayNum + 365; 
     if (state.rotazioneStart) { 
         let distDaOggi = Math.abs(todayNum - stringToNum(state.rotazioneStart)); 
-        limitTurni = distDaOggi + 365; 
-        limitRiposi = distDaOggi + 1825; 
+        limitTurniNum = todayNum + distDaOggi + 365; 
     }
-    
     if (state.futureConfig && state.futureConfig.dataInizio) { 
         let distFutura = Math.abs(todayNum - stringToNum(state.futureConfig.dataInizio)); 
-        if (distFutura + 365 > limitTurni) limitTurni = distFutura + 365; 
-        if (distFutura + 1825 > limitRiposi) limitRiposi = distFutura + 1825; 
+        if (todayNum + distFutura + 365 > limitTurniNum) limitTurniNum = todayNum + distFutura + 365; 
     }
     
     let processati = new Set(); 
-    
-    for (let i = -60; i < limitRiposi; i++) {
-        let dObj = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i, 12, 0, 0); 
+    let dObj = new Date(start);
+
+    // Cicliamo SOLO all'interno della finestra temporale richiesta dal FullCalendar
+    while (dObj < end) {
         let dStr = dateToLocalISO(dObj); 
         let curr = stringToNum(dStr); 
         processati.add(dStr);
@@ -1938,6 +1964,7 @@ function calcolaTurni() {
                 ev.className = (state.variazioni[dStr]==='RI' || state.variazioni[dStr]==='RIPOSO' || state.variazioni[dStr]==='AL') ? 'bg-riposo' : 'bg-modificato'; 
             }
             evs.push(ev); 
+            dObj.setDate(dObj.getDate() + 1);
             continue;
         }
         
@@ -1958,7 +1985,7 @@ function calcolaTurni() {
             }
             evs.push(ev);
             
-        } else if (i < limitTurni) {
+        } else if (curr < limitTurniNum) {
             const currentRotRules = getRotazionePerData(dStr); 
             let t = "";
             
@@ -2056,8 +2083,14 @@ function calcolaTurni() {
                 evs.push(ev); 
             }
         }
+        
+        dObj.setDate(dObj.getDate() + 1);
     }
     
+    // Aggiungiamo eventuali manualità/variazioni inserite che si trovano nel range visibile
+    let startNum = stringToNum(dateToLocalISO(start));
+    let endNum = stringToNum(dateToLocalISO(end));
+
     let chiaviModificate = new Set([
         ...Object.keys(state.variazioni || {}), 
         ...Object.keys(state.nebbia || {}), 
@@ -2070,14 +2103,14 @@ function calcolaTurni() {
     ]);
     
     chiaviModificate.forEach(dStr => {
-        if (!processati.has(dStr)) {
+        let currMod = stringToNum(dStr); 
+        if (currMod >= startNum && currMod < endNum && !processati.has(dStr)) {
             let ferieAssegnate = getFerieGiorno(dStr); 
             if (ferieAssegnate) { 
                 evs.push({ title: ferieAssegnate, start: dStr, allDay: true, className: 'bg-ferie', myOrder: 1 }); 
             }
             
             let customColor = (state.colori && state.colori[dStr]) ? state.colori[dStr] : null;
-            let currMod = stringToNum(dStr); 
             let isPastUpdateMod = (state.history && currMod < stringToNum(DATA_INIZIO_NUOVI_TURNI)); 
             let cfgBaseMod = isPastUpdateMod ? state.history : state;
             
@@ -2269,7 +2302,12 @@ function esportaICS() {
     if (!startDate || !endDate) { alert("Seleziona entrambe le date."); return; } 
     if (startDate > endDate) { alert("La data di inizio deve essere precedente alla data di fine."); return; }
     
-    const turni = calcolaTurni(); 
+    // Ottimizzazione
+    let dStart = creaDataSicura(startDate);
+    let dEnd = creaDataSicura(endDate);
+    dEnd.setDate(dEnd.getDate() + 1);
+    const turni = calcolaTurni(dStart, dEnd); 
+    
     const turniFiltrati = turni.filter(t => t.start >= startDate && t.start <= endDate); 
     
     if (turniFiltrati.length === 0) { alert("Nessun turno nel periodo selezionato."); return; }
@@ -2353,7 +2391,10 @@ function inizializzaCalendario() {
         },
         dateClick: (i) => gestisciInterazione(i.dateStr),
         eventClick: (info) => gestisciInterazione(info.event.startStr),
-        events: (i, success) => success(calcolaTurni())
+        // Ottimizzazione Lazy Loading
+        events: function(info, successCallback, failureCallback) {
+            successCallback(calcolaTurni(info.start, info.end));
+        }
     });
     calendar.render();
 }
