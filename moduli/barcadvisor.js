@@ -54,6 +54,10 @@ export function avviaMotoreBarcadvisor(db, auth, userDataPrivate, isAdmin) {
 
         const searchInput = document.getElementById('ba-searchInput');
         const search = searchInput ? searchInput.value.toLowerCase() : "";
+        
+        const sortSelect = document.getElementById('ba-sortSelect');
+        const sortValue = sortSelect ? sortSelect.value : 'name_asc';
+
         container.innerHTML = '';
 
         const filtered = allUnits.filter(u => {
@@ -78,8 +82,33 @@ export function avviaMotoreBarcadvisor(db, auth, userDataPrivate, isAdmin) {
 
         const orderCats = ["Motoscafi", "Motobattelli", "Motobattelli foranei", "Motonavi", "Motozattere", "Altre Unità"];
 
-        // Suddivide le unità filtrate nei gruppi
-        filtered.sort((a,b) => a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: 'base' })).forEach(unit => {
+        // Suddivide le unità filtrate nei gruppi e applica il filtro scelto
+        filtered.sort((a, b) => {
+            if (sortValue === 'name_asc') {
+                return a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: 'base' });
+            } else if (sortValue === 'name_desc') {
+                return b.id.localeCompare(a.id, undefined, { numeric: true, sensitivity: 'base' });
+            } else {
+                const vA = parseFloat(a.mediaVoto) || 0;
+                const vB = parseFloat(b.mediaVoto) || 0;
+                
+                const unratedA = vA === 0;
+                const unratedB = vB === 0;
+
+                // Spingi le unità senza voto sempre in fondo alla lista
+                if (unratedA && !unratedB) return 1;
+                if (!unratedA && unratedB) return -1;
+
+                if (sortValue === 'rating_desc') {
+                    if (vB !== vA) return vB - vA;
+                } else if (sortValue === 'rating_asc') {
+                    if (vA !== vB) return vA - vB;
+                }
+                
+                // A parità di voti o se entrambe non sono votate, usa l'ordine alfabetico
+                return a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: 'base' });
+            }
+        }).forEach(unit => {
             const displayId = unit.id.replace(/_/g, '/');
             let cat = "Altre Unità";
             
@@ -235,7 +264,7 @@ export function avviaMotoreBarcadvisor(db, auth, userDataPrivate, isAdmin) {
                             </div>
                         `;
                     } else {
-                        // SEGNALAZIONI IN CRONOLOGIA (RISOLTE) - Tolto il text-decoration: line-through;
+                        // SEGNALAZIONI IN CRONOLOGIA (RISOLTE)
                         histCount++;
                         if(historyList) {
                             historyList.innerHTML += `

@@ -1345,3 +1345,4 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ Lazy Loading System inizializzato');
 });
 // ============================================================================
+

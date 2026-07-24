@@ -16,6 +16,14 @@ export function initUIBarcadvisor() {
                         <input type="text" id="ba-searchInput" class="input-field" placeholder="Cerca unità..." style="margin-bottom:0;" oninput="window.renderUnitsBA()">
                         <i class="fa-solid fa-magnifying-glass" style="position:absolute; right:16px; top:18px; color:var(--text-muted);"></i>
                     </div>
+                    
+                    <select id="ba-sortSelect" class="input-field" style="margin-bottom:0;" onchange="window.renderUnitsBA()">
+                        <option value="name_asc">Ordina per: Nome (Crescente)</option>
+                        <option value="name_desc">Ordina per: Nome (Decrescente)</option>
+                        <option value="rating_desc">Ordina per: Voto (Dal più alto)</option>
+                        <option value="rating_asc">Ordina per: Voto (Dal più basso)</option>
+                    </select>
+
                     <button class="btn-action btn-success" onclick="window.openAddUnitBA()">
                         <i class="fa-solid fa-plus"></i> Aggiungi Unità
                     </button>

@@ -20,7 +20,10 @@ export async function avviaMotoreLink() {
                 const row = document.createElement('div');
                 row.className = "link-row";
                 row.innerHTML = `<a class="link-btn" href="${l.url}" target="_blank"><span>${l.nome}</span> <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-                                 <div class="copy-btn" title="Copia link" onclick="window.copiaLink('${l.url}', this)"><i class="fa-regular fa-copy"></i></div>`;
+                                 <div style="display: flex; gap: 8px;">
+                                     <div class="copy-btn" title="Mostra QR Code" onclick="window.mostraQR('${l.url}')"><i class="fa-solid fa-qrcode"></i></div>
+                                     <div class="copy-btn" title="Copia link" onclick="window.copiaLink('${l.url}', this)"><i class="fa-regular fa-copy"></i></div>
+                                 </div>`;
                 block.appendChild(row);
             });
             area.appendChild(block);
@@ -46,4 +49,23 @@ window.copiaLink = (url, btn) => {
             btn.style.borderColor = "";
         }, 1500);
     });
+};
+
+// Nuova funzione per generare e mostrare il QR code
+window.mostraQR = (url) => {
+    const qrImg = document.getElementById('qr-code-img');
+    const modalQR = document.getElementById('modal-qr-main');
+    
+    if (qrImg && modalQR) {
+        // Generazione tramite API per evitare dipendenze esterne
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+        
+        // Se nel tuo script gestisci l'apertura tramite apriModal, la invoca. 
+        // Altrimenti gestisce il display manualmente per sicurezza.
+        if (typeof window.apriModal === 'function') {
+            window.apriModal('modal-qr-main');
+        } else {
+            modalQR.style.display = 'flex';
+        }
+    }
 };

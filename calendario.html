@@ -15,24 +15,51 @@
 
     <script>
         // --- GESTIONE TEMA DA PREFERENZE ---
-        (function applicaTema() {
+        window.applicaTema = function() {
             try {
+                let theme = 'system';
+                
+                // 1. Tenta di leggere preferenze_layout_haze
                 let prefStr = localStorage.getItem('preferenze_layout_haze');
                 if (prefStr) {
-                    let prefs = JSON.parse(prefStr);
-                    let theme = prefs.theme || 'system';
-                    if (theme !== 'system') {
-                        document.documentElement.setAttribute('data-theme', theme);
-                    } else {
-                        document.documentElement.removeAttribute('data-theme');
+                    try {
+                        let prefs = JSON.parse(prefStr);
+                        if (prefs.theme) theme = prefs.theme;
+                    } catch (e) {
+                        // Se il JSON è corrotto, ignora silenziosamente
                     }
-                } else {
-                    const oldTheme = localStorage.getItem('theme');
-                    if (oldTheme && oldTheme !== 'system') document.documentElement.setAttribute('data-theme', oldTheme);
                 }
-            } catch(e) {}
-        })();
+                
+                // 2. Se è ancora su 'system', prova a leggere la vecchia chiave 'theme'
+                if (theme === 'system') {
+                    let oldTheme = localStorage.getItem('theme');
+                    if (oldTheme) theme = oldTheme;
+                }
+
+                // 3. Applica l'attributo all'HTML in modo preciso
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else if (theme === 'light') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
+            } catch(e) {
+                console.error("Errore generale nell'applicazione del tema:", e);
+            }
+        };
+
+        // Applica subito il tema al caricamento della pagina
+        window.applicaTema();
+
+        // Mettiti in ascolto: se index.html cambia il tema, aggiornati immediatamente
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'preferenze_layout_haze' || e.key === 'theme') {
+                window.applicaTema();
+            }
+        });
     </script>
+
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
