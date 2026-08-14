@@ -143,23 +143,22 @@ const ModuliLazyLoader = {
      * @param {Array<string>} nomiModuli - Array di nomi moduli da precaricare
      */
     async precarica(nomiModuli = []) {
-        // Precarichiamo i moduli frequenti se non specificati
-        const moduli_frequenti = ['turni', 'rotazioni', 'orari', 'statistiche'];
-        const daPrecaricare = nomiModuli.length > 0 ? nomiModuli : moduli_frequenti;
+        // Se non vengono specificati moduli, li ottiene TUTTI dall'oggetto 'moduli'
+        const daPrecaricare = nomiModuli.length > 0 ? nomiModuli : Object.keys(this.moduli);
         
-        console.log(`⏳ Precario ${daPrecaricare.length} moduli in background...`);
+        console.log(`⏳ Precarico ${daPrecaricare.length} moduli in background...`);
         
         // Usa requestIdleCallback se disponibile, altrimenti setTimeout
         if ('requestIdleCallback' in window) {
             requestIdleCallback(() => {
                 daPrecaricare.forEach(nome => {
-                    this.caricaModulo(nome).catch(e => console.warn(`Errore precario ${nome}:`, e));
+                    this.caricaModulo(nome).catch(e => console.warn(`Errore precaricamento ${nome}:`, e));
                 });
             }, { timeout: 3000 });
         } else {
             setTimeout(() => {
                 daPrecaricare.forEach(nome => {
-                    this.caricaModulo(nome).catch(e => console.warn(`Errore precario ${nome}:`, e));
+                    this.caricaModulo(nome).catch(e => console.warn(`Errore precaricamento ${nome}:`, e));
                 });
             }, 2000);
         }
@@ -1267,39 +1266,90 @@ window.cambiaRuoloUtente = async (uid, nuovoRuolo) => { if(!confirm("Sei sicuro?
 
 onAuthStateChanged(auth, async (user) => {
     const vLoad = document.getElementById('view-loading'); const vGuest = document.getElementById('view-guest'); const vApp = document.getElementById('view-app'); const vBanned = document.getElementById('view-banned');
+    
     if (user) {
+        // ====================================================================
+        // 1. CARICAMENTO ISTANTANEO DALLA CACHE LOCALE (Zero attese)
+        // ====================================================================
+        vLoad.style.display = 'none';
+        vGuest.style.display = 'none';
+        vApp.style.display = 'flex';
+        vBanned.style.display = 'none';
+        document.getElementById('btnOpenLogin').style.display = 'none'; 
+        document.getElementById('btnOpenProfile').style.display = 'flex';
+        document.getElementById('profileEmail').value = user.email;
+
+        // Recupera dati utente in cache se esistono
+        let cachedData = {};
+        try { cachedData = JSON.parse(localStorage.getItem('userDataCache_haze')) || {}; } catch(e) {}
+        window.currentUserData = cachedData;
+        
+        globalIsAdmin = (user.uid === ADMIN_UID); 
+        globalIsCollab = cachedData.ruolo === 'collaborator';
+        if(globalIsAdmin) { document.getElementById('adminBadge').style.display = 'block'; document.getElementById('menu-admin').style.display = 'flex'; }
+
+        // Inizializza la griglia istantaneamente
+        window.LayoutEngine.init();
+
+        // ====================================================================
+        // 2. SINCRONIZZAZIONE SILENZIOSA E FIX DEL BUG "DATI MANCANTI"
+        // ====================================================================
         try {
-            const docSnap = await getDoc(doc(db, "utenti", user.uid)); let data = docSnap.exists() ? docSnap.data() : {};
-            window.currentUserData = data; vLoad.style.display = 'none';
-            if (data.app_banned === true) { document.body.style.backgroundImage = 'none'; document.body.style.backgroundColor = "var(--bg-color)"; vGuest.style.display = 'none'; vApp.style.display = 'none'; vBanned.style.display = 'flex'; return; }
-            if (!data.nome || !data.cognome || !data.matricola) document.getElementById('modal-dati-obbligatori').style.display = 'flex';
+            const docSnap = await getDoc(doc(db, "utenti", user.uid)); 
+            let data = docSnap.exists() ? docSnap.data() : {};
             
-            globalIsAdmin = (user.uid === ADMIN_UID); globalIsCollab = data.ruolo === 'collaborator';
-            if(globalIsAdmin) { document.getElementById('adminBadge').style.display = 'block'; document.getElementById('menu-admin').style.display = 'flex'; }
+            // FIX BUG: Uniamo i dati freschi di Firebase con quelli in cache. 
+            // Se la rete fa le bizze, i dati locali ci salvano ed evitano la modale.
+            let safeData = { ...cachedData, ...data };
             
-            vGuest.style.display = 'none'; vApp.style.display = 'flex'; vBanned.style.display = 'none';
-            document.getElementById('btnOpenLogin').style.display = 'none'; document.getElementById('btnOpenProfile').style.display = 'flex';
-            document.getElementById('profileEmail').value = user.email;
+            // Aggiorniamo la cache sul telefono solo se il fetch è andato a buon fine
+            if (docSnap.exists()) {
+                localStorage.setItem('userDataCache_haze', JSON.stringify(safeData));
+            }
+            
+            window.currentUserData = safeData; 
+            
+            // Controllo del Ban
+            if (safeData.app_banned === true) { 
+                document.body.style.backgroundImage = 'none'; document.body.style.backgroundColor = "var(--bg-color)"; 
+                vApp.style.display = 'none'; vBanned.style.display = 'flex'; 
+                return; 
+            }
+            
+            // Mostra la modale SOLO se i dati mancano sia su Firebase che nella memoria locale
+            if (!safeData.nome || !safeData.cognome || !safeData.matricola) {
+                document.getElementById('modal-dati-obbligatori').style.display = 'flex';
+            }
+            
+            globalIsCollab = safeData.ruolo === 'collaborator';
             
             const oggiLog = new Date();
             const formatterDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' });
             const oggiLogStr = formatterDate.format(oggiLog);
-            if (data.last_app_access !== oggiLogStr || !data.email) { 
+            
+            if (safeData.last_app_access !== oggiLogStr || !safeData.email) { 
                 setDoc(doc(db, "utenti", user.uid), { last_app_access: oggiLogStr, last_access_full: oggiLog.toISOString(), email: user.email }, { merge: true }); 
             }
             
-            window.LayoutEngine.init(data.preferenze_layout);
-            if(window.inizializzaNotificheSeNativa) window.inizializzaNotificheSeNativa(data);
-
-            document.getElementById('profileNome').value = data.nome || ''; 
-            document.getElementById('profileCognome').value = data.cognome || '';
-            document.getElementById('profileMatricola').value = data.matricola || ''; 
-            document.getElementById('profileProgressivo').value = data.progressivo || '';
-            document.getElementById('profileSoprannome').value = data.soprannome || '';
-            document.getElementById('profileTelefono').value = data.telefono || '';
-            document.getElementById('profileMansione').value = data.mansione || '';
+            // Aggiorna il layout in tempo reale se su Firebase è diverso da quello locale
+            if (safeData.preferenze_layout && safeData.preferenze_layout !== localStorage.getItem('preferenze_layout_haze')) {
+                window.LayoutEngine.init(safeData.preferenze_layout);
+            }
             
-        } catch(e) { vLoad.style.display = 'none'; }
+            if(window.inizializzaNotificheSeNativa) window.inizializzaNotificheSeNativa(safeData);
+
+            // Popola i campi del profilo in background
+            document.getElementById('profileNome').value = safeData.nome || ''; 
+            document.getElementById('profileCognome').value = safeData.cognome || '';
+            document.getElementById('profileMatricola').value = safeData.matricola || ''; 
+            document.getElementById('profileProgressivo').value = safeData.progressivo || '';
+            document.getElementById('profileSoprannome').value = safeData.soprannome || '';
+            document.getElementById('profileTelefono').value = safeData.telefono || '';
+            document.getElementById('profileMansione').value = safeData.mansione || '';
+            
+        } catch(e) { 
+            console.error("Errore aggiornamento dati in background:", e); 
+        }
     } else { 
         vLoad.style.display = 'none'; window.LayoutEngine.init(); vGuest.style.display = 'flex'; vApp.style.display = 'none'; vBanned.style.display = 'none'; 
     }
@@ -1335,14 +1385,14 @@ if (!isStandalone) {
 }
 
 // ============================================================================
-// LAZY LOADING: INIZIALIZZAZIONE E PRECARIO MODULI FREQUENTI
+// LAZY LOADING: INIZIALIZZAZIONE E PRECARICO MODULI
 // ============================================================================
 
 window.ModuliLazyLoader = ModuliLazyLoader;
 
 document.addEventListener('DOMContentLoaded', () => {
-    ModuliLazyLoader.precarica(['turni', 'rotazioni', 'statistiche', 'orari']);
-    console.log('✅ Lazy Loading System inizializzato');
+    // Chiamando precarica() vuoto, scaricherà in background TUTTI i moduli
+    ModuliLazyLoader.precarica();
+    console.log('✅ Lazy Loading System inizializzato per tutti i moduli');
 });
 // ============================================================================
-
