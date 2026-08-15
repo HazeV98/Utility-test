@@ -5,12 +5,11 @@ let firestoreDB = null;
 const MIO_ID_ADMIN = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2";
 
 export async function avviaMotoreContatti(db, auth) {
-    firestoreDB = db; // Salviamo il db globalmente per usarlo nel form
+    firestoreDB = db; 
     
     const area = document.getElementById('contatti-content-area');
     if (!area) return;
 
-    // Mostriamo il tasto + SOLO se l'UID corrisponde al tuo
     const btnAdd = document.getElementById('btn-add-contact');
     if (btnAdd) {
         if (auth && auth.currentUser && auth.currentUser.uid === MIO_ID_ADMIN) {
@@ -47,10 +46,9 @@ async function caricaContattiDaFirebase() {
             }))
         };
         
-        // Collega la barra di ricerca
         const searchInput = document.getElementById('ricerca-contatti');
         if (searchInput) {
-            searchInput.value = ""; // Resetta la ricerca
+            searchInput.value = ""; 
             searchInput.oninput = (e) => {
                 renderizzaContatti(e.target.value);
             };
@@ -82,10 +80,17 @@ function renderizzaContatti(filtroTestuale) {
     datiContattiCache.contatti.forEach(categoriaObj => {
         const elementiFiltrati = categoriaObj.elementi.filter(contatto => {
             if (!termineRicerca) return true;
+            
             const matchNome = (contatto.nome || "").toLowerCase().includes(termineRicerca);
-            const valoreSenzaSpazi = (contatto.valore || "").toLowerCase().replace(/\s+/g, '');
-            const matchValore = valoreSenzaSpazi.includes(termineSenzaSpazi);
-            return matchNome || matchValore;
+            
+            // Gestione retrocompatibilità vecchi record (con .tipo e .valore) e nuovi record (con .telefono e .email)
+            let tel = contatto.telefono || (contatto.tipo === 'telefono' ? contatto.valore : "");
+            let email = contatto.email || (contatto.tipo === 'email' ? contatto.valore : "");
+            
+            const matchTel = tel.replace(/\s+/g, '').includes(termineSenzaSpazi);
+            const matchEmail = email.toLowerCase().includes(termineRicerca);
+            
+            return matchNome || matchTel || matchEmail;
         });
 
         if (elementiFiltrati.length === 0) return; 
@@ -110,7 +115,6 @@ function renderizzaContatti(filtroTestuale) {
         titolo.style.justifyContent = "space-between";
         titolo.style.userSelect = "none";
         
-        // Se l'utente cerca, apre di default. Altrimenti chiuso.
         const isOpenDefault = termineRicerca !== "";
         
         titolo.innerHTML = `
@@ -144,7 +148,7 @@ function renderizzaContatti(filtroTestuale) {
             row.style.animationDelay = "0s";
             row.style.display = "flex";
             row.style.flexDirection = "column";
-            row.style.gap = "6px";
+            row.style.gap = "8px";
             row.style.padding = "14px 16px";
             row.style.borderBottom = (index < elementiFiltrati.length - 1) ? "1px solid var(--border-color)" : "none";
 
@@ -153,63 +157,23 @@ function renderizzaContatti(filtroTestuale) {
             nomeEl.style.color = "var(--text-main)";
             nomeEl.style.fontSize = "15px";
             nomeEl.textContent = contatto.nome;
-
-            const bottomRow = document.createElement('div');
-            bottomRow.style.display = "flex";
-            bottomRow.style.justifyContent = "space-between";
-            bottomRow.style.alignItems = "center";
-
-            const valoreEl = document.createElement('div');
-            valoreEl.style.color = "var(--text-muted)";
-            valoreEl.style.fontSize = "14px";
-            valoreEl.textContent = contatto.valore;
-
-            const actionContainer = document.createElement('div');
-            actionContainer.style.display = "flex";
-            actionContainer.style.gap = "8px";
-
-            const btn = document.createElement('a');
-            btn.className = "link-btn";
-            btn.style.padding = "8px 12px";
-            btn.style.margin = "0";
-            btn.style.display = "flex";
-            btn.style.alignItems = "center";
-            btn.style.justifyContent = "center";
-            btn.style.width = "auto";
-            btn.style.boxShadow = "none";
-            btn.title = contatto.tipo === "email" ? "Invia Email" : "Chiama";
+            row.appendChild(nomeEl);
             
-            if (contatto.tipo === "email") {
-                btn.href = `mailto:${contatto.valore}`;
-                btn.innerHTML = `<i class="fa-solid fa-envelope" style="font-size:16px;"></i>`;
-            } else {
-                const numeroPulito = (contatto.valore || "").replace(/\s+/g, '');
-                btn.href = `tel:${numeroPulito}`;
-                btn.innerHTML = `<i class="fa-solid fa-phone" style="font-size:16px;"></i>`;
+            // Gestione flessibile per vecchi e nuovi dati
+            let tel = contatto.telefono || (contatto.tipo === 'telefono' ? contatto.valore : "");
+            let email = contatto.email || (contatto.tipo === 'email' ? contatto.valore : "");
+
+            // Se esiste un telefono, crea la riga
+            if (tel) {
+                const rowTel = buildDetailRow(tel, 'tel');
+                row.appendChild(rowTel);
             }
             
-            const copyBtn = document.createElement('div');
-            copyBtn.className = "copy-btn";
-            copyBtn.style.padding = "8px 12px";
-            copyBtn.style.margin = "0";
-            copyBtn.style.display = "flex";
-            copyBtn.style.alignItems = "center";
-            copyBtn.style.justifyContent = "center";
-            copyBtn.style.width = "auto";
-            copyBtn.style.boxShadow = "none";
-            copyBtn.innerHTML = "<i class='fa-regular fa-copy'></i>";
-            copyBtn.title = "Copia";
-            copyBtn.onclick = (e) => {
-                e.preventDefault(); 
-                window.copiaTestoContatto(contatto.valore, copyBtn);
-            };
-
-            actionContainer.appendChild(btn);
-            actionContainer.appendChild(copyBtn);
-            bottomRow.appendChild(valoreEl);
-            bottomRow.appendChild(actionContainer);
-            row.appendChild(nomeEl);
-            row.appendChild(bottomRow);
+            // Se esiste un'email, crea la riga
+            if (email) {
+                const rowEmail = buildDetailRow(email, 'email');
+                row.appendChild(rowEmail);
+            }
 
             elementsContainer.appendChild(row);
         });
@@ -223,7 +187,67 @@ function renderizzaContatti(filtroTestuale) {
     }
 }
 
-// Funzione globale per copia negli appunti
+// Funzione Helper per creare le singole righe Tel/Email dentro a un contatto
+function buildDetailRow(valore, tipoRecapito) {
+    const wrapper = document.createElement('div');
+    wrapper.style.display = "flex";
+    wrapper.style.justifyContent = "space-between";
+    wrapper.style.alignItems = "center";
+
+    const textEl = document.createElement('div');
+    textEl.style.color = "var(--text-muted)";
+    textEl.style.fontSize = "14px";
+    textEl.textContent = valore;
+
+    const actionContainer = document.createElement('div');
+    actionContainer.style.display = "flex";
+    actionContainer.style.gap = "8px";
+
+    const btn = document.createElement('a');
+    btn.className = "link-btn";
+    btn.style.padding = "8px 12px";
+    btn.style.margin = "0";
+    btn.style.display = "flex";
+    btn.style.alignItems = "center";
+    btn.style.justifyContent = "center";
+    btn.style.width = "auto";
+    btn.style.boxShadow = "none";
+    
+    if (tipoRecapito === 'email') {
+        btn.title = "Invia Email";
+        btn.href = `mailto:${valore}`;
+        btn.innerHTML = `<i class="fa-solid fa-envelope" style="font-size:16px;"></i>`;
+    } else {
+        btn.title = "Chiama";
+        const numeroPulito = valore.replace(/\s+/g, '');
+        btn.href = `tel:${numeroPulito}`;
+        btn.innerHTML = `<i class="fa-solid fa-phone" style="font-size:16px;"></i>`;
+    }
+    
+    const copyBtn = document.createElement('div');
+    copyBtn.className = "copy-btn";
+    copyBtn.style.padding = "8px 12px";
+    copyBtn.style.margin = "0";
+    copyBtn.style.display = "flex";
+    copyBtn.style.alignItems = "center";
+    copyBtn.style.justifyContent = "center";
+    copyBtn.style.width = "auto";
+    copyBtn.style.boxShadow = "none";
+    copyBtn.innerHTML = "<i class='fa-regular fa-copy'></i>";
+    copyBtn.title = "Copia";
+    copyBtn.onclick = (e) => {
+        e.preventDefault(); 
+        window.copiaTestoContatto(valore, copyBtn);
+    };
+
+    actionContainer.appendChild(btn);
+    actionContainer.appendChild(copyBtn);
+    wrapper.appendChild(textEl);
+    wrapper.appendChild(actionContainer);
+    
+    return wrapper;
+}
+
 window.copiaTestoContatto = (testo, btn) => {
     navigator.clipboard.writeText(testo).then(() => {
         const iconaOriginale = btn.innerHTML;
@@ -259,7 +283,8 @@ window.apriFormNuovoContatto = () => {
     select.innerHTML += '<option value="_nuova_">+ Aggiungi Nuova Categoria...</option>';
     
     document.getElementById('nuovo-contatto-nome').value = "";
-    document.getElementById('nuovo-contatto-valore').value = "";
+    document.getElementById('nuovo-contatto-telefono').value = "";
+    document.getElementById('nuovo-contatto-email').value = "";
     document.getElementById('nuovo-contatto-categoria-nuova').value = "";
     document.getElementById('nuovo-contatto-categoria-nuova').style.display = "none";
     
@@ -280,11 +305,17 @@ window.salvaNuovoContatto = async () => {
     const nome = document.getElementById('nuovo-contatto-nome').value.trim();
     const selectCat = document.getElementById('nuovo-contatto-categoria-select').value;
     const catNuova = document.getElementById('nuovo-contatto-categoria-nuova').value.trim();
-    const tipo = document.getElementById('nuovo-contatto-tipo').value;
-    const valore = document.getElementById('nuovo-contatto-valore').value.trim();
     
-    if (!nome || !valore || !selectCat) {
-        alert("Compila tutti i campi obbligatori (Nome, Categoria e Valore)!");
+    const telefono = document.getElementById('nuovo-contatto-telefono').value.trim();
+    const email = document.getElementById('nuovo-contatto-email').value.trim();
+    
+    if (!nome || !selectCat) {
+        alert("Devi compilare il Nome e selezionare una Categoria!");
+        return;
+    }
+    
+    if (!telefono && !email) {
+        alert("Devi inserire almeno un recapito (Telefono o Email)!");
         return;
     }
 
@@ -303,8 +334,8 @@ window.salvaNuovoContatto = async () => {
         await addDoc(collection(firestoreDB, "contatti"), {
             nome: nome,
             categoria: categoriaFinale,
-            tipo: tipo,
-            valore: valore
+            telefono: telefono,
+            email: email
         });
         
         window.chiudiModal('modal-aggiungi-contatto');
