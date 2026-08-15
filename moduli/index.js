@@ -1384,16 +1384,3 @@ if (!isStandalone) {
 } else {
     if(installBtn) installBtn.style.display = 'none';
 }
-
-// ============================================================================
-// LAZY LOADING: INIZIALIZZAZIONE E PRECARICO MODULI
-// ============================================================================
-
-window.ModuliLazyLoader = ModuliLazyLoader;
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Chiamando precarica() vuoto, scaricherà in background TUTTI i moduli
-    ModuliLazyLoader.precarica();
-    console.log('✅ Lazy Loading System inizializzato per tutti i moduli');
-});
-// ============================================================================
