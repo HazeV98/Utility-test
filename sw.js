@@ -1,4 +1,4 @@
-const CACHE_NAME = 'utility-app-v2';
+const CACHE_NAME = 'utility-app-v3';
 
 self.addEventListener('install', (event) => {
     console.log('[Service Worker] Installato v2');
