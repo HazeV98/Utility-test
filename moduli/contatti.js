@@ -1,7 +1,8 @@
-import { collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 let datiContattiCache = null; 
 let firestoreDB = null;
+let isAdminSession = false; // Variabile globale per mostrare o meno il tasto Modifica
 const MIO_ID_ADMIN = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2";
 
 export async function avviaMotoreContatti(db, auth) {
@@ -13,8 +14,10 @@ export async function avviaMotoreContatti(db, auth) {
     const btnAdd = document.getElementById('btn-add-contact');
     if (btnAdd) {
         if (auth && auth.currentUser && auth.currentUser.uid === MIO_ID_ADMIN) {
+            isAdminSession = true;
             btnAdd.style.display = 'flex';
         } else {
+            isAdminSession = false;
             btnAdd.style.display = 'none';
         }
     }
@@ -31,11 +34,11 @@ async function caricaContattiDaFirebase() {
         const querySnapshot = await getDocs(collection(firestoreDB, "contatti"));
         const tempMap = {};
         
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
+        querySnapshot.forEach((documento) => {
+            const data = documento.data();
             const cat = data.categoria || "Altre Info";
             if (!tempMap[cat]) tempMap[cat] = [];
-            tempMap[cat].push({ id: doc.id, ...data });
+            tempMap[cat].push({ id: documento.id, ...data });
         });
 
         // Ristruttura i dati e in ordine alfabetico
@@ -159,19 +162,18 @@ function renderizzaContatti(filtroTestuale) {
             nomeEl.textContent = contatto.nome;
             row.appendChild(nomeEl);
             
-            // Gestione flessibile per vecchi e nuovi dati
             let tel = contatto.telefono || (contatto.tipo === 'telefono' ? contatto.valore : "");
             let email = contatto.email || (contatto.tipo === 'email' ? contatto.valore : "");
 
             // Se esiste un telefono, crea la riga
             if (tel) {
-                const rowTel = buildDetailRow(tel, 'tel');
+                const rowTel = buildDetailRow(tel, 'tel', contatto, categoriaObj.categoria);
                 row.appendChild(rowTel);
             }
             
             // Se esiste un'email, crea la riga
             if (email) {
-                const rowEmail = buildDetailRow(email, 'email');
+                const rowEmail = buildDetailRow(email, 'email', contatto, categoriaObj.categoria);
                 row.appendChild(rowEmail);
             }
 
@@ -187,8 +189,8 @@ function renderizzaContatti(filtroTestuale) {
     }
 }
 
-// Funzione Helper per creare le singole righe Tel/Email dentro a un contatto
-function buildDetailRow(valore, tipoRecapito) {
+// Funzione Helper per creare le righe Tel/Email (passiamo anche l'intero contatto per il tasto Edit)
+function buildDetailRow(valore, tipoRecapito, interoContatto, categoriaStr) {
     const wrapper = document.createElement('div');
     wrapper.style.display = "flex";
     wrapper.style.justifyContent = "space-between";
@@ -242,6 +244,30 @@ function buildDetailRow(valore, tipoRecapito) {
 
     actionContainer.appendChild(btn);
     actionContainer.appendChild(copyBtn);
+    
+    // TASTO MODIFICA (Mostrato solo all'admin)
+    if (isAdminSession) {
+        const editBtn = document.createElement('div');
+        editBtn.className = "copy-btn";
+        editBtn.style.padding = "8px 12px";
+        editBtn.style.margin = "0";
+        editBtn.style.display = "flex";
+        editBtn.style.alignItems = "center";
+        editBtn.style.justifyContent = "center";
+        editBtn.style.width = "auto";
+        editBtn.style.boxShadow = "none";
+        editBtn.innerHTML = "<i class='fa-solid fa-pen'></i>";
+        editBtn.title = "Modifica Contatto";
+        editBtn.onclick = (e) => {
+            e.preventDefault();
+            // Ricaviamo i dati puliti (se erano vecchi li formatta correttamente)
+            let editTel = interoContatto.telefono || (interoContatto.tipo === 'telefono' ? interoContatto.valore : "");
+            let editEmail = interoContatto.email || (interoContatto.tipo === 'email' ? interoContatto.valore : "");
+            window.apriFormModificaContatto(interoContatto.id, interoContatto.nome, categoriaStr, editTel, editEmail);
+        };
+        actionContainer.appendChild(editBtn);
+    }
+
     wrapper.appendChild(textEl);
     wrapper.appendChild(actionContainer);
     
@@ -269,24 +295,48 @@ window.copiaTestoContatto = (testo, btn) => {
 };
 
 // ============================================================================
-// FUNZIONI FORM ADMIN
+// FUNZIONI FORM ADMIN (AGGIUNGI, MODIFICA, ELIMINA)
 // ============================================================================
 window.apriFormNuovoContatto = () => {
+    document.getElementById('titolo-modal-contatto').innerHTML = '<i class="fa-solid fa-plus"></i> Nuovo Contatto';
+    
     const select = document.getElementById('nuovo-contatto-categoria-select');
     select.innerHTML = '<option value="">-- Seleziona Categoria --</option>';
-    
     if (datiContattiCache && datiContattiCache.contatti) {
-        datiContattiCache.contatti.forEach(c => {
-            select.innerHTML += `<option value="${c.categoria}">${c.categoria}</option>`;
-        });
+        datiContattiCache.contatti.forEach(c => { select.innerHTML += `<option value="${c.categoria}">${c.categoria}</option>`; });
     }
     select.innerHTML += '<option value="_nuova_">+ Aggiungi Nuova Categoria...</option>';
     
+    document.getElementById('edit-contatto-id').value = ""; // Svuotiamo l'ID
     document.getElementById('nuovo-contatto-nome').value = "";
     document.getElementById('nuovo-contatto-telefono').value = "";
     document.getElementById('nuovo-contatto-email').value = "";
     document.getElementById('nuovo-contatto-categoria-nuova').value = "";
     document.getElementById('nuovo-contatto-categoria-nuova').style.display = "none";
+    
+    document.getElementById('btn-elimina-contatto').style.display = "none"; // Nascondiamo il tasto elimina
+    
+    window.apriModal('modal-aggiungi-contatto');
+};
+
+window.apriFormModificaContatto = (id, nome, categoria, telefono, email) => {
+    document.getElementById('titolo-modal-contatto').innerHTML = '<i class="fa-solid fa-pen"></i> Modifica Contatto';
+    
+    const select = document.getElementById('nuovo-contatto-categoria-select');
+    select.innerHTML = '<option value="">-- Seleziona Categoria --</option>';
+    if (datiContattiCache && datiContattiCache.contatti) {
+        datiContattiCache.contatti.forEach(c => { select.innerHTML += `<option value="${c.categoria}">${c.categoria}</option>`; });
+    }
+    select.innerHTML += '<option value="_nuova_">+ Aggiungi Nuova Categoria...</option>';
+    
+    document.getElementById('edit-contatto-id').value = id;
+    document.getElementById('nuovo-contatto-nome').value = nome;
+    document.getElementById('nuovo-contatto-categoria-select').value = categoria;
+    document.getElementById('nuovo-contatto-telefono').value = telefono;
+    document.getElementById('nuovo-contatto-email').value = email;
+    document.getElementById('nuovo-contatto-categoria-nuova').style.display = "none";
+    
+    document.getElementById('btn-elimina-contatto').style.display = "block"; // Mostriamo il tasto elimina
     
     window.apriModal('modal-aggiungi-contatto');
 };
@@ -297,33 +347,20 @@ window.toggleNuovaCategoria = (val) => {
 };
 
 window.salvaNuovoContatto = async () => {
-    if (!firestoreDB) {
-        alert("Errore di connessione al database.");
-        return;
-    }
+    if (!firestoreDB) { alert("Errore di connessione al database."); return; }
     
+    const id = document.getElementById('edit-contatto-id').value;
     const nome = document.getElementById('nuovo-contatto-nome').value.trim();
     const selectCat = document.getElementById('nuovo-contatto-categoria-select').value;
     const catNuova = document.getElementById('nuovo-contatto-categoria-nuova').value.trim();
-    
     const telefono = document.getElementById('nuovo-contatto-telefono').value.trim();
     const email = document.getElementById('nuovo-contatto-email').value.trim();
     
-    if (!nome || !selectCat) {
-        alert("Devi compilare il Nome e selezionare una Categoria!");
-        return;
-    }
-    
-    if (!telefono && !email) {
-        alert("Devi inserire almeno un recapito (Telefono o Email)!");
-        return;
-    }
+    if (!nome || !selectCat) { alert("Devi compilare il Nome e selezionare una Categoria!"); return; }
+    if (!telefono && !email) { alert("Devi inserire almeno un recapito (Telefono o Email)!"); return; }
 
     const categoriaFinale = (selectCat === '_nuova_') ? catNuova : selectCat;
-    if (!categoriaFinale) {
-        alert("Inserisci il nome della nuova categoria!");
-        return;
-    }
+    if (!categoriaFinale) { alert("Inserisci il nome della nuova categoria!"); return; }
     
     const btnSalva = event.currentTarget;
     const originalText = btnSalva.innerHTML;
@@ -331,12 +368,25 @@ window.salvaNuovoContatto = async () => {
     btnSalva.disabled = true;
 
     try {
-        await addDoc(collection(firestoreDB, "contatti"), {
-            nome: nome,
-            categoria: categoriaFinale,
-            telefono: telefono,
-            email: email
-        });
+        if (id) {
+            // È un aggiornamento
+            await updateDoc(doc(firestoreDB, "contatti", id), {
+                nome: nome,
+                categoria: categoriaFinale,
+                telefono: telefono,
+                email: email,
+                tipo: null, // Pulisce i vecchi attributi obsoleti
+                valore: null
+            });
+        } else {
+            // È un nuovo inserimento
+            await addDoc(collection(firestoreDB, "contatti"), {
+                nome: nome,
+                categoria: categoriaFinale,
+                telefono: telefono,
+                email: email
+            });
+        }
         
         window.chiudiModal('modal-aggiungi-contatto');
         await caricaContattiDaFirebase(); 
@@ -347,5 +397,29 @@ window.salvaNuovoContatto = async () => {
     } finally {
         btnSalva.innerHTML = originalText;
         btnSalva.disabled = false;
+    }
+};
+
+window.eliminaContatto = async () => {
+    const id = document.getElementById('edit-contatto-id').value;
+    if (!id || !firestoreDB) return;
+    
+    if (!confirm("Sei sicuro di voler eliminare definitivamente questo contatto?")) return;
+    
+    const btn = document.getElementById('btn-elimina-contatto');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+
+    try {
+        await deleteDoc(doc(firestoreDB, "contatti", id));
+        window.chiudiModal('modal-aggiungi-contatto');
+        await caricaContattiDaFirebase();
+    } catch(e) {
+        console.error("Errore eliminazione:", e);
+        alert("Errore durante l'eliminazione.");
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
     }
 };
