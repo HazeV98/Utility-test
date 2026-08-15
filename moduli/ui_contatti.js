@@ -24,10 +24,13 @@ export function initUIContatti() {
         </div>
     </div>
 
-    <!-- MODALE AGGIUNGI CONTATTO (SOLO ADMIN) -->
+    <!-- MODALE AGGIUNGI/MODIFICA CONTATTO (SOLO ADMIN) -->
     <div id="modal-aggiungi-contatto" class="modal-overlay" style="z-index: 8000;" onclick="window.chiudiSuSfondo(event, 'modal-aggiungi-contatto')">
         <div class="modal-content" style="max-width: 360px;">
-            <h3 style="margin-top: 0; color: var(--primary); border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-plus"></i> Nuovo Contatto</h3>
+            <h3 id="titolo-modal-contatto" style="margin-top: 0; color: var(--primary); border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-plus"></i> Nuovo Contatto</h3>
+            
+            <!-- CAMPO NASCOSTO PER ID IN CASO DI MODIFICA -->
+            <input type="hidden" id="edit-contatto-id" value="">
             
             <label style="font-size:12px; color:var(--text-muted); font-weight:700; display:block; margin-bottom:6px;">NOME / DESCRIZIONE *</label>
             <input type="text" id="nuovo-contatto-nome" class="input-field" placeholder="Es. Ufficio Personale">
@@ -49,8 +52,9 @@ export function initUIContatti() {
             </div>
             
             <div style="display:flex; gap:10px; margin-top:20px;">
-                <button class="btn-modal" style="background:var(--success); color:white; flex:1; margin-top:0;" onclick="window.salvaNuovoContatto()"><i class="fa-solid fa-check"></i> Salva</button>
-                <button class="btn-modal" style="background:transparent; color:var(--danger); border:2px solid var(--danger); flex:1; margin-top:0;" onclick="window.chiudiModal('modal-aggiungi-contatto')">Annulla</button>
+                <button class="btn-modal" style="background:var(--success); color:white; flex:1; margin-top:0; padding:10px;" onclick="window.salvaNuovoContatto()"><i class="fa-solid fa-check"></i> Salva</button>
+                <button id="btn-elimina-contatto" class="btn-modal" style="background:var(--danger); color:white; flex:1; margin-top:0; display:none; padding:10px;" onclick="window.eliminaContatto()"><i class="fa-solid fa-trash"></i> Elimina</button>
+                <button class="btn-modal" style="background:transparent; color:var(--text-muted); border:2px solid var(--border-color); flex:1; margin-top:0; padding:10px;" onclick="window.chiudiModal('modal-aggiungi-contatto')">Annulla</button>
             </div>
         </div>
     </div>
