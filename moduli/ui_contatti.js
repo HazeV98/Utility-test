@@ -1,4 +1,7 @@
 export function initUIContatti() {
+    // Controllo di sicurezza: se esiste già, non ricrearla!
+    if (document.getElementById('modal-contatti-main')) return;
+
     const uiHTML = `
     <!-- MODALE CONTATTI -->
     <div id="modal-contatti-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-contatti-main')">
@@ -52,3 +55,4 @@ export function initUIContatti() {
     </div>
     `;
     document.body.insertAdjacentHTML('beforeend', uiHTML);
+}
