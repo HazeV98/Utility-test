@@ -1,18 +1,19 @@
-import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-let datiContattiCache = null; // Memorizza i dati strutturati per la ricerca
+let datiContattiCache = null; 
+let firestoreDB = null;
 const MIO_ID_ADMIN = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2";
 
-export async function avviaMotoreContatti() {
+export async function avviaMotoreContatti(db, auth) {
+    firestoreDB = db; // Salviamo il db globalmente per usarlo nel form
+    
     const area = document.getElementById('contatti-content-area');
     if (!area) return;
 
-    // Controllo ID per mostrare il tasto "+"
-    const auth = getAuth();
+    // Mostriamo il tasto + SOLO se l'UID corrisponde al tuo
     const btnAdd = document.getElementById('btn-add-contact');
     if (btnAdd) {
-        if (auth.currentUser && auth.currentUser.uid === MIO_ID_ADMIN) {
+        if (auth && auth.currentUser && auth.currentUser.uid === MIO_ID_ADMIN) {
             btnAdd.style.display = 'flex';
         } else {
             btnAdd.style.display = 'none';
@@ -26,10 +27,9 @@ export async function avviaMotoreContatti() {
 
 async function caricaContattiDaFirebase() {
     const area = document.getElementById('contatti-content-area');
-    const db = getFirestore();
     
     try {
-        const querySnapshot = await getDocs(collection(db, "contatti"));
+        const querySnapshot = await getDocs(collection(firestoreDB, "contatti"));
         const tempMap = {};
         
         querySnapshot.forEach((doc) => {
@@ -39,7 +39,7 @@ async function caricaContattiDaFirebase() {
             tempMap[cat].push({ id: doc.id, ...data });
         });
 
-        // Ristruttura in un array per mantenere la logica di renderizzazione intatta
+        // Ristruttura i dati e in ordine alfabetico
         datiContattiCache = {
             contatti: Object.keys(tempMap).sort().map(cat => ({
                 categoria: cat,
@@ -50,7 +50,7 @@ async function caricaContattiDaFirebase() {
         // Collega la barra di ricerca
         const searchInput = document.getElementById('ricerca-contatti');
         if (searchInput) {
-            searchInput.value = ""; // Resetta la ricerca all'apertura
+            searchInput.value = ""; // Resetta la ricerca
             searchInput.oninput = (e) => {
                 renderizzaContatti(e.target.value);
             };
@@ -91,7 +91,7 @@ function renderizzaContatti(filtroTestuale) {
         if (elementiFiltrati.length === 0) return; 
         contattiTrovati += elementiFiltrati.length;
 
-        // --- CREAZIONE DEL BLOCCO CATEGORIA COLLASSABILE ---
+        // Blocco Categoria
         const block = document.createElement('div');
         block.className = "category-block";
         block.style.background = "var(--surface)";
@@ -100,7 +100,7 @@ function renderizzaContatti(filtroTestuale) {
         block.style.overflow = "hidden";
         block.style.boxShadow = "var(--shadow-sm)";
 
-        // Header della categoria (Cliccabile)
+        // Intestazione Categoria
         const titolo = document.createElement('div');
         titolo.className = "category-title";
         titolo.style.margin = "0";
@@ -109,26 +109,22 @@ function renderizzaContatti(filtroTestuale) {
         titolo.style.background = "var(--surface-hover)";
         titolo.style.justifyContent = "space-between";
         titolo.style.userSelect = "none";
-        titolo.style.borderBottom = "none"; // Rimuove il bordo default del CSS precedente
         
-        // Se l'utente sta cercando qualcosa, apriamo la tendina di default. Altrimenti chiusa.
+        // Se l'utente cerca, apre di default. Altrimenti chiuso.
         const isOpenDefault = termineRicerca !== "";
         
         titolo.innerHTML = `
             <div style="display:flex; align-items:center; gap:10px;">
                 <i class="fa-solid fa-folder" style="color:var(--primary); font-size:16px;"></i>
-                <span style="font-size:14px; color:var(--text-main); font-weight:700; letter-spacing: 0;">${categoriaObj.categoria}</span>
+                <span style="font-size:14px; color:var(--text-main); font-weight:700; letter-spacing:0;">${categoriaObj.categoria}</span>
             </div>
             <i class="fa-solid ${isOpenDefault ? 'fa-chevron-down' : 'fa-chevron-right'} chevron-icon" style="color:var(--text-muted); transition: transform 0.2s;"></i>
         `;
         
-        // Contenitore degli elementi
         const elementsContainer = document.createElement('div');
         elementsContainer.style.display = isOpenDefault ? "flex" : "none";
         elementsContainer.style.flexDirection = "column";
-        elementsContainer.style.gap = "0px"; // Gap rimosso, usiamo padding interno
         
-        // Logica di Collassabilità
         titolo.onclick = () => {
             const isClosed = elementsContainer.style.display === "none";
             elementsContainer.style.display = isClosed ? "flex" : "none";
@@ -136,22 +132,16 @@ function renderizzaContatti(filtroTestuale) {
             if (icon) {
                 icon.className = isClosed ? "fa-solid fa-chevron-down chevron-icon" : "fa-solid fa-chevron-right chevron-icon";
             }
-            if (isClosed) {
-                titolo.style.borderBottom = "1px solid var(--border-color)";
-            } else {
-                titolo.style.borderBottom = "none";
-            }
+            titolo.style.borderBottom = isClosed ? "1px solid var(--border-color)" : "none";
         };
 
         if(isOpenDefault) titolo.style.borderBottom = "1px solid var(--border-color)";
-
         block.appendChild(titolo);
 
-        // --- POPOLAMENTO DEGLI ELEMENTI ---
         elementiFiltrati.forEach((contatto, index) => {
             const row = document.createElement('div');
             row.className = "contact-row";
-            row.style.animationDelay = "0s"; // Niente animazione per evitare sfarfallii nell'apertura
+            row.style.animationDelay = "0s";
             row.style.display = "flex";
             row.style.flexDirection = "column";
             row.style.gap = "6px";
@@ -233,7 +223,7 @@ function renderizzaContatti(filtroTestuale) {
     }
 }
 
-// Funzione globale per il copia negli appunti
+// Funzione globale per copia negli appunti
 window.copiaTestoContatto = (testo, btn) => {
     navigator.clipboard.writeText(testo).then(() => {
         const iconaOriginale = btn.innerHTML;
@@ -251,17 +241,16 @@ window.copiaTestoContatto = (testo, btn) => {
             btn.style.color = "";
             btn.style.borderColor = "";
         }, 1500);
-    }).catch(err => console.error('Errore nella copia: ', err));
+    }).catch(err => console.error('Errore copia: ', err));
 };
 
 // ============================================================================
-// FUNZIONI GLOBALI GESTIONE FORM (SOLO ADMIN)
+// FUNZIONI FORM ADMIN
 // ============================================================================
 window.apriFormNuovoContatto = () => {
     const select = document.getElementById('nuovo-contatto-categoria-select');
     select.innerHTML = '<option value="">-- Seleziona Categoria --</option>';
     
-    // Popola le categorie esistenti leggendo dalla cache creata
     if (datiContattiCache && datiContattiCache.contatti) {
         datiContattiCache.contatti.forEach(c => {
             select.innerHTML += `<option value="${c.categoria}">${c.categoria}</option>`;
@@ -269,7 +258,6 @@ window.apriFormNuovoContatto = () => {
     }
     select.innerHTML += '<option value="_nuova_">+ Aggiungi Nuova Categoria...</option>';
     
-    // Svuota i form
     document.getElementById('nuovo-contatto-nome').value = "";
     document.getElementById('nuovo-contatto-valore').value = "";
     document.getElementById('nuovo-contatto-categoria-nuova').value = "";
@@ -284,7 +272,10 @@ window.toggleNuovaCategoria = (val) => {
 };
 
 window.salvaNuovoContatto = async () => {
-    const db = getFirestore();
+    if (!firestoreDB) {
+        alert("Errore di connessione al database.");
+        return;
+    }
     
     const nome = document.getElementById('nuovo-contatto-nome').value.trim();
     const selectCat = document.getElementById('nuovo-contatto-categoria-select').value;
@@ -309,7 +300,7 @@ window.salvaNuovoContatto = async () => {
     btnSalva.disabled = true;
 
     try {
-        await addDoc(collection(db, "contatti"), {
+        await addDoc(collection(firestoreDB, "contatti"), {
             nome: nome,
             categoria: categoriaFinale,
             tipo: tipo,
@@ -317,12 +308,11 @@ window.salvaNuovoContatto = async () => {
         });
         
         window.chiudiModal('modal-aggiungi-contatto');
-        // Ricarica la lista attingendo a Firestore con il nuovo dato
         await caricaContattiDaFirebase(); 
         
     } catch (error) {
-        console.error("Errore salvataggio contatto:", error);
-        alert("Errore nel salvataggio del contatto sul database.");
+        console.error("Errore salvataggio:", error);
+        alert("Errore nel salvataggio.");
     } finally {
         btnSalva.innerHTML = originalText;
         btnSalva.disabled = false;
