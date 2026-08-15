@@ -16,7 +16,7 @@ export function initUIContatti() {
             <!-- BARRA DI RICERCA -->
             <div style="margin-bottom: 15px; position: relative;">
                 <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
-                <input type="text" id="ricerca-contatti" placeholder="Cerca nome o numero..." style="width: 100%; padding: 12px 12px 12px 40px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--surface-hover); color: var(--text-main); box-sizing: border-box; font-family: inherit; font-size: 14px; transition: 0.2s; outline: none;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border-color)'">
+                <input type="text" id="ricerca-contatti" placeholder="Cerca nome, numero o email..." style="width: 100%; padding: 12px 12px 12px 40px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--surface-hover); color: var(--text-main); box-sizing: border-box; font-family: inherit; font-size: 14px; transition: 0.2s; outline: none;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border-color)'">
             </div>
             
             <div id="contatti-content-area" style="flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 14px;">
@@ -29,23 +29,24 @@ export function initUIContatti() {
         <div class="modal-content" style="max-width: 360px;">
             <h3 style="margin-top: 0; color: var(--primary); border-bottom: 1px solid var(--border-color); padding-bottom: 15px;"><i class="fa-solid fa-plus"></i> Nuovo Contatto</h3>
             
-            <label style="font-size:12px; color:var(--text-muted); font-weight:700; display:block; margin-bottom:6px;">NOME / DESCRIZIONE</label>
+            <label style="font-size:12px; color:var(--text-muted); font-weight:700; display:block; margin-bottom:6px;">NOME / DESCRIZIONE *</label>
             <input type="text" id="nuovo-contatto-nome" class="input-field" placeholder="Es. Ufficio Personale">
             
-            <label style="font-size:12px; color:var(--text-muted); font-weight:700; display:block; margin-bottom:6px; margin-top:10px;">CATEGORIA</label>
+            <label style="font-size:12px; color:var(--text-muted); font-weight:700; display:block; margin-bottom:6px; margin-top:10px;">CATEGORIA *</label>
             <select id="nuovo-contatto-categoria-select" class="input-field" style="cursor: pointer;" onchange="window.toggleNuovaCategoria(this.value)">
                 <!-- Opzioni popolate via JS -->
             </select>
             <input type="text" id="nuovo-contatto-categoria-nuova" class="input-field" placeholder="Nome nuova categoria..." style="display:none; margin-top:5px;">
             
-            <label style="font-size:12px; color:var(--text-muted); font-weight:700; display:block; margin-bottom:6px; margin-top:10px;">TIPO DI RECAPITO</label>
-            <select id="nuovo-contatto-tipo" class="input-field" style="cursor: pointer;">
-                <option value="telefono">Telefono</option>
-                <option value="email">Email</option>
-            </select>
-
-            <label style="font-size:12px; color:var(--text-muted); font-weight:700; display:block; margin-bottom:6px; margin-top:10px;">VALORE (Numero o Email)</label>
-            <input type="text" id="nuovo-contatto-valore" class="input-field" placeholder="Es. 041 272 1111">
+            <div style="margin-top: 15px; padding: 12px; background: var(--surface-hover); border-radius: 8px; border: 1px dashed var(--border-color);">
+                <p style="font-size:11px; color:var(--text-muted); margin-top:0; margin-bottom:12px; font-weight:700; text-align:center;"><i class="fa-solid fa-circle-info"></i> INSERISCI ALMENO UN RECAPITO</p>
+                
+                <label style="font-size:12px; color:var(--text-main); font-weight:700; display:block; margin-bottom:6px;">NUMERO DI TELEFONO</label>
+                <input type="text" id="nuovo-contatto-telefono" class="input-field" placeholder="Es. 041 272 1111" style="margin-bottom:12px;">
+                
+                <label style="font-size:12px; color:var(--text-main); font-weight:700; display:block; margin-bottom:6px;">INDIRIZZO EMAIL</label>
+                <input type="email" id="nuovo-contatto-email" class="input-field" placeholder="Es. info@azienda.it">
+            </div>
             
             <div style="display:flex; gap:10px; margin-top:20px;">
                 <button class="btn-modal" style="background:var(--success); color:white; flex:1; margin-top:0;" onclick="window.salvaNuovoContatto()"><i class="fa-solid fa-check"></i> Salva</button>
