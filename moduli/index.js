@@ -316,7 +316,10 @@ window.avviaMotoreLinkDaIndex = async () => {
         }
     }
     const modulo = await ModuliLazyLoader.avviaMotore('link');
-    if (modulo) modulo();
+    
+    // CORREZIONE QUI: Aggiunti i parametri db e auth!
+    if (modulo) modulo(db, auth); 
+    
     const oggiStr = new Date().toISOString().split('T')[0];
     if (window.currentUserData && (window.currentUserData.link_access !== true || window.currentUserData.last_link_access !== oggiStr)) {
         setDoc(doc(db, "utenti", auth.currentUser.uid), { link_access: true, last_link_access: oggiStr }, { merge: true });
