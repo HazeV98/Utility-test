@@ -19,7 +19,8 @@ export function initUIContatti() {
                 <input type="text" id="ricerca-contatti" placeholder="Cerca nome, numero o email..." style="width: 100%; padding: 12px 12px 12px 40px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--surface-hover); color: var(--text-main); box-sizing: border-box; font-family: inherit; font-size: 14px; transition: 0.2s; outline: none;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border-color)'">
             </div>
             
-            <div id="contatti-content-area" style="flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 14px;">
+            <!-- AGGIUNTO MIN-HEIGHT: 0 PER LO SCORRIMENTO -->
+            <div id="contatti-content-area" style="flex: 1; min-height: 0; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 14px;">
             </div>
         </div>
     </div>
