@@ -102,6 +102,7 @@ function renderizzaContatti(filtroTestuale) {
         // Blocco Categoria
         const block = document.createElement('div');
         block.className = "category-block";
+        block.style.flexShrink = "0"; // <-- EVITA LO SCHIACCIAMENTO DELLA CATEGORIA
         block.style.background = "var(--surface)";
         block.style.border = "1px solid var(--border-color)";
         block.style.borderRadius = "var(--radius-md)";
@@ -151,6 +152,7 @@ function renderizzaContatti(filtroTestuale) {
             row.style.animationDelay = "0s";
             row.style.display = "flex";
             row.style.flexDirection = "column";
+            row.style.flexShrink = "0"; // <-- EVITA LO SCHIACCIAMENTO DELLA RIGA INTERNA
             row.style.gap = "8px";
             row.style.padding = "14px 16px";
             row.style.borderBottom = (index < elementiFiltrati.length - 1) ? "1px solid var(--border-color)" : "none";
