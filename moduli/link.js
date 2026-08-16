@@ -136,100 +136,37 @@ function renderizzaLink(filtroTestuale) {
         block.appendChild(titolo);
 
         elementiFiltrati.forEach((l, index) => {
+            
+            // NUOVO STILE MINIMALE ED ELEGANTE PER LA LISTA
             const row = document.createElement('div');
-            row.className = "link-row";
-            row.style.animationDelay = "0s";
             row.style.display = "flex";
-            row.style.flexDirection = "column";
-            row.style.flexShrink = "0";
-            row.style.gap = "8px";
-            row.style.padding = "14px 16px";
+            row.style.alignItems = "center";
+            row.style.gap = "14px";
+            row.style.padding = "12px 16px";
+            row.style.cursor = "pointer";
+            row.style.transition = "background 0.2s";
             row.style.borderBottom = (index < elementiFiltrati.length - 1) ? "1px solid var(--border-color)" : "none";
+            row.onmouseover = () => row.style.background = "var(--surface-hover)";
+            row.onmouseout = () => row.style.background = "transparent";
 
             let urlClean = l.url;
             if (!urlClean.startsWith('http')) urlClean = 'https://' + urlClean;
             
-            // ESTRELA LA FAVICON DIRETTAMENTE DAL DOMINIO
             let domain = "";
             try { domain = new URL(urlClean).hostname; } catch(e) {}
-            let faviconHtml = domain ? `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" style="width:20px; height:20px; border-radius:4px; margin-right:4px;">` : `<i class="fa-solid fa-globe" style="margin-right:4px; font-size:16px;"></i>`;
+            let faviconHtml = domain ? `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" style="width:24px; height:24px; border-radius:6px; background:white;">` : `<i class="fa-solid fa-globe" style="font-size:20px; color:var(--text-muted);"></i>`;
 
-            const linkActionRow = document.createElement('div');
-            linkActionRow.style.display = "flex";
-            linkActionRow.style.justifyContent = "space-between";
-            linkActionRow.style.alignItems = "center";
-
-            const btnWrapper = document.createElement('div');
-            btnWrapper.style.flex = "1";
-            btnWrapper.style.marginRight = "10px";
-
-            // Tasto principale per aprire il Link
-            const linkBtn = document.createElement('a');
-            linkBtn.className = "link-btn";
-            linkBtn.href = urlClean;
-            linkBtn.target = "_blank";
-            linkBtn.style.display = "flex";
-            linkBtn.style.alignItems = "center";
-            linkBtn.style.padding = "8px 12px";
-            linkBtn.style.margin = "0";
-            linkBtn.style.boxShadow = "none";
-            linkBtn.style.justifyContent = "flex-start";
-            linkBtn.style.gap = "8px";
-            
-            linkBtn.innerHTML = `
-                ${faviconHtml}
-                <span style="font-weight:bold; font-size:14px; text-align:left; word-break:break-word;">${l.nome}</span>
-                <i class="fa-solid fa-arrow-up-right-from-square" style="margin-left:auto; font-size:12px; opacity:0.6;"></i>
+            row.innerHTML = `
+                <div style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color);">
+                    ${faviconHtml}
+                </div>
+                <div style="font-weight:700; font-size:14px; color:var(--text-main); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${l.nome}</div>
+                <i class="fa-solid fa-chevron-right" style="color:var(--text-muted); font-size:12px; opacity:0.5;"></i>
             `;
-            btnWrapper.appendChild(linkBtn);
 
-            // Container Azioni Laterali
-            const actionContainer = document.createElement('div');
-            actionContainer.style.display = "flex";
-            actionContainer.style.gap = "8px";
-
-            // Tasto QR
-            const qrBtn = document.createElement('div');
-            qrBtn.className = "copy-btn";
-            qrBtn.title = "Mostra QR Code";
-            qrBtn.style.padding = "8px 12px";
-            qrBtn.style.margin = "0";
-            qrBtn.style.boxShadow = "none";
-            qrBtn.innerHTML = "<i class='fa-solid fa-qrcode'></i>";
-            qrBtn.onclick = () => window.mostraQR(urlClean);
-
-            // Tasto Copia
-            const copyBtn = document.createElement('div');
-            copyBtn.className = "copy-btn";
-            copyBtn.title = "Copia URL";
-            copyBtn.style.padding = "8px 12px";
-            copyBtn.style.margin = "0";
-            copyBtn.style.boxShadow = "none";
-            copyBtn.innerHTML = "<i class='fa-regular fa-copy'></i>";
-            copyBtn.onclick = (e) => { e.preventDefault(); window.copiaLink(urlClean, copyBtn); };
-
-            actionContainer.appendChild(qrBtn);
-            actionContainer.appendChild(copyBtn);
-
-            // Tasto Edit Admin
-            if (isAdminSession) {
-                const editBtn = document.createElement('div');
-                editBtn.className = "copy-btn";
-                editBtn.title = "Modifica Link";
-                editBtn.style.padding = "8px 12px";
-                editBtn.style.margin = "0";
-                editBtn.style.boxShadow = "none";
-                editBtn.innerHTML = "<i class='fa-solid fa-pen'></i>";
-                editBtn.onclick = (e) => {
-                    e.preventDefault();
-                    window.apriFormModificaLink(l.id, l.nome, categoriaObj.categoria, urlClean);
-                };
-                actionContainer.appendChild(editBtn);
-            }
-
-            linkActionRow.appendChild(btnWrapper);
-            linkActionRow.appendChild(actionContainer);
-            row.appendChild(linkActionRow);
+            // CLICCANDO APRE LA SCHEDA INVECE DEL LINK DIRETTO
+            row.onclick = () => window.apriSchedaLink(l.id, l.nome, categoriaObj.categoria, urlClean);
+            
             elementsContainer.appendChild(row);
         });
 
@@ -243,18 +180,58 @@ function renderizzaLink(filtroTestuale) {
 }
 
 // ============================================================================
-// FUNZIONI GLOBALI ESISTENTI (Copia e QR Code)
+// LOGICA SCHEDA LINK E FUNZIONI GLOBALI ESISTENTI
 // ============================================================================
-window.copiaLink = (url, btn) => {
-    navigator.clipboard.writeText(url).then(() => {
-        const oldHTML = btn.innerHTML; 
-        btn.innerHTML = "<i class='fa-solid fa-check'></i>"; 
+
+window.apriSchedaLink = (id, nome, categoria, url) => {
+    let domain = "";
+    try { domain = new URL(url).hostname; } catch(e) {}
+    
+    // Generiamo l'icona più grande per la scheda modale
+    let faviconHtml = domain ? `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=128" style="width:40px; height:40px; border-radius:8px;">` : `<i class="fa-solid fa-globe" style="font-size:32px; color:var(--primary);"></i>`;
+
+    document.getElementById('scheda-link-icona').innerHTML = faviconHtml;
+    document.getElementById('scheda-link-nome').textContent = nome;
+    document.getElementById('scheda-link-url').textContent = url;
+
+    // Assegna il link al bottone "Apri"
+    document.getElementById('btn-scheda-apri').href = url;
+
+    // Gestione Copia
+    const btnCopia = document.getElementById('btn-scheda-copia');
+    btnCopia.onclick = (e) => { 
+        e.preventDefault(); 
+        window.copiaTestoPulsante(url, btnCopia, "<i class='fa-regular fa-copy'></i> Copia"); 
+    };
+
+    // Gestione QR
+    document.getElementById('btn-scheda-qr').onclick = () => window.mostraQR(url);
+
+    // Gestione Edit per Admin
+    const btnModifica = document.getElementById('btn-scheda-modifica');
+    if (isAdminSession) {
+        btnModifica.style.display = "flex";
+        btnModifica.onclick = () => {
+            window.chiudiModal('modal-scheda-link');
+            window.apriFormModificaLink(id, nome, categoria, url);
+        };
+    } else {
+        btnModifica.style.display = "none";
+    }
+
+    window.apriModal('modal-scheda-link');
+};
+
+// Funzione helper per il tasto copia della scheda
+window.copiaTestoPulsante = (testo, btn, htmlOriginale) => {
+    navigator.clipboard.writeText(testo).then(() => {
+        btn.innerHTML = "<i class='fa-solid fa-check'></i> Copiato!"; 
         btn.style.color = "white";
         btn.style.backgroundColor = "var(--success)";
         btn.style.borderColor = "var(--success)";
         
         setTimeout(() => { 
-            btn.innerHTML = oldHTML; 
+            btn.innerHTML = htmlOriginale; 
             btn.style.color = ""; 
             btn.style.backgroundColor = "";
             btn.style.borderColor = "";
