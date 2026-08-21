@@ -6,8 +6,8 @@ let schedaAttivaId = null;
 let isEditMode = false;
 
 // Configurazione GitHub
-const GH_OWNER = "TUO_USERNAME"; // Sostituisci con il tuo username
-const GH_REPO = "TUO_REPO";      // Sostituisci con il tuo repository
+const GH_OWNER = "HazeV98"; // Sostituisci con il tuo username
+const GH_REPO = "Utility-test";      // Sostituisci con il tuo repository
 
 export function inizializzaScheda(containerId, idScheda, database, isAdminOrCollab) {
     dbScheda = database;
