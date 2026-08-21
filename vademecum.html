@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Vademecum - Utility</title>
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet CSS (Per la Mappa) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- SortableJS (Per il riordino in Modifica) -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        /* Variabili Base ereditate da Utility */
+        :root { 
+            --primary: #0066cc; 
+            --surface: #ffffff;
+            --surface-hover: #f8f9fa;
+            --text-main: #1a1a1a; 
+            --text-muted: #5f6368;
+            --border-color: #e0e0e0;
+            --bg-color: #f0f2f5;
+            --danger: #d93025;
+            --success: #0f9d58;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05);
+            --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0; padding: 0;
+            overflow: hidden; /* Previene scroll intera pagina */
+            color: var(--text-main);
+        }
+
+        /* --- HEADER DINAMICO --- */
+        .vd-header {
+            position: fixed; top: 0; left: 0; width: 100%;
+            height: 65px; padding: env(safe-area-inset-top) 20px 0 20px;
+            background: var(--surface);
+            box-shadow: var(--shadow-sm);
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; box-sizing: border-box;
+        }
+
+        .vd-header-left, .vd-header-right {
+            display: flex; align-items: center; gap: 12px; width: 33%;
+        }
+        .vd-header-right { justify-content: flex-end; }
+        .vd-header-center { width: 33%; text-align: center; }
+
+        .vd-title { font-size: 18px; font-weight: 700; margin: 0; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .icon-btn {
+            background: none; border: none; font-size: 24px;
+            color: var(--primary); cursor: pointer; padding: 5px;
+            transition: var(--transition);
+        }
+        .icon-btn:active { transform: scale(0.9); }
+
+        .btn-edit {
+            font-size: 14px; font-weight: 600; color: var(--danger);
+            background: rgba(217,48,37,0.1); border: 1px solid var(--danger);
+            padding: 6px 12px; border-radius: 12px; cursor: pointer;
+            display: none; /* Visibile solo ad Admin/Collab */
+        }
+
+        /* --- CONTENITORE SLIDE (DRILL-DOWN) --- */
+        .vd-viewport {
+            position: relative;
+            width: 100%; height: 100vh;
+            padding-top: calc(65px + env(safe-area-inset-top));
+            overflow-x: hidden; box-sizing: border-box;
+        }
+
+        .vd-panel {
+            position: absolute; top: calc(65px + env(safe-area-inset-top)); left: 0;
+            width: 100%; height: calc(100vh - 65px - env(safe-area-inset-top));
+            padding: 20px; box-sizing: border-box;
+            overflow-y: auto;
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        /* Classi per animazione Slide */
+        .panel-center { transform: translateX(0); }
+        .panel-left { transform: translateX(-100%); }
+        .panel-right { transform: translateX(100%); }
+
+        /* --- ELEMENTI LISTA (VOCI E CATEGORIE) --- */
+        .vd-list-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--surface); padding: 16px 20px;
+            border-radius: 14px; margin-bottom: 12px;
+            box-shadow: var(--shadow-sm); cursor: pointer;
+            border: 1px solid var(--border-color);
+        }
+        .vd-list-item:active { background: var(--surface-hover); transform: scale(0.98); }
+        .item-title { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 12px; }
+        
+        /* Controlli Modifica */
+        .edit-controls { display: none; gap: 10px; align-items: center; }
+        .edit-mode .edit-controls { display: flex; }
+        .edit-mode .vd-list-item { cursor: grab; }
+        .drag-handle { color: var(--text-muted); cursor: grab; font-size: 18px; padding-right: 10px; }
+
+        /* --- STILI MODALI (Semplificati da Utility) --- */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: var(--surface); padding: 24px; border-radius: 20px;
+            width: 90%; max-width: 400px; position: relative; max-height: 90vh; overflow-y: auto;
+        }
+        .input-field {
+            width: 100%; padding: 14px; margin-bottom: 16px; border: 2px solid var(--border-color);
+            border-radius: 12px; box-sizing: border-box; font-size: 15px; font-family: inherit;
+        }
+        .btn-action {
+            width: 100%; padding: 14px; background: var(--success); color: white;
+            border: none; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="vd-header">
+        <div class="vd-header-left">
+            <button id="btn-back" class="icon-btn" style="display: none;" onclick="window.Vademecum.goBack()">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+        </div>
+        <div class="vd-header-center">
+            <h2 id="vd-main-title" class="vd-title">Vademecum</h2>
+        </div>
+        <div class="vd-header-right">
+            <button id="btn-edit-mode" class="btn-edit" onclick="window.Vademecum.toggleEditMode()">Modifica</button>
+            <button class="icon-btn" onclick="window.apriModal('profileModal')">
+                <i class="fa-solid fa-circle-user"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Contenitore Principale Viewport (Drill-Down) -->
+    <main class="vd-viewport" id="viewport">
+        <!-- I pannelli verranno iniettati qui da JS -->
+    </main>
+
+    <!-- Pulsante Aggiungi (Visibile solo in Edit Mode) -->
+    <div id="add-fab" style="display: none; position: fixed; bottom: 30px; right: 30px; z-index: 90;">
+        <button class="icon-btn" style="background: var(--primary); color: white; border-radius: 50%; width: 56px; height: 56px; box-shadow: 0 4px 10px rgba(0,102,204,0.4);" onclick="window.Vademecum.openAddModal()">
+            <i class="fa-solid fa-plus"></i>
+        </button>
+    </div>
+
+    <!-- Modale Profilo (con Token PAT per Admin) -->
+    <div id="profileModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'profileModal')">
+        <div class="modal-content">
+            <i class="fa-solid fa-xmark" style="position: absolute; right: 20px; top: 20px; font-size: 24px; color: var(--text-muted); cursor: pointer;" onclick="window.chiudiModal('profileModal')"></i>
+            <h3 style="margin-top:0; color: var(--primary);"><i class="fa-solid fa-id-badge"></i> Profilo</h3>
+            
+            <input type="text" id="profileNome" class="input-field" placeholder="Nome">
+            <input type="text" id="profileCognome" class="input-field" placeholder="Cognome">
+            
+            <!-- Sezione Token (Visibile solo ad Admin/Collab via JS) -->
+            <div id="sezione-token-admin" style="display:none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
+                <label style="font-size: 11px; font-weight: 700; color: var(--danger); margin-bottom:8px; display:block;"><i class="fa-solid fa-key"></i> GITHUB PAT TOKEN (SOLO STAFF)</label>
+                <input type="password" id="profilePatToken" class="input-field" placeholder="Inserisci il Token PAT">
+            </div>
+
+            <button class="btn-action" onclick="window.Vademecum.salvaProfilo()">Salva Modifiche</button>
+        </div>
+    </div>
+
+    <!-- SCRIPT INIZIALIZZAZIONE -->
+    <script type="module">
+        // Importa il motore (che gestisce Firebase, Auth e Logica)
+        import { avviaMotoreVademecum } from './moduli/vademecum.js';
+        
+        // Esposizione funzioni base per l'HTML
+        window.apriModal = (id) => document.getElementById(id).style.display = 'flex';
+        window.chiudiModal = (id) => document.getElementById(id).style.display = 'none';
+        window.chiudiSuSfondo = (e, id) => { if (e.target.id === id) window.chiudiModal(id); };
+
+        // Avvia l'app
+        avviaMotoreVademecum();
+    </script>
+</body>
+</html>
+
