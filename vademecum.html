@@ -158,6 +158,37 @@
         </div>
     </div>
 
+
+        <!-- Modale Aggiungi/Modifica Nodo -->
+    <div id="nodeModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'nodeModal')">
+        <div class="modal-content">
+            <i class="fa-solid fa-xmark" style="position: absolute; right: 20px; top: 20px; font-size: 24px; color: var(--text-muted); cursor: pointer;" onclick="window.chiudiModal('nodeModal')"></i>
+            <h3 id="nodeModalTitle" style="margin-top:0; color: var(--primary);"><i class="fa-solid fa-plus"></i> Nuova Voce</h3>
+            
+            <input type="hidden" id="nodeId">
+            <input type="hidden" id="nodeParent">
+            
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">TITOLO</label>
+            <input type="text" id="nodeTitolo" class="input-field" placeholder="Es. Procedure di Emergenza">
+            
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">ICONA (FontAwesome)</label>
+            <input type="text" id="nodeIcona" class="input-field" placeholder="es. fa-life-ring">
+            
+            <div id="sezione-tipo-nodo">
+                <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">TIPO CONTENUTO</label>
+                <select id="nodeTipo" class="input-field">
+                    <option value="categoria">Sottocartella (Menu)</option>
+                    <option value="scheda">Scheda Testuale/Foto</option>
+                    <option value="planimetria">Planimetria Interattiva</option>
+                    <option value="mappa">Mappa Dinamica</option>
+                </select>
+            </div>
+            
+            <button id="btn-salva-nodo" class="btn-action" onclick="window.Vademecum.salvaNodo()">Salva Voce</button>
+            <button id="btn-elimina-nodo" class="btn-action" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 10px; display: none;" onclick="window.Vademecum.eliminaNodo()">Elimina Voce</button>
+        </div>
+    </div>
+ 
     <script type="module">
         import { avviaMotoreVademecum } from './moduli/vademecum.js';
         window.apriModal = (id) => document.getElementById(id).style.display = 'flex';
