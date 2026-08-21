@@ -19,7 +19,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app); 
 const db = getFirestore(app);
 
-// Ora parte COMPLETAMENTE VUOTO
+// Inizializza albero vuoto
 let treeData = { "root": [] };
 
 let navigationStack = ["root"];
@@ -52,9 +52,14 @@ export function avviaMotoreVademecum() {
 
     window.Vademecum = { 
         goBack, navigate, toggleEditMode, salvaToken,
-        openAddModal, openEditNodeModal, salvaNodo, eliminaNodo 
+        openAddModal, openEditNodeModal, salvaNodo, eliminaNodo,
+        openMoveModal, eseguiSpostamento
     };
 }
+
+// ==========================================
+// LOGICA DI NAVIGAZIONE E DRILL-DOWN
+// ==========================================
 
 function navigate(targetId, targetTitolo, tipo) {
     if (isEditMode) return; 
@@ -120,7 +125,6 @@ function effettuaScorrimento(direzione) {
 
 function renderPanel(nodeId, positionClass) {
     const viewport = document.getElementById('viewport');
-    // Rimuove eventuali pannelli al centro già esistenti se stiamo solo facendo un refresh (es. dopo salvataggio)
     if (positionClass === "panel-center") {
         const existing = document.getElementById(`panel-${nodeId}`);
         if(existing) existing.remove();
@@ -144,6 +148,9 @@ function renderPanel(nodeId, positionClass) {
                 <div class="vd-list-item" data-id="${item.id}" onclick="window.Vademecum.navigate('${item.id}', '${safeTitle}', '${item.tipo}')">
                     <div class="item-title"><i class="fa-solid ${item.icona || 'fa-folder'}" style="${iconColor}"></i> ${item.titolo}</div>
                     <div class="edit-controls">
+                        <button class="icon-btn" style="color:#17a2b8; width:32px; height:32px;" onclick="event.stopPropagation(); window.Vademecum.openMoveModal('${item.id}', '${item.tipo}')">
+                            <i class="fa-solid fa-arrow-right-to-bracket" style="font-size:14px;"></i>
+                        </button>
                         <button class="icon-btn" style="color:var(--text-muted); width:32px; height:32px;" onclick="event.stopPropagation(); window.Vademecum.openEditNodeModal('${item.id}', '${safeTitle}', '${item.icona}', '${item.tipo}')">
                             <i class="fa-solid fa-pen" style="font-size:14px;"></i>
                         </button>
@@ -184,7 +191,6 @@ function openEditNodeModal(id, titolo, icona, tipo) {
     document.getElementById('nodeTitolo').value = titolo;
     document.getElementById('nodeIcona').value = icona || '';
     
-    // Non permettiamo di cambiare tipo a un nodo già creato per evitare conflitti
     document.getElementById('sezione-tipo-nodo').style.display = "none";
     document.getElementById('btn-elimina-nodo').style.display = "block";
     
@@ -201,21 +207,18 @@ function salvaNodo() {
     let icona = document.getElementById('nodeIcona').value.trim() || 'fa-folder';
     const tipo = document.getElementById('nodeTipo').value;
     
-    // Correzione rapida se l'utente scrive solo "ship" invece di "fa-solid fa-ship"
     if (!icona.includes('fa-')) icona = 'fa-solid fa-' + icona;
 
     if (!titolo) return alert("Inserisci un titolo valido.");
     if (!treeData[parent]) treeData[parent] = [];
     
     if (id) {
-        // Aggiornamento Voce Esistente
         const item = treeData[parent].find(i => i.id === id);
         if(item) {
             item.titolo = titolo;
             item.icona = icona;
         }
     } else {
-        // Creazione Nuova Voce
         const newId = tipo + "_" + Date.now();
         treeData[parent].push({
             id: newId,
@@ -223,13 +226,12 @@ function salvaNodo() {
             icona: icona,
             tipo: tipo
         });
-        // Se è una cartella, predispone l'array vuoto per ospitare figli
         if (tipo === 'categoria') treeData[newId] = []; 
     }
     
     window.chiudiModal('nodeModal');
     salvaAlberoSuFirebase();
-    renderPanel(parent, "panel-center"); // Ridisegna il pannello aggiornato
+    renderPanel(parent, "panel-center"); 
 }
 
 function eliminaNodo() {
@@ -239,7 +241,6 @@ function eliminaNodo() {
     const parent = document.getElementById('nodeParent').value;
     
     treeData[parent] = treeData[parent].filter(i => i.id !== id);
-    // Rimuoviamo l'array figlio se era una categoria
     if (treeData[id]) delete treeData[id]; 
     
     window.chiudiModal('nodeModal');
@@ -281,7 +282,6 @@ function initSortable(element) {
         handle: '.drag-handle', 
         animation: 150,
         onEnd: () => {
-            // Aggiorna l'ordine nell'array quando finisci di trascinare
             const currentId = navigationStack[navigationStack.length - 1];
             const nuovoOrdine = [];
             
@@ -292,7 +292,6 @@ function initSortable(element) {
             });
             
             treeData[currentId] = nuovoOrdine;
-            // Il salvataggio su DB avverrà alla pressione del tasto Fatto (Check verde)
         }
     });
 }
@@ -301,6 +300,82 @@ function salvaToken() {
     const pat = document.getElementById('adminPatToken').value.trim();
     if (pat) localStorage.setItem('gh_admin_token', pat);
     window.chiudiModal('tokenModal');
+}
+
+// ==========================================
+// LOGICA SPOSTAMENTO (FILE E CARTELLE)
+// ==========================================
+
+let nodeToMove = null;
+let nodeToMoveParent = null;
+
+function openMoveModal(id, tipo) {
+    nodeToMove = id;
+    nodeToMoveParent = navigationStack[navigationStack.length - 1];
+
+    let forbiddenIds = [id];
+    if (tipo === 'categoria') {
+        forbiddenIds = forbiddenIds.concat(getTuttiFigliCategoria(id));
+    }
+
+    const container = document.getElementById('move-folder-list');
+    container.innerHTML = '';
+
+    if (nodeToMoveParent !== 'root') {
+         container.innerHTML += createMoveBtn('root', 'Principale (Vademecum)', 0);
+    }
+
+    buildFolderTree('root', 0, forbiddenIds, container);
+
+    window.apriModal('moveModal');
+}
+
+function getTuttiFigliCategoria(catId) {
+    let figli = [];
+    if (treeData[catId]) {
+        treeData[catId].forEach(item => {
+            if (item.tipo === 'categoria') {
+                figli.push(item.id);
+                figli = figli.concat(getTuttiFigliCategoria(item.id));
+            }
+        });
+    }
+    return figli;
+}
+
+function buildFolderTree(parentId, level, forbiddenIds, container) {
+    if (!treeData[parentId]) return;
+    
+    treeData[parentId].forEach(item => {
+        if (item.tipo === 'categoria') {
+            if (!forbiddenIds.includes(item.id)) {
+                if (item.id !== nodeToMoveParent) {
+                    container.innerHTML += createMoveBtn(item.id, item.titolo, level + 1);
+                }
+                buildFolderTree(item.id, level + 1, forbiddenIds, container);
+            }
+        }
+    });
+}
+
+function createMoveBtn(id, titolo, level) {
+    const padding = level * 15;
+    return `<button style="text-align:left; padding: 14px 14px 14px ${14 + padding}px; background:var(--surface-hover); border:1px solid var(--border-color); border-radius:10px; color:var(--text-main); font-weight:600; cursor:pointer;" onclick="window.Vademecum.eseguiSpostamento('${id}')"><i class="fa-solid fa-folder" style="color:var(--primary); margin-right:10px;"></i> ${titolo}</button>`;
+}
+
+function eseguiSpostamento(targetParentId) {
+    const idx = treeData[nodeToMoveParent].findIndex(i => i.id === nodeToMove);
+    if(idx > -1) {
+        const obj = treeData[nodeToMoveParent].splice(idx, 1)[0];
+        
+        if (!treeData[targetParentId]) treeData[targetParentId] = [];
+        treeData[targetParentId].push(obj);
+        
+        salvaAlberoSuFirebase();
+        window.chiudiModal('moveModal');
+        
+        renderPanel(nodeToMoveParent, "panel-center");
+    }
 }
 
 // ==========================================
@@ -350,7 +425,6 @@ async function loadTreeDataFromFirebase() {
         if (snap.exists() && Object.keys(snap.data()).length > 0) {
             treeData = snap.data(); 
         } else {
-            // Se DB è vuoto, inizializza radice vuota (elimina le voci finte)
             treeData = { "root": [] }; 
         }
     } catch(e) { console.error(e); }
