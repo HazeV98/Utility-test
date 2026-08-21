@@ -1,5 +1,4 @@
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { app } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"; // Assicurati di passare il db da vademecum.js
 
 let dbScheda;
 let schedaAttivaId = null;
