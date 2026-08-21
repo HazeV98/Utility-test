@@ -4,7 +4,7 @@ import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/fireb
 
 import { inizializzaMappaCanali } from './vd_mappa.js';
 import { inizializzaScheda } from './vd_scheda.js';
-import { inizializzaPlanimetria } from './vd_planimetria.js'; // NUOVO
+import { inizializzaPlanimetria } from './vd_planimetria.js';
 
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -19,17 +19,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app); 
 const db = getFirestore(app);
 
-// Struttura Dati di partenza
-let treeData = {
-    "root": [
-        { id: "cat_sicurezza", tipo: "categoria", titolo: "Sicurezza a Bordo", icona: "fa-life-ring" },
-        { id: "mappa_canali", tipo: "mappa", titolo: "Mappa Canali e Limiti", icona: "fa-map-location-dot" }
-    ],
-    "cat_sicurezza": [
-        { id: "plan_motonave", tipo: "planimetria", titolo: "Planimetria Motonave", icona: "fa-ship" },
-        { id: "istr_estintore", tipo: "scheda", titolo: "Uso Estintori", icona: "fa-fire-extinguisher" }
-    ]
-};
+// Ora parte COMPLETAMENTE VUOTO
+let treeData = { "root": [] };
 
 let navigationStack = ["root"];
 let isEditMode = false;
@@ -59,7 +50,10 @@ export function avviaMotoreVademecum() {
         }
     });
 
-    window.Vademecum = { goBack, navigate, toggleEditMode, salvaToken, openAddModal: () => alert("Implementazione in corso...") };
+    window.Vademecum = { 
+        goBack, navigate, toggleEditMode, salvaToken,
+        openAddModal, openEditNodeModal, salvaNodo, eliminaNodo 
+    };
 }
 
 function navigate(targetId, targetTitolo, tipo) {
@@ -126,6 +120,12 @@ function effettuaScorrimento(direzione) {
 
 function renderPanel(nodeId, positionClass) {
     const viewport = document.getElementById('viewport');
+    // Rimuove eventuali pannelli al centro già esistenti se stiamo solo facendo un refresh (es. dopo salvataggio)
+    if (positionClass === "panel-center") {
+        const existing = document.getElementById(`panel-${nodeId}`);
+        if(existing) existing.remove();
+    }
+    
     const panel = document.createElement('div');
     panel.className = `vd-panel ${positionClass}`;
     panel.id = `panel-${nodeId}`;
@@ -133,15 +133,22 @@ function renderPanel(nodeId, positionClass) {
     const items = treeData[nodeId] || [];
     
     if (items.length === 0) {
-        panel.innerHTML = `<div style="text-align:center; color:var(--text-muted); margin-top:40px;">Nessuna voce presente.</div>`;
+        panel.innerHTML = `<div style="text-align:center; color:var(--text-muted); margin-top:40px;">Nessuna voce presente. <br> Premi la matita in alto per aggiungerne una.</div>`;
     } else {
         items.forEach(item => {
             const isNav = item.tipo === 'categoria' ? '' : 'display:none;';
             const iconColor = item.tipo === 'categoria' ? 'color:var(--primary);' : 'color:var(--text-muted);';
+            const safeTitle = item.titolo.replace(/'/g, "\\'");
+            
             const itemHTML = `
-                <div class="vd-list-item" onclick="window.Vademecum.navigate('${item.id}', '${item.titolo}', '${item.tipo}')">
+                <div class="vd-list-item" data-id="${item.id}" onclick="window.Vademecum.navigate('${item.id}', '${safeTitle}', '${item.tipo}')">
                     <div class="item-title"><i class="fa-solid ${item.icona || 'fa-folder'}" style="${iconColor}"></i> ${item.titolo}</div>
-                    <div class="edit-controls"><button class="icon-btn" style="color:var(--text-muted); width:32px; height:32px;" onclick="event.stopPropagation(); alert('Modifica voce')"><i class="fa-solid fa-pen" style="font-size:14px;"></i></button><i class="fa-solid fa-grip-lines drag-handle"></i></div>
+                    <div class="edit-controls">
+                        <button class="icon-btn" style="color:var(--text-muted); width:32px; height:32px;" onclick="event.stopPropagation(); window.Vademecum.openEditNodeModal('${item.id}', '${safeTitle}', '${item.icona}', '${item.tipo}')">
+                            <i class="fa-solid fa-pen" style="font-size:14px;"></i>
+                        </button>
+                        <i class="fa-solid fa-grip-lines drag-handle"></i>
+                    </div>
                     <i class="fa-solid fa-chevron-right" style="color:var(--border-color); ${isNav}"></i>
                 </div>`;
             panel.insertAdjacentHTML('beforeend', itemHTML);
@@ -149,6 +156,95 @@ function renderPanel(nodeId, positionClass) {
     }
     viewport.appendChild(panel);
     if (isEditMode) initSortable(panel);
+}
+
+// ==========================================
+// EDITOR ALBERO (AGGIUNTA / MODIFICA / ORDINE)
+// ==========================================
+
+function openAddModal() {
+    document.getElementById('nodeModalTitle').innerHTML = '<i class="fa-solid fa-plus"></i> Nuova Voce';
+    document.getElementById('nodeId').value = "";
+    document.getElementById('nodeTitolo').value = "";
+    document.getElementById('nodeIcona').value = "fa-folder";
+    
+    document.getElementById('sezione-tipo-nodo').style.display = "block";
+    document.getElementById('nodeTipo').value = "categoria";
+    document.getElementById('btn-elimina-nodo').style.display = "none";
+    
+    const currentId = navigationStack[navigationStack.length - 1];
+    document.getElementById('nodeParent').value = currentId;
+    
+    window.apriModal('nodeModal');
+}
+
+function openEditNodeModal(id, titolo, icona, tipo) {
+    document.getElementById('nodeModalTitle').innerHTML = '<i class="fa-solid fa-pen"></i> Modifica Voce';
+    document.getElementById('nodeId').value = id;
+    document.getElementById('nodeTitolo').value = titolo;
+    document.getElementById('nodeIcona').value = icona || '';
+    
+    // Non permettiamo di cambiare tipo a un nodo già creato per evitare conflitti
+    document.getElementById('sezione-tipo-nodo').style.display = "none";
+    document.getElementById('btn-elimina-nodo').style.display = "block";
+    
+    const currentId = navigationStack[navigationStack.length - 1];
+    document.getElementById('nodeParent').value = currentId;
+    
+    window.apriModal('nodeModal');
+}
+
+function salvaNodo() {
+    const id = document.getElementById('nodeId').value;
+    const parent = document.getElementById('nodeParent').value;
+    const titolo = document.getElementById('nodeTitolo').value.trim();
+    let icona = document.getElementById('nodeIcona').value.trim() || 'fa-folder';
+    const tipo = document.getElementById('nodeTipo').value;
+    
+    // Correzione rapida se l'utente scrive solo "ship" invece di "fa-solid fa-ship"
+    if (!icona.includes('fa-')) icona = 'fa-solid fa-' + icona;
+
+    if (!titolo) return alert("Inserisci un titolo valido.");
+    if (!treeData[parent]) treeData[parent] = [];
+    
+    if (id) {
+        // Aggiornamento Voce Esistente
+        const item = treeData[parent].find(i => i.id === id);
+        if(item) {
+            item.titolo = titolo;
+            item.icona = icona;
+        }
+    } else {
+        // Creazione Nuova Voce
+        const newId = tipo + "_" + Date.now();
+        treeData[parent].push({
+            id: newId,
+            titolo: titolo,
+            icona: icona,
+            tipo: tipo
+        });
+        // Se è una cartella, predispone l'array vuoto per ospitare figli
+        if (tipo === 'categoria') treeData[newId] = []; 
+    }
+    
+    window.chiudiModal('nodeModal');
+    salvaAlberoSuFirebase();
+    renderPanel(parent, "panel-center"); // Ridisegna il pannello aggiornato
+}
+
+function eliminaNodo() {
+    if(!confirm("Attenzione: Sei sicuro di voler eliminare questa voce?")) return;
+    
+    const id = document.getElementById('nodeId').value;
+    const parent = document.getElementById('nodeParent').value;
+    
+    treeData[parent] = treeData[parent].filter(i => i.id !== id);
+    // Rimuoviamo l'array figlio se era una categoria
+    if (treeData[id]) delete treeData[id]; 
+    
+    window.chiudiModal('nodeModal');
+    salvaAlberoSuFirebase();
+    renderPanel(parent, "panel-center");
 }
 
 function toggleEditMode() {
@@ -166,7 +262,6 @@ function toggleEditMode() {
         const activePanel = document.querySelector('.vd-panel.panel-center');
         if (activePanel) initSortable(activePanel);
         
-        // Se siamo in un modulo che ascolta il cambio stato, glielo comunichiamo
         window.dispatchEvent(new CustomEvent('vademecum-edit-toggled', { detail: { isEdit: true } }));
     } else {
         viewport.classList.remove('edit-mode');
@@ -182,7 +277,24 @@ function toggleEditMode() {
 
 function initSortable(element) {
     if (sortableInstance) sortableInstance.destroy();
-    sortableInstance = new Sortable(element, { handle: '.drag-handle', animation: 150 });
+    sortableInstance = new Sortable(element, { 
+        handle: '.drag-handle', 
+        animation: 150,
+        onEnd: () => {
+            // Aggiorna l'ordine nell'array quando finisci di trascinare
+            const currentId = navigationStack[navigationStack.length - 1];
+            const nuovoOrdine = [];
+            
+            element.querySelectorAll('.vd-list-item').forEach(el => {
+                const itemId = el.getAttribute('data-id');
+                const found = treeData[currentId].find(i => i.id === itemId);
+                if (found) nuovoOrdine.push(found);
+            });
+            
+            treeData[currentId] = nuovoOrdine;
+            // Il salvataggio su DB avverrà alla pressione del tasto Fatto (Check verde)
+        }
+    });
 }
 
 function salvaToken() {
@@ -191,11 +303,13 @@ function salvaToken() {
     window.chiudiModal('tokenModal');
 }
 
-// Inizializzatori Moduli
+// ==========================================
+// INIZIALIZZAZIONE COMPONENTI FINALI
+// ==========================================
+
 function apriMappaLeaflet(id, titolo) {
     navigationStack.push("mappa_" + id);
     aggiornaHeader(titolo, true);
-    
     const panel = document.createElement('div');
     panel.className = `vd-panel panel-right`; panel.id = `panel-mappa_${id}`;
     panel.innerHTML = `<div id="container-mappa-canali" style="width: 100%; height: 100%;"></div>`;
@@ -207,7 +321,6 @@ function apriMappaLeaflet(id, titolo) {
 function apriScheda(id, titolo) {
     navigationStack.push("scheda_" + id);
     aggiornaHeader(titolo, true);
-    
     const panel = document.createElement('div');
     panel.className = `vd-panel panel-right`; panel.id = `panel-scheda_${id}`;
     panel.innerHTML = `<div id="container-scheda-${id}" style="width: 100%; height: 100%; overflow-y:auto; padding-bottom: 40px;"></div>`;
@@ -219,7 +332,6 @@ function apriScheda(id, titolo) {
 function apriPlanimetria(id, titolo) {
     navigationStack.push("plan_" + id);
     aggiornaHeader(titolo, true);
-    
     const panel = document.createElement('div');
     panel.className = `vd-panel panel-right`; panel.id = `panel-plan_${id}`;
     panel.innerHTML = `<div id="container-plan-${id}" style="width: 100%; height: 100%;"></div>`;
@@ -228,9 +340,23 @@ function apriPlanimetria(id, titolo) {
     inizializzaPlanimetria(`container-plan-${id}`, id, db, (globalIsAdmin || globalIsCollab));
 }
 
+// ==========================================
+// SALVATAGGIO CLOUD 
+// ==========================================
+
 async function loadTreeDataFromFirebase() {
-    try { const snap = await getDoc(doc(db, "app_data", "vademecum_tree")); if (snap.exists()) treeData = snap.data(); } catch(e) { console.error(e); }
+    try { 
+        const snap = await getDoc(doc(db, "app_data", "vademecum_tree")); 
+        if (snap.exists() && Object.keys(snap.data()).length > 0) {
+            treeData = snap.data(); 
+        } else {
+            // Se DB è vuoto, inizializza radice vuota (elimina le voci finte)
+            treeData = { "root": [] }; 
+        }
+    } catch(e) { console.error(e); }
 }
+
 async function salvaAlberoSuFirebase() {
-    try { await setDoc(doc(db, "app_data", "vademecum_tree"), treeData); } catch(e) { console.error(e); }
+    try { await setDoc(doc(db, "app_data", "vademecum_tree"), treeData); } 
+    catch(e) { console.error("Errore Sync:", e); }
 }
