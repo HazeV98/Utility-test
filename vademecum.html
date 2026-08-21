@@ -188,7 +188,20 @@
             <button id="btn-elimina-nodo" class="btn-action" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 10px; display: none;" onclick="window.Vademecum.eliminaNodo()">Elimina Voce</button>
         </div>
     </div>
- 
+
+        <!-- Modale Sposta Nodo -->
+    <div id="moveModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'moveModal')">
+        <div class="modal-content">
+            <i class="fa-solid fa-xmark" style="position: absolute; right: 20px; top: 20px; font-size: 24px; color: var(--text-muted); cursor: pointer;" onclick="window.chiudiModal('moveModal')"></i>
+            <h3 style="margin-top:0; color: var(--primary);"><i class="fa-solid fa-folder-tree"></i> Sposta in...</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Seleziona la cartella di destinazione:</p>
+            
+            <div id="move-folder-list" style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                <!-- Lista popolata dinamicamente dal JS -->
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { avviaMotoreVademecum } from './moduli/vademecum.js';
         window.apriModal = (id) => document.getElementById(id).style.display = 'flex';
