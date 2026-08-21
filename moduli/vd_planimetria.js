@@ -1,7 +1,7 @@
 import { getDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-const GH_OWNER = "TUO_USERNAME"; // Sostituisci
-const GH_REPO = "TUO_REPO";      // Sostituisci
+const GH_OWNER = "HazeV98"; // Sostituisci
+const GH_REPO = "Utility-test";      // Sostituisci
 
 let dbPlan;
 let idPlanAttivo;
