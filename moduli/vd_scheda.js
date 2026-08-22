@@ -326,11 +326,36 @@ function renderizzaGalleria(mediaArray) {
 }
 
 async function eliminaMedia(path) {
-    if(!confirm("Vuoi scollegare questo file dalla scheda?")) return;
+    if(!confirm("Attenzione: Vuoi eliminare DEFINITIVAMENTE questa immagine/video anche dal server?")) return;
+    
+    const token = localStorage.getItem('gh_admin_token');
+    if (!token) return alert("Manca il token PAT Admin!");
+
+    // Cambia icona per mostrare il caricamento
+    const btn = document.querySelector(`button[onclick="window.Scheda.eliminaMedia('${path}')"]`);
+    if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="font-size: 12px;"></i>';
+    
+    try {
+        // 1. Recupera il codice SHA del file fisico
+        const resSha = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, { headers: { 'Authorization': `token ${token}` }});
+        if (resSha.ok) {
+            const fileData = await resSha.json();
+            
+            // 2. Invia comando di DELETE
+            await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: `Eliminato media dalla scheda ${schedaAttivaId}`, sha: fileData.sha })
+            });
+        }
+    } catch(e) { console.error("Errore eliminazione file fisico", e); }
+    
+    // 3. Rimuovi dall'array locale e salva
     datiSchedaCache.media = datiSchedaCache.media.filter(p => p !== path);
-    await salvaSchedaSuGitHub();
+    await salvaSchedaSuGitHub(); // Questo aggiornerà anche la mappa!
     renderizzaGalleria(datiSchedaCache.media);
 }
+
 
 function getBase64(file) {
     return new Promise((resolve, reject) => {
