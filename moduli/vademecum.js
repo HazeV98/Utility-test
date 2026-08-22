@@ -260,7 +260,7 @@ async function puliziaFileGitHub(schedaId) {
     if (!token) return;
     
     const GH_OWNER = "hazev98"; 
-    const GH_REPO = "Utility";
+    const GH_REPO = "Utility-test";
     const pathScheda = `assets/schede/${schedaId}.json`;
     
     try {
