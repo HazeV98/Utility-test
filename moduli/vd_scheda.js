@@ -12,7 +12,6 @@ export function inizializzaScheda(containerId, idScheda, databaseFirebaseIgnorat
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    // Crea il Viewer globale se non esiste ancora nel DOM
     creaViewerSeMancante();
 
     container.innerHTML = `
@@ -21,11 +20,19 @@ export function inizializzaScheda(containerId, idScheda, databaseFirebaseIgnorat
             <button class="icon-btn" onclick="document.execCommand('formatBlock', false, 'H3')" title="Titolo"><i class="fa-solid fa-heading"></i></button>
             <button class="icon-btn" onclick="document.execCommand('insertUnorderedList', false, null)" title="Elenco Puntato"><i class="fa-solid fa-list-ul"></i></button>
             <div style="flex: 1;"></div>
+            
+            <!-- Tasto Foto/Video -->
             <button class="icon-btn" style="color: var(--success);" onclick="document.getElementById('upload-media-scheda').click()" title="Aggiungi Immagine o Video">
                 <i class="fa-solid fa-photo-film"></i>
             </button>
-            <!-- Accetta immagini e video -->
-            <input type="file" id="upload-media-scheda" accept="image/*, video/*" style="display:none;" onchange="window.Scheda.gestisciUploadMedia(event)">
+            
+            <!-- Tasto PDF -->
+            <button class="icon-btn" style="color: var(--danger);" onclick="document.getElementById('upload-pdf-scheda').click()" title="Aggiungi Documento PDF">
+                <i class="fa-solid fa-file-pdf"></i>
+            </button>
+            
+            <input type="file" id="upload-media-scheda" accept="image/*, video/*" style="display:none;" onchange="window.Scheda.gestisciUploadMedia(event, 'media')">
+            <input type="file" id="upload-pdf-scheda" accept="application/pdf" style="display:none;" onchange="window.Scheda.gestisciUploadMedia(event, 'pdf')">
         </div>
 
         <div id="scheda-contenuto" class="scheda-content-box" style="background: var(--surface); padding: 20px; border-radius: 14px; min-height: 200px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); font-size: 15px; line-height: 1.6;">
@@ -41,7 +48,10 @@ export function inizializzaScheda(containerId, idScheda, databaseFirebaseIgnorat
     `;
 
     // Esposizione funzioni per l'HTML
-    window.Scheda = { attivaEditor, salvaSchedaSuGitHub, gestisciUploadMedia, eliminaMedia, apriViewer };
+    window.Scheda = { 
+        attivaEditor, salvaSchedaSuGitHub, gestisciUploadMedia, 
+        eliminaMedia, apriViewer, scaricaFile 
+    };
 
     if (isAdminOrCollab) {
         document.getElementById('scheda-admin-actions').style.display = 'flex';
@@ -56,8 +66,8 @@ export function inizializzaScheda(containerId, idScheda, databaseFirebaseIgnorat
 
 function formattaTestoLettura(html) {
     if (!html) return "";
-    // Trova parole come "(immagine 1)" o "(video 2)" ignorando maiuscole/minuscole
-    return html.replace(/\((immagine|video)\s+(\d+)\)/gi, (match, tipo, num) => {
+    // Regex aggiornata per trovare anche (pdf X)
+    return html.replace(/\((immagine|video|pdf)\s+(\d+)\)/gi, (match, tipo, num) => {
         const index = parseInt(num) - 1;
         return `<a href="#" onclick="window.Scheda.apriViewer(${index}); return false;" style="color: var(--primary); font-weight: 700; text-decoration: underline; background: rgba(0,102,204,0.1); padding: 2px 6px; border-radius: 6px;">${match}</a>`;
     });
@@ -93,7 +103,6 @@ async function avviaLetturaConMappa(id) {
                 const jsonStr = decodeURIComponent(escape(atob(fileData.content)));
                 datiSchedaCache = JSON.parse(jsonStr);
                 
-                // Formatta il testo in lettura per convertire i link
                 contenutoDiv.innerHTML = formattaTestoLettura(datiSchedaCache.testo_html) || "<p>Scrivi qui le istruzioni...</p>";
                 renderizzaGalleria(datiSchedaCache.media || []);
             }
@@ -103,7 +112,6 @@ async function avviaLetturaConMappa(id) {
             contenutoDiv.innerHTML = datiSchedaCache.testo_html;
             renderizzaGalleria([]);
         }
-
     } catch (e) {
         console.error(e);
         contenutoDiv.innerHTML = "<p style='color:var(--danger);'>Errore di sincronizzazione con GitHub.</p>";
@@ -111,7 +119,7 @@ async function avviaLetturaConMappa(id) {
 }
 
 // ==========================================
-// 3. AGGIORNAMENTO DELLA MAPPA (STILE ADMIN)
+// 3. AGGIORNAMENTO DELLA MAPPA E SALVATAGGIO
 // ==========================================
 
 async function rigeneraMappaGlobale(token) {
@@ -155,15 +163,10 @@ async function rigeneraMappaGlobale(token) {
     } catch (e) {}
 }
 
-// ==========================================
-// 4. EDITOR E SALVATAGGIO
-// ==========================================
-
 function attivaEditor() {
     isEditMode = true;
     const contenutoDiv = document.getElementById('scheda-contenuto');
     
-    // Ripristina il testo puro, disabilitando i link dinamici per poterlo editare comodamente
     contenutoDiv.innerHTML = datiSchedaCache.testo_html;
     if(contenutoDiv.innerText.includes("Nuova scheda operativa")) contenutoDiv.innerHTML = "";
 
@@ -175,6 +178,7 @@ function attivaEditor() {
     document.getElementById('btn-edit-scheda').style.display = 'none';
     document.getElementById('btn-salva-scheda').style.display = 'flex';
     document.querySelectorAll('.btn-delete-media').forEach(btn => btn.style.display = 'flex');
+    document.querySelectorAll('.btn-download-media').forEach(btn => btn.style.display = 'none'); // Nasconde download in edit
 }
 
 async function salvaSchedaSuGitHub() {
@@ -182,7 +186,6 @@ async function salvaSchedaSuGitHub() {
     if (!token) { alert("Manca il token PAT Admin!"); return; }
 
     const contenutoDiv = document.getElementById('scheda-contenuto');
-    // Salva il testo puro in ram (così come scritto dall'utente)
     datiSchedaCache.testo_html = contenutoDiv.innerHTML;
     
     const btnSalva = document.getElementById('btn-salva-scheda');
@@ -203,8 +206,7 @@ async function salvaSchedaSuGitHub() {
             body: JSON.stringify(payload)
         });
 
-        if (!res.ok) throw new Error("Errore salvataggio JSON su GitHub");
-        
+        if (!res.ok) throw new Error("Errore salvataggio JSON");
         fileShaAttuale = (await res.json()).content.sha; 
 
         if (!mappaFileGlobale || !mappaFileGlobale.albero || !mappaFileGlobale.albero.includes(`assets/schede/${schedaAttivaId}.json`)) {
@@ -215,15 +217,13 @@ async function salvaSchedaSuGitHub() {
         isEditMode = false;
         contenutoDiv.contentEditable = "false";
         contenutoDiv.style.border = "1px solid var(--border-color)";
-        
-        // Riformatta il testo mostrando di nuovo i link cliccabili
         contenutoDiv.innerHTML = formattaTestoLettura(datiSchedaCache.testo_html);
         
         document.getElementById('scheda-toolbar').style.display = 'none';
         document.getElementById('btn-edit-scheda').style.display = 'flex';
         document.getElementById('btn-salva-scheda').style.display = 'none';
-        document.querySelectorAll('.btn-delete-media').forEach(btn => btn.style.display = 'none');
         
+        renderizzaGalleria(datiSchedaCache.media); // Ridisegna per sistemare i tasti
     } catch(e) {
         alert("Errore durante il salvataggio.");
     } finally {
@@ -233,14 +233,13 @@ async function salvaSchedaSuGitHub() {
 }
 
 // ==========================================
-// 5. UPLOAD MULTIMEDIA E GALLERIA
+// 4. UPLOAD MULTIMEDIA E GALLERIA
 // ==========================================
 
-async function gestisciUploadMedia(event) {
+async function gestisciUploadMedia(event, cartellaTarget) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Limite sicurezza RAM/API: 25 MB
     if (file.size > 25 * 1024 * 1024) {
         alert("File troppo grande. Il limite massimo per caricamenti diretti è 25MB.");
         event.target.value = ""; return;
@@ -251,7 +250,10 @@ async function gestisciUploadMedia(event) {
 
     const extension = file.name.split('.').pop().toLowerCase();
     const newFilename = `${schedaAttivaId}_${new Date().getTime()}.${extension}`;
-    const githubPath = `assets/media_vademecum/${newFilename}`;
+    
+    // Indirizzamento cartella in base al tipo di file
+    const subfolder = cartellaTarget === 'pdf' ? 'pdf_vademecum' : 'media_vademecum';
+    const githubPath = `assets/${subfolder}/${newFilename}`;
 
     const btnSalva = document.getElementById('btn-salva-scheda');
     const txtOriginale = btnSalva.innerHTML;
@@ -294,68 +296,123 @@ function renderizzaGalleria(mediaArray) {
 
     mediaArray.forEach((path, index) => {
         const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${path}`;
-        const ext = path.split('.').pop().toLowerCase();
+        const filename = path.split('/').pop();
+        const ext = filename.split('.').pop().toLowerCase();
+        
         const isVideo = ['mp4', 'webm', 'mov'].includes(ext);
+        const isPdf = ext === 'pdf';
         const numeroVisuale = index + 1;
 
         const mediaDiv = document.createElement('div');
-        mediaDiv.style = "position: relative; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm);";
+        mediaDiv.style = "position: relative; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm); background: var(--surface-hover); border: 1px solid var(--border-color); display: flex; flex-direction: column;";
         
-        let contenutoMedia = isVideo 
-            ? `<video src="${rawUrl}" style="width: 100%; height: 150px; object-fit: cover; display: block;"></video>
-               <i class="fa-solid fa-play" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:30px; text-shadow: 0 2px 4px rgba(0,0,0,0.6); pointer-events:none;"></i>`
-            : `<img src="${rawUrl}" style="width: 100%; height: 150px; object-fit: cover; display: block;">`;
+        let contenutoMedia = '';
+        let tastoDownload = '';
+        
+        if (isPdf) {
+            // Struttura specifica per i PDF
+            contenutoMedia = `
+                <div style="padding: 20px 10px; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--surface);">
+                    <i class="fa-solid fa-file-pdf" style="font-size: 34px; color: var(--danger); margin-bottom: 8px;"></i>
+                    <span style="font-size: 11px; font-weight: 600; color: var(--text-main); word-break: break-all;">${filename}</span>
+                </div>
+                <div style="display: flex; border-top: 1px solid var(--border-color); background: var(--surface-hover);">
+                    <button style="flex: 1; padding: 10px; background: transparent; border: none; color: var(--primary); font-weight: 600; cursor: pointer; border-right: 1px solid var(--border-color); font-size: 12px;" onclick="window.open('${rawUrl}', '_blank')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Apri</button>
+                    <button class="btn-download-media" style="display: ${isEditMode ? 'none' : 'block'}; flex: 1; padding: 10px; background: transparent; border: none; color: var(--success); font-weight: 600; cursor: pointer; font-size: 12px;" onclick="window.Scheda.scaricaFile('${rawUrl}', '${filename}')"><i class="fa-solid fa-download"></i> Scarica</button>
+                </div>
+            `;
+        } else {
+            // Struttura per Immagini e Video
+            const mediaTag = isVideo 
+                ? `<video src="${rawUrl}" style="width: 100%; height: 150px; object-fit: cover; display: block;"></video>
+                   <i class="fa-solid fa-play" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:30px; text-shadow: 0 2px 4px rgba(0,0,0,0.6); pointer-events:none;"></i>`
+                : `<img src="${rawUrl}" style="width: 100%; height: 150px; object-fit: cover; display: block;">`;
+
+            contenutoMedia = `
+                <div onclick="window.Scheda.apriViewer(${index})" style="cursor: pointer; flex: 1; position: relative;">
+                    ${mediaTag}
+                </div>
+            `;
+            
+            tastoDownload = `
+                <button class="btn-download-media icon-btn" style="display: ${isEditMode ? 'none' : 'flex'}; position: absolute; top: 5px; right: 5px; background: var(--surface); color: var(--text-main); width: 30px; height: 30px; border-radius: 50%; justify-content: center; align-items: center; border: 2px solid var(--border-color); z-index: 10;" onclick="window.Scheda.scaricaFile('${rawUrl}', '${filename}')" title="Scarica">
+                    <i class="fa-solid fa-download" style="font-size: 12px;"></i>
+                </button>
+            `;
+        }
+
+        const tastoElimina = `
+            <button class="btn-delete-media icon-btn" style="display: ${isEditMode ? 'flex' : 'none'}; position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; width: 30px; height: 30px; border-radius: 50%; justify-content: center; align-items: center; border: 2px solid white; z-index: 15;" onclick="window.Scheda.eliminaMedia('${path}')" title="Elimina">
+                <i class="fa-solid fa-trash" style="font-size: 12px;"></i>
+            </button>
+        `;
 
         mediaDiv.innerHTML = `
             <!-- Bollino Numerico -->
-            <div style="position: absolute; top: 8px; left: 8px; background: var(--primary); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+            <div style="position: absolute; top: 8px; left: 8px; background: var(--primary); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; z-index: 15; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
                 ${numeroVisuale}
             </div>
-            
-            <div onclick="window.Scheda.apriViewer(${index})" style="cursor: pointer;">
-                ${contenutoMedia}
-            </div>
-
-            <!-- Tasto Elimina (Visibile in Edit Mode) -->
-            <button class="btn-delete-media icon-btn" style="display: ${isEditMode ? 'flex' : 'none'}; position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; width: 30px; height: 30px; border-radius: 50%; justify-content: center; align-items: center; border: 2px solid white;" onclick="window.Scheda.eliminaMedia('${path}')">
-                <i class="fa-solid fa-trash" style="font-size: 12px;"></i>
-            </button>
+            ${contenutoMedia}
+            ${tastoDownload}
+            ${tastoElimina}
         `;
         gallery.appendChild(mediaDiv);
     });
 }
 
+// 5. FUNZIONE UNIVERSALE PER IL DOWNLOAD
+async function scaricaFile(url, filename) {
+    try {
+        const toast = document.createElement('div');
+        toast.innerText = "Preparazione file...";
+        toast.style = "position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; z-index: 3000; font-size: 13px; box-shadow: var(--shadow-sm);";
+        document.body.appendChild(toast);
+        
+        // Fetch bypassa le restrizioni di apertura in altra finestra sui dispositivi mobili forzando il download
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const urlBlob = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = urlBlob;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        
+        window.URL.revokeObjectURL(urlBlob);
+        a.remove();
+        setTimeout(() => toast.remove(), 2500);
+    } catch(e) {
+        // Fallback standard se il fetch fallisce
+        window.open(url, '_blank');
+    }
+}
+
 async function eliminaMedia(path) {
-    if(!confirm("Attenzione: Vuoi eliminare DEFINITIVAMENTE questa immagine/video anche dal server?")) return;
+    if(!confirm("Attenzione: Vuoi eliminare DEFINITIVAMENTE questo file anche dal server?")) return;
     
     const token = localStorage.getItem('gh_admin_token');
     if (!token) return alert("Manca il token PAT Admin!");
 
-    // Cambia icona per mostrare il caricamento
     const btn = document.querySelector(`button[onclick="window.Scheda.eliminaMedia('${path}')"]`);
     if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="font-size: 12px;"></i>';
     
     try {
-        // 1. Recupera il codice SHA del file fisico
         const resSha = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, { headers: { 'Authorization': `token ${token}` }});
         if (resSha.ok) {
             const fileData = await resSha.json();
-            
-            // 2. Invia comando di DELETE
             await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: `Eliminato media dalla scheda ${schedaAttivaId}`, sha: fileData.sha })
             });
         }
-    } catch(e) { console.error("Errore eliminazione file fisico", e); }
+    } catch(e) {}
     
-    // 3. Rimuovi dall'array locale e salva
     datiSchedaCache.media = datiSchedaCache.media.filter(p => p !== path);
-    await salvaSchedaSuGitHub(); // Questo aggiornerà anche la mappa!
+    await salvaSchedaSuGitHub(); 
     renderizzaGalleria(datiSchedaCache.media);
 }
-
 
 function getBase64(file) {
     return new Promise((resolve, reject) => {
@@ -375,7 +432,7 @@ function creaViewerSeMancante() {
         const viewer = document.createElement('div');
         viewer.id = 'vd-media-viewer';
         viewer.className = 'modal-overlay';
-        viewer.style.zIndex = '2000'; // Sopra tutto
+        viewer.style.zIndex = '2000';
         viewer.innerHTML = `
             <div style="position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.92);">
                 <i class="fa-solid fa-xmark" style="position: absolute; right: 20px; top: max(20px, env(safe-area-inset-top)); font-size: 32px; color: white; cursor: pointer; z-index: 10;" onclick="chiudiViewer()"></i>
@@ -384,11 +441,9 @@ function creaViewerSeMancante() {
         `;
         document.body.appendChild(viewer);
 
-        // Aggiunge la chiusura globale
         window.chiudiViewer = () => {
             const vp = document.getElementById('vd-media-viewer');
             vp.style.display = 'none';
-            // Ferma eventuali video in riproduzione
             const vid = vp.querySelector('video');
             if (vid) { vid.pause(); vid.removeAttribute('src'); vid.load(); }
         };
@@ -397,14 +452,20 @@ function creaViewerSeMancante() {
 
 function apriViewer(index) {
     if (index < 0 || !datiSchedaCache.media || !datiSchedaCache.media[index]) {
-        alert("Immagine o video non trovato."); return;
+        alert("File non trovato."); return;
     }
     
     const path = datiSchedaCache.media[index];
     const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${path}`;
     const ext = path.split('.').pop().toLowerCase();
-    const contentDiv = document.getElementById('vd-media-viewer-content');
     
+    // Se è un PDF e viene cliccato da uno Smart Link nel testo, lo apre in una nuova scheda
+    if (ext === 'pdf') {
+        window.open(rawUrl, '_blank');
+        return;
+    }
+    
+    const contentDiv = document.getElementById('vd-media-viewer-content');
     if (['mp4', 'webm', 'mov'].includes(ext)) {
         contentDiv.innerHTML = `<video src="${rawUrl}" controls autoplay playsinline style="max-width: 100vw; max-height: 100vh; object-fit: contain;"></video>`;
     } else {
