@@ -235,11 +235,18 @@ function salvaNodo() {
 }
 
 function eliminaNodo() {
-    if(!confirm("Attenzione: Sei sicuro di voler eliminare questa voce?")) return;
+    if(!confirm("Attenzione: Sei sicuro di voler eliminare questa voce? Se è una scheda, anche il testo e tutti i file multimediali collegati verranno eliminati dal server definitivamente.")) return;
     
     const id = document.getElementById('nodeId').value;
     const parent = document.getElementById('nodeParent').value;
+    const nodo = treeData[parent].find(i => i.id === id);
     
+    // Se è una scheda, lancia la pulizia in background (non blocca l'interfaccia)
+    if (nodo && nodo.tipo === 'scheda') {
+        puliziaFileGitHub(nodo.id);
+    }
+    
+    // Elimina immediatamente dall'interfaccia e salva l'albero
     treeData[parent] = treeData[parent].filter(i => i.id !== id);
     if (treeData[id]) delete treeData[id]; 
     
@@ -247,6 +254,49 @@ function eliminaNodo() {
     salvaAlberoSuFirebase();
     renderPanel(parent, "panel-center");
 }
+
+async function puliziaFileGitHub(schedaId) {
+    const token = localStorage.getItem('gh_admin_token');
+    if (!token) return;
+    
+    const GH_OWNER = "hazev98"; 
+    const GH_REPO = "Utility";
+    const pathScheda = `assets/schede/${schedaId}.json`;
+    
+    try {
+        // 1. Legge il file JSON prima di cancellarlo, per scoprire quali foto conteneva
+        const resScheda = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${pathScheda}?t=${Date.now()}`, { headers: { 'Authorization': `token ${token}` }});
+        
+        if (resScheda.ok) {
+            const fileData = await resScheda.json();
+            const jsonStr = decodeURIComponent(escape(atob(fileData.content)));
+            const datiScheda = JSON.parse(jsonStr);
+            
+            // 2. Cicla ed elimina tutti i media collegati
+            if (datiScheda.media && datiScheda.media.length > 0) {
+                for (const mediaPath of datiScheda.media) {
+                    const resMedia = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${mediaPath}`, { headers: { 'Authorization': `token ${token}` }});
+                    if (resMedia.ok) {
+                        const mediaSha = (await resMedia.json()).sha;
+                        await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${mediaPath}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ message: `Pulizia media scheda eliminata`, sha: mediaSha })
+                        });
+                    }
+                }
+            }
+            
+            // 3. Infine, elimina il file JSON della scheda stessa
+            await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${pathScheda}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: `Eliminata scheda ${schedaId}`, sha: fileData.sha })
+            });
+        }
+    } catch(e) { console.error("Errore pulizia in background:", e); }
+}
+
 
 function toggleEditMode() {
     isEditMode = !isEditMode;
