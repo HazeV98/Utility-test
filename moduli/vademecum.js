@@ -269,7 +269,13 @@ function toggleEditMode() {
         icona.className = "fa-solid fa-pen"; icona.style.color = "var(--primary)";
         btnToken.style.display = "none";
         fab.style.display = "none";
-        if (sortableInstance) sortableInstance.destroy();
+        
+        // FIX: Distruzione sicura dell'istanza per permettere riutilizzi multipli
+        if (sortableInstance) {
+            try { sortableInstance.destroy(); } catch(e) {}
+            sortableInstance = null;
+        }
+        
         salvaAlberoSuFirebase();
         
         window.dispatchEvent(new CustomEvent('vademecum-edit-toggled', { detail: { isEdit: false } }));
@@ -277,7 +283,12 @@ function toggleEditMode() {
 }
 
 function initSortable(element) {
-    if (sortableInstance) sortableInstance.destroy();
+    // FIX: Previene il crash se l'istanza è già stata annullata o è in uno stato appeso
+    if (sortableInstance) {
+        try { sortableInstance.destroy(); } catch(e) {}
+        sortableInstance = null;
+    }
+    
     sortableInstance = new Sortable(element, { 
         handle: '.drag-handle', 
         animation: 150,
@@ -295,6 +306,7 @@ function initSortable(element) {
         }
     });
 }
+
 
 function salvaToken() {
     const pat = document.getElementById('adminPatToken').value.trim();
