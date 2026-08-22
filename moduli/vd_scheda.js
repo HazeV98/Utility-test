@@ -9,15 +9,14 @@ let mappaFileGlobale = null;
 
 export function inizializzaScheda(containerId, idScheda, databaseFirebaseIgnorato, isAdminOrCollab) {
     schedaAttivaId = idScheda;
-    isEditMode = false; // Reset dello stato per la nuova scheda
+    isEditMode = false; 
     const container = document.getElementById(containerId);
     if (!container) return;
 
     creaViewerSeMancante();
 
-    // UTILIZZO DI ID DINAMICI PER EVITARE CONFLITTI TRA SCHEDE
     container.innerHTML = `
-        <div id="scheda-toolbar-${idScheda}" style="display:none; gap: 8px; margin-bottom: 15px; background: var(--surface); padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); overflow-x: auto;">
+        <div id="scheda-toolbar-${idScheda}" style="display:none; gap: 8px; margin-bottom: 15px; background: var(--surface); padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); overflow-x: auto;">
             <button class="icon-btn" onclick="document.execCommand('bold', false, null)" title="Grassetto"><i class="fa-solid fa-bold"></i></button>
             <button class="icon-btn" onclick="document.execCommand('formatBlock', false, 'H3')" title="Titolo"><i class="fa-solid fa-heading"></i></button>
             <button class="icon-btn" onclick="document.execCommand('insertUnorderedList', false, null)" title="Elenco Puntato"><i class="fa-solid fa-list-ul"></i></button>
@@ -35,7 +34,7 @@ export function inizializzaScheda(containerId, idScheda, databaseFirebaseIgnorat
             <input type="file" id="upload-pdf-scheda-${idScheda}" accept="application/pdf" style="display:none;" onchange="window.Scheda.gestisciUploadMedia(event, 'pdf')">
         </div>
 
-        <div id="scheda-contenuto-${idScheda}" class="scheda-content-box" style="background: var(--surface); padding: 20px; border-radius: 14px; min-height: 200px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); font-size: 15px; line-height: 1.6;">
+        <div id="scheda-contenuto-${idScheda}" class="scheda-content-box" style="background: var(--surface); padding: 20px; border-radius: 14px; min-height: 200px; border: 1px solid var(--border-color); font-size: 15px; line-height: 1.6;">
             <div style="text-align:center; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Sincronizzazione Dati...</div>
         </div>
 
@@ -80,7 +79,7 @@ async function avviaLetturaConMappa(id) {
     const pathSchedaTarget = `assets/schede/${id}.json`;
     const contenutoDiv = document.getElementById(`scheda-contenuto-${id}`);
     
-    if(!contenutoDiv) return; // Evita crash se l'utente è uscito troppo in fretta
+    if(!contenutoDiv) return; 
 
     try {
         const urlMappa = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/mappa_file.json?t=${Date.now()}`;
@@ -177,7 +176,7 @@ function attivaEditor() {
     document.getElementById(`btn-edit-scheda-${schedaAttivaId}`).style.display = 'none';
     document.getElementById(`btn-salva-scheda-${schedaAttivaId}`).style.display = 'flex';
     
-    renderizzaGalleria(datiSchedaCache.media); // Ridisegna per mostrare i cestini e nascondere i download
+    renderizzaGalleria(datiSchedaCache.media); 
 }
 
 async function salvaSchedaSuGitHub() {
@@ -293,6 +292,10 @@ function renderizzaGalleria(mediaArray) {
 
     mediaArray.forEach((path, index) => {
         const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${path}`;
+        
+        // URL PUBBLICO DI GITHUB PAGES (Apre nel browser senza forzare il download)
+        const pagesUrl = `https://${GH_OWNER.toLowerCase()}.github.io/${GH_REPO}/${path}`;
+        
         const filename = path.split('/').pop();
         const ext = filename.split('.').pop().toLowerCase();
         
@@ -303,15 +306,15 @@ function renderizzaGalleria(mediaArray) {
         const mediaDiv = document.createElement('div');
         
         if (isPdf) {
-            // RIGA SINGOLA PER IL PDF (STILE MENU)
-            mediaDiv.style = "grid-column: 1 / -1; display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm);";
+            // RIGA SINGOLA PER IL PDF (Senza Ombre)
+            mediaDiv.style = "grid-column: 1 / -1; display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden;";
             
             const actionBtn = isEditMode 
-                ? `<button class="icon-btn" style="width: 50px; height: 100%; border-radius: 0; background: transparent; border: none; color: var(--danger); cursor: pointer;" onclick="window.Scheda.eliminaMedia('${path}')" title="Elimina"><i class="fa-solid fa-trash" style="font-size: 16px;"></i></button>`
-                : `<button class="icon-btn" style="width: 50px; height: 100%; border-radius: 0; background: transparent; border: none; color: var(--success); cursor: pointer;" onclick="window.Scheda.scaricaFile('${rawUrl}', '${filename}')" title="Scarica"><i class="fa-solid fa-download" style="font-size: 16px;"></i></button>`;
+                ? `<button class="icon-btn" style="width: 50px; height: 100%; border-radius: 0; background: transparent; border: none; color: var(--danger); cursor: pointer; box-shadow: none;" onclick="window.Scheda.eliminaMedia('${path}')" title="Elimina"><i class="fa-solid fa-trash" style="font-size: 16px;"></i></button>`
+                : `<button class="icon-btn" style="width: 50px; height: 100%; border-radius: 0; background: transparent; border: none; color: var(--success); cursor: pointer; box-shadow: none;" onclick="window.Scheda.scaricaFile('${rawUrl}', '${filename}')" title="Scarica"><i class="fa-solid fa-download" style="font-size: 16px;"></i></button>`;
 
             mediaDiv.innerHTML = `
-                <a href="${rawUrl}" target="_blank" style="flex: 1; padding: 14px 16px; display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-main);">
+                <a href="${pagesUrl}" target="_blank" style="flex: 1; padding: 14px 16px; display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-main);">
                     <i class="fa-solid fa-file-pdf" style="font-size: 24px; color: var(--danger);"></i>
                     <span style="font-size: 15px; font-weight: 600;">PDF ${numeroVisuale}</span>
                 </a>
@@ -320,19 +323,19 @@ function renderizzaGalleria(mediaArray) {
                 </div>
             `;
         } else {
-            // GRIGLIA PER FOTO E VIDEO
-            mediaDiv.style = "position: relative; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm);";
+            // GRIGLIA PER FOTO E VIDEO (Senza Ombre spurie sui tastini)
+            mediaDiv.style = "position: relative; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color);";
             const mediaTag = isVideo 
                 ? `<video src="${rawUrl}" style="width: 100%; height: 150px; object-fit: cover; display: block;"></video>
                    <i class="fa-solid fa-play" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:30px; text-shadow: 0 2px 4px rgba(0,0,0,0.6); pointer-events:none;"></i>`
                 : `<img src="${rawUrl}" style="width: 100%; height: 150px; object-fit: cover; display: block;">`;
 
             const actionBtn = isEditMode
-                ? `<button class="btn-delete-media icon-btn" style="position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; width: 30px; height: 30px; border-radius: 50%; justify-content: center; align-items: center; border: 2px solid white; z-index: 10;" onclick="window.Scheda.eliminaMedia('${path}')" title="Elimina"><i class="fa-solid fa-trash" style="font-size: 12px;"></i></button>`
-                : `<button class="btn-download-media icon-btn" style="position: absolute; top: 5px; right: 5px; background: var(--surface); color: var(--text-main); width: 30px; height: 30px; border-radius: 50%; justify-content: center; align-items: center; border: 2px solid var(--border-color); z-index: 10;" onclick="window.Scheda.scaricaFile('${rawUrl}', '${filename}')" title="Scarica"><i class="fa-solid fa-download" style="font-size: 12px;"></i></button>`;
+                ? `<button class="btn-delete-media icon-btn" style="position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; width: 30px; height: 30px; border-radius: 50%; justify-content: center; align-items: center; border: 2px solid white; z-index: 10; box-shadow: none;" onclick="window.Scheda.eliminaMedia('${path}')" title="Elimina"><i class="fa-solid fa-trash" style="font-size: 12px;"></i></button>`
+                : `<button class="btn-download-media icon-btn" style="position: absolute; top: 5px; right: 5px; background: var(--surface); color: var(--text-main); width: 30px; height: 30px; border-radius: 50%; justify-content: center; align-items: center; border: 1px solid var(--border-color); z-index: 10; box-shadow: none;" onclick="window.Scheda.scaricaFile('${rawUrl}', '${filename}')" title="Scarica"><i class="fa-solid fa-download" style="font-size: 12px;"></i></button>`;
 
             mediaDiv.innerHTML = `
-                <div style="position: absolute; top: 8px; left: 8px; background: var(--primary); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; z-index: 15; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                <div style="position: absolute; top: 8px; left: 8px; background: var(--primary); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; z-index: 15;">
                     ${numeroVisuale}
                 </div>
                 <div onclick="window.Scheda.apriViewer(${index})" style="cursor: pointer; position: relative;">
@@ -360,7 +363,6 @@ window.scaricaFile = async (url, filename) => {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(urlBlob);
     } catch(e) {
-        // Fallback in caso di blocco CORS[span_2](start_span)[span_2](end_span)
         window.open(url, '_blank');
     }
 }
@@ -430,11 +432,13 @@ function apriViewer(index) {
     }
     
     const path = datiSchedaCache.media[index];
+    const pagesUrl = `https://${GH_OWNER.toLowerCase()}.github.io/${GH_REPO}/${path}`;
     const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${path}`;
     const ext = path.split('.').pop().toLowerCase();
     
+    // Assicuriamoci che anche dal testo i link intelligenti (pdf 1) aprano il file con il nuovo URL
     if (ext === 'pdf') {
-        window.open(rawUrl, '_blank');
+        window.open(pagesUrl, '_blank');
         return;
     }
     
