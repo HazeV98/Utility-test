@@ -460,17 +460,25 @@ function apriMappaLeaflet(id, titolo) {
 
 function apriScheda(id, titolo) {
     const existing = document.getElementById(`panel-scheda_${id}`);
-    if (existing) existing.remove(); // FIX BUG DOM
+    if (existing) existing.remove(); 
 
     navigationStack.push("scheda_" + id);
     aggiornaHeader(titolo, true);
+    
     const panel = document.createElement('div');
-    panel.className = `vd-panel panel-right`; panel.id = `panel-scheda_${id}`;
-    panel.innerHTML = `<div id="container-scheda-${id}" style="width: 100%; height: 100%; overflow-y:auto; padding-bottom: 40px;"></div>`;
+    panel.className = `vd-panel panel-right`; 
+    panel.id = `panel-scheda_${id}`;
+    
+    // FIX BUG: Rimosso "height: 100%" e "overflow-y: auto" 
+    // che causavano il doppio scorrimento e l'occultamento della prima riga
+    panel.innerHTML = `<div id="container-scheda-${id}" style="padding-bottom: 80px;"></div>`;
+    
     document.getElementById('viewport').appendChild(panel);
     effettuaScorrimento("avanti");
+    
     inizializzaScheda(`container-scheda-${id}`, id, db, (globalIsAdmin || globalIsCollab));
 }
+
 
 function apriPlanimetria(id, titolo) {
     const existing = document.getElementById(`panel-plan_${id}`);
