@@ -9,52 +9,51 @@ let mappaFileGlobale = null;
 
 export function inizializzaScheda(containerId, idScheda, databaseFirebaseIgnorato, isAdminOrCollab) {
     schedaAttivaId = idScheda;
+    isEditMode = false; // Reset dello stato per la nuova scheda
     const container = document.getElementById(containerId);
     if (!container) return;
 
     creaViewerSeMancante();
 
+    // UTILIZZO DI ID DINAMICI PER EVITARE CONFLITTI TRA SCHEDE
     container.innerHTML = `
-        <div id="scheda-toolbar" style="display:none; gap: 8px; margin-bottom: 15px; background: var(--surface); padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); overflow-x: auto;">
+        <div id="scheda-toolbar-${idScheda}" style="display:none; gap: 8px; margin-bottom: 15px; background: var(--surface); padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); overflow-x: auto;">
             <button class="icon-btn" onclick="document.execCommand('bold', false, null)" title="Grassetto"><i class="fa-solid fa-bold"></i></button>
             <button class="icon-btn" onclick="document.execCommand('formatBlock', false, 'H3')" title="Titolo"><i class="fa-solid fa-heading"></i></button>
             <button class="icon-btn" onclick="document.execCommand('insertUnorderedList', false, null)" title="Elenco Puntato"><i class="fa-solid fa-list-ul"></i></button>
             <div style="flex: 1;"></div>
             
-            <!-- Tasto Foto/Video -->
-            <button class="icon-btn" style="color: var(--success);" onclick="document.getElementById('upload-media-scheda').click()" title="Aggiungi Immagine o Video">
+            <button class="icon-btn" style="color: var(--success);" onclick="document.getElementById('upload-media-scheda-${idScheda}').click()" title="Aggiungi Immagine o Video">
                 <i class="fa-solid fa-photo-film"></i>
             </button>
             
-            <!-- Tasto PDF -->
-            <button class="icon-btn" style="color: var(--danger);" onclick="document.getElementById('upload-pdf-scheda').click()" title="Aggiungi Documento PDF">
+            <button class="icon-btn" style="color: var(--danger);" onclick="document.getElementById('upload-pdf-scheda-${idScheda}').click()" title="Aggiungi Documento PDF">
                 <i class="fa-solid fa-file-pdf"></i>
             </button>
             
-            <input type="file" id="upload-media-scheda" accept="image/*, video/*" style="display:none;" onchange="window.Scheda.gestisciUploadMedia(event, 'media')">
-            <input type="file" id="upload-pdf-scheda" accept="application/pdf" style="display:none;" onchange="window.Scheda.gestisciUploadMedia(event, 'pdf')">
+            <input type="file" id="upload-media-scheda-${idScheda}" accept="image/*, video/*" style="display:none;" onchange="window.Scheda.gestisciUploadMedia(event, 'media')">
+            <input type="file" id="upload-pdf-scheda-${idScheda}" accept="application/pdf" style="display:none;" onchange="window.Scheda.gestisciUploadMedia(event, 'pdf')">
         </div>
 
-        <div id="scheda-contenuto" class="scheda-content-box" style="background: var(--surface); padding: 20px; border-radius: 14px; min-height: 200px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); font-size: 15px; line-height: 1.6;">
+        <div id="scheda-contenuto-${idScheda}" class="scheda-content-box" style="background: var(--surface); padding: 20px; border-radius: 14px; min-height: 200px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); font-size: 15px; line-height: 1.6;">
             <div style="text-align:center; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Sincronizzazione Dati...</div>
         </div>
 
-        <div id="scheda-media-gallery" style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
+        <div id="scheda-media-gallery-${idScheda}" style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
 
-        <div id="scheda-admin-actions" style="display:none; margin-top: 20px; gap: 10px;">
-            <button id="btn-edit-scheda" class="btn-action" style="background: var(--primary); flex: 1;" onclick="window.Scheda.attivaEditor()"><i class="fa-solid fa-pen"></i> Modifica Scheda</button>
-            <button id="btn-salva-scheda" class="btn-action" style="background: var(--success); flex: 1; display:none;" onclick="window.Scheda.salvaSchedaSuGitHub()"><i class="fa-solid fa-floppy-disk"></i> Salva</button>
+        <div id="scheda-admin-actions-${idScheda}" style="display:none; margin-top: 20px; gap: 10px;">
+            <button id="btn-edit-scheda-${idScheda}" class="btn-action" style="background: var(--primary); flex: 1;" onclick="window.Scheda.attivaEditor()"><i class="fa-solid fa-pen"></i> Modifica Scheda</button>
+            <button id="btn-salva-scheda-${idScheda}" class="btn-action" style="background: var(--success); flex: 1; display:none;" onclick="window.Scheda.salvaSchedaSuGitHub()"><i class="fa-solid fa-floppy-disk"></i> Salva</button>
         </div>
     `;
 
-    // Esposizione funzioni per l'HTML
     window.Scheda = { 
         attivaEditor, salvaSchedaSuGitHub, gestisciUploadMedia, 
         eliminaMedia, apriViewer, scaricaFile 
     };
 
     if (isAdminOrCollab) {
-        document.getElementById('scheda-admin-actions').style.display = 'flex';
+        document.getElementById(`scheda-admin-actions-${idScheda}`).style.display = 'flex';
     }
 
     avviaLetturaConMappa(idScheda);
@@ -66,7 +65,6 @@ export function inizializzaScheda(containerId, idScheda, databaseFirebaseIgnorat
 
 function formattaTestoLettura(html) {
     if (!html) return "";
-    // Regex aggiornata per trovare anche (pdf X)
     return html.replace(/\((immagine|video|pdf)\s+(\d+)\)/gi, (match, tipo, num) => {
         const index = parseInt(num) - 1;
         return `<a href="#" onclick="window.Scheda.apriViewer(${index}); return false;" style="color: var(--primary); font-weight: 700; text-decoration: underline; background: rgba(0,102,204,0.1); padding: 2px 6px; border-radius: 6px;">${match}</a>`;
@@ -80,7 +78,9 @@ function formattaTestoLettura(html) {
 async function avviaLetturaConMappa(id) {
     const token = localStorage.getItem('gh_admin_token');
     const pathSchedaTarget = `assets/schede/${id}.json`;
-    const contenutoDiv = document.getElementById('scheda-contenuto');
+    const contenutoDiv = document.getElementById(`scheda-contenuto-${id}`);
+    
+    if(!contenutoDiv) return; // Evita crash se l'utente è uscito troppo in fretta
 
     try {
         const urlMappa = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/mappa_file.json?t=${Date.now()}`;
@@ -113,7 +113,6 @@ async function avviaLetturaConMappa(id) {
             renderizzaGalleria([]);
         }
     } catch (e) {
-        console.error(e);
         contenutoDiv.innerHTML = "<p style='color:var(--danger);'>Errore di sincronizzazione con GitHub.</p>";
     }
 }
@@ -153,7 +152,7 @@ async function rigeneraMappaGlobale(token) {
             method: "PUT",
             headers: { "Authorization": `token ${token}` },
             body: JSON.stringify({
-                message: "Update mappa globale per indicizzazione Vademecum",
+                message: "Update mappa globale per Vademecum",
                 content: btoa(unescape(encodeURIComponent(JSON.stringify(mappaGlobale)))),
                 sha: shaMappa
             })
@@ -165,7 +164,7 @@ async function rigeneraMappaGlobale(token) {
 
 function attivaEditor() {
     isEditMode = true;
-    const contenutoDiv = document.getElementById('scheda-contenuto');
+    const contenutoDiv = document.getElementById(`scheda-contenuto-${schedaAttivaId}`);
     
     contenutoDiv.innerHTML = datiSchedaCache.testo_html;
     if(contenutoDiv.innerText.includes("Nuova scheda operativa")) contenutoDiv.innerHTML = "";
@@ -174,21 +173,21 @@ function attivaEditor() {
     contenutoDiv.style.border = "2px dashed var(--primary)";
     contenutoDiv.focus();
 
-    document.getElementById('scheda-toolbar').style.display = 'flex';
-    document.getElementById('btn-edit-scheda').style.display = 'none';
-    document.getElementById('btn-salva-scheda').style.display = 'flex';
-    document.querySelectorAll('.btn-delete-media').forEach(btn => btn.style.display = 'flex');
-    document.querySelectorAll('.btn-download-media').forEach(btn => btn.style.display = 'none'); // Nasconde download in edit
+    document.getElementById(`scheda-toolbar-${schedaAttivaId}`).style.display = 'flex';
+    document.getElementById(`btn-edit-scheda-${schedaAttivaId}`).style.display = 'none';
+    document.getElementById(`btn-salva-scheda-${schedaAttivaId}`).style.display = 'flex';
+    
+    renderizzaGalleria(datiSchedaCache.media); // Ridisegna per mostrare i cestini e nascondere i download
 }
 
 async function salvaSchedaSuGitHub() {
     const token = localStorage.getItem('gh_admin_token');
     if (!token) { alert("Manca il token PAT Admin!"); return; }
 
-    const contenutoDiv = document.getElementById('scheda-contenuto');
+    const contenutoDiv = document.getElementById(`scheda-contenuto-${schedaAttivaId}`);
     datiSchedaCache.testo_html = contenutoDiv.innerHTML;
     
-    const btnSalva = document.getElementById('btn-salva-scheda');
+    const btnSalva = document.getElementById(`btn-salva-scheda-${schedaAttivaId}`);
     btnSalva.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Salvataggio...`;
     btnSalva.disabled = true;
 
@@ -219,11 +218,11 @@ async function salvaSchedaSuGitHub() {
         contenutoDiv.style.border = "1px solid var(--border-color)";
         contenutoDiv.innerHTML = formattaTestoLettura(datiSchedaCache.testo_html);
         
-        document.getElementById('scheda-toolbar').style.display = 'none';
-        document.getElementById('btn-edit-scheda').style.display = 'flex';
-        document.getElementById('btn-salva-scheda').style.display = 'none';
+        document.getElementById(`scheda-toolbar-${schedaAttivaId}`).style.display = 'none';
+        document.getElementById(`btn-edit-scheda-${schedaAttivaId}`).style.display = 'flex';
+        document.getElementById(`btn-salva-scheda-${schedaAttivaId}`).style.display = 'none';
         
-        renderizzaGalleria(datiSchedaCache.media); // Ridisegna per sistemare i tasti
+        renderizzaGalleria(datiSchedaCache.media); 
     } catch(e) {
         alert("Errore durante il salvataggio.");
     } finally {
@@ -250,12 +249,10 @@ async function gestisciUploadMedia(event, cartellaTarget) {
 
     const extension = file.name.split('.').pop().toLowerCase();
     const newFilename = `${schedaAttivaId}_${new Date().getTime()}.${extension}`;
-    
-    // Indirizzamento cartella in base al tipo di file
     const subfolder = cartellaTarget === 'pdf' ? 'pdf_vademecum' : 'media_vademecum';
     const githubPath = `assets/${subfolder}/${newFilename}`;
 
-    const btnSalva = document.getElementById('btn-salva-scheda');
+    const btnSalva = document.getElementById(`btn-salva-scheda-${schedaAttivaId}`);
     const txtOriginale = btnSalva.innerHTML;
     btnSalva.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Upload...`;
     btnSalva.disabled = true;
@@ -291,7 +288,7 @@ async function gestisciUploadMedia(event, cartellaTarget) {
 }
 
 function renderizzaGalleria(mediaArray) {
-    const gallery = document.getElementById('scheda-media-gallery');
+    const gallery = document.getElementById(`scheda-media-gallery-${schedaAttivaId}`);
     gallery.innerHTML = '';
 
     mediaArray.forEach((path, index) => {
@@ -304,86 +301,66 @@ function renderizzaGalleria(mediaArray) {
         const numeroVisuale = index + 1;
 
         const mediaDiv = document.createElement('div');
-        mediaDiv.style = "position: relative; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm); background: var(--surface-hover); border: 1px solid var(--border-color); display: flex; flex-direction: column;";
-        
-        let contenutoMedia = '';
-        let tastoDownload = '';
         
         if (isPdf) {
-            // Struttura specifica per i PDF
-            contenutoMedia = `
-                <div style="padding: 20px 10px; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--surface);">
-                    <i class="fa-solid fa-file-pdf" style="font-size: 34px; color: var(--danger); margin-bottom: 8px;"></i>
-                    <span style="font-size: 11px; font-weight: 600; color: var(--text-main); word-break: break-all;">${filename}</span>
-                </div>
-                <div style="display: flex; border-top: 1px solid var(--border-color); background: var(--surface-hover);">
-                    <button style="flex: 1; padding: 10px; background: transparent; border: none; color: var(--primary); font-weight: 600; cursor: pointer; border-right: 1px solid var(--border-color); font-size: 12px;" onclick="window.open('${rawUrl}', '_blank')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Apri</button>
-                    <button class="btn-download-media" style="display: ${isEditMode ? 'none' : 'block'}; flex: 1; padding: 10px; background: transparent; border: none; color: var(--success); font-weight: 600; cursor: pointer; font-size: 12px;" onclick="window.Scheda.scaricaFile('${rawUrl}', '${filename}')"><i class="fa-solid fa-download"></i> Scarica</button>
+            // RIGA SINGOLA PER IL PDF (STILE MENU)
+            mediaDiv.style = "grid-column: 1 / -1; display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm);";
+            
+            const actionBtn = isEditMode 
+                ? `<button class="icon-btn" style="width: 50px; height: 100%; border-radius: 0; background: transparent; border: none; color: var(--danger); cursor: pointer;" onclick="window.Scheda.eliminaMedia('${path}')" title="Elimina"><i class="fa-solid fa-trash" style="font-size: 16px;"></i></button>`
+                : `<button class="icon-btn" style="width: 50px; height: 100%; border-radius: 0; background: transparent; border: none; color: var(--success); cursor: pointer;" onclick="window.Scheda.scaricaFile('${rawUrl}', '${filename}')" title="Scarica"><i class="fa-solid fa-download" style="font-size: 16px;"></i></button>`;
+
+            mediaDiv.innerHTML = `
+                <a href="${rawUrl}" target="_blank" style="flex: 1; padding: 14px 16px; display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-main);">
+                    <i class="fa-solid fa-file-pdf" style="font-size: 24px; color: var(--danger);"></i>
+                    <span style="font-size: 15px; font-weight: 600;">PDF ${numeroVisuale}</span>
+                </a>
+                <div style="display: flex; align-items: stretch; border-left: 1px solid var(--border-color);">
+                    ${actionBtn}
                 </div>
             `;
         } else {
-            // Struttura per Immagini e Video
+            // GRIGLIA PER FOTO E VIDEO
+            mediaDiv.style = "position: relative; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm);";
             const mediaTag = isVideo 
                 ? `<video src="${rawUrl}" style="width: 100%; height: 150px; object-fit: cover; display: block;"></video>
                    <i class="fa-solid fa-play" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:30px; text-shadow: 0 2px 4px rgba(0,0,0,0.6); pointer-events:none;"></i>`
                 : `<img src="${rawUrl}" style="width: 100%; height: 150px; object-fit: cover; display: block;">`;
 
-            contenutoMedia = `
-                <div onclick="window.Scheda.apriViewer(${index})" style="cursor: pointer; flex: 1; position: relative;">
+            const actionBtn = isEditMode
+                ? `<button class="btn-delete-media icon-btn" style="position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; width: 30px; height: 30px; border-radius: 50%; justify-content: center; align-items: center; border: 2px solid white; z-index: 10;" onclick="window.Scheda.eliminaMedia('${path}')" title="Elimina"><i class="fa-solid fa-trash" style="font-size: 12px;"></i></button>`
+                : `<button class="btn-download-media icon-btn" style="position: absolute; top: 5px; right: 5px; background: var(--surface); color: var(--text-main); width: 30px; height: 30px; border-radius: 50%; justify-content: center; align-items: center; border: 2px solid var(--border-color); z-index: 10;" onclick="window.Scheda.scaricaFile('${rawUrl}', '${filename}')" title="Scarica"><i class="fa-solid fa-download" style="font-size: 12px;"></i></button>`;
+
+            mediaDiv.innerHTML = `
+                <div style="position: absolute; top: 8px; left: 8px; background: var(--primary); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; z-index: 15; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                    ${numeroVisuale}
+                </div>
+                <div onclick="window.Scheda.apriViewer(${index})" style="cursor: pointer; position: relative;">
                     ${mediaTag}
                 </div>
-            `;
-            
-            tastoDownload = `
-                <button class="btn-download-media icon-btn" style="display: ${isEditMode ? 'none' : 'flex'}; position: absolute; top: 5px; right: 5px; background: var(--surface); color: var(--text-main); width: 30px; height: 30px; border-radius: 50%; justify-content: center; align-items: center; border: 2px solid var(--border-color); z-index: 10;" onclick="window.Scheda.scaricaFile('${rawUrl}', '${filename}')" title="Scarica">
-                    <i class="fa-solid fa-download" style="font-size: 12px;"></i>
-                </button>
+                ${actionBtn}
             `;
         }
-
-        const tastoElimina = `
-            <button class="btn-delete-media icon-btn" style="display: ${isEditMode ? 'flex' : 'none'}; position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; width: 30px; height: 30px; border-radius: 50%; justify-content: center; align-items: center; border: 2px solid white; z-index: 15;" onclick="window.Scheda.eliminaMedia('${path}')" title="Elimina">
-                <i class="fa-solid fa-trash" style="font-size: 12px;"></i>
-            </button>
-        `;
-
-        mediaDiv.innerHTML = `
-            <!-- Bollino Numerico -->
-            <div style="position: absolute; top: 8px; left: 8px; background: var(--primary); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; z-index: 15; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
-                ${numeroVisuale}
-            </div>
-            ${contenutoMedia}
-            ${tastoDownload}
-            ${tastoElimina}
-        `;
+        
         gallery.appendChild(mediaDiv);
     });
 }
 
 // 5. FUNZIONE UNIVERSALE PER IL DOWNLOAD
-async function scaricaFile(url, filename) {
+window.scaricaFile = async (url, filename) => {
     try {
-        const toast = document.createElement('div');
-        toast.innerText = "Preparazione file...";
-        toast.style = "position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; z-index: 3000; font-size: 13px; box-shadow: var(--shadow-sm);";
-        document.body.appendChild(toast);
-        
-        // Fetch bypassa le restrizioni di apertura in altra finestra sui dispositivi mobili forzando il download
         const response = await fetch(url);
         const blob = await response.blob();
         const urlBlob = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.style.display = 'none';
         a.href = urlBlob;
         a.download = filename;
         document.body.appendChild(a);
         a.click();
-        
+        document.body.removeChild(a);
         window.URL.revokeObjectURL(urlBlob);
-        a.remove();
-        setTimeout(() => toast.remove(), 2500);
     } catch(e) {
-        // Fallback standard se il fetch fallisce
+        // Fallback in caso di blocco CORS[span_2](start_span)[span_2](end_span)
         window.open(url, '_blank');
     }
 }
@@ -394,9 +371,6 @@ async function eliminaMedia(path) {
     const token = localStorage.getItem('gh_admin_token');
     if (!token) return alert("Manca il token PAT Admin!");
 
-    const btn = document.querySelector(`button[onclick="window.Scheda.eliminaMedia('${path}')"]`);
-    if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="font-size: 12px;"></i>';
-    
     try {
         const resSha = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, { headers: { 'Authorization': `token ${token}` }});
         if (resSha.ok) {
@@ -459,7 +433,6 @@ function apriViewer(index) {
     const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${path}`;
     const ext = path.split('.').pop().toLowerCase();
     
-    // Se è un PDF e viene cliccato da uno Smart Link nel testo, lo apre in una nuova scheda
     if (ext === 'pdf') {
         window.open(rawUrl, '_blank');
         return;
