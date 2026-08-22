@@ -395,6 +395,9 @@ function eseguiSpostamento(targetParentId) {
 // ==========================================
 
 function apriMappaLeaflet(id, titolo) {
+    const existing = document.getElementById(`panel-mappa_${id}`);
+    if (existing) existing.remove(); // FIX BUG DOM
+
     navigationStack.push("mappa_" + id);
     aggiornaHeader(titolo, true);
     const panel = document.createElement('div');
@@ -406,6 +409,9 @@ function apriMappaLeaflet(id, titolo) {
 }
 
 function apriScheda(id, titolo) {
+    const existing = document.getElementById(`panel-scheda_${id}`);
+    if (existing) existing.remove(); // FIX BUG DOM
+
     navigationStack.push("scheda_" + id);
     aggiornaHeader(titolo, true);
     const panel = document.createElement('div');
@@ -417,6 +423,9 @@ function apriScheda(id, titolo) {
 }
 
 function apriPlanimetria(id, titolo) {
+    const existing = document.getElementById(`panel-plan_${id}`);
+    if (existing) existing.remove(); // FIX BUG DOM
+
     navigationStack.push("plan_" + id);
     aggiornaHeader(titolo, true);
     const panel = document.createElement('div');
