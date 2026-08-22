@@ -227,14 +227,14 @@ const ICON_MAP = {
     rubrica: "fa-solid fa-address-book", ferie: "fa-solid fa-umbrella-beach", orari: "fa-regular fa-clock",
     documenti: "fa-solid fa-file-lines", link: "fa-solid fa-link", contatti: "fa-solid fa-id-card",
     buoni: "fa-solid fa-utensils", promemoria: "fa-solid fa-stopwatch", dds: "fa-solid fa-box-archive",
-    report: "fa-solid fa-headset", impostazioni: "fa-solid fa-gear", admin: "fa-solid fa-lock", accessi: "fa-solid fa-users-gear"
+    report: "fa-solid fa-headset", admin: "fa-solid fa-lock", accessi: "fa-solid fa-users-gear", vademecum: "fa-solid fa-book"
 };
 
 const EMOJI_MAP = {
     oggi: "🎯", calendario: "📅", statistiche: "📊", rotazioni: "👥", turni: "🔄",
     bachecaturni: "🤝", rubrica: "📒", ferie: "⛱️", orari: "🕒", documenti: "📄",
     link: "🔗", contatti: "🪪", buoni: "🍽️", promemoria: "⏱️", dds: "🗃️",
-    report: "🎧", impostazioni: "⚙️", admin: "🔒", accessi: "👨‍💻"
+    report: "🎧", admin: "🔒", accessi: "👨‍💻", vademecum: "📖"
 };
 
 const DEFAULT_APPS = [
@@ -254,6 +254,7 @@ const DEFAULT_APPS = [
     { id: "orari", label: "Orari\nNavigazione", onclick: "window.apriModaleOrari()", defaultColor: "#17a2b8" },
     { id: "chebateo", label: "CheBateo", image: "icone_app/iconcb.png", href: "https://m.chebateo.it/" },
     { id: "documenti", label: "Documenti", onclick: "window.apriModaleDocumenti()", defaultColor: "#6c757d" },
+    { id: "vademecum", label: "Vademecum", href: "vademecum.html", defaultColor: "#8e8e93" },
     { id: "link", label: "Link", onclick: "window.apriModaleLink()", defaultColor: "#495057" },
     { id: "contatti", label: "Contatti", onclick: "window.apriModaleContatti()", defaultColor: "#2c3e50" },
     { id: "buoni", label: "Buoni\nPasto", onclick: "window.apriModaleBuoniPasto()", defaultColor: "#d63384" },
@@ -262,7 +263,6 @@ const DEFAULT_APPS = [
     { id: "dds", label: "Archivio\nDDS", onclick: "window.apriModaleDDS()", defaultColor: "#5856d6" },
     
     { id: "report", label: "Assistenza\nApp", onclick: "window.avviaMotoreSegnalazioniDaIndex()", defaultColor: "#0088ff" },
-    { id: "impostazioni", label: "Impostazioni", onclick: "window.apriModal('settingsModal')", defaultColor: "#8e8e93" },
     { id: "spriss", label: "Spriss", image: "icone_app/iconspriss.png", href: "https://spriss.avmspa.it/" },
     
     { id: "admin", label: "Admin", onclick: "window.apriModaleAdmin()", condition: "admin", defaultColor: "#ff3b30" },
@@ -902,8 +902,8 @@ window.LayoutEngine = {
                 let parsed = JSON.parse(targetStr);
                 this.prefs = { ...this.prefs, ...parsed };
                 
-                // Rimuove forzatamente l'app "guida" se presente nelle preferenze salvate dagli utenti
-                this.prefs.apps = this.prefs.apps.filter(app => app.id !== 'guida');
+                // Rimuove forzatamente l'app "guida" e la vecchia "impostazioni" se presenti nelle preferenze salvate
+                this.prefs.apps = this.prefs.apps.filter(app => app.id !== 'guida' && app.id !== 'impostazioni');
                 
                 this.mergeWithDefaults();
             } catch(e) {}
