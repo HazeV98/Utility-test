@@ -428,6 +428,7 @@
         <a href="https://m.chebateo.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-water"></i> CheBateo</a>
         
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleDocumenti(); return false;" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Documenti</a>
+        <a href="vademecum.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Vademecum</a>
         
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleLink(); return false;" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
         
@@ -513,6 +514,9 @@
             </div>
             <div class="header-side right">
                 <button id="install-btn"><i class="fa-solid fa-download"></i> Installa</button>
+                <div id="icona-impostazioni" style="position: relative; cursor: pointer; margin-left: 10px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--surface); border-radius: 50%; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); transition: all 0.2s;" onclick="window.apriModal('settingsModal')">
+                    <i class="fa-solid fa-gear" style="font-size: 18px; color: var(--primary);"></i>
+                </div>
                 <div id="icona-bacheca" style="position: relative; cursor: pointer; margin-left: 10px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--surface); border-radius: 50%; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); transition: all 0.2s;" onclick="window.apriBachecaUtility()">
                     <i class="fa-solid fa-bullhorn" style="font-size: 18px; color: var(--primary);"></i>
                     <div id="badge-messaggi" class="badge-notif" style="display: none;">0</div>
