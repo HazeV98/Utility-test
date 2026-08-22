@@ -1,13 +1,13 @@
-const CACHE_NAME = 'utility-app-v9';
+const CACHE_NAME = 'utility-app-v10';
 
 self.addEventListener('install', (event) => {
-    console.log('[Service Worker] Installato v9');
+    console.log('[Service Worker] Installato v10');
     // Forza l'attivazione immediata del service worker
     self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-    console.log('[Service Worker] Attivato v9');
+    console.log('[Service Worker] Attivato v10');
     return self.clients.claim();
 });
 
