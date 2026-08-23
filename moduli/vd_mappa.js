@@ -13,10 +13,11 @@ let isEditMode = false;
 let globalIsAdminCollab = false;
 
 export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnorato, isAdminOrCollab) {
+    // CORREZIONE: Controllo del token per sbloccare il tasto modifica
     const token = localStorage.getItem('gh_admin_token');
     globalIsAdminCollab = isAdminOrCollab || (token ? true : false);
-    isEditMode = false;
     
+    isEditMode = false;
     const container = document.getElementById(containerId);
     if (!container) return;
 
@@ -25,7 +26,7 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     container.innerHTML = `
         <div id="leaflet-map-container" style="width: 100%; height: 100%; z-index: 1;"></div>
         
-        <!-- Legenda e Filtri -->
+        <!-- Legenda e Filtri (Inizialmente Nascosta) -->
         <div id="mappa-legenda-panel" style="display: none; position: absolute; top: max(15px, env(safe-area-inset-top)); right: 70px; background: var(--surface); padding: 15px; border-radius: 12px; box-shadow: var(--shadow-md); z-index: 1000; font-size: 13px; min-width: 180px; border: 1px solid var(--border-color);">
             <div style="font-weight: 700; margin-bottom: 10px; color: var(--text-main); font-size: 14px;">Mostra in mappa:</div>
             <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 15px;">
@@ -39,7 +40,7 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
             <div id="legenda-colori"></div>
         </div>
 
-        <!-- Pulsanti Fluttuanti (FAB) -->
+        <!-- Pulsanti Fluttuanti (FAB) spostati in ALTO A DESTRA -->
         <div style="position: absolute; top: max(15px, env(safe-area-inset-top)); right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 15px;">
             <button class="icon-btn fab-btn" title="Filtri e Legenda" onclick="window.Mappa.toggleLegend()" style="width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: var(--primary); box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
                 <i class="fa-solid fa-filter"></i>
@@ -57,6 +58,7 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
         cambiaLayerDati, toggleLegend, toggleSfondo, toggleEdit, salvaFeatureModificata 
     };
 
+    // CORREZIONE: Usa la variabile globale per mostrare il bottone
     if (globalIsAdminCollab) {
         document.getElementById('fab-edit-mappa').style.display = 'flex';
     }
@@ -66,15 +68,11 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     mappaAttiva = L.map('leaflet-map-container', { zoomControl: false }).setView([45.435, 12.325], 13);
     L.control.zoom({ position: 'topleft' }).addTo(mappaAttiva);
 
-    // FIX MAPPA: Indirizzo CartoDB corretto (senza il parametro che bloccava il caricamento)
-    layerStandard = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap, &copy; CartoDB',
-        maxZoom: 19
+    layerStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap', maxZoom: 18
     });
-    
     layerSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri', 
-        maxZoom: 18
+        attribution: 'Tiles &copy; Esri', maxZoom: 18
     });
 
     layerStandard.addTo(mappaAttiva);
@@ -86,32 +84,28 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     await caricaDatiGeoJson();
 }
 
-// FIX CARICAMENTO: Evita il limite API di 1MB di GitHub leggendo il file grezzo o locale
 async function caricaDatiGeoJson() {
     const token = localStorage.getItem('gh_admin_token');
     try {
         if (!datiGeoJsonCache) {
-            
-            let response = await fetch(`./assets/canali_venezia.geojson?t=${Date.now()}`);
-            if (!response.ok) {
-                const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/assets/canali_venezia.geojson?t=${Date.now()}`;
-                response = await fetch(rawUrl);
-            }
-            if (!response.ok) throw new Error("File GeoJSON non trovato");
-            
-            datiGeoJsonCache = await response.json();
-
             if (globalIsAdminCollab && token) {
-                try {
-                    const urlAPI = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/canali_venezia.geojson`;
-                    const resAPI = await fetch(urlAPI, { headers: { 'Authorization': `token ${token}` } });
-                    if (resAPI.ok) fileShaAttuale = (await resAPI.json()).sha;
-                } catch(e) {}
+                const urlAPI = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/canali_venezia.geojson?t=${Date.now()}`;
+                const response = await fetch(urlAPI, { headers: { 'Authorization': `token ${token}` } });
+                if (response.ok) {
+                    const data = await response.json();
+                    fileShaAttuale = data.sha;
+                    datiGeoJsonCache = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+                }
+            } 
+            
+            if (!datiGeoJsonCache) {
+                const response = await fetch('./assets/canali_venezia.geojson?t=' + Date.now());
+                if (!response.ok) throw new Error("File GeoJSON non trovato");
+                datiGeoJsonCache = await response.json();
             }
 
             datiGeoJsonCache.features.forEach((f, idx) => f.properties._internal_id = idx);
         }
-        
         disegnaGeoJson();
     } catch (error) {
         console.error(error);
@@ -131,29 +125,32 @@ function disegnaGeoJson() {
     }).addTo(mappaAttiva);
 }
 
+// ------------------------------------
+// GESTIONE COLORI E STILI
+// ------------------------------------
 function impostaStileLinea(feature) {
-    let colore = '#9e9e9e'; 
+    let colore = '#9e9e9e'; // Grigio default per "Altro"
 
     if (modalitaCorrente === 'velocita') {
         const velStr = feature.properties.velocita;
         const vel = parseFloat(velStr);
         
-        if (isNaN(vel)) colore = '#9e9e9e';         
-        else if (vel <= 5) colore = '#d93025';      
-        else if (vel <= 7) colore = '#ff9800';      
-        else if (vel <= 9) colore = '#fbbc05';      
-        else if (vel <= 11) colore = '#8bc34a';     
-        else if (vel >= 20) colore = '#0f9d58';     
+        if (isNaN(vel)) colore = '#9e9e9e';         // Altro / Nessun limite numerico
+        else if (vel <= 5) colore = '#d93025';      // Rosso
+        else if (vel <= 7) colore = '#ff9800';      // Arancione
+        else if (vel <= 9) colore = '#fbbc05';      // Giallo
+        else if (vel <= 11) colore = '#8bc34a';     // Verde Chiaro
+        else if (vel >= 20) colore = '#0f9d58';     // Verde Scuro
     } 
     else if (modalitaCorrente === 'giurisdizione') {
         const giu = (feature.properties.giurisdisz || '').toUpperCase();
-        if (giu.includes('COMUNE')) colore = '#4285f4';                                      
-        else if (giu.includes('AUTORITÀ MARITTIMA') || giu.includes('AUTORITA MARITTIMA')) colore = '#9c27b0'; 
-        else if (giu.includes('MAGISTRATO')) colore = '#009688';                             
-        else colore = '#e91e63';                                                             
+        if (giu.includes('COMUNE')) colore = '#4285f4';                                      // Blu 
+        else if (giu.includes('AUTORITÀ MARITTIMA') || giu.includes('AUTORITA MARITTIMA')) colore = '#9c27b0'; // Viola
+        else if (giu.includes('MAGISTRATO')) colore = '#009688';                             // Verde Acqua/Teal 
+        else colore = '#e91e63';                                                             // Rosa (Altro)
     }
 
-    const isPolygon = feature.geometry && feature.geometry.type.includes('Polygon');
+    const isPolygon = feature.geometry.type.includes('Polygon');
 
     return {
         color: colore,
@@ -189,6 +186,9 @@ function aggiornaUI_Legenda() {
     contenitore.innerHTML = html;
 }
 
+// ------------------------------------
+// POPUP E MODALITÀ MODIFICA
+// ------------------------------------
 function aggiungiPopup(feature, layer) {
     layer.bindPopup(() => {
         const p = feature.properties;
@@ -238,6 +238,7 @@ async function salvaFeatureModificata(index) {
 
         datiGeoJsonCache.features[index].properties.Toponomast = nuovoNome;
         
+        // Se il campo velocità non è un numero (es. stringa vuota), lo salva così com'è per cadere in "Altro"
         const velParse = parseFloat(nuovaVel);
         datiGeoJsonCache.features[index].properties.velocita = isNaN(velParse) ? nuovaVel : velParse;
         
@@ -275,6 +276,9 @@ async function salvaFeatureModificata(index) {
     }
 }
 
+// ------------------------------------
+// FUNZIONI FAB (PULSANTI FLUTTUANTI)
+// ------------------------------------
 function toggleLegend() {
     const panel = document.getElementById('mappa-legenda-panel');
     panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
