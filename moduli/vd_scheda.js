@@ -35,7 +35,7 @@ export function inizializzaScheda(containerId, idScheda, databaseFirebaseIgnorat
         </div>
 
         <div id="scheda-contenuto-${idScheda}" class="scheda-content-box" style="background: var(--surface); padding: 20px; border-radius: 14px; min-height: 200px; border: 1px solid var(--border-color); font-size: 15px; line-height: 1.6;">
-            <div style="text-align:center; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Sincronizzazione Dati...</div>
+            <div style="text-align:center; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Caricamento...</div>
         </div>
 
         <div id="scheda-media-gallery-${idScheda}" style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
@@ -65,19 +65,14 @@ export function inizializzaScheda(containerId, idScheda, databaseFirebaseIgnorat
 function formattaTestoLettura(html) {
     if (!html) return "";
     
-    // 1. Converte (immagine 1), (video 2), (pdf 1)
     let formattato = html.replace(/\((immagine|video|pdf)\s+(\d+)\)/gi, (match, tipo, num) => {
         const index = parseInt(num) - 1;
         return `<a href="#" onclick="window.Scheda.apriViewer(${index}); return false;" style="color: var(--primary); font-weight: 700; text-decoration: underline; background: rgba(0,102,204,0.1); padding: 2px 6px; border-radius: 6px;">${match}</a>`;
     });
     
-    // 2. Converte link:www.sito.it in URL veri (nascondendo "link:")
     formattato = formattato.replace(/link:([^\s<]+)/gi, (match, url) => {
         let href = url;
-        // Se l'utente non ha scritto http://, lo aggiungiamo noi per evitare link rotti
-        if (!href.startsWith('http://') && !href.startsWith('https://')) {
-            href = 'https://' + href;
-        }
+        if (!href.startsWith('http://') && !href.startsWith('https://')) href = 'https://' + href;
         return `<a href="${href}" target="_blank" style="color: var(--primary); font-weight: 600; text-decoration: underline;"><i class="fa-solid fa-link" style="font-size: 13px;"></i> ${url}</a>`;
     });
     
@@ -409,7 +404,7 @@ function getBase64(file) {
 }
 
 // ==========================================
-// 6. VISUALIZZATORE INTERNO (VIEWER)
+// 6. VISUALIZZATORE INTERNO (CON ZOOM)
 // ==========================================
 
 function creaViewerSeMancante() {
@@ -419,9 +414,9 @@ function creaViewerSeMancante() {
         viewer.className = 'modal-overlay';
         viewer.style.zIndex = '2000';
         viewer.innerHTML = `
-            <div style="position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.92);">
-                <i class="fa-solid fa-xmark" style="position: absolute; right: 20px; top: max(20px, env(safe-area-inset-top)); font-size: 32px; color: white; cursor: pointer; z-index: 10;" onclick="chiudiViewer()"></i>
-                <div id="vd-media-viewer-content" style="max-width: 100%; max-height: 100%; display:flex; justify-content:center; align-items:center;"></div>
+            <div style="position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.92); overflow: hidden;">
+                <i class="fa-solid fa-xmark" style="position: absolute; right: 20px; top: max(20px, env(safe-area-inset-top)); font-size: 32px; color: white; cursor: pointer; z-index: 50;" onclick="window.chiudiViewer()"></i>
+                <div id="vd-media-viewer-content" style="width: 100%; height: 100%; display:flex; justify-content:center; align-items:center;"></div>
             </div>
         `;
         document.body.appendChild(viewer);
@@ -454,8 +449,84 @@ function apriViewer(index) {
     if (['mp4', 'webm', 'mov'].includes(ext)) {
         contentDiv.innerHTML = `<video src="${rawUrl}" controls autoplay playsinline style="max-width: 100vw; max-height: 100vh; object-fit: contain;"></video>`;
     } else {
-        contentDiv.innerHTML = `<img src="${rawUrl}" style="max-width: 100vw; max-height: 100vh; object-fit: contain;">`;
+        contentDiv.innerHTML = `<img id="vd-viewer-img" src="${rawUrl}" style="max-width: 100vw; max-height: 100vh; object-fit: contain; transform-origin: center center; transition: transform 0.2s ease-out;">`;
+        setTimeout(inizializzaZoomImmagine, 50); // Attiva i controlli touch/mouse
     }
     
     document.getElementById('vd-media-viewer').style.display = 'flex';
+}
+
+function inizializzaZoomImmagine() {
+    const img = document.getElementById('vd-viewer-img');
+    const container = document.getElementById('vd-media-viewer-content');
+    if (!img || !container) return;
+
+    let scale = 1, panning = false, pointX = 0, pointY = 0;
+    let startX = 0, startY = 0, startDist = 0, initialScale = 1;
+    
+    function setTransform() {
+        img.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
+    }
+
+    // Doppio tap / click
+    let lastTap = 0;
+    img.addEventListener('touchstart', (e) => {
+        const currentTime = new Date().getTime();
+        if (currentTime - lastTap < 300 && e.touches.length === 1) {
+            scale = scale > 1 ? 1 : 2.5;
+            pointX = 0; pointY = 0;
+            img.style.transition = 'transform 0.3s ease';
+            setTransform();
+            e.preventDefault();
+        }
+        lastTap = currentTime;
+    }, { passive: false });
+
+    // Inizio tocco (Pinch o Pan)
+    container.addEventListener('touchstart', (e) => {
+        img.style.transition = 'none';
+        if (e.touches.length === 2) {
+            startDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            initialScale = scale;
+        } else if (e.touches.length === 1) {
+            panning = true;
+            startX = e.touches[0].clientX - pointX;
+            startY = e.touches[0].clientY - pointY;
+        }
+    }, { passive: false });
+
+    // Movimento tocco
+    container.addEventListener('touchmove', (e) => {
+        e.preventDefault(); // Blocca lo scroll della pagina in background
+        if (e.touches.length === 2) {
+            const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            scale = Math.max(1, Math.min(initialScale * (dist / startDist), 5));
+            setTransform();
+        } else if (e.touches.length === 1 && panning && scale > 1) {
+            pointX = e.touches[0].clientX - startX;
+            pointY = e.touches[0].clientY - startY;
+            setTransform();
+        }
+    }, { passive: false });
+
+    // Fine tocco
+    container.addEventListener('touchend', (e) => {
+        if (e.touches.length < 2) initialScale = scale;
+        if (e.touches.length === 0) {
+            panning = false;
+            if (scale < 1) { scale = 1; pointX = 0; pointY = 0; }
+            img.style.transition = 'transform 0.2s ease-out';
+            setTransform();
+        }
+    });
+
+    // Supporto per rotellina del mouse (PC)
+    container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        img.style.transition = 'none';
+        const delta = e.deltaY > 0 ? -0.2 : 0.2;
+        scale = Math.max(1, Math.min(scale + delta, 5));
+        if (scale === 1) { pointX = 0; pointY = 0; }
+        setTransform();
+    }, { passive: false });
 }
