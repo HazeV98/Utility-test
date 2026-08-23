@@ -513,13 +513,14 @@
                 <h2 id="main-title"><img src="icon-512.png" alt="U">tility</h2>
             </div>
             <div class="header-side right">
-                <button id="install-btn"><i class="fa-solid fa-download"></i> Installa</button>
-                <div id="icona-impostazioni" style="position: relative; cursor: pointer; margin-left: 10px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--surface); border-radius: 50%; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); transition: all 0.2s;" onclick="window.apriModal('settingsModal')">
-                    <i class="fa-solid fa-gear" style="font-size: 18px; color: var(--primary);"></i>
-                </div>
-                <div id="icona-bacheca" style="position: relative; cursor: pointer; margin-left: 10px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--surface); border-radius: 50%; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); transition: all 0.2s;" onclick="window.apriBachecaUtility()">
-                    <i class="fa-solid fa-bullhorn" style="font-size: 18px; color: var(--primary);"></i>
-                    <div id="badge-messaggi" class="badge-notif" style="display: none;">0</div>
+                <button id="install-btn" style="margin-right: 10px;"><i class="fa-solid fa-download"></i> Installa</button>
+                <div style="display: flex; align-items: center; gap: 15px; margin-left: 15px;">
+                    <i class="fa-solid fa-gear" style="font-size: 26px; cursor: pointer; color: var(--primary); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="window.apriModal('settingsModal')"></i>
+                    
+                    <div style="position: relative; cursor: pointer; transition: transform 0.2s; display: flex; align-items: center;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="window.apriBachecaUtility()">
+                        <i class="fa-solid fa-bullhorn" style="font-size: 26px; color: var(--primary);"></i>
+                        <div id="badge-messaggi" class="badge-notif" style="display: none; top: -5px; right: -8px;">0</div>
+                    </div>
                 </div>
             </div>
         </div>
