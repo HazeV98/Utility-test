@@ -13,7 +13,10 @@ let isEditMode = false;
 let globalIsAdminCollab = false;
 
 export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnorato, isAdminOrCollab) {
-    globalIsAdminCollab = isAdminOrCollab;
+    // CORREZIONE: Controllo del token per sbloccare il tasto modifica
+    const token = localStorage.getItem('gh_admin_token');
+    globalIsAdminCollab = isAdminOrCollab || (token ? true : false);
+    
     isEditMode = false;
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -55,7 +58,8 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
         cambiaLayerDati, toggleLegend, toggleSfondo, toggleEdit, salvaFeatureModificata 
     };
 
-    if (isAdminOrCollab) {
+    // CORREZIONE: Usa la variabile globale per mostrare il bottone
+    if (globalIsAdminCollab) {
         document.getElementById('fab-edit-mappa').style.display = 'flex';
     }
 
