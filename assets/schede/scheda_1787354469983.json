@@ -1,4 +1,4 @@
 {
-  "testo_html": "Test",
+  "testo_html": "Test<div>link:www.google.com</div>",
   "media": []
 }
