@@ -13,7 +13,6 @@ let isEditMode = false;
 let globalIsAdminCollab = false;
 
 export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnorato, isAdminOrCollab) {
-    // Controllo automatico del token se il parametro non viene passato dal Vademecum
     const token = localStorage.getItem('gh_admin_token');
     globalIsAdminCollab = isAdminOrCollab || (token ? true : false);
     isEditMode = false;
@@ -48,7 +47,6 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
             <button class="icon-btn fab-btn" title="Cambia Sfondo" onclick="window.Mappa.toggleSfondo()" style="width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: var(--text-main); box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
                 <i class="fa-solid fa-layer-group"></i>
             </button>
-            <!-- Il bottone di modifica ora appare automaticamente se hai il token -->
             <button id="fab-edit-mappa" class="icon-btn fab-btn" title="Modifica Dati" onclick="window.Mappa.toggleEdit()" style="display: none; width: 45px; height: 45px; border-radius: 50%; background: var(--primary); color: white; box-shadow: var(--shadow-md); border: none;">
                 <i class="fa-solid fa-pen" id="icon-edit-mappa"></i>
             </button>
@@ -68,13 +66,12 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     mappaAttiva = L.map('leaflet-map-container', { zoomControl: false }).setView([45.435, 12.325], 13);
     L.control.zoom({ position: 'topleft' }).addTo(mappaAttiva);
 
-    // Mappa Standard "Pulita" (CartoDB Voyager) - Senza linee traghetti e nomi fermate
-    layerStandard = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CartoDB</a>',
+    // FIX MAPPA: Indirizzo CartoDB corretto (senza il parametro che bloccava il caricamento)
+    layerStandard = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap, &copy; CartoDB',
         maxZoom: 19
     });
     
-    // Mappa Satellite Alta Definizione
     layerSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles &copy; Esri', 
         maxZoom: 18
@@ -89,28 +86,32 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     await caricaDatiGeoJson();
 }
 
+// FIX CARICAMENTO: Evita il limite API di 1MB di GitHub leggendo il file grezzo o locale
 async function caricaDatiGeoJson() {
     const token = localStorage.getItem('gh_admin_token');
     try {
         if (!datiGeoJsonCache) {
-            if (globalIsAdminCollab && token) {
-                const urlAPI = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/canali_venezia.geojson?t=${Date.now()}`;
-                const response = await fetch(urlAPI, { headers: { 'Authorization': `token ${token}` } });
-                if (response.ok) {
-                    const data = await response.json();
-                    fileShaAttuale = data.sha;
-                    datiGeoJsonCache = JSON.parse(decodeURIComponent(escape(atob(data.content))));
-                }
-            } 
             
-            if (!datiGeoJsonCache) {
-                const response = await fetch('./assets/canali_venezia.geojson?t=' + Date.now());
-                if (!response.ok) throw new Error("File GeoJSON non trovato");
-                datiGeoJsonCache = await response.json();
+            let response = await fetch(`./assets/canali_venezia.geojson?t=${Date.now()}`);
+            if (!response.ok) {
+                const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/assets/canali_venezia.geojson?t=${Date.now()}`;
+                response = await fetch(rawUrl);
+            }
+            if (!response.ok) throw new Error("File GeoJSON non trovato");
+            
+            datiGeoJsonCache = await response.json();
+
+            if (globalIsAdminCollab && token) {
+                try {
+                    const urlAPI = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/canali_venezia.geojson`;
+                    const resAPI = await fetch(urlAPI, { headers: { 'Authorization': `token ${token}` } });
+                    if (resAPI.ok) fileShaAttuale = (await resAPI.json()).sha;
+                } catch(e) {}
             }
 
             datiGeoJsonCache.features.forEach((f, idx) => f.properties._internal_id = idx);
         }
+        
         disegnaGeoJson();
     } catch (error) {
         console.error(error);
@@ -130,9 +131,6 @@ function disegnaGeoJson() {
     }).addTo(mappaAttiva);
 }
 
-// ------------------------------------
-// GESTIONE COLORI E STILI
-// ------------------------------------
 function impostaStileLinea(feature) {
     let colore = '#9e9e9e'; 
 
@@ -191,9 +189,6 @@ function aggiornaUI_Legenda() {
     contenitore.innerHTML = html;
 }
 
-// ------------------------------------
-// POPUP E MODALITÀ MODIFICA
-// ------------------------------------
 function aggiungiPopup(feature, layer) {
     layer.bindPopup(() => {
         const p = feature.properties;
@@ -280,9 +275,6 @@ async function salvaFeatureModificata(index) {
     }
 }
 
-// ------------------------------------
-// FUNZIONI FAB (PULSANTI FLUTTUANTI)
-// ------------------------------------
 function toggleLegend() {
     const panel = document.getElementById('mappa-legenda-panel');
     panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
