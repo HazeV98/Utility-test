@@ -35,7 +35,7 @@ export function inizializzaScheda(containerId, idScheda, databaseFirebaseIgnorat
         </div>
 
         <div id="scheda-contenuto-${idScheda}" class="scheda-content-box" style="background: var(--surface); padding: 20px; border-radius: 14px; min-height: 200px; border: 1px solid var(--border-color); font-size: 15px; line-height: 1.6;">
-            <div style="text-align:center; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Caricamento...</div>
+            <div style="text-align:center; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Sincronizzazione Dati...</div>
         </div>
 
         <div id="scheda-media-gallery-${idScheda}" style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
@@ -64,10 +64,24 @@ export function inizializzaScheda(containerId, idScheda, databaseFirebaseIgnorat
 
 function formattaTestoLettura(html) {
     if (!html) return "";
-    return html.replace(/\((immagine|video|pdf)\s+(\d+)\)/gi, (match, tipo, num) => {
+    
+    // 1. Converte (immagine 1), (video 2), (pdf 1)
+    let formattato = html.replace(/\((immagine|video|pdf)\s+(\d+)\)/gi, (match, tipo, num) => {
         const index = parseInt(num) - 1;
         return `<a href="#" onclick="window.Scheda.apriViewer(${index}); return false;" style="color: var(--primary); font-weight: 700; text-decoration: underline; background: rgba(0,102,204,0.1); padding: 2px 6px; border-radius: 6px;">${match}</a>`;
     });
+    
+    // 2. Converte link:www.sito.it in URL veri (nascondendo "link:")
+    formattato = formattato.replace(/link:([^\s<]+)/gi, (match, url) => {
+        let href = url;
+        // Se l'utente non ha scritto http://, lo aggiungiamo noi per evitare link rotti
+        if (!href.startsWith('http://') && !href.startsWith('https://')) {
+            href = 'https://' + href;
+        }
+        return `<a href="${href}" target="_blank" style="color: var(--primary); font-weight: 600; text-decoration: underline;"><i class="fa-solid fa-link" style="font-size: 13px;"></i> ${url}</a>`;
+    });
+    
+    return formattato;
 }
 
 // ==========================================
@@ -292,10 +306,7 @@ function renderizzaGalleria(mediaArray) {
 
     mediaArray.forEach((path, index) => {
         const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${path}`;
-        
-        // Link Relativo fondamentale per i PDF (così apre nel browser e non scarica)
         const urlRelativo = `./${path}`;
-        
         const filename = path.split('/').pop();
         const ext = filename.split('.').pop().toLowerCase();
         
@@ -306,14 +317,12 @@ function renderizzaGalleria(mediaArray) {
         const mediaDiv = document.createElement('div');
         
         if (isPdf) {
-            // RIGA SINGOLA PER IL PDF (Senza Ombre, Stile Modulo Documenti)
             mediaDiv.style = "grid-column: 1 / -1; display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden;";
             
             const actionBtn = isEditMode 
                 ? `<button class="icon-btn" style="width: 50px; height: 100%; border-radius: 0; background: transparent; border: none; color: var(--danger); cursor: pointer; box-shadow: none;" onclick="window.Scheda.eliminaMedia('${path}')" title="Elimina"><i class="fa-solid fa-trash" style="font-size: 16px;"></i></button>`
                 : `<button class="icon-btn" style="width: 50px; height: 100%; border-radius: 0; background: transparent; border: none; color: var(--success); cursor: pointer; box-shadow: none;" onclick="window.Scheda.scaricaFile('${urlRelativo}', '${filename}')" title="Scarica"><i class="fa-solid fa-download" style="font-size: 16px;"></i></button>`;
 
-            // Utilizziamo urlRelativo nell'href
             mediaDiv.innerHTML = `
                 <a href="${urlRelativo}" target="_blank" style="flex: 1; padding: 14px 16px; display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-main);">
                     <i class="fa-solid fa-file-pdf" style="font-size: 24px; color: var(--danger);"></i>
@@ -324,10 +333,7 @@ function renderizzaGalleria(mediaArray) {
                 </div>
             `;
         } else {
-            // GRIGLIA PER FOTO E VIDEO (Senza Ombre spurie sui tastini)
             mediaDiv.style = "position: relative; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color);";
-            
-            // Per img e video l'url raw va benissimo, per farli vedere istantaneamente
             const mediaTag = isVideo 
                 ? `<video src="${rawUrl}" style="width: 100%; height: 150px; object-fit: cover; display: block;"></video>
                    <i class="fa-solid fa-play" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:30px; text-shadow: 0 2px 4px rgba(0,0,0,0.6); pointer-events:none;"></i>`
@@ -435,7 +441,7 @@ function apriViewer(index) {
     }
     
     const path = datiSchedaCache.media[index];
-    const urlRelativo = `./${path}`; // Link relativo
+    const urlRelativo = `./${path}`; 
     const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${path}`;
     const ext = path.split('.').pop().toLowerCase();
     
