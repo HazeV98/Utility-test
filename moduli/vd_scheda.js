@@ -35,7 +35,7 @@ export function inizializzaScheda(containerId, idScheda, databaseFirebaseIgnorat
         </div>
 
         <div id="scheda-contenuto-${idScheda}" class="scheda-content-box" style="background: var(--surface); padding: 20px; border-radius: 14px; min-height: 200px; border: 1px solid var(--border-color); font-size: 15px; line-height: 1.6;">
-            <div style="text-align:center; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Sincronizzazione Dati...</div>
+            <div style="text-align:center; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Caricamento...</div>
         </div>
 
         <div id="scheda-media-gallery-${idScheda}" style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
