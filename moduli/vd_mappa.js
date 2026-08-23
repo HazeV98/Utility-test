@@ -18,10 +18,8 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    // Rimuove padding e margini dal contenitore padre per effetto "A Tutto Schermo" sotto l'header
     container.parentElement.style.padding = "0"; 
 
-    // HTML Struttura: Mappa a tutto schermo + Pulsanti Fluttuanti (FABs) + Legenda
     container.innerHTML = `
         <div id="leaflet-map-container" style="width: 100%; height: 100%; z-index: 1;"></div>
         
@@ -39,8 +37,8 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
             <div id="legenda-colori"></div>
         </div>
 
-        <!-- Pulsanti Fluttuanti (FAB) a destra -->
-        <div style="position: absolute; bottom: 30px; right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 15px;">
+        <!-- Pulsanti Fluttuanti (FAB) spostati in ALTO A DESTRA -->
+        <div style="position: absolute; top: max(15px, env(safe-area-inset-top)); right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 15px;">
             <button class="icon-btn fab-btn" title="Filtri e Legenda" onclick="window.Mappa.toggleLegend()" style="width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: var(--primary); box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
                 <i class="fa-solid fa-filter"></i>
             </button>
@@ -53,7 +51,6 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
         </div>
     `;
 
-    // Esposizione globale per eventi inline HTML
     window.Mappa = { 
         cambiaLayerDati, toggleLegend, toggleSfondo, toggleEdit, salvaFeatureModificata 
     };
@@ -65,8 +62,6 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     if (mappaAttiva) mappaAttiva.remove(); 
 
     mappaAttiva = L.map('leaflet-map-container', { zoomControl: false }).setView([45.435, 12.325], 13);
-
-    // Riposiziona lo zoom nativo in alto a sinistra
     L.control.zoom({ position: 'topleft' }).addTo(mappaAttiva);
 
     layerStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -81,7 +76,6 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
 
     aggiornaUI_Legenda();
 
-    // Ricalcolo dimensione per evitare bug di render a div nascosto
     setTimeout(() => { mappaAttiva.invalidateSize(); }, 450);
     await caricaDatiGeoJson();
 }
@@ -90,7 +84,6 @@ async function caricaDatiGeoJson() {
     const token = localStorage.getItem('gh_admin_token');
     try {
         if (!datiGeoJsonCache) {
-            // Se sei admin, scarica tramite API per ottenere anche il codice "sha" utile per sovrascrivere il file
             if (globalIsAdminCollab && token) {
                 const urlAPI = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/canali_venezia.geojson?t=${Date.now()}`;
                 const response = await fetch(urlAPI, { headers: { 'Authorization': `token ${token}` } });
@@ -101,14 +94,12 @@ async function caricaDatiGeoJson() {
                 }
             } 
             
-            // Fallback: se fallisce o utente standard, usa la rete normale per sola lettura
             if (!datiGeoJsonCache) {
                 const response = await fetch('./assets/canali_venezia.geojson?t=' + Date.now());
                 if (!response.ok) throw new Error("File GeoJSON non trovato");
                 datiGeoJsonCache = await response.json();
             }
 
-            // Inietta un ID interno per rintracciare i poligoni durante la modifica
             datiGeoJsonCache.features.forEach((f, idx) => f.properties._internal_id = idx);
         }
         disegnaGeoJson();
@@ -134,21 +125,25 @@ function disegnaGeoJson() {
 // GESTIONE COLORI E STILI
 // ------------------------------------
 function impostaStileLinea(feature) {
-    let colore = '#3388ff'; 
+    let colore = '#9e9e9e'; // Grigio default per "Altro"
 
     if (modalitaCorrente === 'velocita') {
-        const vel = parseFloat(feature.properties.velocita) || 0;
-        if (vel <= 5) colore = '#d93025';       // Rosso
-        else if (vel <= 7) colore = '#ff9800';  // Arancione
-        else if (vel <= 11) colore = '#fbbc05'; // Giallo
-        else colore = '#0f9d58';                // Verde (>= 20)
+        const velStr = feature.properties.velocita;
+        const vel = parseFloat(velStr);
+        
+        if (isNaN(vel)) colore = '#9e9e9e';         // Altro / Nessun limite numerico
+        else if (vel <= 5) colore = '#d93025';      // Rosso
+        else if (vel <= 7) colore = '#ff9800';      // Arancione
+        else if (vel <= 9) colore = '#fbbc05';      // Giallo
+        else if (vel <= 11) colore = '#8bc34a';     // Verde Chiaro
+        else if (vel >= 20) colore = '#0f9d58';     // Verde Scuro
     } 
     else if (modalitaCorrente === 'giurisdizione') {
         const giu = (feature.properties.giurisdisz || '').toUpperCase();
-        if (giu.includes('COMUNE')) colore = '#4285f4';             // Blu 
-        else if (giu.includes('CAPITANERIA')) colore = '#9c27b0';   // Viola
-        else if (giu.includes('MAGISTRATO')) colore = '#009688';    // Verde Acqua/Teal 
-        else colore = '#e91e63';                                    // Rosa (Altro)
+        if (giu.includes('COMUNE')) colore = '#4285f4';                                      // Blu 
+        else if (giu.includes('AUTORITÀ MARITTIMA') || giu.includes('AUTORITA MARITTIMA')) colore = '#9c27b0'; // Viola
+        else if (giu.includes('MAGISTRATO')) colore = '#009688';                             // Verde Acqua/Teal 
+        else colore = '#e91e63';                                                             // Rosa (Altro)
     }
 
     const isPolygon = feature.geometry.type.includes('Polygon');
@@ -171,13 +166,15 @@ function aggiornaUI_Legenda() {
         html = `
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#d93025; border-radius:3px;"></span> &le; 5 km/h</div>
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#ff9800; border-radius:3px;"></span> &le; 7 km/h</div>
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#fbbc05; border-radius:3px;"></span> &le; 11 km/h</div>
-            <div style="display:flex; align-items:center; gap:8px; color:var(--text-main);"><span style="width:14px; height:14px; background:#0f9d58; border-radius:3px;"></span> &ge; 20 km/h</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#fbbc05; border-radius:3px;"></span> &le; 9 km/h</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#8bc34a; border-radius:3px;"></span> &le; 11 km/h</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#0f9d58; border-radius:3px;"></span> &ge; 20 km/h</div>
+            <div style="display:flex; align-items:center; gap:8px; color:var(--text-main);"><span style="width:14px; height:14px; background:#9e9e9e; border-radius:3px;"></span> Altro</div>
         `;
     } else {
         html = `
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#4285f4; border-radius:3px;"></span> Comune</div>
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#9c27b0; border-radius:3px;"></span> Capitaneria</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#9c27b0; border-radius:3px;"></span> Aut. Marittima</div>
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#009688; border-radius:3px;"></span> Magistrato/Reg.</div>
             <div style="display:flex; align-items:center; gap:8px; color:var(--text-main);"><span style="width:14px; height:14px; background:#e91e63; border-radius:3px;"></span> Altro</div>
         `;
@@ -189,7 +186,6 @@ function aggiornaUI_Legenda() {
 // POPUP E MODALITÀ MODIFICA
 // ------------------------------------
 function aggiungiPopup(feature, layer) {
-    // Genera il popup dinamicamente al click in base alla modalità (Lettura vs Modifica)
     layer.bindPopup(() => {
         const p = feature.properties;
         
@@ -201,7 +197,7 @@ function aggiungiPopup(feature, layer) {
                     <input type="text" id="edit-nome-${p._internal_id}" value="${p.Toponomast || ''}" style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:6px; border:1px solid #ccc; border-radius:4px;">
                     
                     <label style="font-size:11px; font-weight:600;">Velocità (km/h)</label>
-                    <input type="number" id="edit-vel-${p._internal_id}" value="${p.velocita || ''}" style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                    <input type="text" id="edit-vel-${p._internal_id}" value="${p.velocita || ''}" style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:6px; border:1px solid #ccc; border-radius:4px;" placeholder="es: 11">
                     
                     <label style="font-size:11px; font-weight:600;">Giurisdizione / Ente</label>
                     <input type="text" id="edit-giu-${p._internal_id}" value="${p.giurisdisz || ''}" style="width:100%; box-sizing:border-box; margin-bottom:12px; padding:6px; border:1px solid #ccc; border-radius:4px;">
@@ -232,17 +228,18 @@ async function salvaFeatureModificata(index) {
     btn.disabled = true;
 
     try {
-        // Recupera i nuovi valori inseriti
         const nuovoNome = document.getElementById(`edit-nome-${index}`).value;
         const nuovaVel = document.getElementById(`edit-vel-${index}`).value;
         const nuovaGiu = document.getElementById(`edit-giu-${index}`).value;
 
-        // Aggiorna l'oggetto in RAM
         datiGeoJsonCache.features[index].properties.Toponomast = nuovoNome;
-        datiGeoJsonCache.features[index].properties.velocita = parseInt(nuovaVel) || null;
+        
+        // Se il campo velocità non è un numero (es. stringa vuota), lo salva così com'è per cadere in "Altro"
+        const velParse = parseFloat(nuovaVel);
+        datiGeoJsonCache.features[index].properties.velocita = isNaN(velParse) ? nuovaVel : velParse;
+        
         datiGeoJsonCache.features[index].properties.giurisdisz = nuovaGiu;
 
-        // Prepara il JSON per GitHub rimuovendo l'ID interno per pulizia
         const jsonPerGitHub = JSON.parse(JSON.stringify(datiGeoJsonCache));
         jsonPerGitHub.features.forEach(f => delete f.properties._internal_id);
 
@@ -265,7 +262,6 @@ async function salvaFeatureModificata(index) {
         
         fileShaAttuale = (await res.json()).content.sha; 
         
-        // Ridisegna immediatamente il livello per mostrare i nuovi colori
         disegnaGeoJson();
         mappaAttiva.closePopup();
 
@@ -300,7 +296,7 @@ function toggleSfondo() {
         mappaAttiva.removeLayer(layerSatellite);
         layerStandard.addTo(mappaAttiva);
     }
-    if (datiGeoJsonCache) disegnaGeoJson(); // Aggiorna l'opacità dei colori in base allo sfondo
+    if (datiGeoJsonCache) disegnaGeoJson(); 
 }
 
 function toggleEdit() {
@@ -311,7 +307,7 @@ function toggleEdit() {
     if (isEditMode) {
         btn.style.background = 'var(--success)';
         icon.className = "fa-solid fa-check";
-        mappaAttiva.closePopup(); // Chiude eventuali popup aperti in mod. lettura
+        mappaAttiva.closePopup(); 
     } else {
         btn.style.background = 'var(--primary)';
         icon.className = "fa-solid fa-pen";
