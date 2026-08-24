@@ -4,7 +4,17 @@
     "Antincendio",
     "Nautica",
     "Primo Soccorso",
-    "Altro"
+    "Altro",
+    "Allarmi"
   ],
-  "schede": {}
+  "schede": {
+    "sch_1787589810232": {
+      "nome": "Nuovo Elemento",
+      "icona": "fa-circle",
+      "colore": "#ff0000",
+      "categoria": "Sicurezza",
+      "testo_html": "<p>Dettagli...</p>",
+      "media": []
+    }
+  }
 }
