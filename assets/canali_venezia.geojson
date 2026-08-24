@@ -222060,7 +222060,7 @@
       "type": "Feature",
       "properties": {
         "Toponomast": "CANALE LA NAVE",
-        "velocita": 11,
+        "velocita": 15,
         "giurisdisz": "MAGISTRATO ALLE ACQUE DI VENEZIA",
         "id": "limiti_di_velocita_di_navigazione_nei_canali.192",
         "data_agg": 20120424,
