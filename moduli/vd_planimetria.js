@@ -78,8 +78,8 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
     if (globalIsAdminCollab) document.getElementById('fab-edit-plan').style.display = 'flex';
 
     if (mappaPlan) mappaPlan.remove(); 
-    // Incrementato il minZoom per gestire meglio immagini ad altissima risoluzione
-    mappaPlan = L.map('plan-map-container', { crs: L.CRS.Simple, minZoom: -4, zoomControl: false });
+    // zoomSnap: 0 è FONDAMENTALE affinchè l'immagine si adatti allo schermo senza "scatti" che la rendono minuscola
+    mappaPlan = L.map('plan-map-container', { crs: L.CRS.Simple, minZoom: -4, zoomControl: false, zoomSnap: 0 });
     L.control.zoom({ position: 'topleft' }).addTo(mappaPlan);
     markersLayer = L.layerGroup().addTo(mappaPlan);
 
@@ -241,8 +241,8 @@ function disegnaLivelloCorrente() {
             const bounds = [[0, 0], [h, w]];
             imageOverlay = L.imageOverlay(rawImgUrl, bounds).addTo(mappaPlan);
             
-            // Inquadra sempre l'immagine perfettamente al caricamento di un livello
-            mappaPlan.fitBounds(bounds, { padding: [15, 15], animate: false });
+            // padding [0, 0] fa sì che la mappa copra l'area disponibile in modo ottimale
+            mappaPlan.fitBounds(bounds, { padding: [0, 0], animate: false });
             mappaPlan._hasSetInitialView = true;
 
             if (livello.pins) {
@@ -263,12 +263,12 @@ function disegnaLivelloCorrente() {
                         pinName = scheda.nome;
                     }
 
-                    // Se in modalità modifica, avvolge il pin in un cerchio trasparente più largo per il trascinamento touch
                     let finalIconHtml = baseIconHtml;
                     let clickAreaSize = size;
                     
                     if (isEditMode) {
-                        clickAreaSize = Math.max(size + 40, 70); // Crea una safe-area di almeno 70px per il dito
+                        // Ridotto il cerchio di trascinamento: ora sporge di soli 8px per lato
+                        clickAreaSize = size + 16; 
                         finalIconHtml = `
                             <div style="width: ${clickAreaSize}px; height: ${clickAreaSize}px; border-radius: 50%; border: 2px dashed var(--primary); background: rgba(0, 102, 204, 0.15); display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
                                 ${baseIconHtml}
