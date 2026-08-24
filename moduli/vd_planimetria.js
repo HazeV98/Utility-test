@@ -5,13 +5,17 @@ let mappaPlan = null;
 let markersLayer = null;
 let imageOverlay = null;
 
-let planData = { schede: {}, livelli: [] };
+let planData = { livelli: [], schedeNave: [] };
+let inventarioGlobale = { categorie: ['Sicurezza', 'Antincendio', 'Nautica', 'Primo Soccorso', 'Altro'], schede: {} };
+
 let fileShaAttuale = null;
+let invShaAttuale = null;
+
 let idPlanAttivo = null;
 let isEditMode = false;
 let globalIsAdminCollab = false;
 let livelloCorrenteIdx = 0;
-let statoDropPin = null; // Memorizza se stiamo piazzando un pin
+let statoDropPin = null; 
 
 export async function inizializzaPlanimetria(containerId, planId, databaseIgnorato, isAdminOrCollab) {
     idPlanAttivo = planId;
@@ -22,20 +26,16 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
 
     const container = document.getElementById(containerId);
     if (!container) return;
-
     container.parentElement.style.padding = "0"; 
 
-    // Struttura Base: Contenitore Mappa, FABs e Modali
     container.innerHTML = `
         <div id="plan-map-container" style="width: 100%; height: 100%; z-index: 1; background: #e0e0e0;"></div>
         
-        <!-- Legenda (Inventario) -->
-        <div id="plan-legenda-panel" style="display: none; position: absolute; top: max(15px, env(safe-area-inset-top)); right: 70px; background: var(--surface); padding: 15px; border-radius: 12px; box-shadow: var(--shadow-md); z-index: 1000; font-size: 13px; min-width: 200px; max-height: 70vh; overflow-y: auto; border: 1px solid var(--border-color);">
+        <div id="plan-legenda-panel" style="display: none; position: absolute; top: max(15px, env(safe-area-inset-top)); right: 70px; background: var(--surface); padding: 15px; border-radius: 12px; box-shadow: var(--shadow-md); z-index: 1000; font-size: 13px; min-width: 230px; max-height: 70vh; overflow-y: auto; border: 1px solid var(--border-color);">
             <div style="font-weight: 700; margin-bottom: 12px; color: var(--text-main); font-size: 14px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px;"><i class="fa-solid fa-clipboard-list"></i> Inventario Unità</div>
             <div id="plan-legenda-content"></div>
         </div>
 
-        <!-- FAB (Pulsanti in alto a destra) -->
         <div style="position: absolute; top: max(15px, env(safe-area-inset-top)); right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 15px;">
             <button class="icon-btn fab-btn" title="Inventario" onclick="window.Plan.toggleLegenda()" style="width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: var(--primary); box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
                 <i class="fa-solid fa-list"></i>
@@ -48,40 +48,36 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
             </button>
         </div>
 
-        <!-- Indicatore Drop Pin -->
         <div id="plan-drop-indicator" style="display:none; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: var(--warning); color: #000; padding: 10px 20px; border-radius: 20px; font-weight: bold; z-index: 2000; box-shadow: var(--shadow-md); pointer-events: none;">
             <i class="fa-solid fa-crosshairs"></i> Clicca sulla planimetria per piazzare l'elemento
         </div>
     `;
 
-    // Esposizione funzioni globali
     window.Plan = { 
         toggleLegenda, apriModaleLivelli, toggleEditMode, cambiaLivello, 
-        apriGestioneSchede, creaNuovaScheda, apriEditorScheda, salvaScheda, eliminaScheda,
-        attivaDropPin, apriSchedaViewer, salvaPlanimetriaSuGitHub, gestisciUploadMediaPlan,
-        eliminaMediaPlan, scaricaFilePlan, apriViewerPlan, aggiungiNuovoLivello, eliminaPin
+        apriGestioneSchede, creaNuovaScheda, apriEditorScheda, salvaScheda, eliminaSchedaGlobale,
+        toggleSchedaNave, chiediQuantitaPin, componiContenitore, salvaContenitore, apriVisualizzatorePin,
+        apriSchedaViewer, salvaPlanimetriaSuGitHub, gestisciUploadMediaPlan,
+        eliminaMediaPlan, scaricaFilePlan, apriViewerPlan, aggiungiNuovoLivello, eliminaPin, aggiungiCategoria
     };
 
-    if (globalIsAdminCollab) {
-        document.getElementById('fab-edit-plan').style.display = 'flex';
-    }
+    if (globalIsAdminCollab) document.getElementById('fab-edit-plan').style.display = 'flex';
 
     if (mappaPlan) mappaPlan.remove(); 
-    
-    // Inizializza Leaflet con coordinate piane
     mappaPlan = L.map('plan-map-container', { crs: L.CRS.Simple, minZoom: -3, zoomControl: false });
     L.control.zoom({ position: 'topleft' }).addTo(mappaPlan);
     markersLayer = L.layerGroup().addTo(mappaPlan);
 
-    // Gestione click per piazzare pin
     mappaPlan.on('click', (e) => {
         if (statoDropPin && isEditMode) {
             const { lat, lng } = e.latlng;
             planData.livelli[livelloCorrenteIdx].pins.push({
                 id: 'pin_' + Date.now(),
-                schedaId: statoDropPin,
                 lat: lat,
-                lng: lng
+                lng: lng,
+                tipo: statoDropPin.tipo,
+                nomeContenitore: statoDropPin.nomeContenitore,
+                elementi: statoDropPin.elementi
             });
             statoDropPin = null;
             document.getElementById('plan-drop-indicator').style.display = 'none';
@@ -91,51 +87,105 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
     });
 
     setTimeout(() => { mappaPlan.invalidateSize(); }, 450);
-    
     creaContenitoreModali();
     await caricaDatiPlanimetria();
 }
 
 // ==========================================
-// 1. CARICAMENTO DATI E RENDER 
+// CARICAMENTO DATI E MIGRAZIONE
 // ==========================================
-
 async function caricaDatiPlanimetria() {
     const token = localStorage.getItem('gh_admin_token');
+    
+    try {
+        let resInv = await fetch(`./assets/planimetrie/inventario_globale.json?t=${Date.now()}`);
+        if (!resInv.ok) resInv = await fetch(`https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/assets/planimetrie/inventario_globale.json?t=${Date.now()}`);
+        if (resInv.ok) {
+            const invData = await resInv.json();
+            if(invData.categorie) inventarioGlobale.categorie = invData.categorie;
+            if(invData.schede) inventarioGlobale.schede = invData.schede;
+        }
+        if (globalIsAdminCollab && token) {
+            try {
+                const resAPI = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/planimetrie/inventario_globale.json`, { headers: { 'Authorization': `token ${token}` } });
+                if (resAPI.ok) invShaAttuale = (await resAPI.json()).sha;
+            } catch(e) {}
+        }
+    } catch(e) {}
+
     try {
         let response = await fetch(`./assets/planimetrie/${idPlanAttivo}.json?t=${Date.now()}`);
-        if (!response.ok) {
-            const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/assets/planimetrie/${idPlanAttivo}.json?t=${Date.now()}`;
-            response = await fetch(rawUrl);
-        }
+        if (!response.ok) response = await fetch(`https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/assets/planimetrie/${idPlanAttivo}.json?t=${Date.now()}`);
 
         if (response.ok) {
             planData = await response.json();
-            
-            // Assicuriamoci che la struttura sia integra
-            if (!planData.schede) planData.schede = {};
             if (!planData.livelli) planData.livelli = [];
+            if (!planData.schedeNave) planData.schedeNave = [];
         }
 
-        // Recupera SHA per salvataggio
         if (globalIsAdminCollab && token) {
             try {
-                const urlAPI = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/planimetrie/${idPlanAttivo}.json`;
-                const resAPI = await fetch(urlAPI, { headers: { 'Authorization': `token ${token}` } });
+                const resAPI = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/planimetrie/${idPlanAttivo}.json`, { headers: { 'Authorization': `token ${token}` } });
                 if (resAPI.ok) fileShaAttuale = (await resAPI.json()).sha;
             } catch(e) {}
         }
         
+        await migrazioneVecchiDati(token); 
+
         disegnaLivelloCorrente();
         aggiornaLegenda();
 
     } catch (error) {
-        // Nessuna planimetria trovata, crea struttura vuota
-        planData = { schede: {}, livelli: [] };
+        planData = { livelli: [], schedeNave: [] };
         disegnaLivelloCorrente();
     }
 }
 
+async function migrazioneVecchiDati(token) {
+    let salvaGlo = false, salvaLoc = false;
+
+    if (!planData.schedeNave) { planData.schedeNave = []; salvaLoc = true; }
+
+    if (planData.schede) {
+        for (const [id, sch] of Object.entries(planData.schede)) {
+            if (!inventarioGlobale.schede[id]) {
+                sch.categoria = 'Altro'; 
+                inventarioGlobale.schede[id] = sch;
+                salvaGlo = true;
+            }
+        }
+        delete planData.schede;
+        salvaLoc = true;
+    }
+
+    planData.livelli.forEach(liv => {
+        if(liv.pins) {
+            liv.pins.forEach(p => {
+                if(p.schedaId && !p.tipo) {
+                    p.tipo = 'singolo'; p.elementi = [{ schedaId: p.schedaId, qta: 1 }];
+                    delete p.schedaId; salvaLoc = true;
+                }
+                
+                // Assicura che i pin vecchi siano nella lista schedeNave
+                p.elementi.forEach(el => {
+                    if (!planData.schedeNave.includes(el.schedaId)) {
+                        planData.schedeNave.push(el.schedaId);
+                        salvaLoc = true;
+                    }
+                });
+            });
+        }
+    });
+
+    if (globalIsAdminCollab && token) {
+        if (salvaGlo) await salvaInventarioGlobaleSuGitHub();
+        if (salvaLoc) await salvaPlanimetriaSuGitHub();
+    }
+}
+
+// ==========================================
+// RENDER MAPPA E PIN
+// ==========================================
 function disegnaLivelloCorrente() {
     if (imageOverlay) mappaPlan.removeLayer(imageOverlay);
     markersLayer.clearLayers();
@@ -143,55 +193,46 @@ function disegnaLivelloCorrente() {
     const btnLivelli = document.getElementById('fab-livelli');
     if (planData.livelli.length > 0) {
         btnLivelli.style.display = 'flex';
-        
         const livello = planData.livelli[livelloCorrenteIdx];
         const rawImgUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${livello.imgUrl}`;
         
-        // Carica l'immagine per scoprirne le dimensioni
         const img = new Image();
         img.onload = function() {
-            const w = this.width;
-            const h = this.height;
-            // Calcola i bordi per Leaflet (Y invertita rispetto allo schermo)
+            const w = this.width, h = this.height;
             const bounds = [[0, 0], [h, w]];
             imageOverlay = L.imageOverlay(rawImgUrl, bounds).addTo(mappaPlan);
             
             if (!mappaPlan._hasSetInitialView) {
-                mappaPlan.fitBounds(bounds);
-                mappaPlan._hasSetInitialView = true;
+                mappaPlan.fitBounds(bounds); mappaPlan._hasSetInitialView = true;
             }
 
-            // Disegna i pin
             if (livello.pins) {
                 livello.pins.forEach(pin => {
-                    const scheda = planData.schede[pin.schedaId];
-                    if (!scheda) return;
+                    let iconHtml = '', pinName = '';
+                    if (pin.tipo === 'contenitore') {
+                        iconHtml = `<div style="background-color: #546e7a; width: 34px; height: 34px; border-radius: 8px; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.5); font-size: 16px;"><i class="fa-solid fa-box-open"></i></div>`;
+                        pinName = pin.nomeContenitore;
+                    } else {
+                        const scheda = inventarioGlobale.schede[pin.elementi[0].schedaId];
+                        if (!scheda) return;
+                        iconHtml = `<div style="background-color: ${scheda.colore}; width: 34px; height: 34px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.5); font-size: 15px;"><i class="fa-solid ${scheda.icona}"></i></div>`;
+                        pinName = scheda.nome;
+                    }
 
-                    const iconHtml = `<div style="background-color: ${scheda.colore}; width: 32px; height: 32px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 3px 6px rgba(0,0,0,0.5); font-size: 14px;"><i class="fa-solid ${scheda.icona}"></i></div>`;
-                    
                     const marker = L.marker([pin.lat, pin.lng], {
-                        icon: L.divIcon({ html: iconHtml, className: '', iconSize: [32, 32], iconAnchor: [16, 16] }),
+                        icon: L.divIcon({ html: iconHtml, className: '', iconSize: [34, 34], iconAnchor: [17, 17] }),
                         draggable: isEditMode
                     }).addTo(markersLayer);
 
                     if (isEditMode) {
-                        // Modalità Modifica: Drag & Drop e tasto elimina rapido
                         marker.on('dragend', function(e) {
                             const newPos = marker.getLatLng();
-                            pin.lat = newPos.lat;
-                            pin.lng = newPos.lng;
+                            pin.lat = newPos.lat; pin.lng = newPos.lng;
                             salvaPlanimetriaSuGitHub();
                         });
-                        
-                        marker.bindPopup(`
-                            <div style="text-align:center;">
-                                <strong>${scheda.nome}</strong><br><br>
-                                <button onclick="window.Plan.eliminaPin('${pin.id}')" style="background:var(--danger); color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;"><i class="fa-solid fa-trash"></i> Rimuovi Pin</button>
-                            </div>
-                        `);
+                        marker.bindPopup(`<div style="text-align:center;"><strong>${pinName}</strong><br><br><button onclick="window.Plan.eliminaPin('${pin.id}')" style="background:var(--danger); color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-trash"></i> Rimuovi Pin</button></div>`);
                     } else {
-                        // Modalità Visualizzazione: Clicca per aprire la Scheda
-                        marker.on('click', () => apriSchedaViewer(pin.schedaId));
+                        marker.on('click', () => apriVisualizzatorePin(pin));
                     }
                 });
             }
@@ -199,91 +240,63 @@ function disegnaLivelloCorrente() {
         img.src = rawImgUrl;
     } else {
         btnLivelli.style.display = 'none';
-        if (isEditMode) {
-            apriModaleLivelli(); // Forza l'aggiunta di un livello
-        } else {
-            document.getElementById('plan-map-container').innerHTML = `
-                <div style="text-align: center; color: var(--text-muted); padding-top: 100px;">
-                    <i class="fa-solid fa-map" style="font-size: 50px; margin-bottom:15px;"></i><br>
-                    Nessuna planimetria presente per questa unità.
-                </div>`;
-        }
+        if (isEditMode) apriModaleLivelli(); 
     }
 }
 
 // ==========================================
-// 2. FUNZIONI INTERFACCIA E SALVATAGGIO
+// SALVATAGGI
 // ==========================================
+async function salvaInventarioGlobaleSuGitHub() {
+    const token = localStorage.getItem('gh_admin_token');
+    if (!token) return;
+    try {
+        const urlAPI = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/planimetrie/inventario_globale.json`;
+        const payload = { message: `Aggiornato Inventario Globale`, content: btoa(unescape(encodeURIComponent(JSON.stringify(inventarioGlobale, null, 2)))) };
+        if (invShaAttuale) payload.sha = invShaAttuale;
+        const res = await fetch(urlAPI, { method: 'PUT', headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (res.ok) invShaAttuale = (await res.json()).content.sha; 
+    } catch(e) {}
+}
 
 async function salvaPlanimetriaSuGitHub(mostraCaricamento = false) {
     const token = localStorage.getItem('gh_admin_token');
     if (!token) return alert("Manca il token PAT Admin!");
-
-    if(mostraCaricamento) {
-        document.getElementById('btn-salva-scheda').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Salvataggio...`;
-        document.getElementById('btn-salva-scheda').disabled = true;
-    }
+    if(mostraCaricamento) { document.getElementById('btn-salva-scheda').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Salvataggio...`; document.getElementById('btn-salva-scheda').disabled = true; }
 
     try {
-        const jsonString = JSON.stringify(planData, null, 2);
-        const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
-        const urlAPI = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/planimetrie/${idPlanAttivo}.json`;
-        
-        const payload = { message: `Aggiornata planimetria ${idPlanAttivo}`, content: base64Content };
+        const payload = { message: `Aggiornata planimetria ${idPlanAttivo}`, content: btoa(unescape(encodeURIComponent(JSON.stringify(planData, null, 2)))) };
         if (fileShaAttuale) payload.sha = fileShaAttuale;
-
-        const res = await fetch(urlAPI, {
-            method: 'PUT',
-            headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+        const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/planimetrie/${idPlanAttivo}.json`, {
+            method: 'PUT', headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
-
         if (!res.ok) throw new Error("Errore salvataggio");
         fileShaAttuale = (await res.json()).content.sha; 
-        
-        aggiornaLegenda();
-        disegnaLivelloCorrente();
-    } catch(e) {
-        alert("Errore di salvataggio. Riprovare.");
-    } finally {
-        if(mostraCaricamento) {
-            document.getElementById('btn-salva-scheda').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Salva Modifiche`;
-            document.getElementById('btn-salva-scheda').disabled = false;
-        }
+        aggiornaLegenda(); disegnaLivelloCorrente();
+    } catch(e) { alert("Errore di salvataggio. Riprovare."); } 
+    finally {
+        if(mostraCaricamento) { document.getElementById('btn-salva-scheda').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Salva Modifiche`; document.getElementById('btn-salva-scheda').disabled = false; }
     }
 }
 
+// ==========================================
+// LEGENDA (MOSTRA SOLO SCHEDE DELLA NAVE)
+// ==========================================
 function toggleEditMode() {
     isEditMode = !isEditMode;
     const btn = document.getElementById('fab-edit-plan');
     const icon = document.getElementById('icon-edit-plan');
-    
     if (isEditMode) {
-        btn.style.background = 'var(--success)';
-        icon.className = "fa-solid fa-check";
-        apriGestioneSchede(); // Apre subito il pannello di gestione inventario
+        btn.style.background = 'var(--success)'; icon.className = "fa-solid fa-check";
+        apriGestioneSchede(); 
     } else {
-        btn.style.background = 'var(--primary)';
-        icon.className = "fa-solid fa-pen";
-        chiudiModaleGlobale();
-        statoDropPin = null;
+        btn.style.background = 'var(--primary)'; icon.className = "fa-solid fa-pen";
+        chiudiModaleGlobale(); statoDropPin = null;
         document.getElementById('plan-drop-indicator').style.display = 'none';
         document.getElementById('plan-map-container').style.cursor = 'grab';
     }
     disegnaLivelloCorrente(); 
 }
-
-function eliminaPin(idPin) {
-    if(confirm("Rimuovere questo elemento dalla mappa? (La scheda inventario non verrà eliminata)")) {
-        planData.livelli[livelloCorrenteIdx].pins = planData.livelli[livelloCorrenteIdx].pins.filter(p => p.id !== idPin);
-        salvaPlanimetriaSuGitHub();
-        mappaPlan.closePopup();
-    }
-}
-
-// ==========================================
-// 3. LEGENDA (INVENTARIO AUTOMATICO)
-// ==========================================
 
 function toggleLegenda() {
     const panel = document.getElementById('plan-legenda-panel');
@@ -292,194 +305,151 @@ function toggleLegenda() {
 
 function aggiornaLegenda() {
     const contenitore = document.getElementById('plan-legenda-content');
-    if (!contenitore || !planData.schede) return;
+    if (!contenitore || !inventarioGlobale.schede || !planData.schedeNave) return;
 
-    // Calcola totale per ogni scheda su tutta la nave
     let conteggi = {};
     planData.livelli.forEach(liv => {
         if (liv.pins) {
             liv.pins.forEach(p => {
-                conteggi[p.schedaId] = (conteggi[p.schedaId] || 0) + 1;
+                p.elementi.forEach(el => { conteggi[el.schedaId] = (conteggi[el.schedaId] || 0) + parseInt(el.qta); });
             });
         }
     });
 
     let html = '';
-    let totaleOggetti = 0;
-
-    for (const [id, scheda] of Object.entries(planData.schede)) {
-        const count = conteggi[id] || 0;
-        if (count > 0) {
-            totaleOggetti += count;
+    
+    planData.schedeNave.forEach(id => {
+        const scheda = inventarioGlobale.schede[id];
+        if (scheda) {
+            const count = conteggi[id] || 0;
+            const opacita = count === 0 ? 'opacity: 0.6;' : ''; // Sbiadisce leggermente se non è posizionata in mappa
             html += `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 4px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 4px; ${opacita}">
                     <div style="display:flex; align-items:center; gap:10px; color:var(--text-main);">
                         <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; background:${scheda.colore}; color:white; border-radius:50%; font-size:10px;"><i class="fa-solid ${scheda.icona}"></i></span>
                         <span style="font-weight: 500;">${scheda.nome}</span>
                     </div>
-                    <strong style="color: var(--primary); font-size: 15px;">${count}</strong>
+                    <strong style="color: var(--primary); font-size: 15px;">x${count}</strong>
                 </div>
             `;
         }
-    }
+    });
 
-    if (totaleOggetti === 0) {
-        html = `<div style="text-align:center; color:var(--text-muted); font-size:12px;">Nessun elemento piazzato.</div>`;
-    }
-
+    if (planData.schedeNave.length === 0) html = `<div style="text-align:center; color:var(--text-muted); font-size:12px;">Nessuna dotazione associata a questa unità.</div>`;
     contenitore.innerHTML = html;
 }
 
 // ==========================================
-// 4. LIVELLI (PONTI)
+// EDITOR INVENTARIO (LISTA GLOBALE)
 // ==========================================
-
-function apriModaleLivelli() {
+function apriGestioneSchede() {
     let html = `
-        <h3 style="margin-bottom: 15px; color: var(--primary);"><i class="fa-solid fa-layer-group"></i> Ponti / Livelli</h3>
-        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 20px;">
+        <h3 style="margin-bottom: 5px; color: var(--primary);"><i class="fa-solid fa-earth-americas"></i> Inventario Navale (Globale)</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Aggiungi <b>(+)</b> le dotazioni a questa nave per poterle posizionare sulla mappa.</p>
+        
+        <div style="display:flex; gap:10px; margin-bottom: 20px;">
+            <button onclick="window.Plan.creaNuovaScheda()" style="flex:1; background:var(--primary); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-file-circle-plus"></i> Nuova Scheda</button>
+            <button onclick="window.Plan.componiContenitore()" style="flex:1; background:#546e7a; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-box-open"></i> Pin Multiplo</button>
+        </div>
+        <div style="max-height: 50vh; overflow-y: auto; padding-right:5px;">
     `;
-    
-    planData.livelli.forEach((liv, idx) => {
-        const bg = idx === livelloCorrenteIdx ? 'var(--primary)' : 'var(--surface)';
-        const color = idx === livelloCorrenteIdx ? 'white' : 'var(--text-main)';
-        html += `
-            <button onclick="window.Plan.cambiaLivello(${idx})" style="background:${bg}; color:${color}; padding:12px; border:1px solid var(--border-color); border-radius:8px; text-align:left; font-weight:bold; font-size:15px; cursor:pointer;">
-                ${liv.nome}
-            </button>
-        `;
+
+    inventarioGlobale.categorie.forEach(cat => {
+        const schedeInCat = Object.entries(inventarioGlobale.schede).filter(([id, s]) => s.categoria === cat);
+        if(schedeInCat.length > 0) {
+            html += `<h4 style="margin-top:15px; margin-bottom:8px; color:var(--text-main); border-bottom:2px solid var(--border-color); padding-bottom:3px;">${cat}</h4>`;
+            schedeInCat.forEach(([id, scheda]) => {
+                const isAdded = planData.schedeNave.includes(id);
+                
+                let btnsAggiunta = isAdded 
+                    ? `<button class="icon-btn" onclick="window.Plan.toggleSchedaNave('${id}')" style="background:var(--danger); color:white; border:none; padding:6px; border-radius:6px;" title="Rimuovi da questa nave"><i class="fa-solid fa-minus"></i></button>
+                       <button class="icon-btn" onclick="window.Plan.chiediQuantitaPin('${id}')" style="background:var(--warning); color:#000; border:none; padding:6px; border-radius:6px;" title="Posiziona Pin in Mappa"><i class="fa-solid fa-crosshairs"></i></button>`
+                    : `<button class="icon-btn" onclick="window.Plan.toggleSchedaNave('${id}')" style="background:var(--success); color:white; border:none; padding:6px; border-radius:6px;" title="Aggiungi all'inventario di questa nave"><i class="fa-solid fa-plus"></i></button>`;
+
+                html += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background: var(--surface); border: 1px solid ${isAdded ? 'var(--primary)' : 'var(--border-color)'}; padding: 10px; border-radius: 8px; margin-bottom: 8px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; background:${scheda.colore}; color:white; border-radius:50%; font-size:12px;"><i class="fa-solid ${scheda.icona}"></i></span>
+                            <span style="font-weight: 600; font-size: 14px; color:var(--text-main);">${scheda.nome}</span>
+                        </div>
+                        <div style="display:flex; gap: 5px;">
+                            ${btnsAggiunta}
+                            <div style="width: 1px; background: var(--border-color); margin: 0 5px;"></div>
+                            <button class="icon-btn" onclick="window.Plan.apriEditorScheda('${id}')" style="background:var(--surface); color:var(--text-main); border:1px solid var(--border-color); padding:6px; border-radius:6px;" title="Modifica Scheda Globale"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
     });
 
     html += `</div>`;
-
-    if (isEditMode) {
-        html += `
-            <div style="border-top: 2px solid var(--border-color); padding-top: 15px;">
-                <p style="font-size: 13px; font-weight: bold; margin-bottom:8px;">Aggiungi Nuovo Ponte (Immagine JPG)</p>
-                <input type="text" id="nuovo-livello-nome" placeholder="es. Ponte Coperta" style="width:100%; padding:8px; box-sizing:border-box; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 10px;">
-                <button onclick="document.getElementById('upload-livello-base').click()" style="width:100%; background:var(--success); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-upload"></i> Carica Planimetria JPG</button>
-                <input type="file" id="upload-livello-base" accept="image/jpeg, image/png" style="display:none;" onchange="window.Plan.aggiungiNuovoLivello(event)">
-            </div>
-        `;
-    }
-
     mostraModale(html);
 }
 
-function cambiaLivello(idx) {
-    livelloCorrenteIdx = idx;
-    chiudiModaleGlobale();
-    disegnaLivelloCorrente();
-}
-
-async function aggiungiNuovoLivello(event) {
-    const file = event.target.files[0];
-    const nomeLivello = document.getElementById('nuovo-livello-nome').value.trim();
-    
-    if (!file || !nomeLivello) { alert("Inserisci un nome e seleziona un file."); return; }
-
-    const token = localStorage.getItem('gh_admin_token');
-    const ext = file.name.split('.').pop().toLowerCase();
-    const githubPath = `assets/planimetrie/${idPlanAttivo}_L${Date.now()}.${ext}`;
-    
-    chiudiModaleGlobale();
-    // Mostra loading
-    document.getElementById('plan-map-container').innerHTML = `<div style="text-align:center; padding-top:100px; color:var(--primary); font-weight:bold;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br>Caricamento immagine in corso...</div>`;
-    
-    try {
-        const reader = new FileReader();
-        const base64Content = await new Promise((res, rej) => {
-            reader.readAsDataURL(file);
-            reader.onload = () => res(reader.result.split(',')[1]);
-            reader.onerror = e => rej(e);
-        });
-
-        await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${githubPath}`, {
-            method: 'PUT', headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: `Aggiunto livello ${nomeLivello}`, content: base64Content })
-        });
-
-        planData.livelli.push({ nome: nomeLivello, imgUrl: githubPath, pins: [] });
-        livelloCorrenteIdx = planData.livelli.length - 1; // Spostati sul nuovo
-        
-        // Ricrea mappa che avevamo distrutto col loading
-        document.getElementById('plan-map-container').innerHTML = '';
-        setTimeout(() => {
-            mappaPlan.invalidateSize();
-            await salvaPlanimetriaSuGitHub(); 
-        }, 100);
-        
-    } catch(e) {
-        alert("Errore upload livello.");
-        disegnaLivelloCorrente();
+function toggleSchedaNave(id) {
+    if (planData.schedeNave.includes(id)) {
+        if (confirm("Vuoi rimuovere questo elemento dall'inventario della nave? Verranno eliminati automaticamente anche i relativi pin dalla planimetria.")) {
+            planData.schedeNave = planData.schedeNave.filter(s => s !== id);
+            // Pulisce i pin
+            planData.livelli.forEach(liv => {
+                if (liv.pins) {
+                    liv.pins.forEach(p => { p.elementi = p.elementi.filter(el => el.schedaId !== id); });
+                    liv.pins = liv.pins.filter(p => p.elementi.length > 0);
+                }
+            });
+            salvaPlanimetriaSuGitHub(); apriGestioneSchede();
+        }
+    } else {
+        planData.schedeNave.push(id);
+        salvaPlanimetriaSuGitHub(); apriGestioneSchede();
     }
 }
 
-
 // ==========================================
-// 5. GESTORE INVENTARIO (SCHEDE MASTER)
+// CREAZIONE E MODIFICA SINGOLA SCHEDA GLOBALE
 // ==========================================
-
-function apriGestioneSchede() {
-    let html = `
-        <h3 style="margin-bottom: 15px; color: var(--primary);"><i class="fa-solid fa-boxes-stacked"></i> Inventario Elementi</h3>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Gli elementi creati qui possono essere posizionati più volte sulla mappa.</p>
-        
-        <button onclick="window.Plan.creaNuovaScheda()" style="width:100%; background:var(--success); color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom: 20px;">
-            <i class="fa-solid fa-plus"></i> Crea Nuovo Elemento
-        </button>
-
-        <div style="display:flex; flex-direction:column; gap:10px; max-height: 400px; overflow-y: auto;">
-    `;
-
-    for (const [id, scheda] of Object.entries(planData.schede)) {
-        html += `
-            <div style="display:flex; justify-content:space-between; align-items:center; background: var(--surface); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; background:${scheda.colore}; color:white; border-radius:50%; font-size:12px;"><i class="fa-solid ${scheda.icona}"></i></span>
-                    <span style="font-weight: 600; font-size: 14px;">${scheda.nome}</span>
-                </div>
-                <div style="display:flex; gap: 5px;">
-                    <button class="icon-btn" onclick="window.Plan.attivaDropPin('${id}')" style="background:var(--warning); color:#000; border:none; padding:6px; border-radius:6px;" title="Posiziona sulla mappa"><i class="fa-solid fa-crosshairs"></i> Piatta</button>
-                    <button class="icon-btn" onclick="window.Plan.apriEditorScheda('${id}')" style="background:var(--primary); color:white; border:none; padding:6px; border-radius:6px;" title="Modifica Scheda"><i class="fa-solid fa-pen"></i></button>
-                </div>
-            </div>
-        `;
-    }
-    html += `</div>`;
-    mostraModale(html);
-}
-
 function creaNuovaScheda() {
     const id = 'sch_' + Date.now();
-    planData.schede[id] = {
-        nome: "Nuovo Elemento",
-        icona: "fa-circle-info",
-        colore: "#3388ff",
-        testo_html: "<p>Dettagli...</p>",
-        media: []
-    };
+    inventarioGlobale.schede[id] = { nome: "Nuovo Elemento", icona: "fa-life-ring", colore: "#ff0000", categoria: "Sicurezza", testo_html: "<p>Dettagli...</p>", media: [] };
     apriEditorScheda(id);
 }
 
+function aggiungiCategoria() {
+    const nuova = prompt("Nome nuova categoria:");
+    if(nuova && nuova.trim() !== '' && !inventarioGlobale.categorie.includes(nuova)) {
+        inventarioGlobale.categorie.push(nuova.trim()); salvaInventarioGlobaleSuGitHub();
+        const sel = document.getElementById('sch-categoria');
+        sel.innerHTML += `<option value="${nuova}">${nuova}</option>`; sel.value = nuova;
+    }
+}
+
 function apriEditorScheda(id) {
-    const s = planData.schede[id];
+    const s = inventarioGlobale.schede[id];
+    let catOptions = inventarioGlobale.categorie.map(c => `<option value="${c}" ${s.categoria === c ? 'selected' : ''}>${c}</option>`).join('');
+
     let html = `
-        <h3 style="margin-bottom: 15px; color: var(--primary);"><i class="fa-solid fa-pen-to-square"></i> Modifica: ${s.nome}</h3>
+        <h3 style="margin-bottom: 15px; color: var(--primary);"><i class="fa-solid fa-pen-to-square"></i> Scheda: ${s.nome}</h3>
         
         <label style="font-size:11px; font-weight:600;">Nome Elemento</label>
         <input type="text" id="sch-nome" value="${s.nome}" style="width:100%; padding:8px; margin-bottom:10px; border-radius:4px; border:1px solid #ccc; box-sizing:border-box;">
         
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <div style="flex:1;">
-                <label style="font-size:11px; font-weight:600;">Classe Icona (es. fa-fire)</label>
-                <input type="text" id="sch-icona" value="${s.icona}" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; box-sizing:border-box;">
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <div style="flex:2;">
+                <label style="font-size:11px; font-weight:600;">Categoria</label>
+                <div style="display:flex; gap:5px;">
+                    <select id="sch-categoria" style="flex:1; padding:8px; border-radius:4px; border:1px solid #ccc;">${catOptions}</select>
+                    <button onclick="window.Plan.aggiungiCategoria()" style="background:var(--primary); color:white; border:none; border-radius:4px; padding:0 10px;" title="Nuova Categoria"><i class="fa-solid fa-plus"></i></button>
+                </div>
             </div>
             <div style="flex:1;">
-                <label style="font-size:11px; font-weight:600;">Colore Esadecimale</label>
-                <input type="color" id="sch-colore" value="${s.colore}" style="width:100%; height:34px; padding:2px; border-radius:4px; border:1px solid #ccc; box-sizing:border-box;">
+                <label style="font-size:11px; font-weight:600; color:var(--danger);">Colore del Pin</label>
+                <input type="color" id="sch-colore" value="${s.colore}" style="width:100%; height:34px; padding:2px; border-radius:4px; border:2px solid var(--danger); box-sizing:border-box;">
             </div>
         </div>
+
+        <label style="font-size:11px; font-weight:600;">Classe Icona (es. fa-fire-extinguisher)</label>
+        <input type="text" id="sch-icona" value="${s.icona}" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; box-sizing:border-box; margin-bottom:15px;">
 
         <label style="font-size:11px; font-weight:600;">Testo Descrittivo</label>
         <div style="display:flex; gap: 5px; margin-bottom: 5px; background: #f0f0f0; padding: 5px; border-radius: 4px;">
@@ -503,7 +473,7 @@ function apriEditorScheda(id) {
 
         <div style="display:flex; gap:10px; margin-top: 20px;">
             <button onclick="window.Plan.apriGestioneSchede()" style="flex:1; background:var(--surface); color:var(--text-main); border:1px solid var(--border-color); padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">Annulla</button>
-            <button onclick="window.Plan.eliminaScheda('${id}')" style="background:var(--danger); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
+            <button onclick="window.Plan.eliminaSchedaGlobale('${id}')" style="background:var(--danger); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
             <button id="btn-salva-scheda" onclick="window.Plan.salvaScheda('${id}')" style="flex:2; background:var(--success); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-floppy-disk"></i> Salva Modifiche</button>
         </div>
     `;
@@ -511,60 +481,161 @@ function apriEditorScheda(id) {
 }
 
 async function salvaScheda(id) {
-    const s = planData.schede[id];
+    const s = inventarioGlobale.schede[id];
     s.nome = document.getElementById('sch-nome').value.trim();
     s.icona = document.getElementById('sch-icona').value.trim();
     s.colore = document.getElementById('sch-colore').value;
+    s.categoria = document.getElementById('sch-categoria').value;
     s.testo_html = document.getElementById('sch-testo').innerHTML;
 
-    await salvaPlanimetriaSuGitHub(true);
+    document.getElementById('btn-salva-scheda').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
+    await salvaInventarioGlobaleSuGitHub();
+    disegnaLivelloCorrente(); // Ridisegna per aggiornare il colore del pin se modificato
     apriGestioneSchede(); 
 }
 
-function attivaDropPin(idScheda) {
+async function eliminaSchedaGlobale(id) {
+    if(!confirm("ELIMINAZIONE GLOBALE: La scheda verrà rimossa dal database e sparirà da tutte le planimetrie di tutte le navi. Procedere?")) return;
+    
+    delete inventarioGlobale.schede[id];
+    
+    // Rimuove da questa nave
+    planData.schedeNave = planData.schedeNave.filter(s => s !== id);
+    planData.livelli.forEach(liv => {
+        if(liv.pins) {
+            liv.pins.forEach(p => { p.elementi = p.elementi.filter(el => el.schedaId !== id); });
+            liv.pins = liv.pins.filter(p => p.elementi.length > 0);
+        }
+    });
+
+    await salvaInventarioGlobaleSuGitHub(); await salvaPlanimetriaSuGitHub(); apriGestioneSchede();
+}
+
+// ==========================================
+// PIAZZAMENTO PIN (SINGOLI E CONTENITORI)
+// ==========================================
+function chiediQuantitaPin(idScheda) {
+    const qta = prompt("Quanti pezzi di questo elemento ci sono in questo punto?", "1");
+    if (qta && !isNaN(qta) && parseInt(qta) > 0) {
+        chiudiModaleGlobale();
+        statoDropPin = { tipo: 'singolo', nomeContenitore: null, elementi: [{ schedaId: idScheda, qta: parseInt(qta) }] };
+        document.getElementById('plan-drop-indicator').style.display = 'block';
+        document.getElementById('plan-map-container').style.cursor = 'crosshair';
+    }
+}
+
+function componiContenitore() {
+    if(planData.schedeNave.length === 0) return alert("Aggiungi prima delle dotazioni all'inventario di questa nave.");
+
+    let html = `
+        <h3 style="margin-bottom: 15px; color: #546e7a;"><i class="fa-solid fa-box-open"></i> Crea Pin Contenitore</h3>
+        <input type="text" id="cont-nome" placeholder="Es. Cassetta Sicurezza Prua" style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; font-weight:bold;">
+        <p style="font-size: 13px; font-weight:bold; margin-bottom:10px;">Quantità degli elementi nel contenitore:</p>
+        <div style="max-height: 300px; overflow-y: auto; margin-bottom: 15px; padding-right:5px;">
+    `;
+    
+    planData.schedeNave.forEach(id => {
+        const scheda = inventarioGlobale.schede[id];
+        if (scheda) {
+            html += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--border-color); padding:8px; border-radius:6px; margin-bottom:6px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid ${scheda.icona}" style="color:${scheda.colore};"></i>
+                        <span style="font-size:13px; font-weight:600; color:var(--text-main);">${scheda.nome}</span>
+                    </div>
+                    <input type="number" id="cont-qta-${id}" min="0" value="0" style="width:50px; padding:4px; text-align:center; border:1px solid #ccc; border-radius:4px;">
+                </div>
+            `;
+        }
+    });
+
+    html += `
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button onclick="window.Plan.apriGestioneSchede()" style="flex:1; background:var(--surface); color:var(--text-main); border:1px solid var(--border-color); padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">Annulla</button>
+            <button onclick="window.Plan.salvaContenitore()" style="flex:2; background:#546e7a; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-crosshairs"></i> Posiziona</button>
+        </div>
+    `;
+    mostraModale(html);
+}
+
+function salvaContenitore() {
+    const nome = document.getElementById('cont-nome').value.trim() || 'Contenitore Multiplo';
+    let elementi = [];
+    
+    planData.schedeNave.forEach(id => {
+        const input = document.getElementById(`cont-qta-${id}`);
+        if(input) {
+            const qta = parseInt(input.value);
+            if (qta > 0) elementi.push({ schedaId: id, qta: qta });
+        }
+    });
+
+    if (elementi.length === 0) return alert("Inserisci almeno un elemento nel contenitore.");
+
     chiudiModaleGlobale();
-    statoDropPin = idScheda;
+    statoDropPin = { tipo: 'contenitore', nomeContenitore: nome, elementi: elementi };
     document.getElementById('plan-drop-indicator').style.display = 'block';
     document.getElementById('plan-map-container').style.cursor = 'crosshair';
 }
 
-async function eliminaScheda(id) {
-    if(!confirm("Sicuro? La scheda verrà eliminata insieme a TUTTI i pin collegati su tutti i ponti.")) return;
-    
-    delete planData.schede[id];
-    // Pulisce anche i pin orfani
-    planData.livelli.forEach(liv => {
-        if(liv.pins) liv.pins = liv.pins.filter(p => p.schedaId !== id);
-    });
+// ==========================================
+// VIEWER (LETTURA MAPPA) E GALLERIA
+// ==========================================
+function apriVisualizzatorePin(pin) {
+    if (pin.tipo === 'singolo') {
+        apriSchedaViewer(pin.elementi[0].schedaId, pin.elementi[0].qta);
+    } else {
+        let html = `
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom:10px;">
+                <span style="display:flex; align-items:center; justify-content:center; width:40px; height:40px; background:#546e7a; color:white; border-radius:8px; font-size:20px;"><i class="fa-solid fa-box-open"></i></span>
+                <h2 style="color: var(--text-main); margin:0;">${pin.nomeContenitore}</h2>
+            </div>
+            <p style="font-size:13px; font-weight:bold; color:var(--text-muted); margin-bottom:10px;">Contenuto:</p>
+            <div style="display:flex; flex-direction:column; gap:10px; max-height: 50vh; overflow-y:auto; padding-right:5px;">
+        `;
+        
+        pin.elementi.forEach(el => {
+            const s = inventarioGlobale.schede[el.schedaId];
+            if (s) {
+                html += `
+                    <div onclick="window.Plan.apriSchedaViewer('${el.schedaId}', ${el.qta})" style="display:flex; align-items:center; justify-content:space-between; padding:12px; background:var(--surface); border:1px solid var(--border-color); border-radius:8px; cursor:pointer; transition: 0.2s;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <span style="width:28px; height:28px; background:${s.colore}; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px;"><i class="fa-solid ${s.icona}"></i></span>
+                            <span style="font-weight:600; font-size:14px; color:var(--text-main);">${s.nome}</span>
+                        </div>
+                        <span style="background:rgba(0,102,204,0.1); color:var(--primary); padding:4px 10px; border-radius:12px; font-weight:bold; font-size:13px;">N° ${el.qta}</span>
+                    </div>
+                `;
+            }
+        });
 
-    await salvaPlanimetriaSuGitHub(true);
-    apriGestioneSchede();
+        html += `</div>`;
+        mostraModale(html);
+    }
 }
 
-// ==========================================
-// 6. SCHEDA VIEWER (LETTURA)
-// ==========================================
-
-function apriSchedaViewer(id) {
-    const s = planData.schede[id];
+function apriSchedaViewer(id, qta = null) {
+    const s = inventarioGlobale.schede[id];
     if(!s) return;
 
-    // Converte Magic Links e Numeri Media
     let formattato = s.testo_html || "";
     formattato = formattato.replace(/\((immagine|video|pdf)\s+(\d+)\)/gi, (match, tipo, num) => {
         const index = parseInt(num) - 1;
         return `<a href="#" onclick="window.Plan.apriViewerPlan('${id}', ${index}); return false;" style="color: var(--primary); font-weight: 700; text-decoration: underline; background: rgba(0,102,204,0.1); padding: 2px 6px; border-radius: 6px;">${match}</a>`;
     });
     formattato = formattato.replace(/link:([^\s<]+)/gi, (match, url) => {
-        let href = url;
-        if (!href.startsWith('http')) href = 'https://' + href;
+        let href = url; if (!href.startsWith('http')) href = 'https://' + href;
         return `<a href="${href}" target="_blank" style="color: var(--primary); font-weight: 600; text-decoration: underline;"><i class="fa-solid fa-link" style="font-size: 13px;"></i> ${url}</a>`;
     });
 
+    const badgeQta = qta ? `<span style="background:rgba(0,102,204,0.1); color:var(--primary); padding:4px 12px; border-radius:16px; font-weight:bold; font-size:14px; margin-left:auto;">Presenti: N° ${qta}</span>` : '';
+
     let html = `
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom:10px;">
-            <span style="display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; background:${s.colore}; color:white; border-radius:50%; font-size:16px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"><i class="fa-solid ${s.icona}"></i></span>
-            <h2 style="color: var(--primary); margin:0;">${s.nome}</h2>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom:10px; flex-wrap: wrap;">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:${s.colore}; color:white; border-radius:50%; font-size:18px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"><i class="fa-solid ${s.icona}"></i></span>
+            <h2 style="color: var(--text-main); margin:0;">${s.nome}</h2>
+            ${badgeQta}
         </div>
         
         <div style="font-size: 15px; line-height: 1.6; color: var(--text-main); margin-bottom: 25px;">
@@ -574,177 +645,117 @@ function apriSchedaViewer(id) {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             ${generaHtmlGalleria(s.media, false, id)}
         </div>
-        
-        <button onclick="window.chiudiModaleGlobale()" style="width:100%; margin-top:20px; background:var(--surface); color:var(--text-main); border:1px solid var(--border-color); padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;">Chiudi</button>
     `;
-
     mostraModale(html);
 }
 
-// ==========================================
-// 7. GESTIONE UPLOAD MEDIA E GALLERIA
-// ==========================================
-
+// UPLOAD MEDIA E FUNZIONI GESTIONE FILE E MODALI (Invariate e ottimizzate)
 async function gestisciUploadMediaPlan(event, cartellaTarget, idScheda) {
     const file = event.target.files[0];
     if (!file) return;
-
     const token = localStorage.getItem('gh_admin_token');
-    if (!token) return;
-
     const btnSalva = document.getElementById('btn-salva-scheda');
-    const txtOriginale = btnSalva.innerHTML;
-    btnSalva.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Upload in corso...`;
-    btnSalva.disabled = true;
+    const txtOrig = btnSalva.innerHTML;
+    btnSalva.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`; btnSalva.disabled = true;
 
     try {
-        const extension = file.name.split('.').pop().toLowerCase();
-        const newFilename = `plan_${idPlanAttivo}_${Date.now()}.${extension}`;
-        const subfolder = cartellaTarget === 'pdf' ? 'pdf_vademecum' : 'media_vademecum';
-        const githubPath = `assets/${subfolder}/${newFilename}`;
-
+        const ext = file.name.split('.').pop().toLowerCase();
+        const path = `assets/${cartellaTarget === 'pdf' ? 'pdf_vademecum' : 'media_vademecum'}/plan_${Date.now()}.${ext}`;
         const reader = new FileReader();
-        const base64Content = await new Promise((res, rej) => {
-            reader.readAsDataURL(file);
-            reader.onload = () => res(reader.result.split(',')[1]);
-            reader.onerror = e => rej(e);
+        const b64 = await new Promise((res, rej) => { reader.readAsDataURL(file); reader.onload = () => res(reader.result.split(',')[1]); });
+        await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
+            method: 'PUT', headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: `Media globale aggiunto`, content: b64 })
         });
-
-        await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${githubPath}`, {
-            method: 'PUT',
-            headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: `Media planimetria ${idPlanAttivo}`, content: base64Content })
-        });
-
-        if (!planData.schede[idScheda].media) planData.schede[idScheda].media = [];
-        planData.schede[idScheda].media.push(githubPath);
-        
-        // Aggiorna l'HTML della galleria visivamente per chi sta editando
-        document.getElementById('sch-gallery').innerHTML = generaHtmlGalleria(planData.schede[idScheda].media, true, idScheda);
-
+        if (!inventarioGlobale.schede[idScheda].media) inventarioGlobale.schede[idScheda].media = [];
+        inventarioGlobale.schede[idScheda].media.push(path);
+        document.getElementById('sch-gallery').innerHTML = generaHtmlGalleria(inventarioGlobale.schede[idScheda].media, true, idScheda);
     } catch (e) { alert("Errore caricamento media."); }
-    finally {
-        btnSalva.innerHTML = txtOriginale;
-        btnSalva.disabled = false;
-        event.target.value = ""; 
-    }
+    finally { btnSalva.innerHTML = txtOrig; btnSalva.disabled = false; event.target.value = ""; }
 }
 
 function generaHtmlGalleria(mediaArray, isEdit, idScheda) {
     if(!mediaArray) return '';
     let html = '';
-    
     mediaArray.forEach((path, index) => {
         const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${path}`;
         const filename = path.split('/').pop();
         const ext = filename.split('.').pop().toLowerCase();
-        
         const isVideo = ['mp4', 'webm', 'mov'].includes(ext);
         const isPdf = ext === 'pdf';
-        const numeroVisuale = index + 1;
+        const num = index + 1;
 
         html += `<div style="position: relative; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); ${isPdf ? 'grid-column: 1 / -1;' : ''}">`;
-        
         if (isPdf) {
             html += `
                 <div style="display:flex; background:var(--surface);">
                     <a href="./${path}" target="_blank" style="flex:1; padding:14px; display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--text-main);">
-                        <i class="fa-solid fa-file-pdf" style="font-size: 24px; color: var(--danger);"></i>
-                        <span style="font-size: 15px; font-weight: 600;">PDF ${numeroVisuale}</span>
+                        <i class="fa-solid fa-file-pdf" style="font-size: 24px; color: var(--danger);"></i><span style="font-size: 15px; font-weight: 600;">PDF ${num}</span>
                     </a>
                     <div style="border-left: 1px solid var(--border-color); display:flex;">
-                        ${isEdit 
-                            ? `<button onclick="window.Plan.eliminaMediaPlan('${idScheda}', ${index})" style="background:transparent; border:none; color:var(--danger); width:50px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>`
-                            : `<button onclick="window.Plan.scaricaFilePlan('./${path}', '${filename}')" style="background:transparent; border:none; color:var(--success); width:50px; cursor:pointer;"><i class="fa-solid fa-download"></i></button>`
-                        }
+                        ${isEdit ? `<button onclick="window.Plan.eliminaMediaPlan('${idScheda}', ${index})" style="background:transparent; border:none; color:var(--danger); width:50px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>` : `<button onclick="window.Plan.scaricaFilePlan('./${path}', '${filename}')" style="background:transparent; border:none; color:var(--success); width:50px; cursor:pointer;"><i class="fa-solid fa-download"></i></button>`}
                     </div>
                 </div>
             `;
         } else {
-            const mediaTag = isVideo 
-                ? `<video src="${rawUrl}" style="width: 100%; height: 120px; object-fit: cover; display: block;"></video><i class="fa-solid fa-play" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:30px; text-shadow: 0 2px 4px rgba(0,0,0,0.6); pointer-events:none;"></i>`
-                : `<img src="${rawUrl}" style="width: 100%; height: 120px; object-fit: cover; display: block;">`;
-
+            const tag = isVideo ? `<video src="${rawUrl}" style="width: 100%; height: 120px; object-fit: cover; display: block;"></video><i class="fa-solid fa-play" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:30px; pointer-events:none;"></i>` : `<img src="${rawUrl}" style="width: 100%; height: 120px; object-fit: cover; display: block;">`;
             html += `
-                <div style="position: absolute; top: 6px; left: 6px; background: var(--primary); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; z-index: 15;">${numeroVisuale}</div>
-                <div onclick="window.Plan.apriViewerPlan('${idScheda}', ${index})" style="cursor: pointer; position: relative;">${mediaTag}</div>
-                ${isEdit 
-                    ? `<button onclick="window.Plan.eliminaMediaPlan('${idScheda}', ${index})" style="position:absolute; top:5px; right:5px; background:var(--danger); color:white; border:2px solid white; border-radius:50%; width:30px; height:30px; cursor:pointer; z-index:10;"><i class="fa-solid fa-trash" style="font-size:11px;"></i></button>`
-                    : `<button onclick="window.Plan.scaricaFilePlan('./${path}', '${filename}')" style="position:absolute; top:5px; right:5px; background:var(--surface); color:var(--text-main); border:1px solid var(--border-color); border-radius:50%; width:30px; height:30px; cursor:pointer; z-index:10;"><i class="fa-solid fa-download" style="font-size:11px;"></i></button>`
-                }
+                <div style="position:absolute; top:6px; left:6px; background:var(--primary); color:white; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; z-index:15;">${num}</div>
+                <div onclick="window.Plan.apriViewerPlan('${idScheda}', ${index})" style="cursor: pointer; position: relative;">${tag}</div>
+                ${isEdit ? `<button onclick="window.Plan.eliminaMediaPlan('${idScheda}', ${index})" style="position:absolute; top:5px; right:5px; background:var(--danger); color:white; border:2px solid white; border-radius:50%; width:30px; height:30px; cursor:pointer; z-index:10;"><i class="fa-solid fa-trash" style="font-size:11px;"></i></button>` : `<button onclick="window.Plan.scaricaFilePlan('./${path}', '${filename}')" style="position:absolute; top:5px; right:5px; background:var(--surface); color:var(--text-main); border:1px solid var(--border-color); border-radius:50%; width:30px; height:30px; cursor:pointer; z-index:10;"><i class="fa-solid fa-download" style="font-size:11px;"></i></button>`}
             `;
         }
         html += `</div>`;
     });
-    
     return html;
 }
 
-window.scaricaFilePlan = async (url, filename) => {
+window.scaricaFilePlan = async (url, filename) => { try { const response = await fetch(url); const blob = await response.blob(); const urlBlob = window.URL.createObjectURL(blob); const a = document.createElement('a'); a.href = urlBlob; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); window.URL.revokeObjectURL(urlBlob); } catch(e) { window.open(url, '_blank'); } }
+function eliminaMediaPlan(idScheda, index) { if(!confirm("Eliminare la foto dal server?")) return; inventarioGlobale.schede[idScheda].media.splice(index, 1); document.getElementById('sch-gallery').innerHTML = generaHtmlGalleria(inventarioGlobale.schede[idScheda].media, true, idScheda); }
+
+function apriModaleLivelli() {
+    let html = `<h3 style="margin-bottom: 15px; color: var(--primary);"><i class="fa-solid fa-layer-group"></i> Ponti / Livelli</h3><div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 20px;">`;
+    planData.livelli.forEach((liv, idx) => {
+        const bg = idx === livelloCorrenteIdx ? 'var(--primary)' : 'var(--surface)';
+        const color = idx === livelloCorrenteIdx ? 'white' : 'var(--text-main)';
+        html += `<button onclick="window.Plan.cambiaLivello(${idx})" style="background:${bg}; color:${color}; padding:12px; border:1px solid var(--border-color); border-radius:8px; text-align:left; font-weight:bold; font-size:15px; cursor:pointer;">${liv.nome}</button>`;
+    });
+    html += `</div>`;
+    if (isEditMode) {
+        html += `<div style="border-top: 2px solid var(--border-color); padding-top: 15px;"><p style="font-size: 13px; font-weight: bold; margin-bottom:8px;">Aggiungi Nuovo Ponte (JPG/PNG)</p><input type="text" id="nuovo-livello-nome" placeholder="es. Ponte Coperta" style="width:100%; padding:8px; box-sizing:border-box; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 10px;"><button onclick="document.getElementById('upload-livello-base').click()" style="width:100%; background:var(--success); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-upload"></i> Carica Planimetria JPG</button><input type="file" id="upload-livello-base" accept="image/jpeg, image/png" style="display:none;" onchange="window.Plan.aggiungiNuovoLivello(event)"></div>`;
+    }
+    mostraModale(html);
+}
+function cambiaLivello(idx) { livelloCorrenteIdx = idx; chiudiModaleGlobale(); disegnaLivelloCorrente(); }
+function eliminaPin(idPin) { if(confirm("Rimuovere questo elemento dalla mappa?")) { planData.livelli[livelloCorrenteIdx].pins = planData.livelli[livelloCorrenteIdx].pins.filter(p => p.id !== idPin); salvaPlanimetriaSuGitHub(); mappaPlan.closePopup(); } }
+
+async function aggiungiNuovoLivello(event) {
+    const file = event.target.files[0]; const nomeLivello = document.getElementById('nuovo-livello-nome').value.trim();
+    if (!file || !nomeLivello) return alert("Inserisci nome e file.");
+    const token = localStorage.getItem('gh_admin_token'); const ext = file.name.split('.').pop().toLowerCase(); const githubPath = `assets/planimetrie/${idPlanAttivo}_L${Date.now()}.${ext}`;
+    chiudiModaleGlobale(); document.getElementById('plan-map-container').innerHTML = `<div style="text-align:center; padding-top:100px; color:var(--primary); font-weight:bold;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br>Caricamento...</div>`;
     try {
-        const response = await fetch(url);
-        const blob = await response.blob();
-        const urlBlob = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = urlBlob; a.download = filename;
-        document.body.appendChild(a); a.click();
-        document.body.removeChild(a); window.URL.revokeObjectURL(urlBlob);
-    } catch(e) { window.open(url, '_blank'); }
+        const reader = new FileReader(); const base64Content = await new Promise((res, rej) => { reader.readAsDataURL(file); reader.onload = () => res(reader.result.split(',')[1]); });
+        await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${githubPath}`, { method: 'PUT', headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: `Aggiunto livello ${nomeLivello}`, content: base64Content }) });
+        planData.livelli.push({ nome: nomeLivello, imgUrl: githubPath, pins: [] }); livelloCorrenteIdx = planData.livelli.length - 1; 
+        document.getElementById('plan-map-container').innerHTML = ''; setTimeout(() => { mappaPlan.invalidateSize(); salvaPlanimetriaSuGitHub(); }, 100);
+    } catch(e) { alert("Errore upload livello."); disegnaLivelloCorrente(); }
 }
-
-function eliminaMediaPlan(idScheda, mediaIndex) {
-    if(!confirm("Eliminare il file dal server?")) return;
-    planData.schede[idScheda].media.splice(mediaIndex, 1);
-    document.getElementById('sch-gallery').innerHTML = generaHtmlGalleria(planData.schede[idScheda].media, true, idScheda);
-}
-
-// ==========================================
-// 8. VIEWER INTERNO E SISTEMA MODALI GLOBALI
-// ==========================================
 
 function creaContenitoreModali() {
     if (!document.getElementById('plan-modal-overlay')) {
-        const overlay = document.createElement('div');
-        overlay.id = 'plan-modal-overlay';
-        overlay.className = 'modal-overlay';
-        overlay.style.cssText = 'display:none; align-items:center; justify-content:center; padding: 20px; z-index: 2500; background: rgba(0,0,0,0.7);';
-        
-        overlay.innerHTML = `
-            <div id="plan-modal-box" style="background: var(--surface); width: 100%; max-width: 500px; border-radius: 16px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; position: relative;">
-                <button onclick="window.chiudiModaleGlobale()" style="position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
-                <div id="plan-modal-content"></div>
-            </div>
-        `;
+        const overlay = document.createElement('div'); overlay.id = 'plan-modal-overlay'; overlay.className = 'modal-overlay'; overlay.style.cssText = 'display:none; align-items:center; justify-content:center; padding: 20px; z-index: 2500; background: rgba(0,0,0,0.7);';
+        overlay.innerHTML = `<div id="plan-modal-box" style="background: var(--surface); width: 100%; max-width: 500px; border-radius: 16px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; position: relative;"><button onclick="window.chiudiModaleGlobale()" style="position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer;"><i class="fa-solid fa-xmark"></i></button><div id="plan-modal-content"></div></div>`;
         document.body.appendChild(overlay);
-
-        window.chiudiModaleGlobale = () => {
-            document.getElementById('plan-modal-overlay').style.display = 'none';
-            document.getElementById('plan-modal-content').innerHTML = '';
-        };
+        window.chiudiModaleGlobale = () => { overlay.style.display = 'none'; document.getElementById('plan-modal-content').innerHTML = ''; };
     }
 }
-
-function mostraModale(html) {
-    document.getElementById('plan-modal-content').innerHTML = html;
-    document.getElementById('plan-modal-overlay').style.display = 'flex';
-}
-
+function mostraModale(html) { document.getElementById('plan-modal-content').innerHTML = html; document.getElementById('plan-modal-overlay').style.display = 'flex'; }
 function apriViewerPlan(idScheda, index) {
-    const s = planData.schede[idScheda];
-    const path = s.media[index];
-    const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${path}`;
-    const ext = path.split('.').pop().toLowerCase();
-    
-    // Riusa il viewer dello script vd_scheda.js (che supporta pinch-to-zoom)
+    const s = inventarioGlobale.schede[idScheda]; const path = s.media[index]; const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${path}`; const ext = path.split('.').pop().toLowerCase();
     if (window.creaViewerSeMancante) {
-        window.creaViewerSeMancante();
-        const contentDiv = document.getElementById('vd-media-viewer-content');
-        if (['mp4', 'webm', 'mov'].includes(ext)) {
-            contentDiv.innerHTML = `<video src="${rawUrl}" controls autoplay playsinline style="max-width: 100vw; max-height: 100vh; object-fit: contain;"></video>`;
-        } else {
-            contentDiv.innerHTML = `<img id="vd-viewer-img" src="${rawUrl}" style="max-width: 100vw; max-height: 100vh; object-fit: contain; transform-origin: center center; transition: transform 0.2s ease-out;">`;
-            if (window.inizializzaZoomImmagine) setTimeout(window.inizializzaZoomImmagine, 50);
-        }
+        window.creaViewerSeMancante(); const contentDiv = document.getElementById('vd-media-viewer-content');
+        if (['mp4', 'webm', 'mov'].includes(ext)) { contentDiv.innerHTML = `<video src="${rawUrl}" controls autoplay playsinline style="max-width: 100vw; max-height: 100vh; object-fit: contain;"></video>`; } 
+        else { contentDiv.innerHTML = `<img id="vd-viewer-img" src="${rawUrl}" style="max-width: 100vw; max-height: 100vh; object-fit: contain; transform-origin: center center; transition: transform 0.2s ease-out;">`; if (window.inizializzaZoomImmagine) setTimeout(window.inizializzaZoomImmagine, 50); }
         document.getElementById('vd-media-viewer').style.display = 'flex';
     }
 }
