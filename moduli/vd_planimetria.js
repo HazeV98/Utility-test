@@ -78,7 +78,8 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
     if (globalIsAdminCollab) document.getElementById('fab-edit-plan').style.display = 'flex';
 
     if (mappaPlan) mappaPlan.remove(); 
-    mappaPlan = L.map('plan-map-container', { crs: L.CRS.Simple, minZoom: -3, zoomControl: false });
+    // Incrementato il minZoom per gestire meglio immagini ad altissima risoluzione
+    mappaPlan = L.map('plan-map-container', { crs: L.CRS.Simple, minZoom: -4, zoomControl: false });
     L.control.zoom({ position: 'topleft' }).addTo(mappaPlan);
     markersLayer = L.layerGroup().addTo(mappaPlan);
 
@@ -116,7 +117,6 @@ async function caricaDatiPlanimetria() {
     let invCaricatoViaApi = false;
     if (globalIsAdminCollab && token) {
         try {
-            // Usa le API per eludere la cache di GitHub Pages ed avere i dati in tempo reale
             const resAPI = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/planimetrie/inventario_globale.json`, { headers: { 'Authorization': `token ${token}` } });
             if (resAPI.ok) {
                 const data = await resAPI.json();
@@ -230,7 +230,6 @@ function disegnaLivelloCorrente() {
     const btnLivelli = document.getElementById('fab-livelli');
     if (planData.livelli.length > 0) {
         btnLivelli.style.display = 'flex';
-        // Controllo di sicurezza se l'indice esce dai limiti (es. dopo eliminazione)
         if(livelloCorrenteIdx >= planData.livelli.length) livelloCorrenteIdx = planData.livelli.length - 1;
         
         const livello = planData.livelli[livelloCorrenteIdx];
@@ -242,29 +241,48 @@ function disegnaLivelloCorrente() {
             const bounds = [[0, 0], [h, w]];
             imageOverlay = L.imageOverlay(rawImgUrl, bounds).addTo(mappaPlan);
             
-            if (!mappaPlan._hasSetInitialView) {
-                mappaPlan.fitBounds(bounds); mappaPlan._hasSetInitialView = true;
-            }
+            // Inquadra sempre l'immagine perfettamente al caricamento di un livello
+            mappaPlan.fitBounds(bounds, { padding: [15, 15], animate: false });
+            mappaPlan._hasSetInitialView = true;
 
             if (livello.pins) {
                 livello.pins.forEach(pin => {
-                    let iconHtml = '', pinName = '';
+                    let pinName = '';
                     let size = pin.size || 20;
                     let fontSize = size * 0.45; 
+                    let baseIconHtml = '';
 
                     if (pin.tipo === 'contenitore') {
-                        iconHtml = `<div style="background-color: #546e7a; width: ${size}px; height: ${size}px; border-radius: 8px; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.5); font-size: ${fontSize}px;"><i class="fa-solid fa-box-open"></i></div>`;
+                        baseIconHtml = `<div style="background-color: #546e7a; width: ${size}px; height: ${size}px; border-radius: 8px; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.5); font-size: ${fontSize}px;"><i class="fa-solid fa-box-open"></i></div>`;
                         pinName = pin.nomeContenitore;
                     } else {
                         const scheda = inventarioGlobale.schede[pin.elementi[0].schedaId];
                         if (!scheda) return;
                         const faClass = scheda.icona.includes('fa-') ? scheda.icona : `fa-solid ${scheda.icona}`;
-                        iconHtml = `<div style="background-color: ${scheda.colore}; width: ${size}px; height: ${size}px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.5); font-size: ${fontSize}px;"><i class="${faClass}"></i></div>`;
+                        baseIconHtml = `<div style="background-color: ${scheda.colore}; width: ${size}px; height: ${size}px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.5); font-size: ${fontSize}px;"><i class="${faClass}"></i></div>`;
                         pinName = scheda.nome;
                     }
 
+                    // Se in modalità modifica, avvolge il pin in un cerchio trasparente più largo per il trascinamento touch
+                    let finalIconHtml = baseIconHtml;
+                    let clickAreaSize = size;
+                    
+                    if (isEditMode) {
+                        clickAreaSize = Math.max(size + 40, 70); // Crea una safe-area di almeno 70px per il dito
+                        finalIconHtml = `
+                            <div style="width: ${clickAreaSize}px; height: ${clickAreaSize}px; border-radius: 50%; border: 2px dashed var(--primary); background: rgba(0, 102, 204, 0.15); display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                                ${baseIconHtml}
+                            </div>
+                        `;
+                    }
+
                     const marker = L.marker([pin.lat, pin.lng], {
-                        icon: L.divIcon({ html: iconHtml, className: '', iconSize: [size, size], iconAnchor: [size/2, size/2] }),
+                        icon: L.divIcon({ 
+                            html: finalIconHtml, 
+                            className: '', 
+                            iconSize: [clickAreaSize, clickAreaSize], 
+                            iconAnchor: [clickAreaSize/2, clickAreaSize/2] 
+                        }),
                         draggable: isEditMode
                     }).addTo(markersLayer);
 
@@ -280,7 +298,7 @@ function disegnaLivelloCorrente() {
                                 <strong style="font-size:14px; color:var(--primary);">${pinName}</strong><br>
                                 
                                 <div style="margin: 12px 0; font-size:12px; color:var(--text-main); background: var(--surface); padding: 8px; border-radius: 6px; border: 1px dashed var(--border-color);">
-                                    <i class="fa-solid fa-up-down-left-right" style="color:var(--primary); margin-right:5px;"></i> Trascina per spostare
+                                    <i class="fa-solid fa-up-down-left-right" style="color:var(--primary); margin-right:5px;"></i> Trascina l'area tratteggiata per spostare
                                 </div>
                                 
                                 <div style="margin: 15px 0 20px 0; text-align: left;">
@@ -508,7 +526,8 @@ function apriSelezionePin() {
                         <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; background:${scheda.colore}; color:white; border-radius:50%; font-size:12px;"><i class="${scheda.icona.includes('fa-') ? scheda.icona : 'fa-solid ' + scheda.icona}"></i></span>
                         <span style="font-weight: 600; font-size: 14px; color:var(--text-main);">${scheda.nome}</span>
                     </div>
-                    <button class="icon-btn" onclick="window.Plan.chiediQuantitaPin('${id}')" style="background:var(--warning); color:#000; border:none; padding:6px; border-radius:6px;" title="Posiziona Pin in Mappa"><i class="fa-solid fa-crosshairs"></i> Posiziona</button>
+                    <!-- Tasto Posiziona solo con l'icona mirino -->
+                    <button class="icon-btn" onclick="window.Plan.chiediQuantitaPin('${id}')" style="background:var(--warning); color:#000; border:none; padding:8px 12px; border-radius:6px;" title="Posiziona Pin in Mappa"><i class="fa-solid fa-crosshairs"></i></button>
                 </div>
             `;
         }
@@ -880,7 +899,6 @@ async function eliminaLivello(idx) {
     
     chiudiModaleGlobale();
     
-    // Prova ad eliminare l'immagine dal server
     try {
         const resAPI = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${liv.imgUrl}`, { headers: { 'Authorization': `token ${token}` } });
         if (resAPI.ok) {
