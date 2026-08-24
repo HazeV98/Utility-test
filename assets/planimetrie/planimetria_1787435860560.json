@@ -3,7 +3,22 @@
     {
       "nome": "Tipo 1",
       "imgUrl": "assets/planimetrie/planimetria_1787435860560_L1787601943920.jpg",
-      "pins": []
+      "pins": [
+        {
+          "id": "pin_1787601995513",
+          "lat": 1789.2428839025524,
+          "lng": 349.86657995153746,
+          "tipo": "singolo",
+          "nomeContenitore": null,
+          "elementi": [
+            {
+              "schedaId": "sch_1787592024172",
+              "qta": 1
+            }
+          ],
+          "size": 20
+        }
+      ]
     }
   ],
   "schedeNave": [
