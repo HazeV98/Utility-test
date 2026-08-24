@@ -1,26 +1,5 @@
 {
-  "livelli": [
-    {
-      "nome": "Tipo 1",
-      "imgUrl": "assets/planimetrie/planimetria_1787435860560_L1787589484323.jpg",
-      "pins": [
-        {
-          "id": "pin_1787592101894",
-          "lat": 2377.7099468681636,
-          "lng": 599.2109460741278,
-          "tipo": "singolo",
-          "nomeContenitore": null,
-          "elementi": [
-            {
-              "schedaId": "sch_1787592024172",
-              "qta": 1
-            }
-          ],
-          "size": 20
-        }
-      ]
-    }
-  ],
+  "livelli": [],
   "schedeNave": [
     "sch_1787592024172"
   ]
