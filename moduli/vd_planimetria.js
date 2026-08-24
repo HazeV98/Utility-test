@@ -9,7 +9,7 @@ let planData = { livelli: [], schedeNave: [] };
 let inventarioGlobale = { 
     categorie: ['Sicurezza', 'Antincendio', 'Nautica', 'Primo Soccorso', 'Altro'], 
     schede: {},
-    coloriCat: {} // Memoria dei colori per categoria
+    coloriCat: {} 
 };
 
 let fileShaAttuale = null;
@@ -67,7 +67,7 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
     `;
 
     window.Plan = { 
-        toggleLegenda, apriModaleLivelli, toggleEditMode, cambiaLivello, 
+        toggleLegenda, apriModaleLivelli, toggleEditMode, cambiaLivello, eliminaLivello,
         apriGestioneSchede, apriSelezionePin, creaNuovaScheda, apriEditorScheda, salvaScheda, eliminaSchedaGlobale,
         toggleSchedaNave, chiediQuantitaPin, componiContenitore, salvaContenitore, apriVisualizzatorePin,
         apriSchedaViewer, salvaPlanimetriaSuGitHub, gestisciUploadMediaPlan,
@@ -92,7 +92,7 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
                 tipo: statoDropPin.tipo,
                 nomeContenitore: statoDropPin.nomeContenitore,
                 elementi: statoDropPin.elementi,
-                size: 20 // Dimensione di default dimezzata
+                size: 20 
             });
             statoDropPin = null;
             document.getElementById('plan-drop-indicator').style.display = 'none';
@@ -107,54 +107,76 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
 }
 
 // ==========================================
-// CARICAMENTO DATI E MIGRAZIONE
+// CARICAMENTO DATI IN TEMPO REALE (API)
 // ==========================================
 async function caricaDatiPlanimetria() {
     const token = localStorage.getItem('gh_admin_token');
     
-    try {
-        let resInv = await fetch(`./assets/planimetrie/inventario_globale.json?t=${Date.now()}`);
-        if (!resInv.ok) resInv = await fetch(`https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/assets/planimetrie/inventario_globale.json?t=${Date.now()}`);
-        if (resInv.ok) {
-            const invData = await resInv.json();
-            if(invData.categorie) inventarioGlobale.categorie = invData.categorie;
-            if(invData.schede) inventarioGlobale.schede = invData.schede;
-            if(invData.coloriCat) inventarioGlobale.coloriCat = invData.coloriCat;
-        }
-        if (globalIsAdminCollab && token) {
-            try {
-                const resAPI = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/planimetrie/inventario_globale.json`, { headers: { 'Authorization': `token ${token}` } });
-                if (resAPI.ok) invShaAttuale = (await resAPI.json()).sha;
-            } catch(e) {}
-        }
-    } catch(e) {}
-
-    try {
-        let response = await fetch(`./assets/planimetrie/${idPlanAttivo}.json?t=${Date.now()}`);
-        if (!response.ok) response = await fetch(`https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/assets/planimetrie/${idPlanAttivo}.json?t=${Date.now()}`);
-
-        if (response.ok) {
-            planData = await response.json();
-            if (!planData.livelli) planData.livelli = [];
-            if (!planData.schedeNave) planData.schedeNave = [];
-        }
-
-        if (globalIsAdminCollab && token) {
-            try {
-                const resAPI = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/planimetrie/${idPlanAttivo}.json`, { headers: { 'Authorization': `token ${token}` } });
-                if (resAPI.ok) fileShaAttuale = (await resAPI.json()).sha;
-            } catch(e) {}
-        }
-        
-        await migrazioneVecchiDati(token); 
-
-        disegnaLivelloCorrente();
-        aggiornaLegenda();
-
-    } catch (error) {
-        planData = { livelli: [], schedeNave: [] };
-        disegnaLivelloCorrente();
+    // 1. CARICAMENTO INVENTARIO GLOBALE
+    let invCaricatoViaApi = false;
+    if (globalIsAdminCollab && token) {
+        try {
+            // Usa le API per eludere la cache di GitHub Pages ed avere i dati in tempo reale
+            const resAPI = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/planimetrie/inventario_globale.json`, { headers: { 'Authorization': `token ${token}` } });
+            if (resAPI.ok) {
+                const data = await resAPI.json();
+                invShaAttuale = data.sha;
+                const parsed = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+                if(parsed.categorie) inventarioGlobale.categorie = parsed.categorie;
+                if(parsed.schede) inventarioGlobale.schede = parsed.schede;
+                if(parsed.coloriCat) inventarioGlobale.coloriCat = parsed.coloriCat;
+                invCaricatoViaApi = true;
+            }
+        } catch(e) {}
     }
+    
+    if (!invCaricatoViaApi) {
+        try {
+            let resInv = await fetch(`./assets/planimetrie/inventario_globale.json?t=${Date.now()}`);
+            if (!resInv.ok) resInv = await fetch(`https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/assets/planimetrie/inventario_globale.json?t=${Date.now()}`);
+            if (resInv.ok) {
+                const invData = await resInv.json();
+                if(invData.categorie) inventarioGlobale.categorie = invData.categorie;
+                if(invData.schede) inventarioGlobale.schede = invData.schede;
+                if(invData.coloriCat) inventarioGlobale.coloriCat = invData.coloriCat;
+            }
+        } catch(e) {}
+    }
+
+    // 2. CARICAMENTO PLANIMETRIA LOCALE NAVE
+    let planCaricataViaApi = false;
+    if (globalIsAdminCollab && token) {
+        try {
+            const resAPI = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/planimetrie/${idPlanAttivo}.json`, { headers: { 'Authorization': `token ${token}` } });
+            if (resAPI.ok) {
+                const data = await resAPI.json();
+                fileShaAttuale = data.sha;
+                planData = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+                if (!planData.livelli) planData.livelli = [];
+                if (!planData.schedeNave) planData.schedeNave = [];
+                planCaricataViaApi = true;
+            }
+        } catch(e) {}
+    }
+
+    if (!planCaricataViaApi) {
+        try {
+            let response = await fetch(`./assets/planimetrie/${idPlanAttivo}.json?t=${Date.now()}`);
+            if (!response.ok) response = await fetch(`https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/assets/planimetrie/${idPlanAttivo}.json?t=${Date.now()}`);
+
+            if (response.ok) {
+                planData = await response.json();
+                if (!planData.livelli) planData.livelli = [];
+                if (!planData.schedeNave) planData.schedeNave = [];
+            }
+        } catch (error) {
+            planData = { livelli: [], schedeNave: [] };
+        }
+    }
+        
+    await migrazioneVecchiDati(token); 
+    disegnaLivelloCorrente();
+    aggiornaLegenda();
 }
 
 async function migrazioneVecchiDati(token) {
@@ -181,7 +203,7 @@ async function migrazioneVecchiDati(token) {
                     p.tipo = 'singolo'; p.elementi = [{ schedaId: p.schedaId, qta: 1 }];
                     delete p.schedaId; salvaLoc = true;
                 }
-                if(!p.size) { p.size = 20; salvaLoc = true; } // Imposta grandezza default ai vecchi
+                if(!p.size) { p.size = 20; salvaLoc = true; } 
                 p.elementi.forEach(el => {
                     if (!planData.schedeNave.includes(el.schedaId)) {
                         planData.schedeNave.push(el.schedaId);
@@ -208,6 +230,9 @@ function disegnaLivelloCorrente() {
     const btnLivelli = document.getElementById('fab-livelli');
     if (planData.livelli.length > 0) {
         btnLivelli.style.display = 'flex';
+        // Controllo di sicurezza se l'indice esce dai limiti (es. dopo eliminazione)
+        if(livelloCorrenteIdx >= planData.livelli.length) livelloCorrenteIdx = planData.livelli.length - 1;
+        
         const livello = planData.livelli[livelloCorrenteIdx];
         const rawImgUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${livello.imgUrl}`;
         
@@ -225,7 +250,7 @@ function disegnaLivelloCorrente() {
                 livello.pins.forEach(pin => {
                     let iconHtml = '', pinName = '';
                     let size = pin.size || 20;
-                    let fontSize = size * 0.45; // Testo scalato in proporzione
+                    let fontSize = size * 0.45; 
 
                     if (pin.tipo === 'contenitore') {
                         iconHtml = `<div style="background-color: #546e7a; width: ${size}px; height: ${size}px; border-radius: 8px; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.5); font-size: ${fontSize}px;"><i class="fa-solid fa-box-open"></i></div>`;
@@ -233,9 +258,7 @@ function disegnaLivelloCorrente() {
                     } else {
                         const scheda = inventarioGlobale.schede[pin.elementi[0].schedaId];
                         if (!scheda) return;
-                        // Controllo per inserire correttamente l'icona (che sia fa-solid o no)
                         const faClass = scheda.icona.includes('fa-') ? scheda.icona : `fa-solid ${scheda.icona}`;
-                        
                         iconHtml = `<div style="background-color: ${scheda.colore}; width: ${size}px; height: ${size}px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.5); font-size: ${fontSize}px;"><i class="${faClass}"></i></div>`;
                         pinName = scheda.nome;
                     }
@@ -306,12 +329,16 @@ async function salvaPlanimetriaSuGitHub(mostraCaricamento = false) {
     try {
         const payload = { message: `Aggiornata planimetria ${idPlanAttivo}`, content: btoa(unescape(encodeURIComponent(JSON.stringify(planData, null, 2)))) };
         if (fileShaAttuale) payload.sha = fileShaAttuale;
+        
         const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/planimetrie/${idPlanAttivo}.json`, {
             method: 'PUT', headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
-        if (!res.ok) throw new Error("Errore salvataggio");
+        
+        if (!res.ok) throw new Error("Errore salvataggio planimetria");
+        
         fileShaAttuale = (await res.json()).content.sha; 
-        aggiornaLegenda(); disegnaLivelloCorrente();
+        aggiornaLegenda(); 
+        disegnaLivelloCorrente();
     } catch(e) { console.error("Errore salvataggio", e); } 
     finally {
         if(mostraCaricamento && btnSalva) { btnSalva.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Salva Modifiche`; btnSalva.disabled = false; }
@@ -382,7 +409,7 @@ function aggiornaLegenda() {
             html += `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 4px; ${opacita}">
                     <div style="display:flex; align-items:center; gap:10px; color:var(--text-main);">
-                        <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; background:${scheda.colore}; color:white; border-radius:50%; font-size:10px;"><i class="fa-solid ${scheda.icona}"></i></span>
+                        <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; background:${scheda.colore}; color:white; border-radius:50%; font-size:10px;"><i class="${scheda.icona.includes('fa-') ? scheda.icona : 'fa-solid ' + scheda.icona}"></i></span>
                         <span style="font-weight: 500;">${scheda.nome}</span>
                     </div>
                     <strong style="color: var(--primary); font-size: 15px;">x${count}</strong>
@@ -421,7 +448,7 @@ function apriGestioneSchede() {
                 html += `
                     <div style="display:flex; justify-content:space-between; align-items:center; background: var(--surface); border: 1px solid ${isAdded ? 'var(--primary)' : 'var(--border-color)'}; padding: 10px; border-radius: 8px; margin-bottom: 8px;">
                         <div style="display:flex; align-items:center; gap:10px;">
-                            <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; background:${scheda.colore}; color:white; border-radius:50%; font-size:12px;"><i class="fa-solid ${scheda.icona}"></i></span>
+                            <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; background:${scheda.colore}; color:white; border-radius:50%; font-size:12px;"><i class="${scheda.icona.includes('fa-') ? scheda.icona : 'fa-solid ' + scheda.icona}"></i></span>
                             <span style="font-weight: 600; font-size: 14px; color:var(--text-main);">${scheda.nome}</span>
                         </div>
                         <div style="display:flex; gap: 5px;">
@@ -478,7 +505,7 @@ function apriSelezionePin() {
             html += `
                 <div style="display:flex; justify-content:space-between; align-items:center; background: var(--surface); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 8px;">
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; background:${scheda.colore}; color:white; border-radius:50%; font-size:12px;"><i class="fa-solid ${scheda.icona}"></i></span>
+                        <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; background:${scheda.colore}; color:white; border-radius:50%; font-size:12px;"><i class="${scheda.icona.includes('fa-') ? scheda.icona : 'fa-solid ' + scheda.icona}"></i></span>
                         <span style="font-weight: 600; font-size: 14px; color:var(--text-main);">${scheda.nome}</span>
                     </div>
                     <button class="icon-btn" onclick="window.Plan.chiediQuantitaPin('${id}')" style="background:var(--warning); color:#000; border:none; padding:6px; border-radius:6px;" title="Posiziona Pin in Mappa"><i class="fa-solid fa-crosshairs"></i> Posiziona</button>
@@ -515,7 +542,7 @@ function componiContenitore() {
             html += `
                 <div style="display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--border-color); padding:8px; border-radius:6px; margin-bottom:6px;">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid ${scheda.icona}" style="color:${scheda.colore};"></i>
+                        <i class="${scheda.icona.includes('fa-') ? scheda.icona : 'fa-solid ' + scheda.icona}" style="color:${scheda.colore};"></i>
                         <span style="font-size:13px; font-weight:600; color:var(--text-main);">${scheda.nome}</span>
                     </div>
                     <input type="number" id="cont-qta-${id}" min="0" value="0" style="width:50px; padding:4px; text-align:center; border:1px solid #ccc; border-radius:4px;">
@@ -559,7 +586,6 @@ function salvaContenitore() {
 // ==========================================
 function creaNuovaScheda() {
     const id = 'sch_' + Date.now();
-    // Default fa-solid fa-location-dot (il classico segnaposto pieno di google maps) o usa il colore dell'ultima categoria.
     const colDef = inventarioGlobale.coloriCat?.["Sicurezza"] || "#ff0000";
     
     inventarioGlobale.schede[id] = { 
@@ -652,7 +678,6 @@ async function salvaScheda(id) {
     s.categoria = document.getElementById('sch-categoria').value;
     s.testo_html = document.getElementById('sch-testo').innerHTML;
     
-    // Aggiorna la memoria dei colori per questa categoria
     if (!inventarioGlobale.coloriCat) inventarioGlobale.coloriCat = {};
     inventarioGlobale.coloriCat[s.categoria] = s.colore;
 
@@ -811,12 +836,20 @@ function generaHtmlGalleria(mediaArray, isEdit, idScheda) {
 window.scaricaFilePlan = async (url, filename) => { try { const response = await fetch(url); const blob = await response.blob(); const urlBlob = window.URL.createObjectURL(blob); const a = document.createElement('a'); a.href = urlBlob; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); window.URL.revokeObjectURL(urlBlob); } catch(e) { window.open(url, '_blank'); } }
 function eliminaMediaPlan(idScheda, index) { if(!confirm("Eliminare la foto dal server?")) return; inventarioGlobale.schede[idScheda].media.splice(index, 1); document.getElementById('sch-gallery').innerHTML = generaHtmlGalleria(inventarioGlobale.schede[idScheda].media, true, idScheda); }
 
+// ==========================================
+// GESTIONE LIVELLI (PONTI)
+// ==========================================
 function apriModaleLivelli() {
     let html = `<h3 style="margin-bottom: 15px; color: var(--primary);"><i class="fa-solid fa-layer-group"></i> Ponti / Livelli</h3><div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 20px;">`;
     planData.livelli.forEach((liv, idx) => {
         const bg = idx === livelloCorrenteIdx ? 'var(--primary)' : 'var(--surface)';
         const color = idx === livelloCorrenteIdx ? 'white' : 'var(--text-main)';
-        html += `<button onclick="window.Plan.cambiaLivello(${idx})" style="background:${bg}; color:${color}; padding:12px; border:1px solid var(--border-color); border-radius:8px; text-align:left; font-weight:bold; font-size:15px; cursor:pointer;">${liv.nome}</button>`;
+        html += `
+            <div style="display:flex; gap:5px;">
+                <button onclick="window.Plan.cambiaLivello(${idx})" style="flex:1; background:${bg}; color:${color}; padding:12px; border:1px solid var(--border-color); border-radius:8px; text-align:left; font-weight:bold; font-size:15px; cursor:pointer;">${liv.nome}</button>
+                ${isEditMode ? `<button onclick="window.Plan.eliminaLivello(${idx})" style="background:var(--danger); color:white; border:none; border-radius:8px; padding:0 15px; cursor:pointer;" title="Elimina Ponte"><i class="fa-solid fa-trash"></i></button>` : ''}
+            </div>
+        `;
     });
     html += `</div>`;
     if (isEditMode) {
@@ -838,6 +871,32 @@ async function aggiungiNuovoLivello(event) {
         planData.livelli.push({ nome: nomeLivello, imgUrl: githubPath, pins: [] }); livelloCorrenteIdx = planData.livelli.length - 1; 
         document.getElementById('plan-map-container').innerHTML = ''; setTimeout(() => { mappaPlan.invalidateSize(); salvaPlanimetriaSuGitHub(); }, 100);
     } catch(e) { alert("Errore upload livello."); disegnaLivelloCorrente(); }
+}
+
+async function eliminaLivello(idx) {
+    if(!confirm("Vuoi davvero eliminare questo ponte e tutti i suoi pin? L'immagine verrà rimossa dal server.")) return;
+    const liv = planData.livelli[idx];
+    const token = localStorage.getItem('gh_admin_token');
+    
+    chiudiModaleGlobale();
+    
+    // Prova ad eliminare l'immagine dal server
+    try {
+        const resAPI = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${liv.imgUrl}`, { headers: { 'Authorization': `token ${token}` } });
+        if (resAPI.ok) {
+            const data = await resAPI.json();
+            await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${liv.imgUrl}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: "Eliminato livello planimetria", sha: data.sha })
+            });
+        }
+    } catch(e) { console.warn("Impossibile eliminare immagine, continuo", e); }
+
+    planData.livelli.splice(idx, 1);
+    livelloCorrenteIdx = Math.max(0, livelloCorrenteIdx - 1);
+    await salvaPlanimetriaSuGitHub();
+    apriModaleLivelli(); 
 }
 
 function creaContenitoreModali() {
