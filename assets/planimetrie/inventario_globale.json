@@ -15,6 +15,14 @@
       "categoria": "Allarmi",
       "testo_html": "I valori normali si attestano fra 1,5 bar e 5 bar",
       "media": []
+    },
+    "sch_1787603175363": {
+      "nome": "Alta temperatura acqua",
+      "icona": "fa-solid fa-location-dot",
+      "colore": "#8a8a8a",
+      "categoria": "Allarmi",
+      "testo_html": "Spia e allarme acustico quando la temperatura supera i 108°C&nbsp;",
+      "media": []
     }
   },
   "coloriCat": {
