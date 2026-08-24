@@ -13,7 +13,6 @@ let isEditMode = false;
 let globalIsAdminCollab = false;
 
 export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnorato, isAdminOrCollab) {
-    // Controllo automatico del token se il parametro non viene passato dal Vademecum
     const token = localStorage.getItem('gh_admin_token');
     globalIsAdminCollab = isAdminOrCollab || (token ? true : false);
     isEditMode = false;
@@ -26,7 +25,7 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     container.innerHTML = `
         <div id="leaflet-map-container" style="width: 100%; height: 100%; z-index: 1;"></div>
         
-        <!-- Legenda e Filtri (Inizialmente Nascosta) -->
+        <!-- Legenda e Filtri -->
         <div id="mappa-legenda-panel" style="display: none; position: absolute; top: max(15px, env(safe-area-inset-top)); right: 70px; background: var(--surface); padding: 15px; border-radius: 12px; box-shadow: var(--shadow-md); z-index: 1000; font-size: 13px; min-width: 180px; border: 1px solid var(--border-color);">
             <div style="font-weight: 700; margin-bottom: 10px; color: var(--text-main); font-size: 14px;">Mostra in mappa:</div>
             <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 15px;">
@@ -40,7 +39,7 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
             <div id="legenda-colori"></div>
         </div>
 
-        <!-- Pulsanti Fluttuanti (FAB) spostati in ALTO A DESTRA -->
+        <!-- Pulsanti Fluttuanti (FAB) -->
         <div style="position: absolute; top: max(15px, env(safe-area-inset-top)); right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 15px;">
             <button class="icon-btn fab-btn" title="Filtri e Legenda" onclick="window.Mappa.toggleLegend()" style="width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: var(--primary); box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
                 <i class="fa-solid fa-filter"></i>
@@ -48,7 +47,6 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
             <button class="icon-btn fab-btn" title="Cambia Sfondo" onclick="window.Mappa.toggleSfondo()" style="width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: var(--text-main); box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
                 <i class="fa-solid fa-layer-group"></i>
             </button>
-            <!-- Il bottone di modifica ora appare automaticamente se hai il token -->
             <button id="fab-edit-mappa" class="icon-btn fab-btn" title="Modifica Dati" onclick="window.Mappa.toggleEdit()" style="display: none; width: 45px; height: 45px; border-radius: 50%; background: var(--primary); color: white; box-shadow: var(--shadow-md); border: none;">
                 <i class="fa-solid fa-pen" id="icon-edit-mappa"></i>
             </button>
@@ -68,8 +66,9 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     mappaAttiva = L.map('leaflet-map-container', { zoomControl: false }).setView([45.435, 12.325], 13);
     L.control.zoom({ position: 'topleft' }).addTo(mappaAttiva);
 
-    layerStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap', maxZoom: 18
+    // Mappa Standard "Pulita" CartoDB Voyager
+    layerStandard = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap, © CartoDB', maxZoom: 19
     });
     layerSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles &copy; Esri', maxZoom: 18
@@ -84,18 +83,14 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     await caricaDatiGeoJson();
 }
 
-// CORREZIONE APPLICATA QUI: Bypassa il limite di 1MB dell'API di GitHub
 async function caricaDatiGeoJson() {
     const token = localStorage.getItem('gh_admin_token');
     try {
         if (!datiGeoJsonCache) {
-            
-            // 1. Legge sempre i dati dal file diretto bypassando l'API (no limiti di peso)
             const response = await fetch('./assets/canali_venezia.geojson?t=' + Date.now());
             if (!response.ok) throw new Error("File GeoJSON non trovato");
             datiGeoJsonCache = await response.json();
 
-            // 2. Se ha il token, fa una chiamata API leggerissima SOLO per il codice SHA utile al salvataggio
             if (globalIsAdminCollab && token) {
                 try {
                     const urlAPI = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/assets/canali_venezia.geojson`;
@@ -134,32 +129,34 @@ function disegnaGeoJson() {
 // GESTIONE COLORI E STILI
 // ------------------------------------
 function impostaStileLinea(feature) {
-    let colore = '#9e9e9e'; // Grigio default per "Altro"
+    let colore = '#a9a9a9'; 
 
     if (modalitaCorrente === 'velocita') {
         const velStr = feature.properties.velocita;
         const vel = parseFloat(velStr);
         
-        if (isNaN(vel)) colore = '#9e9e9e';         // Altro / Nessun limite numerico
-        else if (vel <= 5) colore = '#d93025';      // Rosso
-        else if (vel <= 7) colore = '#ff9800';      // Arancione
-        else if (vel <= 9) colore = '#fbbc05';      // Giallo
-        else if (vel <= 11) colore = '#8bc34a';     // Verde Chiaro
-        else if (vel >= 20) colore = '#0f9d58';     // Verde Scuro
+        if (isNaN(vel)) colore = '#a9a9a9';         // Altro (Grigio scuro)
+        else if (vel <= 5) colore = '#ff0000';      // Rosso vivo
+        else if (vel <= 7) colore = '#ff8c00';      // Arancione scuro
+        else if (vel <= 9) colore = '#ffd700';      // Oro / Giallo acceso
+        else if (vel <= 11) colore = '#32cd32';     // Verde lime
+        else if (vel <= 14) colore = '#00ced1';     // Turchese scuro
+        else if (vel <= 15) colore = '#1e90ff';     // Blu dodger
+        else if (vel >= 20) colore = '#8a2be2';     // Viola scuro
     } 
     else if (modalitaCorrente === 'giurisdizione') {
         const giu = (feature.properties.giurisdisz || '').toUpperCase();
-        if (giu.includes('COMUNE')) colore = '#4285f4';                                      // Blu 
-        else if (giu.includes('AUTORITÀ MARITTIMA') || giu.includes('AUTORITA MARITTIMA')) colore = '#9c27b0'; // Viola
-        else if (giu.includes('MAGISTRATO')) colore = '#009688';                             // Verde Acqua/Teal 
-        else colore = '#e91e63';                                                             // Rosa (Altro)
+        if (giu.includes('COMUNE')) colore = '#4285f4';                                      
+        else if (giu.includes('AUTORITÀ MARITTIMA') || giu.includes('AUTORITA MARITTIMA')) colore = '#9c27b0'; 
+        else if (giu.includes('MAGISTRATO')) colore = '#009688';                             
+        else colore = '#e91e63';                                                             
     }
 
     const isPolygon = feature.geometry.type.includes('Polygon');
 
     return {
         color: colore,
-        weight: sfondoCorrente === 'satellite' ? 3 : 2,
+        weight: sfondoCorrente === 'satellite' ? 4 : 3, // Leggermente più spesse per risaltare
         fillColor: colore,
         fillOpacity: isPolygon ? (sfondoCorrente === 'satellite' ? 0.5 : 0.4) : 1,
         opacity: sfondoCorrente === 'satellite' ? 0.9 : 0.8
@@ -173,12 +170,14 @@ function aggiornaUI_Legenda() {
     let html = '';
     if (modalitaCorrente === 'velocita') {
         html = `
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#d93025; border-radius:3px;"></span> &le; 5 km/h</div>
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#ff9800; border-radius:3px;"></span> &le; 7 km/h</div>
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#fbbc05; border-radius:3px;"></span> &le; 9 km/h</div>
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#8bc34a; border-radius:3px;"></span> &le; 11 km/h</div>
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#0f9d58; border-radius:3px;"></span> &ge; 20 km/h</div>
-            <div style="display:flex; align-items:center; gap:8px; color:var(--text-main);"><span style="width:14px; height:14px; background:#9e9e9e; border-radius:3px;"></span> Altro</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#ff0000; border-radius:3px;"></span> &le; 5 km/h</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#ff8c00; border-radius:3px;"></span> &le; 7 km/h</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#ffd700; border-radius:3px;"></span> &le; 9 km/h</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#32cd32; border-radius:3px;"></span> &le; 11 km/h</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#00ced1; border-radius:3px;"></span> &le; 14 km/h</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#1e90ff; border-radius:3px;"></span> &le; 15 km/h</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; color:var(--text-main);"><span style="width:14px; height:14px; background:#8a2be2; border-radius:3px;"></span> &ge; 20 km/h</div>
+            <div style="display:flex; align-items:center; gap:8px; color:var(--text-main);"><span style="width:14px; height:14px; background:#a9a9a9; border-radius:3px;"></span> Altro</div>
         `;
     } else {
         html = `
@@ -243,7 +242,6 @@ async function salvaFeatureModificata(index) {
 
         datiGeoJsonCache.features[index].properties.Toponomast = nuovoNome;
         
-        // Se il campo velocità non è un numero (es. stringa vuota), lo salva così com'è per cadere in "Altro"
         const velParse = parseFloat(nuovaVel);
         datiGeoJsonCache.features[index].properties.velocita = isNaN(velParse) ? nuovaVel : velParse;
         
