@@ -36,15 +36,24 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
             <div id="plan-legenda-content"></div>
         </div>
 
-        <div style="position: absolute; top: max(15px, env(safe-area-inset-top)); right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 15px;">
+        <div style="position: absolute; top: max(15px, env(safe-area-inset-top)); right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 12px; align-items: center;">
             <button class="icon-btn fab-btn" title="Inventario" onclick="window.Plan.toggleLegenda()" style="width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: var(--primary); box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
                 <i class="fa-solid fa-list"></i>
             </button>
             <button id="fab-livelli" class="icon-btn fab-btn" title="Cambia Livello" onclick="window.Plan.apriModaleLivelli()" style="width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: var(--text-main); box-shadow: var(--shadow-md); border: 2px solid var(--border-color); display: none;">
                 <i class="fa-solid fa-layer-group"></i>
             </button>
-            <button id="fab-edit-plan" class="icon-btn fab-btn" title="Gestione Planimetria" onclick="window.Plan.toggleEditMode()" style="display: none; width: 45px; height: 45px; border-radius: 50%; background: var(--primary); color: white; box-shadow: var(--shadow-md); border: none;">
+            
+            <button id="fab-edit-plan" class="icon-btn fab-btn" title="Attiva/Disattiva Modifica" onclick="window.Plan.toggleEditMode()" style="display: none; width: 45px; height: 45px; border-radius: 50%; background: var(--primary); color: white; box-shadow: var(--shadow-md); border: none;">
                 <i class="fa-solid fa-pen" id="icon-edit-plan"></i>
+            </button>
+
+            <!-- Tasti visibili solo in modalità modifica -->
+            <button id="fab-db-schede" class="icon-btn fab-btn" title="Database Schede" onclick="window.Plan.apriGestioneSchede()" style="display: none; width: 40px; height: 40px; border-radius: 50%; background: var(--surface); color: var(--primary); box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
+                <i class="fa-solid fa-database"></i>
+            </button>
+            <button id="fab-add-pin" class="icon-btn fab-btn" title="Piazza Pin" onclick="window.Plan.apriSelezionePin()" style="display: none; width: 40px; height: 40px; border-radius: 50%; background: var(--warning); color: #000; box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
+                <i class="fa-solid fa-map-pin"></i>
             </button>
         </div>
 
@@ -55,7 +64,7 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
 
     window.Plan = { 
         toggleLegenda, apriModaleLivelli, toggleEditMode, cambiaLivello, 
-        apriGestioneSchede, creaNuovaScheda, apriEditorScheda, salvaScheda, eliminaSchedaGlobale,
+        apriGestioneSchede, apriSelezionePin, creaNuovaScheda, apriEditorScheda, salvaScheda, eliminaSchedaGlobale,
         toggleSchedaNave, chiediQuantitaPin, componiContenitore, salvaContenitore, apriVisualizzatorePin,
         apriSchedaViewer, salvaPlanimetriaSuGitHub, gestisciUploadMediaPlan,
         eliminaMediaPlan, scaricaFilePlan, apriViewerPlan, aggiungiNuovoLivello, eliminaPin, aggiungiCategoria
@@ -165,8 +174,6 @@ async function migrazioneVecchiDati(token) {
                     p.tipo = 'singolo'; p.elementi = [{ schedaId: p.schedaId, qta: 1 }];
                     delete p.schedaId; salvaLoc = true;
                 }
-                
-                // Assicura che i pin vecchi siano nella lista schedeNave
                 p.elementi.forEach(el => {
                     if (!planData.schedeNave.includes(el.schedaId)) {
                         planData.schedeNave.push(el.schedaId);
@@ -286,12 +293,21 @@ function toggleEditMode() {
     isEditMode = !isEditMode;
     const btn = document.getElementById('fab-edit-plan');
     const icon = document.getElementById('icon-edit-plan');
+    const fabDb = document.getElementById('fab-db-schede');
+    const fabAdd = document.getElementById('fab-add-pin');
+    
     if (isEditMode) {
-        btn.style.background = 'var(--success)'; icon.className = "fa-solid fa-check";
-        apriGestioneSchede(); 
+        btn.style.background = 'var(--success)'; 
+        icon.className = "fa-solid fa-check";
+        fabDb.style.display = 'flex';
+        fabAdd.style.display = 'flex';
     } else {
-        btn.style.background = 'var(--primary)'; icon.className = "fa-solid fa-pen";
-        chiudiModaleGlobale(); statoDropPin = null;
+        btn.style.background = 'var(--primary)'; 
+        icon.className = "fa-solid fa-pen";
+        fabDb.style.display = 'none';
+        fabAdd.style.display = 'none';
+        chiudiModaleGlobale(); 
+        statoDropPin = null;
         document.getElementById('plan-drop-indicator').style.display = 'none';
         document.getElementById('plan-map-container').style.cursor = 'grab';
     }
@@ -322,7 +338,7 @@ function aggiornaLegenda() {
         const scheda = inventarioGlobale.schede[id];
         if (scheda) {
             const count = conteggi[id] || 0;
-            const opacita = count === 0 ? 'opacity: 0.6;' : ''; // Sbiadisce leggermente se non è posizionata in mappa
+            const opacita = count === 0 ? 'opacity: 0.6;' : ''; 
             html += `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 4px; ${opacita}">
                     <div style="display:flex; align-items:center; gap:10px; color:var(--text-main);">
@@ -340,17 +356,14 @@ function aggiornaLegenda() {
 }
 
 // ==========================================
-// EDITOR INVENTARIO (LISTA GLOBALE)
+// EDITOR INVENTARIO GLOBALE
 // ==========================================
 function apriGestioneSchede() {
     let html = `
-        <h3 style="margin-bottom: 5px; color: var(--primary);"><i class="fa-solid fa-earth-americas"></i> Inventario Navale (Globale)</h3>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Aggiungi <b>(+)</b> le dotazioni a questa nave per poterle posizionare sulla mappa.</p>
+        <h3 style="margin-bottom: 5px; color: var(--primary);"><i class="fa-solid fa-database"></i> Database Schede</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Gestisci le dotazioni globali e aggiungile <b>(+)</b> alla nave corrente.</p>
         
-        <div style="display:flex; gap:10px; margin-bottom: 20px;">
-            <button onclick="window.Plan.creaNuovaScheda()" style="flex:1; background:var(--primary); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-file-circle-plus"></i> Nuova Scheda</button>
-            <button onclick="window.Plan.componiContenitore()" style="flex:1; background:#546e7a; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-box-open"></i> Pin Multiplo</button>
-        </div>
+        <button onclick="window.Plan.creaNuovaScheda()" style="width:100%; background:var(--primary); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom: 20px;"><i class="fa-solid fa-file-circle-plus"></i> Crea Nuova Scheda</button>
         <div style="max-height: 50vh; overflow-y: auto; padding-right:5px;">
     `;
 
@@ -361,9 +374,8 @@ function apriGestioneSchede() {
             schedeInCat.forEach(([id, scheda]) => {
                 const isAdded = planData.schedeNave.includes(id);
                 
-                let btnsAggiunta = isAdded 
-                    ? `<button class="icon-btn" onclick="window.Plan.toggleSchedaNave('${id}')" style="background:var(--danger); color:white; border:none; padding:6px; border-radius:6px;" title="Rimuovi da questa nave"><i class="fa-solid fa-minus"></i></button>
-                       <button class="icon-btn" onclick="window.Plan.chiediQuantitaPin('${id}')" style="background:var(--warning); color:#000; border:none; padding:6px; border-radius:6px;" title="Posiziona Pin in Mappa"><i class="fa-solid fa-crosshairs"></i></button>`
+                let btnAggiungiRimuovi = isAdded 
+                    ? `<button class="icon-btn" onclick="window.Plan.toggleSchedaNave('${id}')" style="background:var(--danger); color:white; border:none; padding:6px; border-radius:6px;" title="Rimuovi da questa nave"><i class="fa-solid fa-minus"></i></button>`
                     : `<button class="icon-btn" onclick="window.Plan.toggleSchedaNave('${id}')" style="background:var(--success); color:white; border:none; padding:6px; border-radius:6px;" title="Aggiungi all'inventario di questa nave"><i class="fa-solid fa-plus"></i></button>`;
 
                 html += `
@@ -373,7 +385,7 @@ function apriGestioneSchede() {
                             <span style="font-weight: 600; font-size: 14px; color:var(--text-main);">${scheda.nome}</span>
                         </div>
                         <div style="display:flex; gap: 5px;">
-                            ${btnsAggiunta}
+                            ${btnAggiungiRimuovi}
                             <div style="width: 1px; background: var(--border-color); margin: 0 5px;"></div>
                             <button class="icon-btn" onclick="window.Plan.apriEditorScheda('${id}')" style="background:var(--surface); color:var(--text-main); border:1px solid var(--border-color); padding:6px; border-radius:6px;" title="Modifica Scheda Globale"><i class="fa-solid fa-pen"></i></button>
                         </div>
@@ -391,7 +403,6 @@ function toggleSchedaNave(id) {
     if (planData.schedeNave.includes(id)) {
         if (confirm("Vuoi rimuovere questo elemento dall'inventario della nave? Verranno eliminati automaticamente anche i relativi pin dalla planimetria.")) {
             planData.schedeNave = planData.schedeNave.filter(s => s !== id);
-            // Pulisce i pin
             planData.livelli.forEach(liv => {
                 if (liv.pins) {
                     liv.pins.forEach(p => { p.elementi = p.elementi.filter(el => el.schedaId !== id); });
@@ -407,11 +418,109 @@ function toggleSchedaNave(id) {
 }
 
 // ==========================================
+// AGGIUNTA PIN ALLA MAPPA
+// ==========================================
+function apriSelezionePin() {
+    if(planData.schedeNave.length === 0) return alert("Aggiungi prima delle dotazioni dal Database Schede.");
+
+    let html = `
+        <h3 style="margin-bottom: 5px; color: var(--primary);"><i class="fa-solid fa-map-pin"></i> Posiziona Elemento</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Scegli un elemento dall'inventario della nave da piazzare sulla mappa.</p>
+        
+        <button onclick="window.Plan.componiContenitore()" style="width:100%; background:#546e7a; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom: 20px;"><i class="fa-solid fa-box-open"></i> Crea Pin Multiplo (Contenitore)</button>
+        
+        <div style="max-height: 50vh; overflow-y: auto; padding-right:5px;">
+    `;
+
+    planData.schedeNave.forEach(id => {
+        const scheda = inventarioGlobale.schede[id];
+        if (scheda) {
+            html += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background: var(--surface); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 8px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; background:${scheda.colore}; color:white; border-radius:50%; font-size:12px;"><i class="fa-solid ${scheda.icona}"></i></span>
+                        <span style="font-weight: 600; font-size: 14px; color:var(--text-main);">${scheda.nome}</span>
+                    </div>
+                    <button class="icon-btn" onclick="window.Plan.chiediQuantitaPin('${id}')" style="background:var(--warning); color:#000; border:none; padding:6px; border-radius:6px;" title="Posiziona Pin in Mappa"><i class="fa-solid fa-crosshairs"></i> Posiziona</button>
+                </div>
+            `;
+        }
+    });
+
+    html += `</div>`;
+    mostraModale(html);
+}
+
+function chiediQuantitaPin(idScheda) {
+    const qta = prompt("Quanti pezzi di questo elemento ci sono in questo punto?", "1");
+    if (qta && !isNaN(qta) && parseInt(qta) > 0) {
+        chiudiModaleGlobale();
+        statoDropPin = { tipo: 'singolo', nomeContenitore: null, elementi: [{ schedaId: idScheda, qta: parseInt(qta) }] };
+        document.getElementById('plan-drop-indicator').style.display = 'block';
+        document.getElementById('plan-map-container').style.cursor = 'crosshair';
+    }
+}
+
+function componiContenitore() {
+    let html = `
+        <h3 style="margin-bottom: 15px; color: #546e7a;"><i class="fa-solid fa-box-open"></i> Crea Pin Contenitore</h3>
+        <input type="text" id="cont-nome" placeholder="Es. Cassetta Sicurezza Prua" style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; font-weight:bold;">
+        <p style="font-size: 13px; font-weight:bold; margin-bottom:10px;">Quantità degli elementi nel contenitore:</p>
+        <div style="max-height: 300px; overflow-y: auto; margin-bottom: 15px; padding-right:5px;">
+    `;
+    
+    planData.schedeNave.forEach(id => {
+        const scheda = inventarioGlobale.schede[id];
+        if (scheda) {
+            html += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--border-color); padding:8px; border-radius:6px; margin-bottom:6px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid ${scheda.icona}" style="color:${scheda.colore};"></i>
+                        <span style="font-size:13px; font-weight:600; color:var(--text-main);">${scheda.nome}</span>
+                    </div>
+                    <input type="number" id="cont-qta-${id}" min="0" value="0" style="width:50px; padding:4px; text-align:center; border:1px solid #ccc; border-radius:4px;">
+                </div>
+            `;
+        }
+    });
+
+    html += `
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button onclick="window.Plan.apriSelezionePin()" style="flex:1; background:var(--surface); color:var(--text-main); border:1px solid var(--border-color); padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">Annulla</button>
+            <button onclick="window.Plan.salvaContenitore()" style="flex:2; background:#546e7a; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-crosshairs"></i> Posiziona</button>
+        </div>
+    `;
+    mostraModale(html);
+}
+
+function salvaContenitore() {
+    const nome = document.getElementById('cont-nome').value.trim() || 'Contenitore Multiplo';
+    let elementi = [];
+    
+    planData.schedeNave.forEach(id => {
+        const input = document.getElementById(`cont-qta-${id}`);
+        if(input) {
+            const qta = parseInt(input.value);
+            if (qta > 0) elementi.push({ schedaId: id, qta: qta });
+        }
+    });
+
+    if (elementi.length === 0) return alert("Inserisci almeno un elemento nel contenitore.");
+
+    chiudiModaleGlobale();
+    statoDropPin = { tipo: 'contenitore', nomeContenitore: nome, elementi: elementi };
+    document.getElementById('plan-drop-indicator').style.display = 'block';
+    document.getElementById('plan-map-container').style.cursor = 'crosshair';
+}
+
+// ==========================================
 // CREAZIONE E MODIFICA SINGOLA SCHEDA GLOBALE
 // ==========================================
 function creaNuovaScheda() {
     const id = 'sch_' + Date.now();
-    inventarioGlobale.schede[id] = { nome: "Nuovo Elemento", icona: "fa-life-ring", colore: "#ff0000", categoria: "Sicurezza", testo_html: "<p>Dettagli...</p>", media: [] };
+    // Default fa-circle per mostrare un "punto semplice"
+    inventarioGlobale.schede[id] = { nome: "Nuovo Elemento", icona: "fa-circle", colore: "#ff0000", categoria: "Sicurezza", testo_html: "<p>Dettagli...</p>", media: [] };
     apriEditorScheda(id);
 }
 
@@ -490,7 +599,7 @@ async function salvaScheda(id) {
 
     document.getElementById('btn-salva-scheda').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
     await salvaInventarioGlobaleSuGitHub();
-    disegnaLivelloCorrente(); // Ridisegna per aggiornare il colore del pin se modificato
+    disegnaLivelloCorrente(); 
     apriGestioneSchede(); 
 }
 
@@ -499,7 +608,6 @@ async function eliminaSchedaGlobale(id) {
     
     delete inventarioGlobale.schede[id];
     
-    // Rimuove da questa nave
     planData.schedeNave = planData.schedeNave.filter(s => s !== id);
     planData.livelli.forEach(liv => {
         if(liv.pins) {
@@ -509,74 +617,6 @@ async function eliminaSchedaGlobale(id) {
     });
 
     await salvaInventarioGlobaleSuGitHub(); await salvaPlanimetriaSuGitHub(); apriGestioneSchede();
-}
-
-// ==========================================
-// PIAZZAMENTO PIN (SINGOLI E CONTENITORI)
-// ==========================================
-function chiediQuantitaPin(idScheda) {
-    const qta = prompt("Quanti pezzi di questo elemento ci sono in questo punto?", "1");
-    if (qta && !isNaN(qta) && parseInt(qta) > 0) {
-        chiudiModaleGlobale();
-        statoDropPin = { tipo: 'singolo', nomeContenitore: null, elementi: [{ schedaId: idScheda, qta: parseInt(qta) }] };
-        document.getElementById('plan-drop-indicator').style.display = 'block';
-        document.getElementById('plan-map-container').style.cursor = 'crosshair';
-    }
-}
-
-function componiContenitore() {
-    if(planData.schedeNave.length === 0) return alert("Aggiungi prima delle dotazioni all'inventario di questa nave.");
-
-    let html = `
-        <h3 style="margin-bottom: 15px; color: #546e7a;"><i class="fa-solid fa-box-open"></i> Crea Pin Contenitore</h3>
-        <input type="text" id="cont-nome" placeholder="Es. Cassetta Sicurezza Prua" style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; font-weight:bold;">
-        <p style="font-size: 13px; font-weight:bold; margin-bottom:10px;">Quantità degli elementi nel contenitore:</p>
-        <div style="max-height: 300px; overflow-y: auto; margin-bottom: 15px; padding-right:5px;">
-    `;
-    
-    planData.schedeNave.forEach(id => {
-        const scheda = inventarioGlobale.schede[id];
-        if (scheda) {
-            html += `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--border-color); padding:8px; border-radius:6px; margin-bottom:6px;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid ${scheda.icona}" style="color:${scheda.colore};"></i>
-                        <span style="font-size:13px; font-weight:600; color:var(--text-main);">${scheda.nome}</span>
-                    </div>
-                    <input type="number" id="cont-qta-${id}" min="0" value="0" style="width:50px; padding:4px; text-align:center; border:1px solid #ccc; border-radius:4px;">
-                </div>
-            `;
-        }
-    });
-
-    html += `
-        </div>
-        <div style="display:flex; gap:10px;">
-            <button onclick="window.Plan.apriGestioneSchede()" style="flex:1; background:var(--surface); color:var(--text-main); border:1px solid var(--border-color); padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">Annulla</button>
-            <button onclick="window.Plan.salvaContenitore()" style="flex:2; background:#546e7a; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-crosshairs"></i> Posiziona</button>
-        </div>
-    `;
-    mostraModale(html);
-}
-
-function salvaContenitore() {
-    const nome = document.getElementById('cont-nome').value.trim() || 'Contenitore Multiplo';
-    let elementi = [];
-    
-    planData.schedeNave.forEach(id => {
-        const input = document.getElementById(`cont-qta-${id}`);
-        if(input) {
-            const qta = parseInt(input.value);
-            if (qta > 0) elementi.push({ schedaId: id, qta: qta });
-        }
-    });
-
-    if (elementi.length === 0) return alert("Inserisci almeno un elemento nel contenitore.");
-
-    chiudiModaleGlobale();
-    statoDropPin = { tipo: 'contenitore', nomeContenitore: nome, elementi: elementi };
-    document.getElementById('plan-drop-indicator').style.display = 'block';
-    document.getElementById('plan-map-container').style.cursor = 'crosshair';
 }
 
 // ==========================================
@@ -649,7 +689,7 @@ function apriSchedaViewer(id, qta = null) {
     mostraModale(html);
 }
 
-// UPLOAD MEDIA E FUNZIONI GESTIONE FILE E MODALI (Invariate e ottimizzate)
+// UPLOAD MEDIA E FUNZIONI GESTIONE FILE E MODALI
 async function gestisciUploadMediaPlan(event, cartellaTarget, idScheda) {
     const file = event.target.files[0];
     if (!file) return;
