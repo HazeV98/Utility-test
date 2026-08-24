@@ -6,7 +6,11 @@ let markersLayer = null;
 let imageOverlay = null;
 
 let planData = { livelli: [], schedeNave: [] };
-let inventarioGlobale = { categorie: ['Sicurezza', 'Antincendio', 'Nautica', 'Primo Soccorso', 'Altro'], schede: {} };
+let inventarioGlobale = { 
+    categorie: ['Sicurezza', 'Antincendio', 'Nautica', 'Primo Soccorso', 'Altro'], 
+    schede: {},
+    coloriCat: {} // Memoria dei colori per categoria
+};
 
 let fileShaAttuale = null;
 let invShaAttuale = null;
@@ -31,7 +35,7 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
     container.innerHTML = `
         <div id="plan-map-container" style="width: 100%; height: 100%; z-index: 1; background: #e0e0e0;"></div>
         
-        <div id="plan-legenda-panel" style="display: none; position: absolute; top: max(15px, env(safe-area-inset-top)); right: 70px; background: var(--surface); padding: 15px; border-radius: 12px; box-shadow: var(--shadow-md); z-index: 1000; font-size: 13px; min-width: 230px; max-height: 70vh; overflow-y: auto; border: 1px solid var(--border-color);">
+        <div id="plan-legenda-panel" style="display: none; position: absolute; top: max(15px, env(safe-area-inset-top)); right: 70px; background: var(--surface); padding: 15px; border-radius: 12px; box-shadow: var(--shadow-md); z-index: 1000; font-size: 13px; min-width: 230px; max-width: calc(100vw - 90px); box-sizing: border-box; max-height: 70vh; overflow-y: auto; border: 1px solid var(--border-color);">
             <div style="font-weight: 700; margin-bottom: 12px; color: var(--text-main); font-size: 14px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px;"><i class="fa-solid fa-clipboard-list"></i> Inventario Unità</div>
             <div id="plan-legenda-content"></div>
         </div>
@@ -67,7 +71,8 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
         apriGestioneSchede, apriSelezionePin, creaNuovaScheda, apriEditorScheda, salvaScheda, eliminaSchedaGlobale,
         toggleSchedaNave, chiediQuantitaPin, componiContenitore, salvaContenitore, apriVisualizzatorePin,
         apriSchedaViewer, salvaPlanimetriaSuGitHub, gestisciUploadMediaPlan,
-        eliminaMediaPlan, scaricaFilePlan, apriViewerPlan, aggiungiNuovoLivello, eliminaPin, aggiungiCategoria
+        eliminaMediaPlan, scaricaFilePlan, apriViewerPlan, aggiungiNuovoLivello, eliminaPin, 
+        aggiungiCategoria, salvaDimensionePin, cambiaColoreDaCategoria
     };
 
     if (globalIsAdminCollab) document.getElementById('fab-edit-plan').style.display = 'flex';
@@ -86,7 +91,8 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
                 lng: lng,
                 tipo: statoDropPin.tipo,
                 nomeContenitore: statoDropPin.nomeContenitore,
-                elementi: statoDropPin.elementi
+                elementi: statoDropPin.elementi,
+                size: 20 // Dimensione di default dimezzata
             });
             statoDropPin = null;
             document.getElementById('plan-drop-indicator').style.display = 'none';
@@ -113,6 +119,7 @@ async function caricaDatiPlanimetria() {
             const invData = await resInv.json();
             if(invData.categorie) inventarioGlobale.categorie = invData.categorie;
             if(invData.schede) inventarioGlobale.schede = invData.schede;
+            if(invData.coloriCat) inventarioGlobale.coloriCat = invData.coloriCat;
         }
         if (globalIsAdminCollab && token) {
             try {
@@ -174,6 +181,7 @@ async function migrazioneVecchiDati(token) {
                     p.tipo = 'singolo'; p.elementi = [{ schedaId: p.schedaId, qta: 1 }];
                     delete p.schedaId; salvaLoc = true;
                 }
+                if(!p.size) { p.size = 20; salvaLoc = true; } // Imposta grandezza default ai vecchi
                 p.elementi.forEach(el => {
                     if (!planData.schedeNave.includes(el.schedaId)) {
                         planData.schedeNave.push(el.schedaId);
@@ -216,18 +224,24 @@ function disegnaLivelloCorrente() {
             if (livello.pins) {
                 livello.pins.forEach(pin => {
                     let iconHtml = '', pinName = '';
+                    let size = pin.size || 20;
+                    let fontSize = size * 0.45; // Testo scalato in proporzione
+
                     if (pin.tipo === 'contenitore') {
-                        iconHtml = `<div style="background-color: #546e7a; width: 34px; height: 34px; border-radius: 8px; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.5); font-size: 16px;"><i class="fa-solid fa-box-open"></i></div>`;
+                        iconHtml = `<div style="background-color: #546e7a; width: ${size}px; height: ${size}px; border-radius: 8px; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.5); font-size: ${fontSize}px;"><i class="fa-solid fa-box-open"></i></div>`;
                         pinName = pin.nomeContenitore;
                     } else {
                         const scheda = inventarioGlobale.schede[pin.elementi[0].schedaId];
                         if (!scheda) return;
-                        iconHtml = `<div style="background-color: ${scheda.colore}; width: 34px; height: 34px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.5); font-size: 15px;"><i class="fa-solid ${scheda.icona}"></i></div>`;
+                        // Controllo per inserire correttamente l'icona (che sia fa-solid o no)
+                        const faClass = scheda.icona.includes('fa-') ? scheda.icona : `fa-solid ${scheda.icona}`;
+                        
+                        iconHtml = `<div style="background-color: ${scheda.colore}; width: ${size}px; height: ${size}px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.5); font-size: ${fontSize}px;"><i class="${faClass}"></i></div>`;
                         pinName = scheda.nome;
                     }
 
                     const marker = L.marker([pin.lat, pin.lng], {
-                        icon: L.divIcon({ html: iconHtml, className: '', iconSize: [34, 34], iconAnchor: [17, 17] }),
+                        icon: L.divIcon({ html: iconHtml, className: '', iconSize: [size, size], iconAnchor: [size/2, size/2] }),
                         draggable: isEditMode
                     }).addTo(markersLayer);
 
@@ -237,7 +251,23 @@ function disegnaLivelloCorrente() {
                             pin.lat = newPos.lat; pin.lng = newPos.lng;
                             salvaPlanimetriaSuGitHub();
                         });
-                        marker.bindPopup(`<div style="text-align:center;"><strong>${pinName}</strong><br><br><button onclick="window.Plan.eliminaPin('${pin.id}')" style="background:var(--danger); color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-trash"></i> Rimuovi Pin</button></div>`);
+                        
+                        marker.bindPopup(`
+                            <div style="text-align:center; min-width: 170px; padding: 5px;">
+                                <strong style="font-size:14px; color:var(--primary);">${pinName}</strong><br>
+                                
+                                <div style="margin: 12px 0; font-size:12px; color:var(--text-main); background: var(--surface); padding: 8px; border-radius: 6px; border: 1px dashed var(--border-color);">
+                                    <i class="fa-solid fa-up-down-left-right" style="color:var(--primary); margin-right:5px;"></i> Trascina per spostare
+                                </div>
+                                
+                                <div style="margin: 15px 0 20px 0; text-align: left;">
+                                    <label style="font-size:11px; font-weight:bold; color:var(--text-main);">Scala Icona: <span id="val-size-${pin.id}">${size}</span>px</label>
+                                    <input type="range" min="10" max="60" value="${size}" oninput="document.getElementById('val-size-${pin.id}').innerText=this.value" onchange="window.Plan.salvaDimensionePin('${pin.id}', this.value)" style="width:100%; margin-top:5px;">
+                                </div>
+                                
+                                <button onclick="window.Plan.eliminaPin('${pin.id}')" style="background:var(--danger); color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; width:100%; font-weight:bold;"><i class="fa-solid fa-trash"></i> Elimina</button>
+                            </div>
+                        `);
                     } else {
                         marker.on('click', () => apriVisualizzatorePin(pin));
                     }
@@ -269,7 +299,9 @@ async function salvaInventarioGlobaleSuGitHub() {
 async function salvaPlanimetriaSuGitHub(mostraCaricamento = false) {
     const token = localStorage.getItem('gh_admin_token');
     if (!token) return alert("Manca il token PAT Admin!");
-    if(mostraCaricamento) { document.getElementById('btn-salva-scheda').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Salvataggio...`; document.getElementById('btn-salva-scheda').disabled = true; }
+    
+    const btnSalva = document.getElementById('btn-salva-scheda');
+    if(mostraCaricamento && btnSalva) { btnSalva.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Salvataggio...`; btnSalva.disabled = true; }
 
     try {
         const payload = { message: `Aggiornata planimetria ${idPlanAttivo}`, content: btoa(unescape(encodeURIComponent(JSON.stringify(planData, null, 2)))) };
@@ -280,14 +312,22 @@ async function salvaPlanimetriaSuGitHub(mostraCaricamento = false) {
         if (!res.ok) throw new Error("Errore salvataggio");
         fileShaAttuale = (await res.json()).content.sha; 
         aggiornaLegenda(); disegnaLivelloCorrente();
-    } catch(e) { alert("Errore di salvataggio. Riprovare."); } 
+    } catch(e) { console.error("Errore salvataggio", e); } 
     finally {
-        if(mostraCaricamento) { document.getElementById('btn-salva-scheda').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Salva Modifiche`; document.getElementById('btn-salva-scheda').disabled = false; }
+        if(mostraCaricamento && btnSalva) { btnSalva.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Salva Modifiche`; btnSalva.disabled = false; }
+    }
+}
+
+function salvaDimensionePin(idPin, newSize) {
+    const pin = planData.livelli[livelloCorrenteIdx].pins.find(p => p.id === idPin);
+    if (pin) {
+        pin.size = parseInt(newSize);
+        salvaPlanimetriaSuGitHub(); 
     }
 }
 
 // ==========================================
-// LEGENDA (MOSTRA SOLO SCHEDE DELLA NAVE)
+// LEGENDA E TOGGLE MODALITÀ
 // ==========================================
 function toggleEditMode() {
     isEditMode = !isEditMode;
@@ -519,8 +559,17 @@ function salvaContenitore() {
 // ==========================================
 function creaNuovaScheda() {
     const id = 'sch_' + Date.now();
-    // Default fa-circle per mostrare un "punto semplice"
-    inventarioGlobale.schede[id] = { nome: "Nuovo Elemento", icona: "fa-circle", colore: "#ff0000", categoria: "Sicurezza", testo_html: "<p>Dettagli...</p>", media: [] };
+    // Default fa-solid fa-location-dot (il classico segnaposto pieno di google maps) o usa il colore dell'ultima categoria.
+    const colDef = inventarioGlobale.coloriCat?.["Sicurezza"] || "#ff0000";
+    
+    inventarioGlobale.schede[id] = { 
+        nome: "Nuovo Elemento", 
+        icona: "fa-solid fa-location-dot", 
+        colore: colDef, 
+        categoria: "Sicurezza", 
+        testo_html: "<p>Dettagli...</p>", 
+        media: [] 
+    };
     apriEditorScheda(id);
 }
 
@@ -530,6 +579,12 @@ function aggiungiCategoria() {
         inventarioGlobale.categorie.push(nuova.trim()); salvaInventarioGlobaleSuGitHub();
         const sel = document.getElementById('sch-categoria');
         sel.innerHTML += `<option value="${nuova}">${nuova}</option>`; sel.value = nuova;
+    }
+}
+
+function cambiaColoreDaCategoria(catSelezionata) {
+    if (inventarioGlobale.coloriCat && inventarioGlobale.coloriCat[catSelezionata]) {
+        document.getElementById('sch-colore').value = inventarioGlobale.coloriCat[catSelezionata];
     }
 }
 
@@ -547,7 +602,7 @@ function apriEditorScheda(id) {
             <div style="flex:2;">
                 <label style="font-size:11px; font-weight:600;">Categoria</label>
                 <div style="display:flex; gap:5px;">
-                    <select id="sch-categoria" style="flex:1; padding:8px; border-radius:4px; border:1px solid #ccc;">${catOptions}</select>
+                    <select id="sch-categoria" onchange="window.Plan.cambiaColoreDaCategoria(this.value)" style="flex:1; padding:8px; border-radius:4px; border:1px solid #ccc;">${catOptions}</select>
                     <button onclick="window.Plan.aggiungiCategoria()" style="background:var(--primary); color:white; border:none; border-radius:4px; padding:0 10px;" title="Nuova Categoria"><i class="fa-solid fa-plus"></i></button>
                 </div>
             </div>
@@ -557,7 +612,7 @@ function apriEditorScheda(id) {
             </div>
         </div>
 
-        <label style="font-size:11px; font-weight:600;">Classe Icona (es. fa-fire-extinguisher)</label>
+        <label style="font-size:11px; font-weight:600;">Classe Icona (es. fa-solid fa-fire)</label>
         <input type="text" id="sch-icona" value="${s.icona}" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; box-sizing:border-box; margin-bottom:15px;">
 
         <label style="font-size:11px; font-weight:600;">Testo Descrittivo</label>
@@ -583,7 +638,7 @@ function apriEditorScheda(id) {
         <div style="display:flex; gap:10px; margin-top: 20px;">
             <button onclick="window.Plan.apriGestioneSchede()" style="flex:1; background:var(--surface); color:var(--text-main); border:1px solid var(--border-color); padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">Annulla</button>
             <button onclick="window.Plan.eliminaSchedaGlobale('${id}')" style="background:var(--danger); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
-            <button id="btn-salva-scheda" onclick="window.Plan.salvaScheda('${id}')" style="flex:2; background:var(--success); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-floppy-disk"></i> Salva Modifiche</button>
+            <button id="btn-salva-scheda" onclick="window.Plan.salvaScheda('${id}')" style="flex:2; background:var(--success); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-floppy-disk"></i> Salva</button>
         </div>
     `;
     mostraModale(html);
@@ -596,6 +651,10 @@ async function salvaScheda(id) {
     s.colore = document.getElementById('sch-colore').value;
     s.categoria = document.getElementById('sch-categoria').value;
     s.testo_html = document.getElementById('sch-testo').innerHTML;
+    
+    // Aggiorna la memoria dei colori per questa categoria
+    if (!inventarioGlobale.coloriCat) inventarioGlobale.coloriCat = {};
+    inventarioGlobale.coloriCat[s.categoria] = s.colore;
 
     document.getElementById('btn-salva-scheda').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
     await salvaInventarioGlobaleSuGitHub();
@@ -641,7 +700,7 @@ function apriVisualizzatorePin(pin) {
                 html += `
                     <div onclick="window.Plan.apriSchedaViewer('${el.schedaId}', ${el.qta})" style="display:flex; align-items:center; justify-content:space-between; padding:12px; background:var(--surface); border:1px solid var(--border-color); border-radius:8px; cursor:pointer; transition: 0.2s;">
                         <div style="display:flex; align-items:center; gap:12px;">
-                            <span style="width:28px; height:28px; background:${s.colore}; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px;"><i class="fa-solid ${s.icona}"></i></span>
+                            <span style="width:28px; height:28px; background:${s.colore}; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px;"><i class="${s.icona.includes('fa-') ? s.icona : 'fa-solid ' + s.icona}"></i></span>
                             <span style="font-weight:600; font-size:14px; color:var(--text-main);">${s.nome}</span>
                         </div>
                         <span style="background:rgba(0,102,204,0.1); color:var(--primary); padding:4px 10px; border-radius:12px; font-weight:bold; font-size:13px;">N° ${el.qta}</span>
@@ -673,7 +732,7 @@ function apriSchedaViewer(id, qta = null) {
 
     let html = `
         <div style="display:flex; align-items:center; gap:12px; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom:10px; flex-wrap: wrap;">
-            <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:${s.colore}; color:white; border-radius:50%; font-size:18px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"><i class="fa-solid ${s.icona}"></i></span>
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:${s.colore}; color:white; border-radius:50%; font-size:18px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"><i class="${s.icona.includes('fa-') ? s.icona : 'fa-solid ' + s.icona}"></i></span>
             <h2 style="color: var(--text-main); margin:0;">${s.nome}</h2>
             ${badgeQta}
         </div>
@@ -724,7 +783,7 @@ function generaHtmlGalleria(mediaArray, isEdit, idScheda) {
         const isPdf = ext === 'pdf';
         const num = index + 1;
 
-        html += `<div style="position: relative; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); ${isPdf ? 'grid-column: 1 / -1;' : ''}">`;
+        html += `<div style="position: relative; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); box-sizing: border-box; ${isPdf ? 'grid-column: 1 / -1;' : ''}">`;
         if (isPdf) {
             html += `
                 <div style="display:flex; background:var(--surface);">
@@ -783,8 +842,8 @@ async function aggiungiNuovoLivello(event) {
 
 function creaContenitoreModali() {
     if (!document.getElementById('plan-modal-overlay')) {
-        const overlay = document.createElement('div'); overlay.id = 'plan-modal-overlay'; overlay.className = 'modal-overlay'; overlay.style.cssText = 'display:none; align-items:center; justify-content:center; padding: 20px; z-index: 2500; background: rgba(0,0,0,0.7);';
-        overlay.innerHTML = `<div id="plan-modal-box" style="background: var(--surface); width: 100%; max-width: 500px; border-radius: 16px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; position: relative;"><button onclick="window.chiudiModaleGlobale()" style="position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer;"><i class="fa-solid fa-xmark"></i></button><div id="plan-modal-content"></div></div>`;
+        const overlay = document.createElement('div'); overlay.id = 'plan-modal-overlay'; overlay.className = 'modal-overlay'; overlay.style.cssText = 'display:none; align-items:center; justify-content:center; padding: 20px; z-index: 2500; background: rgba(0,0,0,0.7); box-sizing: border-box;';
+        overlay.innerHTML = `<div id="plan-modal-box" style="background: var(--surface); width: 95%; max-width: 500px; border-radius: 16px; padding: 25px; box-sizing: border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; position: relative; margin: 0 auto;"><button onclick="window.chiudiModaleGlobale()" style="position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer;"><i class="fa-solid fa-xmark"></i></button><div id="plan-modal-content"></div></div>`;
         document.body.appendChild(overlay);
         window.chiudiModaleGlobale = () => { overlay.style.display = 'none'; document.getElementById('plan-modal-content').innerHTML = ''; };
     }
