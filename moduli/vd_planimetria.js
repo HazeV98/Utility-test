@@ -268,7 +268,7 @@ function disegnaLivelloCorrente() {
                     
                     if (isEditMode) {
                         // Ridotto il cerchio di trascinamento: ora sporge di soli 8px per lato
-                        clickAreaSize = size + 16; 
+                        clickAreaSize = Math.max(size + 40, 70); 
                         finalIconHtml = `
                             <div style="width: ${clickAreaSize}px; height: ${clickAreaSize}px; border-radius: 50%; border: 2px dashed var(--primary); background: rgba(0, 102, 204, 0.15); display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
                                 ${baseIconHtml}
