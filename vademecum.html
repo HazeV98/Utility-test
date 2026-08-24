@@ -159,7 +159,7 @@
     </div>
 
 
-        <!-- Modale Aggiungi/Modifica Nodo -->
+    <!-- Modale Aggiungi/Modifica Nodo -->
     <div id="nodeModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'nodeModal')">
         <div class="modal-content">
             <i class="fa-solid fa-xmark" style="position: absolute; right: 20px; top: 20px; font-size: 24px; color: var(--text-muted); cursor: pointer;" onclick="window.chiudiModal('nodeModal')"></i>
@@ -184,12 +184,20 @@
                 </select>
             </div>
             
+            <!-- Checkbox per In Lavorazione -->
+            <div style="margin-bottom: 20px; background: rgba(255, 183, 77, 0.1); padding: 12px; border-radius: 12px; border: 1px dashed var(--warning);">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; font-weight: 600; color: #d88900;">
+                    <input type="checkbox" id="nodeInLavorazione" style="width: 18px; height: 18px;">
+                    <i class="fa-solid fa-person-digging"></i> In lavorazione (Nascosto)
+                </label>
+            </div>
+            
             <button id="btn-salva-nodo" class="btn-action" onclick="window.Vademecum.salvaNodo()">Salva Voce</button>
             <button id="btn-elimina-nodo" class="btn-action" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 10px; display: none;" onclick="window.Vademecum.eliminaNodo()">Elimina Voce</button>
         </div>
     </div>
 
-        <!-- Modale Sposta Nodo -->
+    <!-- Modale Sposta Nodo -->
     <div id="moveModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'moveModal')">
         <div class="modal-content">
             <i class="fa-solid fa-xmark" style="position: absolute; right: 20px; top: 20px; font-size: 24px; color: var(--text-muted); cursor: pointer;" onclick="window.chiudiModal('moveModal')"></i>
