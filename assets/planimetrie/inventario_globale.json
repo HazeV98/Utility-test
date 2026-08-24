@@ -9,11 +9,11 @@
   ],
   "schede": {
     "sch_1787589810232": {
-      "nome": "Nuovo Elemento",
+      "nome": "Pressione olio motore",
       "icona": "fa-circle",
-      "colore": "#ff0000",
-      "categoria": "Sicurezza",
-      "testo_html": "<p>Dettagli...</p>",
+      "colore": "#a8a8a8",
+      "categoria": "Allarmi",
+      "testo_html": "Allarme pressione olio motore, I valori regolari dovrebbero mantenersi fra 1,5 bar e 5 bar",
       "media": []
     }
   }
