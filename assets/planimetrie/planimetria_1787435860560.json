@@ -8,25 +8,8 @@
     {
       "nome": "Tipo 1",
       "imgUrl": "assets/planimetrie/planimetria_1787435860560_L1787589484323.jpg",
-      "pins": [
-        {
-          "id": "pin_1787591912373",
-          "lat": 2393.8711946748235,
-          "lng": 680.7206866912547,
-          "tipo": "singolo",
-          "nomeContenitore": null,
-          "elementi": [
-            {
-              "schedaId": "sch_1787589810232",
-              "qta": 1
-            }
-          ],
-          "size": 13
-        }
-      ]
+      "pins": []
     }
   ],
-  "schedeNave": [
-    "sch_1787589810232"
-  ]
+  "schedeNave": []
 }
