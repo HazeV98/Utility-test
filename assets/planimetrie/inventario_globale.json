@@ -13,7 +13,7 @@
       "icona": "fa-solid fa-location-dot",
       "colore": "#8a8a8a",
       "categoria": "Allarmi",
-      "testo_html": "I valori normali si attestano fra 1,5 bar e 5 bar",
+      "testo_html": "I valori normali si attestano fra 1,5 bar e 5 bar. Spia e allarme acustico quando la pressione non supera 0,8 bar",
       "media": []
     },
     "sch_1787603175363": {
