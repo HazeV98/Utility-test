@@ -39,6 +39,14 @@
       "categoria": "Allarmi",
       "testo_html": "Spia e allarme acustico quando è presente gasolio nella vaschetta che raccoglie la perdita di tubi di iniezione o quasto a questo sensore",
       "media": []
+    },
+    "sch_1787609002378": {
+      "nome": "Rottura tubi iniezione",
+      "icona": "fa-solid fa-location-dot",
+      "colore": "#8a8a8a",
+      "categoria": "Allarmi",
+      "testo_html": "Spia e allarme acustico quando è presente gasolio nella vaschetta che raccoglie la perdita di tubi di iniezione o quasto a questo sensore",
+      "media": []
     }
   },
   "coloriCat": {
