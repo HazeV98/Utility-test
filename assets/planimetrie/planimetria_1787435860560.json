@@ -1,11 +1,6 @@
 {
   "livelli": [
     {
-      "nome": "Quadro 1",
-      "imgUrl": "assets/planimetrie/planimetria_1787435860560_L1787586802826.jpg",
-      "pins": []
-    },
-    {
       "nome": "Tipo 1",
       "imgUrl": "assets/planimetrie/planimetria_1787435860560_L1787589484323.jpg",
       "pins": [
