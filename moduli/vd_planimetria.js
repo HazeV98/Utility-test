@@ -78,7 +78,6 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
     if (globalIsAdminCollab) document.getElementById('fab-edit-plan').style.display = 'flex';
 
     if (mappaPlan) mappaPlan.remove(); 
-    // zoomSnap: 0 è FONDAMENTALE affinchè l'immagine si adatti allo schermo senza "scatti" che la rendono minuscola
     mappaPlan = L.map('plan-map-container', { crs: L.CRS.Simple, minZoom: -4, zoomControl: false, zoomSnap: 0 });
     L.control.zoom({ position: 'topleft' }).addTo(mappaPlan);
     markersLayer = L.layerGroup().addTo(mappaPlan);
@@ -241,7 +240,6 @@ function disegnaLivelloCorrente() {
             const bounds = [[0, 0], [h, w]];
             imageOverlay = L.imageOverlay(rawImgUrl, bounds).addTo(mappaPlan);
             
-            // padding [0, 0] fa sì che la mappa copra l'area disponibile in modo ottimale
             mappaPlan.fitBounds(bounds, { padding: [0, 0], animate: false });
             mappaPlan._hasSetInitialView = true;
 
@@ -267,7 +265,7 @@ function disegnaLivelloCorrente() {
                     let clickAreaSize = size;
                     
                     if (isEditMode) {
-                        // Ridotto il cerchio di trascinamento: ora sporge di soli 8px per lato
+                        // Ripristinata l'area di trascinamento larga originaria
                         clickAreaSize = Math.max(size + 40, 70); 
                         finalIconHtml = `
                             <div style="width: ${clickAreaSize}px; height: ${clickAreaSize}px; border-radius: 50%; border: 2px dashed var(--primary); background: rgba(0, 102, 204, 0.15); display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
@@ -441,7 +439,7 @@ function aggiornaLegenda() {
 }
 
 // ==========================================
-// EDITOR INVENTARIO GLOBALE
+// EDITOR INVENTARIO GLOBALE CON CATEGORIE COLLASSABILI
 // ==========================================
 function apriGestioneSchede() {
     let html = `
@@ -455,7 +453,16 @@ function apriGestioneSchede() {
     inventarioGlobale.categorie.forEach(cat => {
         const schedeInCat = Object.entries(inventarioGlobale.schede).filter(([id, s]) => s.categoria === cat);
         if(schedeInCat.length > 0) {
-            html += `<h4 style="margin-top:15px; margin-bottom:8px; color:var(--text-main); border-bottom:2px solid var(--border-color); padding-bottom:3px;">${cat}</h4>`;
+            
+            // Categoria Collassabile con tag <details> e <summary>
+            html += `
+            <details open style="margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px; background: rgba(0,0,0,0.02);">
+                <summary style="padding: 10px; font-weight: bold; cursor: pointer; color: var(--text-main); font-size: 14px; outline: none; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                    ${cat} <span style="font-weight: normal; font-size: 12px; color: var(--text-muted); float: right;">(${schedeInCat.length} elementi)</span>
+                </summary>
+                <div style="padding: 10px; padding-bottom: 0;">
+            `;
+            
             schedeInCat.forEach(([id, scheda]) => {
                 const isAdded = planData.schedeNave.includes(id);
                 
@@ -477,6 +484,7 @@ function apriGestioneSchede() {
                     </div>
                 `;
             });
+            html += `</div></details>`;
         }
     });
 
@@ -526,7 +534,6 @@ function apriSelezionePin() {
                         <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; background:${scheda.colore}; color:white; border-radius:50%; font-size:12px;"><i class="${scheda.icona.includes('fa-') ? scheda.icona : 'fa-solid ' + scheda.icona}"></i></span>
                         <span style="font-weight: 600; font-size: 14px; color:var(--text-main);">${scheda.nome}</span>
                     </div>
-                    <!-- Tasto Posiziona solo con l'icona mirino -->
                     <button class="icon-btn" onclick="window.Plan.chiediQuantitaPin('${id}')" style="background:var(--warning); color:#000; border:none; padding:8px 12px; border-radius:6px;" title="Posiziona Pin in Mappa"><i class="fa-solid fa-crosshairs"></i></button>
                 </div>
             `;
