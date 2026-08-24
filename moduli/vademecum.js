@@ -64,6 +64,12 @@ export function avviaMotoreVademecum() {
 function navigate(targetId, targetTitolo, tipo) {
     if (isEditMode) return; 
 
+    // Nascondi il pulsante modifica se stiamo aprendo un documento (Mappa, Scheda o Planimetria)
+    const btnEdit = document.getElementById('btn-edit-mode');
+    if (tipo !== "categoria") {
+        if (btnEdit) btnEdit.style.display = 'none';
+    }
+
     if (tipo === "categoria") {
         navigationStack.push(targetId);
         aggiornaHeader(targetTitolo, true);
@@ -96,6 +102,13 @@ function goBack() {
     }
     
     aggiornaHeader(targetTitolo, isSub);
+    
+    // Ripristina la visualizzazione del tasto Modifica quando si torna a una cartella o alla root (se hai i permessi)
+    const btnEdit = document.getElementById('btn-edit-mode');
+    if (globalIsAdmin || globalIsCollab) {
+        if (btnEdit) btnEdit.style.display = 'flex';
+    }
+
     renderPanel(currentId, "panel-left");
     effettuaScorrimento("indietro");
 }
@@ -136,22 +149,34 @@ function renderPanel(nodeId, positionClass) {
 
     const items = treeData[nodeId] || [];
     
+    let renderedCount = 0;
+
     if (items.length === 0) {
         panel.innerHTML = `<div style="text-align:center; color:var(--text-muted); margin-top:40px;">Nessuna voce presente. <br> Premi la matita in alto per aggiungerne una.</div>`;
     } else {
         items.forEach(item => {
+            // Se la voce è "in lavorazione", mostrala SOLO ad admin e collaboratori
+            if (item.inLavorazione && !(globalIsAdmin || globalIsCollab)) {
+                return; // Nascondi l'elemento
+            }
+            
+            renderedCount++;
+
             const isNav = item.tipo === 'categoria' ? '' : 'display:none;';
             const iconColor = item.tipo === 'categoria' ? 'color:var(--primary);' : 'color:var(--text-muted);';
             const safeTitle = item.titolo.replace(/'/g, "\\'");
             
+            // Badge visivo per admin/collaboratori per capire subito se una voce è in lavorazione
+            const wipBadge = item.inLavorazione ? `<span style="background: var(--warning); color: #000; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: bold;"><i class="fa-solid fa-person-digging"></i> WIP</span>` : '';
+            
             const itemHTML = `
                 <div class="vd-list-item" data-id="${item.id}" onclick="window.Vademecum.navigate('${item.id}', '${safeTitle}', '${item.tipo}')">
-                    <div class="item-title"><i class="fa-solid ${item.icona || 'fa-folder'}" style="${iconColor}"></i> ${item.titolo}</div>
+                    <div class="item-title"><i class="fa-solid ${item.icona || 'fa-folder'}" style="${iconColor}"></i> ${item.titolo} ${wipBadge}</div>
                     <div class="edit-controls">
                         <button class="icon-btn" style="color:#17a2b8; width:32px; height:32px;" onclick="event.stopPropagation(); window.Vademecum.openMoveModal('${item.id}', '${item.tipo}')">
                             <i class="fa-solid fa-arrow-right-to-bracket" style="font-size:14px;"></i>
                         </button>
-                        <button class="icon-btn" style="color:var(--text-muted); width:32px; height:32px;" onclick="event.stopPropagation(); window.Vademecum.openEditNodeModal('${item.id}', '${safeTitle}', '${item.icona}', '${item.tipo}')">
+                        <button class="icon-btn" style="color:var(--text-muted); width:32px; height:32px;" onclick="event.stopPropagation(); window.Vademecum.openEditNodeModal('${item.id}', '${safeTitle}', '${item.icona}', '${item.tipo}', ${item.inLavorazione ? 'true' : 'false'})">
                             <i class="fa-solid fa-pen" style="font-size:14px;"></i>
                         </button>
                         <i class="fa-solid fa-grip-lines drag-handle"></i>
@@ -160,6 +185,10 @@ function renderPanel(nodeId, positionClass) {
                 </div>`;
             panel.insertAdjacentHTML('beforeend', itemHTML);
         });
+
+        if (renderedCount === 0 && !(globalIsAdmin || globalIsCollab)) {
+             panel.innerHTML = `<div style="text-align:center; color:var(--text-muted); margin-top:40px;">Contenuti in lavorazione.</div>`;
+        }
     }
     viewport.appendChild(panel);
     if (isEditMode) initSortable(panel);
@@ -174,6 +203,7 @@ function openAddModal() {
     document.getElementById('nodeId').value = "";
     document.getElementById('nodeTitolo').value = "";
     document.getElementById('nodeIcona').value = "fa-folder";
+    document.getElementById('nodeInLavorazione').checked = false; // Reset checkbox
     
     document.getElementById('sezione-tipo-nodo').style.display = "block";
     document.getElementById('nodeTipo').value = "categoria";
@@ -185,11 +215,12 @@ function openAddModal() {
     window.apriModal('nodeModal');
 }
 
-function openEditNodeModal(id, titolo, icona, tipo) {
+function openEditNodeModal(id, titolo, icona, tipo, inLavorazione = false) {
     document.getElementById('nodeModalTitle').innerHTML = '<i class="fa-solid fa-pen"></i> Modifica Voce';
     document.getElementById('nodeId').value = id;
     document.getElementById('nodeTitolo').value = titolo;
     document.getElementById('nodeIcona').value = icona || '';
+    document.getElementById('nodeInLavorazione').checked = inLavorazione; // Recupero il valore salvato
     
     document.getElementById('sezione-tipo-nodo').style.display = "none";
     document.getElementById('btn-elimina-nodo').style.display = "block";
@@ -206,6 +237,7 @@ function salvaNodo() {
     const titolo = document.getElementById('nodeTitolo').value.trim();
     let icona = document.getElementById('nodeIcona').value.trim() || 'fa-folder';
     const tipo = document.getElementById('nodeTipo').value;
+    const inLavorazione = document.getElementById('nodeInLavorazione').checked;
     
     if (!icona.includes('fa-')) icona = 'fa-solid fa-' + icona;
 
@@ -217,6 +249,7 @@ function salvaNodo() {
         if(item) {
             item.titolo = titolo;
             item.icona = icona;
+            item.inLavorazione = inLavorazione; // Salva la modifica
         }
     } else {
         const newId = tipo + "_" + Date.now();
@@ -224,7 +257,8 @@ function salvaNodo() {
             id: newId,
             titolo: titolo,
             icona: icona,
-            tipo: tipo
+            tipo: tipo,
+            inLavorazione: inLavorazione // Salva al momento della creazione
         });
         if (tipo === 'categoria') treeData[newId] = []; 
     }
