@@ -107,7 +107,7 @@
     },
     "sch_1787619908832": {
       "nome": "Salvagenti equipaggio",
-      "icona": "fa-solid fa-location-dot",
+      "icona": "fa-solid",
       "colore": "#0381ff",
       "categoria": "Salvataggio",
       "testo_html": "Salvagenti destinati all'uso da parte dell'equipaggio.",
