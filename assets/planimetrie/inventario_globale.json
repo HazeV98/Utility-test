@@ -120,6 +120,14 @@
       "categoria": "Salvataggio",
       "testo_html": "Giubbotto salvagente destinato all'uso da parte di un adulto.",
       "media": []
+    },
+    "sch_1787669917757": {
+      "nome": "Giubbotto salvagente bambini",
+      "icona": "fa-solid",
+      "colore": "#0381ff",
+      "categoria": "Salvataggio",
+      "testo_html": "Giubbotto salvagente destinato all'utilizzo da parte di un bambino",
+      "media": []
     }
   },
   "coloriCat": {
