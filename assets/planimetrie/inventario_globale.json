@@ -153,6 +153,14 @@
       "categoria": "Impianti",
       "testo_html": "Locale in cui si trova l'impianto di movimento del timone, qui si può escludere la pompa timone per utilizzare la barra di fortuna.",
       "media": []
+    },
+    "sch_1787675092715": {
+      "nome": "Atollo",
+      "icona": "fa-solid",
+      "colore": "#ffff00",
+      "categoria": "Salvataggio",
+      "testo_html": "Dotazione di salvataggio per 12 persone.&nbsp;",
+      "media": []
     }
   },
   "coloriCat": {
