@@ -79,6 +79,14 @@
       "categoria": "Antincendio",
       "testo_html": "Estintore a polvere da 6kg",
       "media": []
+    },
+    "sch_1787619497012": {
+      "nome": "Erogatore impianto CO2",
+      "icona": "fa-solid",
+      "colore": "#ff0000",
+      "categoria": "Antincendio",
+      "testo_html": "Erogatore da cui viene scaricata la CO2 utilizzando il comando in plancia.",
+      "media": []
     }
   },
   "coloriCat": {
