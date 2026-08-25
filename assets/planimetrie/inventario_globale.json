@@ -145,6 +145,14 @@
       "categoria": "Impianti",
       "testo_html": "Pacco batterie dell'unità",
       "media": []
+    },
+    "sch_1787674939701": {
+      "nome": "Locale agghiaccio",
+      "icona": "fa-solid fa-location-dot",
+      "colore": "#a3a3a3",
+      "categoria": "Impianti",
+      "testo_html": "Locale in cui si trova l'impianto di movimento del timone, qui si può escludere la pompa timone per utilizzare la barra di fortuna.",
+      "media": []
     }
   },
   "coloriCat": {
