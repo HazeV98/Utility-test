@@ -180,10 +180,10 @@
       "media": []
     },
     "sch_1787701275794": {
-      "nome": "Nuovo Elemento",
-      "icona": "fa-solid fa-location-dot",
-      "colore": "#ff0000",
-      "categoria": "Sicurezza",
+      "nome": "Bugliolo",
+      "icona": "fa-solid fa-bucket",
+      "colore": "#ffff00",
+      "categoria": "Dotazioni",
       "testo_html": "<p>Dettagli...</p>",
       "media": []
     }
@@ -192,6 +192,7 @@
     "Allarmi": "#8a8a8a",
     "Antincendio": "#ff0000",
     "Salvataggio": "#ff9100",
-    "Impianti": "#a3a3a3"
+    "Impianti": "#a3a3a3",
+    "Dotazioni": "#ffff00"
   }
 }
