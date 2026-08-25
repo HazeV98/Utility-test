@@ -55,9 +55,18 @@
       "categoria": "Allarmi",
       "testo_html": "Non attivo",
       "media": []
+    },
+    "sch_1787618714454": {
+      "nome": "Estintore CO2",
+      "icona": "fa-fire-extinguisher",
+      "colore": "#ff0000",
+      "categoria": "Antincendio",
+      "testo_html": "<p>Dettagli...</p>",
+      "media": []
     }
   },
   "coloriCat": {
-    "Allarmi": "#8a8a8a"
+    "Allarmi": "#8a8a8a",
+    "Antincendio": "#ff0000"
   }
 }
