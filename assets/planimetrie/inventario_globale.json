@@ -106,16 +106,17 @@
       "media": []
     },
     "sch_1787619908832": {
-      "nome": "Nuovo Elemento",
+      "nome": "Salvagenti equipaggio",
       "icona": "fa-solid fa-location-dot",
-      "colore": "#ff0000",
-      "categoria": "Sicurezza",
-      "testo_html": "<p>Dettagli...</p>",
+      "colore": "#0381ff",
+      "categoria": "Salvataggio",
+      "testo_html": "Salvagenti destinati all'uso da parte dell'equipaggio.",
       "media": []
     }
   },
   "coloriCat": {
     "Allarmi": "#8a8a8a",
-    "Antincendio": "#ff0000"
+    "Antincendio": "#ff0000",
+    "Salvataggio": "#0381ff"
   }
 }
