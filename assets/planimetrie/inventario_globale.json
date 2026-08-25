@@ -6,7 +6,8 @@
     "Primo Soccorso",
     "Altro",
     "Allarmi",
-    "Salvataggio"
+    "Salvataggio",
+    "Impianti"
   ],
   "schede": {
     "sch_1787592024172": {
@@ -127,6 +128,14 @@
       "colore": "#ffff00",
       "categoria": "Salvataggio",
       "testo_html": "Giubbotto salvagente destinato all'utilizzo da parte di un bambino",
+      "media": []
+    },
+    "sch_1787674677619": {
+      "nome": "Nuovo Elemento",
+      "icona": "fa-solid fa-location-dot",
+      "colore": "#ff0000",
+      "categoria": "Sicurezza",
+      "testo_html": "<p>Dettagli...</p>",
       "media": []
     }
   },
