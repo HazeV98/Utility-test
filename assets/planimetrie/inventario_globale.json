@@ -13,7 +13,7 @@
   "schede": {
     "sch_1787592024172": {
       "nome": "Pressione olio motore",
-      "icona": "fa-solid fa-location-dot",
+      "icona": "fa-solid fa-gear",
       "colore": "#8a8a8a",
       "categoria": "Allarmi",
       "testo_html": "I valori normali si attestano fra 1,5 bar e 5 bar. Spia e allarme acustico quando la pressione non supera 0,8 bar",
