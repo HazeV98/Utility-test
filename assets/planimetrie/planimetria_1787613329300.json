@@ -347,6 +347,28 @@
             }
           ],
           "size": 10
+        },
+        {
+          "id": "pin_1787701730508",
+          "lat": 1557.0000787451688,
+          "lng": 3355.885653099999,
+          "tipo": "contenitore",
+          "nomeContenitore": "Contenitore Multiplo",
+          "elementi": [
+            {
+              "schedaId": "sch_1787619908832",
+              "qta": 2
+            },
+            {
+              "schedaId": "sch_1787701617488",
+              "qta": 1
+            },
+            {
+              "schedaId": "sch_1787701658851",
+              "qta": 1
+            }
+          ],
+          "size": 20
         }
       ]
     }
