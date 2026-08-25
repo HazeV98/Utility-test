@@ -221,7 +221,7 @@
     },
     "sch_1787701658851": {
       "nome": "Scandaglio a mano",
-      "icona": "fa-solid fa-location-dot",
+      "icona": "fa-solid fa-ruler-vertical",
       "colore": "#00bbff",
       "categoria": "Nautica",
       "testo_html": "<p>Dettagli...</p>",
