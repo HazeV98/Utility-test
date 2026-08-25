@@ -131,17 +131,18 @@
       "media": []
     },
     "sch_1787674677619": {
-      "nome": "Nuovo Elemento",
+      "nome": "Cassa compenso",
       "icona": "fa-solid fa-location-dot",
-      "colore": "#ff0000",
-      "categoria": "Sicurezza",
-      "testo_html": "<p>Dettagli...</p>",
+      "colore": "#a3a3a3",
+      "categoria": "Impianti",
+      "testo_html": "Cassa contenente il liquido di raffreddamento del motore.",
       "media": []
     }
   },
   "coloriCat": {
     "Allarmi": "#8a8a8a",
     "Antincendio": "#ff0000",
-    "Salvataggio": "#ffff00"
+    "Salvataggio": "#ffff00",
+    "Impianti": "#a3a3a3"
   }
 }
