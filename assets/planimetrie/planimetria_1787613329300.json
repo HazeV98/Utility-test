@@ -3,7 +3,22 @@
     {
       "nome": "Coperta",
       "imgUrl": "assets/planimetrie/planimetria_1787613329300_L1787613390316.jpg",
-      "pins": []
+      "pins": [
+        {
+          "id": "pin_1787618827951",
+          "lat": 1661.3271265306805,
+          "lng": 2445.486731330143,
+          "tipo": "singolo",
+          "nomeContenitore": null,
+          "elementi": [
+            {
+              "schedaId": "sch_1787618714454",
+              "qta": 1
+            }
+          ],
+          "size": 20
+        }
+      ]
     }
   ],
   "schedeNave": [
