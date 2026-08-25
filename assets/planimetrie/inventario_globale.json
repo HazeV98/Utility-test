@@ -137,6 +137,14 @@
       "categoria": "Impianti",
       "testo_html": "Cassa contenente il liquido di raffreddamento del motore.",
       "media": []
+    },
+    "sch_1787674856978": {
+      "nome": "Batterie",
+      "icona": "fa-solid",
+      "colore": "#a3a3a3",
+      "categoria": "Impianti",
+      "testo_html": "Pacco batterie dell'unità",
+      "media": []
     }
   },
   "coloriCat": {
