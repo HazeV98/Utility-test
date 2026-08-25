@@ -95,6 +95,14 @@
       "categoria": "Antincendio",
       "testo_html": "Sirena che avvisa eventuale personale in LAM che sta per essere scaricata la CO2 per l'estinzione dell'incendio.",
       "media": []
+    },
+    "sch_1787619787142": {
+      "nome": "Bombole impianto CO2",
+      "icona": "fa-solid",
+      "colore": "#ff0000",
+      "categoria": "Antincendio",
+      "testo_html": "Bombole che contengono la CO2 dell'impianto di estinzione fisso. Vengono scaricate in LAM tramite un comanando presente in plancia.",
+      "media": []
     }
   },
   "coloriCat": {
