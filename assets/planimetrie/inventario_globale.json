@@ -202,6 +202,14 @@
       "categoria": "Dotazioni",
       "testo_html": "<p>Dettagli...</p>",
       "media": []
+    },
+    "sch_1787701418631": {
+      "nome": "Cassetta pronto soccorso",
+      "icona": "fa-solid fa-location-dot",
+      "colore": "#00ff00",
+      "categoria": "Primo Soccorso",
+      "testo_html": "<p>Dettagli...</p>",
+      "media": []
     }
   },
   "coloriCat": {
@@ -209,6 +217,7 @@
     "Antincendio": "#ff0000",
     "Salvataggio": "#ff9100",
     "Impianti": "#a3a3a3",
-    "Dotazioni": "#ffff00"
+    "Dotazioni": "#ffff00",
+    "Primo Soccorso": "#00ff00"
   }
 }
