@@ -210,6 +210,14 @@
       "categoria": "Primo Soccorso",
       "testo_html": "<p>Dettagli...</p>",
       "media": []
+    },
+    "sch_1787701617488": {
+      "nome": "Cima di rispetto",
+      "icona": "fa-solid fa-location-dot",
+      "colore": "#00bbff",
+      "categoria": "Nautica",
+      "testo_html": "<p>Dettagli...</p>",
+      "media": []
     }
   },
   "coloriCat": {
@@ -218,6 +226,7 @@
     "Salvataggio": "#ff9100",
     "Impianti": "#a3a3a3",
     "Dotazioni": "#ffeb12",
-    "Primo Soccorso": "#00ff00"
+    "Primo Soccorso": "#00ff00",
+    "Nautica": "#00bbff"
   }
 }
