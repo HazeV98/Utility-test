@@ -59,7 +59,7 @@
     },
     "sch_1787618714454": {
       "nome": "Estintore CO2",
-      "icona": "fa-solid",
+      "icona": "fa-solid fa-fire-extinguisher",
       "colore": "#ff0000",
       "categoria": "Antincendio",
       "testo_html": "<p>Dettagli...</p>",
