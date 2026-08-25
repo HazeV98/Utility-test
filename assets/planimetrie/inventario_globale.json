@@ -52,7 +52,7 @@
     },
     "sch_1787609072649": {
       "nome": "Scadenza manutenzione",
-      "icona": "fa-solid fa-location-dot",
+      "icona": "fa-solid fa-settings",
       "colore": "#8a8a8a",
       "categoria": "Allarmi",
       "testo_html": "Non attivo",
