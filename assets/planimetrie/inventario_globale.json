@@ -75,7 +75,7 @@
     },
     "sch_1787619303916": {
       "nome": "Estintore a polvere",
-      "icona": "fa-solid",
+      "icona": "fa-solid fa-fire-extinguisher",
       "colore": "#ff0000",
       "categoria": "Antincendio",
       "testo_html": "Estintore a polvere da 6kg",
