@@ -161,6 +161,14 @@
       "categoria": "Salvataggio",
       "testo_html": "Dotazione di salvataggio per 12 persone.&nbsp;",
       "media": []
+    },
+    "sch_1787676671378": {
+      "nome": "Salvagente anulare",
+      "icona": "fa-solid fa-life-ring",
+      "colore": "#ff9100",
+      "categoria": "Salvataggio",
+      "testo_html": "",
+      "media": []
     }
   },
   "coloriCat": {
