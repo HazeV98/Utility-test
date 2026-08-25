@@ -182,7 +182,7 @@
     "sch_1787701275794": {
       "nome": "Bugliolo",
       "icona": "fa-solid fa-bucket",
-      "colore": "#ffff00",
+      "colore": "#ffeb12",
       "categoria": "Dotazioni",
       "testo_html": "<p>Dettagli...</p>",
       "media": []
@@ -217,7 +217,7 @@
     "Antincendio": "#ff0000",
     "Salvataggio": "#ff9100",
     "Impianti": "#a3a3a3",
-    "Dotazioni": "#ffff00",
+    "Dotazioni": "#ffeb12",
     "Primo Soccorso": "#00ff00"
   }
 }
