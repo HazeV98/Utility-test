@@ -194,6 +194,14 @@
       "categoria": "Dotazioni",
       "testo_html": "<p>Dettagli...</p>",
       "media": []
+    },
+    "sch_1787701387420": {
+      "nome": "Boetta fumogena",
+      "icona": "fa-solid fa-smoke",
+      "colore": "#ffff00",
+      "categoria": "Dotazioni",
+      "testo_html": "<p>Dettagli...</p>",
+      "media": []
     }
   },
   "coloriCat": {
