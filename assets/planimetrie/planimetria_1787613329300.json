@@ -297,6 +297,20 @@
             }
           ],
           "size": 10
+        },
+        {
+          "id": "pin_1787676844727",
+          "lat": 755.7481819347839,
+          "lng": 839.36312627631,
+          "tipo": "singolo",
+          "nomeContenitore": null,
+          "elementi": [
+            {
+              "schedaId": "sch_1787676748007",
+              "qta": 1
+            }
+          ],
+          "size": 20
         }
       ]
     }
