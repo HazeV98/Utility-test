@@ -109,7 +109,7 @@
     "sch_1787619908832": {
       "nome": "Giubbotto salvagente equipaggio",
       "icona": "fa-solid fa-vest",
-      "colore": "#ffff00",
+      "colore": "#ff9100",
       "categoria": "Salvataggio",
       "testo_html": "Salvagenti destinati all'uso da parte dell'equipaggio.",
       "media": []
@@ -166,7 +166,7 @@
   "coloriCat": {
     "Allarmi": "#8a8a8a",
     "Antincendio": "#ff0000",
-    "Salvataggio": "#ffff00",
+    "Salvataggio": "#ff9100",
     "Impianti": "#a3a3a3"
   }
 }
