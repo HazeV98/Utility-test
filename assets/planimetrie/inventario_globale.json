@@ -5,7 +5,8 @@
     "Nautica",
     "Primo Soccorso",
     "Altro",
-    "Allarmi"
+    "Allarmi",
+    "Salvataggio"
   ],
   "schede": {
     "sch_1787592024172": {
@@ -102,6 +103,14 @@
       "colore": "#ff0000",
       "categoria": "Antincendio",
       "testo_html": "Bombole che contengono la CO2 dell'impianto di estinzione fisso. Vengono scaricate in LAM tramite un comanando presente in plancia.",
+      "media": []
+    },
+    "sch_1787619908832": {
+      "nome": "Nuovo Elemento",
+      "icona": "fa-solid fa-location-dot",
+      "colore": "#ff0000",
+      "categoria": "Sicurezza",
+      "testo_html": "<p>Dettagli...</p>",
       "media": []
     }
   },
