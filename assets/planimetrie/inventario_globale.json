@@ -205,7 +205,7 @@
     },
     "sch_1787701418631": {
       "nome": "Cassetta pronto soccorso",
-      "icona": "fa-solid fa-location-dot",
+      "icona": "fa-solid fa-suitcase-medical",
       "colore": "#00ff00",
       "categoria": "Primo Soccorso",
       "testo_html": "<p>Dettagli...</p>",
