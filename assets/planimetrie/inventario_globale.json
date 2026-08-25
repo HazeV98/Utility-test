@@ -112,6 +112,14 @@
       "categoria": "Salvataggio",
       "testo_html": "Salvagenti destinati all'uso da parte dell'equipaggio.",
       "media": []
+    },
+    "sch_1787620125458": {
+      "nome": "Giubbotto salvagente",
+      "icona": "fa-solid",
+      "colore": "#0381ff",
+      "categoria": "Salvataggio",
+      "testo_html": "Giubbotto salvagente destinato all'uso da parte di un adulto.",
+      "media": []
     }
   },
   "coloriCat": {
