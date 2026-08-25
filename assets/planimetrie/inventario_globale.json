@@ -169,6 +169,14 @@
       "categoria": "Salvataggio",
       "testo_html": "",
       "media": []
+    },
+    "sch_1787676748007": {
+      "nome": "Salvagente anulare con boetta",
+      "icona": "fa-solid fa-live-ring",
+      "colore": "#ff9100",
+      "categoria": "Salvataggio",
+      "testo_html": "Salvagente anulare con sagola e boetta luminosa.&nbsp;",
+      "media": []
     }
   },
   "coloriCat": {
