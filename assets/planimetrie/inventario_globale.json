@@ -7,7 +7,8 @@
     "Altro",
     "Allarmi",
     "Salvataggio",
-    "Impianti"
+    "Impianti",
+    "Dotazioni"
   ],
   "schede": {
     "sch_1787592024172": {
@@ -176,6 +177,14 @@
       "colore": "#ff9100",
       "categoria": "Salvataggio",
       "testo_html": "Salvagente anulare con sagola e boetta luminosa.&nbsp;",
+      "media": []
+    },
+    "sch_1787701275794": {
+      "nome": "Nuovo Elemento",
+      "icona": "fa-solid fa-location-dot",
+      "colore": "#ff0000",
+      "categoria": "Sicurezza",
+      "testo_html": "<p>Dettagli...</p>",
       "media": []
     }
   },
