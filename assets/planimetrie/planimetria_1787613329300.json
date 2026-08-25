@@ -339,6 +339,28 @@
             }
           ],
           "size": 10
+        },
+        {
+          "id": "pin_1787701502215",
+          "lat": 1481.6856937923321,
+          "lng": 2313.582826142743,
+          "tipo": "contenitore",
+          "nomeContenitore": "Cassetta dotazioni",
+          "elementi": [
+            {
+              "schedaId": "sch_1787701275794",
+              "qta": 1
+            },
+            {
+              "schedaId": "sch_1787701346064",
+              "qta": 1
+            },
+            {
+              "schedaId": "sch_1787701387420",
+              "qta": 1
+            }
+          ],
+          "size": 20
         }
       ]
     }
