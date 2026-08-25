@@ -93,7 +93,7 @@
     },
     "sch_1787619647777": {
       "nome": "Sirena CO2",
-      "icona": "fa-solid fa-siren",
+      "icona": "fa-solid fa-bullhorn",
       "colore": "#ff0000",
       "categoria": "Antincendio",
       "testo_html": "Sirena che avvisa eventuale personale in LAM che sta per essere scaricata la CO2 per l'estinzione dell'incendio.",
