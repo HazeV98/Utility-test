@@ -855,7 +855,7 @@
             <div style="display: flex; gap: 10px; margin-bottom: 16px;">
                 <div style="position:relative; flex:1;">
                     <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted);"></i>
-                    <input type="text" id="search-utenti-app" placeholder="Cerca collega..." style="margin: 0; width:100%; padding: 12px 12px 12px 36px; font-size: 14px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; background: var(--surface); color:var(--text-main); outline:none;" onkeyup="window.filtraUtentiApp()">
+                    <input type="text" id="search-utenti-app" autocomplete="off" spellcheck="false" data-lpignore="true" placeholder="Cerca collega..." style="margin: 0; width:100%; padding: 12px 12px 12px 36px; font-size: 14px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; background: var(--surface); color:var(--text-main); outline:none;" onkeyup="window.filtraUtentiApp()">
                 </div>
                 <select id="sort-utenti-app" style="padding: 12px; font-size: 13px; margin: 0; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; background: var(--surface); color:var(--text-main); cursor:pointer; outline:none;" onchange="window.renderGestioneAccessi()">
                     <option value="recente">Recenti prima</option>
