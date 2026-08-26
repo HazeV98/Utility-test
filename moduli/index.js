@@ -905,6 +905,25 @@ window.LayoutEngine = {
                 // Rimuove forzatamente l'app "guida" e la vecchia "impostazioni" se presenti nelle preferenze salvate
                 this.prefs.apps = this.prefs.apps.filter(app => app.id !== 'guida' && app.id !== 'impostazioni');
                 
+                // SISTEMA DI FORZATURA AGGIORNAMENTO ICONE
+                const currentLayoutVersion = localStorage.getItem('layout_version_1') || 0;
+                if (currentLayoutVersion < 1) {
+                    this.prefs.apps.forEach(app => {
+                        if (!app.id.startsWith('custom_')) {
+                            const def = DEFAULT_APPS.find(d => d.id === app.id);
+                            if (def) {
+                                app.label = def.label;
+                                app.icon = def.icon;
+                                app.image = def.image;
+                                if (def.href) app.href = def.href;
+                                if (def.onclick) app.onclick = def.onclick;
+                            }
+                        }
+                    });
+                    localStorage.setItem('layout_version_1', '1');
+                    this.sincronizzaConFirebase();
+                }
+
                 this.mergeWithDefaults();
             } catch(e) {}
         } else { this.prefs.apps = JSON.parse(JSON.stringify(DEFAULT_APPS)); }
@@ -1263,7 +1282,40 @@ window.apriDettaglioUtente = (uid) => {
     const btnCollab = document.getElementById('btn-rendi-collab');
     if (isCollab) { btnCollab.innerHTML = "<i class='fa-solid fa-user-minus'></i> Revoca Collaboratore"; btnCollab.style.background = "transparent"; btnCollab.style.color = "var(--danger)"; btnCollab.style.border = "2px solid var(--danger)"; btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'user'); }
     else { btnCollab.innerHTML = "<i class='fa-solid fa-user-shield'></i> Rendi Collaboratore"; btnCollab.style.background = "#6f42c1"; btnCollab.style.color = "white"; btnCollab.style.border = "none"; btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'collaborator'); }
+    
+    // NUOVO PULSANTE EDIT
+    document.getElementById('dettaglio-utente-body').insertAdjacentHTML('beforeend', `<button class="btn-modal" style="background: #ff9800; color: white; margin-top:15px; margin-bottom:5px;" onclick="window.apriEditorAdminUtente('${uid}')"><i class="fa-solid fa-pen"></i> Correggi Dati Utente</button>`);
+    
     window.apriModal('modal-dettaglio-utente');
+};
+
+window.apriEditorAdminUtente = (uid) => {
+    const u = window.utentiMap[uid]; if(!u) return;
+    document.getElementById('dettaglio-utente-body').innerHTML = `
+        <div class="float-wrapper"><input type="text" id="adm-edit-nome" class="input-field" value="${u.nome || ''}"><label style="top:12px; font-size:11px; color:var(--primary); font-weight:700;">Nome</label></div>
+        <div class="float-wrapper"><input type="text" id="adm-edit-cognome" class="input-field" value="${u.cognome || ''}"><label style="top:12px; font-size:11px; color:var(--primary); font-weight:700;">Cognome</label></div>
+        <div class="float-wrapper"><input type="text" id="adm-edit-matricola" class="input-field" value="${u.matricola || ''}"><label style="top:12px; font-size:11px; color:var(--primary); font-weight:700;">Matricola</label></div>
+        <div class="float-wrapper"><input type="text" id="adm-edit-prog" class="input-field" value="${u.progressivo || ''}"><label style="top:12px; font-size:11px; color:var(--primary); font-weight:700;">Omonimia</label></div>
+        <div class="float-wrapper"><input type="text" id="adm-edit-tel" class="input-field" value="${u.telefono || ''}"><label style="top:12px; font-size:11px; color:var(--primary); font-weight:700;">Telefono</label></div>
+        <button class="btn-modal" style="background: var(--success); color: white;" onclick="window.salvaEditorAdminUtente('${uid}')"><i class="fa-solid fa-floppy-disk"></i> Salva Dati Corretti</button>
+    `;
+};
+
+window.salvaEditorAdminUtente = async (uid) => {
+    if(!confirm("Confermi la modifica dei dati di questo utente?")) return;
+    const datiAggiornati = {
+        nome: document.getElementById('adm-edit-nome').value.trim(),
+        cognome: document.getElementById('adm-edit-cognome').value.trim(),
+        matricola: document.getElementById('adm-edit-matricola').value.trim(),
+        progressivo: document.getElementById('adm-edit-prog').value.trim(),
+        telefono: document.getElementById('adm-edit-tel').value.trim()
+    };
+    try {
+        await setDoc(doc(db, "utenti", uid), datiAggiornati, { merge: true });
+        window.utentiMap[uid] = { ...window.utentiMap[uid], ...datiAggiornati };
+        window.apriDettaglioUtente(uid);
+        window.renderGestioneAccessi();
+    } catch(e) { alert("Errore nel salvataggio su Firebase."); }
 };
 
 window.cambiaRuoloUtente = async (uid, nuovoRuolo) => { if(!confirm("Sei sicuro?")) return; try { await setDoc(doc(db, "utenti", uid), { ruolo: nuovoRuolo }, { merge: true }); window.utentiMap[uid].ruolo = nuovoRuolo; window.chiudiModal('modal-dettaglio-utente'); alert("Ruolo aggiornato!"); } catch(e) { alert("Errore."); } };
