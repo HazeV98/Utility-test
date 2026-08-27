@@ -66,13 +66,16 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     mappaAttiva = L.map('leaflet-map-container', { zoomControl: false }).setView([45.435, 12.325], 13);
     L.control.zoom({ position: 'topleft' }).addTo(mappaAttiva);
 
-    // Mappa Standard "Pulita" CartoDB Voyager
-    layerStandard = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap, © CartoDB', maxZoom: 19
+        // Mappa Standard OpenStreetMap pura
+    layerStandard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors', maxZoom: 19
     });
+    
+    // Mappa Satellite (limite zoom a 17 per prevenire errori di rendering ad altissimo ingrandimento)
     layerSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri', maxZoom: 18
+        attribution: 'Tiles &copy; Esri', maxZoom: 17
     });
+
 
     layerStandard.addTo(mappaAttiva);
     sfondoCorrente = 'standard';
