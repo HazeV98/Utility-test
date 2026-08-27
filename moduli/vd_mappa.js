@@ -1,6 +1,7 @@
 const GH_OWNER = "HazeV98"; 
 const GH_REPO = "Utility-test";
 
+// Stili alleggeriti: la dimensione ora è gestita tramite classi genitore
 const stiliEtichette = document.createElement('style');
 stiliEtichette.innerHTML = `
     .etichetta-canale {
@@ -84,7 +85,7 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     mappaAttiva = L.map('leaflet-map-container', { zoomControl: false }).setView([45.435, 12.325], 13);
     L.control.zoom({ position: 'topleft' }).addTo(mappaAttiva);
     
-    // Ricalcola le etichette anche durante gli spostamenti della mappa
+    // Aggiornamento etichette calcolato sia sul cambio zoom che sullo spostamento (pan)
     mappaAttiva.on('zoomend', gestisciEtichetteVisibili);
     mappaAttiva.on('moveend', gestisciEtichetteVisibili);
 
@@ -250,7 +251,7 @@ function aggiungiPopup(feature, layer) {
 }
 
 // ------------------------------------
-// GESTIONE OTTIMIZZATA ETICHETTE E TRACCIAMENTO VIEWPORT
+// GESTIONE OTTIMIZZATA ETICHETTE
 // ------------------------------------
 function gestisciEtichetteVisibili() {
     if (!mappaAttiva || !geoJsonLayer) return;
@@ -258,64 +259,28 @@ function gestisciEtichetteVisibili() {
     const zoom = mappaAttiva.getZoom();
     const bounds = mappaAttiva.getBounds();
     
+    // Gestione della dimensione CSS ancorata al contenitore mappa
     const container = document.getElementById('leaflet-map-container');
     container.classList.remove('zoom-15', 'zoom-16', 'zoom-17-plus');
     if (zoom === 15) container.classList.add('zoom-15');
     else if (zoom === 16) container.classList.add('zoom-16');
     else if (zoom >= 17) container.classList.add('zoom-17-plus');
     
+    // Carica etichette SOLO per i canali visibili a schermo (culling)
     geoJsonLayer.eachLayer(layer => {
         if (!layer.getBounds || !layer.feature || !layer.feature.properties || !layer.feature.properties.Toponomast) return;
 
-        const layerBounds = layer.getBounds();
-
-        if (zoom >= 15 && bounds.intersects(layerBounds)) {
-            // Calcolo dinamico: estrae solo i vertici del canale fisicamente visibili sullo schermo
-            let bestLatLng = layerBounds.getCenter(); 
-            let visibleCoords = [];
-            
-            const extractVisible = (latlngs) => {
-                latlngs.forEach(ll => {
-                    if (Array.isArray(ll)) extractVisible(ll);
-                    else if (bounds.contains(ll)) visibleCoords.push(ll);
-                });
-            };
-
-            if (layer.getLatLngs) {
-                extractVisible(layer.getLatLngs());
-                if (visibleCoords.length > 0) {
-                    // Prende il vertice visibile a metà dell'elenco per ancorare il testo al centro del campo visivo
-                    bestLatLng = visibleCoords[Math.floor(visibleCoords.length / 2)];
-                } else {
-                    // Fallback di sicurezza per segmenti retti estremi senza nodi intermedi
-                    const sw = L.latLng(
-                        Math.max(layerBounds.getSouth(), bounds.getSouth()),
-                        Math.max(layerBounds.getWest(), bounds.getWest())
-                    );
-                    const ne = L.latLng(
-                        Math.min(layerBounds.getNorth(), bounds.getNorth()),
-                        Math.min(layerBounds.getEast(), bounds.getEast())
-                    );
-                    bestLatLng = L.latLngBounds(sw, ne).getCenter();
-                }
-            }
-
-            // Sgancia il tooltip dall'elemento rigido e gli aggiorna dinamicamente le coordinate
-            if (!layer._customTooltip) {
-                layer._customTooltip = L.tooltip({
+        if (zoom >= 15 && bounds.intersects(layer.getBounds())) {
+            if (!layer.getTooltip()) {
+                layer.bindTooltip(layer.feature.properties.Toponomast, {
                     permanent: true,
                     direction: 'center',
                     className: 'etichetta-canale'
-                }).setContent(layer.feature.properties.Toponomast);
-            }
-            
-            layer._customTooltip.setLatLng(bestLatLng);
-            if (!mappaAttiva.hasLayer(layer._customTooltip)) {
-                mappaAttiva.addLayer(layer._customTooltip);
+                });
             }
         } else {
-            if (layer._customTooltip && mappaAttiva.hasLayer(layer._customTooltip)) {
-                mappaAttiva.removeLayer(layer._customTooltip);
+            if (layer.getTooltip()) {
+                layer.unbindTooltip();
             }
         }
     });
