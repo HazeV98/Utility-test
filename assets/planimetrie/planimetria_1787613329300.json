@@ -347,7 +347,8 @@
             }
           ],
           "size": 10,
-          "immagineContenitore": "assets/media_vademecum/cont_1787864768760.jpg"
+          "immagineContenitore": "assets/media_vademecum/cont_1787864768760.jpg",
+          "iconaContenitore": "fa-solid fa-box-open"
         },
         {
           "id": "pin_1787701765481",
