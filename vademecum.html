@@ -89,10 +89,16 @@
         }
         .vd-list-item:active { background: var(--surface-hover); transform: scale(0.98); }
         .item-title { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 14px; }
+        
         .edit-controls { display: none; gap: 10px; align-items: center; }
         .edit-mode .edit-controls { display: flex; }
         .edit-mode .vd-list-item { cursor: grab; }
         .drag-handle { color: var(--text-muted); cursor: grab; font-size: 18px; padding-right: 10px; }
+
+        /* Regole CSS dinamiche per Tasto Info Menù */
+        .info-btn-view { display: none; }
+        .has-info .info-btn-view { display: flex; align-items: center; justify-content: center; }
+        .edit-mode .info-btn-view { display: flex !important; align-items: center; justify-content: center; }
 
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -207,6 +213,14 @@
             <div id="move-folder-list" style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
                 <!-- Lista popolata dinamicamente dal JS -->
             </div>
+        </div>
+    </div>
+
+    <!-- Modale Info Nodo -->
+    <div id="infoNodoModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'infoNodoModal')">
+        <div class="modal-content">
+            <i class="fa-solid fa-xmark" style="position: absolute; right: 20px; top: 20px; font-size: 24px; color: var(--text-muted); cursor: pointer;" onclick="window.chiudiModal('infoNodoModal')"></i>
+            <div id="infoNodoContent"></div>
         </div>
     </div>
 

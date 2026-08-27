@@ -53,7 +53,7 @@ export function avviaMotoreVademecum() {
     window.Vademecum = { 
         goBack, navigate, toggleEditMode, salvaToken,
         openAddModal, openEditNodeModal, salvaNodo, eliminaNodo,
-        openMoveModal, eseguiSpostamento
+        openMoveModal, eseguiSpostamento, apriInfoNodo, salvaInfoNodo
     };
 }
 
@@ -129,10 +129,26 @@ function effettuaScorrimento(direzione) {
     setTimeout(() => {
         const panels = document.querySelectorAll('.vd-panel');
         if (panels.length < 2) return;
-        const o = panels[panels.length - 2], n = panels[panels.length - 1];
-        if (direzione === "avanti") { o.classList.replace('panel-center', 'panel-left'); n.classList.replace('panel-right', 'panel-center'); } 
-        else { o.classList.replace('panel-center', 'panel-right'); n.classList.replace('panel-left', 'panel-center'); }
-        setTimeout(() => { if (panels.length > 2) panels[0].remove(); }, 400);
+        
+        const o = panels[panels.length - 2]; // Pannello vecchio
+        const n = panels[panels.length - 1]; // Pannello nuovo
+
+        if (direzione === "avanti") { 
+            o.classList.replace('panel-center', 'panel-left'); 
+            n.classList.replace('panel-right', 'panel-center'); 
+        } else { 
+            o.classList.replace('panel-center', 'panel-right'); 
+            n.classList.replace('panel-left', 'panel-center'); 
+        }
+        
+        // BUGFIX SCORRIMENTO: Distruzione pannelli vecchi dal DOM per sbloccare le mappe
+        setTimeout(() => { 
+            if (o) o.remove(); 
+            // Failsafe: Rimuove qualsiasi altro pannello estraneo rimasto nel DOM
+            document.querySelectorAll('.vd-panel').forEach(p => {
+                if (p !== n) p.remove();
+            });
+        }, 400);
     }, 50);
 }
 
@@ -169,19 +185,30 @@ function renderPanel(nodeId, positionClass) {
             // Badge visivo per admin/collaboratori per capire subito se una voce è in lavorazione
             const wipBadge = item.inLavorazione ? `<span style="background: var(--warning); color: #000; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: bold;"><i class="fa-solid fa-person-digging"></i> WIP</span>` : '';
             
+            // Logica per mostrare/nascondere il tasto INFO in base ai contenuti
+            const hasInfoClass = (item.infoTesto && item.infoTesto.trim() !== '') ? 'has-info' : '';
+
             const itemHTML = `
-                <div class="vd-list-item" data-id="${item.id}" onclick="window.Vademecum.navigate('${item.id}', '${safeTitle}', '${item.tipo}')">
+                <div class="vd-list-item ${hasInfoClass}" data-id="${item.id}" onclick="window.Vademecum.navigate('${item.id}', '${safeTitle}', '${item.tipo}')">
                     <div class="item-title"><i class="fa-solid ${item.icona || 'fa-folder'}" style="${iconColor}"></i> ${item.titolo} ${wipBadge}</div>
-                    <div class="edit-controls">
-                        <button class="icon-btn" style="color:#17a2b8; width:32px; height:32px;" onclick="event.stopPropagation(); window.Vademecum.openMoveModal('${item.id}', '${item.tipo}')">
-                            <i class="fa-solid fa-arrow-right-to-bracket" style="font-size:14px;"></i>
+                    
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div class="edit-controls">
+                            <button class="icon-btn" style="color:#17a2b8; width:32px; height:32px;" onclick="event.stopPropagation(); window.Vademecum.openMoveModal('${item.id}', '${item.tipo}')">
+                                <i class="fa-solid fa-arrow-right-to-bracket" style="font-size:14px;"></i>
+                            </button>
+                            <button class="icon-btn" style="color:var(--text-muted); width:32px; height:32px;" onclick="event.stopPropagation(); window.Vademecum.openEditNodeModal('${item.id}', '${safeTitle}', '${item.icona}', '${item.tipo}', ${item.inLavorazione ? 'true' : 'false'})">
+                                <i class="fa-solid fa-pen" style="font-size:14px;"></i>
+                            </button>
+                            <i class="fa-solid fa-grip-lines drag-handle"></i>
+                        </div>
+                        
+                        <button class="icon-btn btn-transparent info-btn-view" style="color:var(--primary); font-size:18px; padding:0; margin:0;" onclick="event.stopPropagation(); window.Vademecum.apriInfoNodo('${item.id}')" title="Info Voce">
+                            <i class="fa-solid fa-circle-info"></i>
                         </button>
-                        <button class="icon-btn" style="color:var(--text-muted); width:32px; height:32px;" onclick="event.stopPropagation(); window.Vademecum.openEditNodeModal('${item.id}', '${safeTitle}', '${item.icona}', '${item.tipo}', ${item.inLavorazione ? 'true' : 'false'})">
-                            <i class="fa-solid fa-pen" style="font-size:14px;"></i>
-                        </button>
-                        <i class="fa-solid fa-grip-lines drag-handle"></i>
+
+                        <i class="fa-solid fa-chevron-right" style="color:var(--border-color); ${isNav}"></i>
                     </div>
-                    <i class="fa-solid fa-chevron-right" style="color:var(--border-color); ${isNav}"></i>
                 </div>`;
             panel.insertAdjacentHTML('beforeend', itemHTML);
         });
@@ -396,6 +423,56 @@ function salvaToken() {
     const pat = document.getElementById('adminPatToken').value.trim();
     if (pat) localStorage.setItem('gh_admin_token', pat);
     window.chiudiModal('tokenModal');
+}
+
+// ==========================================
+// LOGICA INFO VOCE MENU
+// ==========================================
+
+function apriInfoNodo(id) {
+    let nodo = null;
+    for (const key in treeData) {
+        const found = treeData[key].find(item => item.id === id);
+        if (found) { nodo = found; break; }
+    }
+    if (!nodo) return;
+
+    let html = `<h3 style="margin-bottom: 15px; color: var(--primary);"><i class="fa-solid fa-circle-info"></i> Info: ${nodo.titolo}</h3>`;
+    
+    if (isEditMode) {
+        html += `
+            <textarea id="node-info-text" style="width:100%; min-height:150px; padding:10px; border-radius:8px; border:1px solid var(--border-color); box-sizing:border-box; margin-bottom:15px; font-family:inherit;">${nodo.infoTesto || ""}</textarea>
+            <button onclick="window.Vademecum.salvaInfoNodo('${id}')" style="width:100%; background:var(--success); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-floppy-disk"></i> Salva Informazioni</button>
+        `;
+    } else {
+        html += `
+            <div style="width:100%; min-height:100px; padding:10px; border-radius:8px; background:var(--surface); border:1px solid var(--border-color); box-sizing:border-box; white-space:pre-wrap; color: var(--text-main); line-height: 1.5;">${nodo.infoTesto || "Nessuna informazione disponibile."}</div>
+        `;
+    }
+
+    document.getElementById('infoNodoContent').innerHTML = html;
+    window.apriModal('infoNodoModal');
+}
+
+function salvaInfoNodo(id) {
+    let nodo = null;
+    let parentKey = null;
+    
+    for (const key in treeData) {
+        const found = treeData[key].find(item => item.id === id);
+        if (found) { nodo = found; parentKey = key; break; }
+    }
+    
+    if (!nodo) return;
+
+    nodo.infoTesto = document.getElementById('node-info-text').value;
+    salvaAlberoSuFirebase();
+    window.chiudiModal('infoNodoModal');
+    
+    const currentId = navigationStack[navigationStack.length - 1];
+    if (parentKey === currentId) {
+        renderPanel(currentId, "panel-center");
+    }
 }
 
 // ==========================================
