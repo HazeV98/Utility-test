@@ -232,6 +232,14 @@
       "categoria": "Nautica",
       "testo_html": "<p>Dettagli...</p>",
       "media": []
+    },
+    "sch_1787867726632": {
+      "nome": "Coperta isotermica",
+      "icona": "fa-solid fa-location-dot",
+      "colore": "#ffeb12",
+      "categoria": "Dotazioni",
+      "testo_html": "<p>Dettagli...</p>",
+      "media": []
     }
   },
   "coloriCat": {
