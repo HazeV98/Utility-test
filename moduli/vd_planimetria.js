@@ -44,6 +44,9 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
             <button class="icon-btn fab-btn" title="Inventario" onclick="window.Plan.toggleLegenda()" style="width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: var(--primary); box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
                 <i class="fa-solid fa-list"></i>
             </button>
+            <button class="icon-btn fab-btn" title="Info Planimetria" onclick="window.Plan.apriInfoPlanimetria()" style="width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: var(--text-main); box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
+                <i class="fa-solid fa-circle-info"></i>
+            </button>
             <button id="fab-livelli" class="icon-btn fab-btn" title="Cambia Livello" onclick="window.Plan.apriModaleLivelli()" style="width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: var(--text-main); box-shadow: var(--shadow-md); border: 2px solid var(--border-color); display: none;">
                 <i class="fa-solid fa-layer-group"></i>
             </button>
@@ -71,8 +74,10 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
         apriGestioneSchede, apriSelezionePin, creaNuovaScheda, apriEditorScheda, salvaScheda, eliminaSchedaGlobale,
         toggleSchedaNave, chiediQuantitaPin, componiContenitore, salvaContenitore, apriVisualizzatorePin,
         apriSchedaViewer, salvaPlanimetriaSuGitHub, gestisciUploadMediaPlan,
-        eliminaMediaPlan, scaricaFilePlan, apriViewerPlan, aggiungiNuovoLivello, eliminaPin, 
-        aggiungiCategoria, salvaDimensionePin, cambiaColoreDaCategoria
+        eliminaMediaPlan, scaricaFilePlan, apriViewerPlan, apriImmagineSingola, aggiungiNuovoLivello, eliminaPin, 
+        aggiungiCategoria, salvaDimensionePin, cambiaColoreDaCategoria,
+        apriInfoPlanimetria, salvaInfoPlanimetria, apriModificaContenitore, salvaModificheContenitore,
+        gestisciUploadImmagineContenitore, eliminaImmagineContenitore
     };
 
     if (globalIsAdminCollab) document.getElementById('fab-edit-plan').style.display = 'flex';
@@ -92,7 +97,9 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
                 tipo: statoDropPin.tipo,
                 nomeContenitore: statoDropPin.nomeContenitore,
                 elementi: statoDropPin.elementi,
-                size: 20 
+                size: 20,
+                iconaContenitore: 'fa-solid fa-box-open',
+                immagineContenitore: null
             });
             statoDropPin = null;
             document.getElementById('plan-drop-indicator').style.display = 'none';
@@ -107,12 +114,38 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
 }
 
 // ==========================================
+// INFO PLANIMETRIA
+// ==========================================
+function apriInfoPlanimetria() {
+    let infoText = planData.infoTesto || "";
+    let html = `<h3 style="margin-bottom: 15px; color: var(--primary);"><i class="fa-solid fa-circle-info"></i> Info Planimetria</h3>`;
+    
+    if (isEditMode) {
+        html += `
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Aggiungi qui informazioni generali riguardanti l'oggetto della planimetria (es. nome nave, specifiche, appunti).</p>
+            <textarea id="info-plan-text" style="width:100%; min-height:150px; padding:10px; border-radius:8px; border:1px solid var(--border-color); box-sizing:border-box; margin-bottom:15px; font-family:inherit;">${infoText}</textarea>
+            <button onclick="window.Plan.salvaInfoPlanimetria()" style="width:100%; background:var(--success); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-floppy-disk"></i> Salva Informazioni</button>
+        `;
+    } else {
+        html += `
+            <div style="width:100%; min-height:150px; padding:10px; border-radius:8px; background:var(--surface); border:1px solid var(--border-color); box-sizing:border-box; white-space:pre-wrap; color: var(--text-main); line-height: 1.5;">${infoText || "Nessuna informazione disponibile."}</div>
+        `;
+    }
+    mostraModale(html);
+}
+
+function salvaInfoPlanimetria() {
+    planData.infoTesto = document.getElementById('info-plan-text').value;
+    salvaPlanimetriaSuGitHub();
+    chiudiModaleGlobale();
+}
+
+// ==========================================
 // CARICAMENTO DATI IN TEMPO REALE (API)
 // ==========================================
 async function caricaDatiPlanimetria() {
     const token = localStorage.getItem('gh_admin_token');
     
-    // 1. CARICAMENTO INVENTARIO GLOBALE
     let invCaricatoViaApi = false;
     if (globalIsAdminCollab && token) {
         try {
@@ -142,7 +175,6 @@ async function caricaDatiPlanimetria() {
         } catch(e) {}
     }
 
-    // 2. CARICAMENTO PLANIMETRIA LOCALE NAVE
     let planCaricataViaApi = false;
     if (globalIsAdminCollab && token) {
         try {
@@ -251,7 +283,9 @@ function disegnaLivelloCorrente() {
                     let baseIconHtml = '';
 
                     if (pin.tipo === 'contenitore') {
-                        baseIconHtml = `<div style="background-color: #546e7a; width: ${size}px; height: ${size}px; border-radius: 8px; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.5); font-size: ${fontSize}px;"><i class="fa-solid fa-box-open"></i></div>`;
+                        let iconClass = pin.iconaContenitore || 'fa-solid fa-box-open';
+                        if (!iconClass.includes('fa-')) iconClass = 'fa-solid ' + iconClass;
+                        baseIconHtml = `<div style="background-color: #546e7a; width: ${size}px; height: ${size}px; border-radius: 8px; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.5); font-size: ${fontSize}px;"><i class="${iconClass}"></i></div>`;
                         pinName = pin.nomeContenitore;
                     } else {
                         const scheda = inventarioGlobale.schede[pin.elementi[0].schedaId];
@@ -265,7 +299,6 @@ function disegnaLivelloCorrente() {
                     let clickAreaSize = size;
                     
                     if (isEditMode) {
-                        // Ripristinata l'area di trascinamento larga originaria
                         clickAreaSize = Math.max(size + 40, 70); 
                         finalIconHtml = `
                             <div style="width: ${clickAreaSize}px; height: ${clickAreaSize}px; border-radius: 50%; border: 2px dashed var(--primary); background: rgba(0, 102, 204, 0.15); display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
@@ -291,6 +324,10 @@ function disegnaLivelloCorrente() {
                             salvaPlanimetriaSuGitHub();
                         });
                         
+                        let btnModifica = pin.tipo === 'contenitore' 
+                            ? `<button onclick="window.Plan.apriModificaContenitore('${pin.id}')" style="background:var(--primary); color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; width:100%; font-weight:bold; margin-bottom:10px;"><i class="fa-solid fa-pen"></i> Modifica Contenitore</button>` 
+                            : '';
+
                         marker.bindPopup(`
                             <div style="text-align:center; min-width: 170px; padding: 5px;">
                                 <strong style="font-size:14px; color:var(--primary);">${pinName}</strong><br>
@@ -304,6 +341,7 @@ function disegnaLivelloCorrente() {
                                     <input type="range" min="10" max="60" value="${size}" oninput="document.getElementById('val-size-${pin.id}').innerText=this.value" onchange="window.Plan.salvaDimensionePin('${pin.id}', this.value)" style="width:100%; margin-top:5px;">
                                 </div>
                                 
+                                ${btnModifica}
                                 <button onclick="window.Plan.eliminaPin('${pin.id}')" style="background:var(--danger); color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; width:100%; font-weight:bold;"><i class="fa-solid fa-trash"></i> Elimina</button>
                             </div>
                         `);
@@ -439,7 +477,7 @@ function aggiornaLegenda() {
 }
 
 // ==========================================
-// EDITOR INVENTARIO GLOBALE CON CATEGORIE COLLASSABILI
+// EDITOR INVENTARIO GLOBALE
 // ==========================================
 function apriGestioneSchede() {
     let html = `
@@ -453,10 +491,8 @@ function apriGestioneSchede() {
     inventarioGlobale.categorie.forEach(cat => {
         const schedeInCat = Object.entries(inventarioGlobale.schede).filter(([id, s]) => s.categoria === cat);
         if(schedeInCat.length > 0) {
-            
-            // Categoria Collassabile con tag <details> e <summary>
             html += `
-            <details open style="margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px; background: rgba(0,0,0,0.02);">
+            <details style="margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px; background: rgba(0,0,0,0.02);">
                 <summary style="padding: 10px; font-weight: bold; cursor: pointer; color: var(--text-main); font-size: 14px; outline: none; border-bottom: 1px solid rgba(0,0,0,0.05);">
                     ${cat} <span style="font-weight: normal; font-size: 12px; color: var(--text-muted); float: right;">(${schedeInCat.length} elementi)</span>
                 </summary>
@@ -511,7 +547,7 @@ function toggleSchedaNave(id) {
 }
 
 // ==========================================
-// AGGIUNTA PIN ALLA MAPPA
+// AGGIUNTA PIN ALLA MAPPA E CONTENITORI
 // ==========================================
 function apriSelezionePin() {
     if(planData.schedeNave.length === 0) return alert("Aggiungi prima delle dotazioni dal Database Schede.");
@@ -525,18 +561,32 @@ function apriSelezionePin() {
         <div style="max-height: 50vh; overflow-y: auto; padding-right:5px;">
     `;
 
-    planData.schedeNave.forEach(id => {
-        const scheda = inventarioGlobale.schede[id];
-        if (scheda) {
+    inventarioGlobale.categorie.forEach(cat => {
+        const schedeInCat = planData.schedeNave.filter(id => inventarioGlobale.schede[id] && inventarioGlobale.schede[id].categoria === cat);
+        
+        if (schedeInCat.length > 0) {
             html += `
-                <div style="display:flex; justify-content:space-between; align-items:center; background: var(--surface); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 8px;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; background:${scheda.colore}; color:white; border-radius:50%; font-size:12px;"><i class="${scheda.icona.includes('fa-') ? scheda.icona : 'fa-solid ' + scheda.icona}"></i></span>
-                        <span style="font-weight: 600; font-size: 14px; color:var(--text-main);">${scheda.nome}</span>
-                    </div>
-                    <button class="icon-btn" onclick="window.Plan.chiediQuantitaPin('${id}')" style="background:var(--warning); color:#000; border:none; padding:8px 12px; border-radius:6px;" title="Posiziona Pin in Mappa"><i class="fa-solid fa-crosshairs"></i></button>
-                </div>
+            <details style="margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px; background: rgba(0,0,0,0.02);">
+                <summary style="padding: 10px; font-weight: bold; cursor: pointer; color: var(--text-main); font-size: 14px; outline: none; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                    ${cat} <span style="font-weight: normal; font-size: 12px; color: var(--text-muted); float: right;">(${schedeInCat.length} elementi)</span>
+                </summary>
+                <div style="padding: 10px; padding-bottom: 0;">
             `;
+            
+            schedeInCat.forEach(id => {
+                const scheda = inventarioGlobale.schede[id];
+                html += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background: var(--surface); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 8px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; background:${scheda.colore}; color:white; border-radius:50%; font-size:12px;"><i class="${scheda.icona.includes('fa-') ? scheda.icona : 'fa-solid ' + scheda.icona}"></i></span>
+                            <span style="font-weight: 600; font-size: 14px; color:var(--text-main);">${scheda.nome}</span>
+                        </div>
+                        <button class="icon-btn" onclick="window.Plan.chiediQuantitaPin('${id}')" style="background:var(--warning); color:#000; border:none; padding:8px 12px; border-radius:6px;" title="Posiziona Pin in Mappa"><i class="fa-solid fa-crosshairs"></i></button>
+                    </div>
+                `;
+            });
+
+            html += `</div></details>`;
         }
     });
 
@@ -605,6 +655,132 @@ function salvaContenitore() {
     statoDropPin = { tipo: 'contenitore', nomeContenitore: nome, elementi: elementi };
     document.getElementById('plan-drop-indicator').style.display = 'block';
     document.getElementById('plan-map-container').style.cursor = 'crosshair';
+}
+
+// MODIFICA CONTENITORE ESISTENTE
+function apriModificaContenitore(pinId) {
+    const pin = planData.livelli[livelloCorrenteIdx].pins.find(p => p.id === pinId);
+    if (!pin) return;
+    
+    let icona = pin.iconaContenitore || 'fa-solid fa-box-open';
+    if (!icona.includes('fa-')) icona = 'fa-solid ' + icona;
+    
+    let html = `
+        <h3 style="margin-bottom: 15px; color: #546e7a;"><i class="${icona}"></i> Modifica Contenitore</h3>
+        
+        <label style="font-size:11px; font-weight:bold;">Nome Contenitore</label>
+        <input type="text" id="edit-cont-nome" value="${pin.nomeContenitore}" style="width:100%; padding:10px; margin-bottom:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; font-weight:bold;">
+        
+        <label style="font-size:11px; font-weight:bold;">Classe Icona (es. fa-solid fa-box)</label>
+        <input type="text" id="edit-cont-icona" value="${icona}" style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
+        
+        <div style="margin-bottom: 15px; padding: 10px; background: var(--surface); border: 1px solid var(--border-color); border-radius: 8px;">
+            <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:8px;">Immagine Contenitore</label>
+    `;
+    
+    if (pin.immagineContenitore) {
+        const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${pin.immagineContenitore}`;
+        html += `
+            <div style="position:relative; width:100%; height:120px; border-radius:6px; overflow:hidden; border:1px solid #ccc;">
+                <img src="${rawUrl}" style="width:100%; height:100%; object-fit:cover;">
+                <button onclick="window.Plan.eliminaImmagineContenitore('${pinId}')" style="position:absolute; top:5px; right:5px; background:var(--danger); color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        `;
+    } else {
+        html += `
+            <button onclick="document.getElementById('upload-img-cont').click()" style="width:100%; background:var(--primary); color:white; border:none; padding:8px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-upload"></i> Carica Immagine</button>
+            <input type="file" id="upload-img-cont" accept="image/*" style="display:none;" onchange="window.Plan.gestisciUploadImmagineContenitore(event, '${pinId}')">
+        `;
+    }
+
+    html += `
+        </div>
+        <p style="font-size: 13px; font-weight:bold; margin-bottom:10px;">Contenuto:</p>
+        <div style="max-height: 200px; overflow-y: auto; margin-bottom: 15px; padding-right:5px;">
+    `;
+    
+    planData.schedeNave.forEach(id => {
+        const scheda = inventarioGlobale.schede[id];
+        if (scheda) {
+            const elInPin = pin.elementi.find(e => e.schedaId === id);
+            const qta = elInPin ? elInPin.qta : 0;
+            
+            html += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--border-color); padding:8px; border-radius:6px; margin-bottom:6px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i class="${scheda.icona.includes('fa-') ? scheda.icona : 'fa-solid ' + scheda.icona}" style="color:${scheda.colore};"></i>
+                        <span style="font-size:13px; font-weight:600; color:var(--text-main);">${scheda.nome}</span>
+                    </div>
+                    <input type="number" id="edit-cont-qta-${id}" min="0" value="${qta}" style="width:50px; padding:4px; text-align:center; border:1px solid #ccc; border-radius:4px;">
+                </div>
+            `;
+        }
+    });
+
+    html += `
+        </div>
+        <button onclick="window.Plan.salvaModificheContenitore('${pinId}')" style="width:100%; background:var(--success); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-floppy-disk"></i> Salva Modifiche</button>
+    `;
+    mostraModale(html);
+}
+
+function salvaModificheContenitore(pinId) {
+    const pin = planData.livelli[livelloCorrenteIdx].pins.find(p => p.id === pinId);
+    if (!pin) return;
+    
+    pin.nomeContenitore = document.getElementById('edit-cont-nome').value.trim() || 'Contenitore Multiplo';
+    pin.iconaContenitore = document.getElementById('edit-cont-icona').value.trim();
+    
+    let nuoviElementi = [];
+    planData.schedeNave.forEach(id => {
+        const input = document.getElementById(`edit-cont-qta-${id}`);
+        if(input) {
+            const qta = parseInt(input.value);
+            if (qta > 0) nuoviElementi.push({ schedaId: id, qta: qta });
+        }
+    });
+    
+    if (nuoviElementi.length === 0) return alert("Inserisci almeno un elemento nel contenitore.");
+    
+    pin.elementi = nuoviElementi;
+    chiudiModaleGlobale();
+    salvaPlanimetriaSuGitHub();
+}
+
+async function gestisciUploadImmagineContenitore(event, pinId) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const token = localStorage.getItem('gh_admin_token');
+    const pin = planData.livelli[livelloCorrenteIdx].pins.find(p => p.id === pinId);
+    
+    try {
+        document.getElementById('plan-modal-content').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--primary);"><i class="fa-solid fa-spinner fa-spin fa-3x"></i><br><br>Caricamento immagine in corso...</div>`;
+        const ext = file.name.split('.').pop().toLowerCase();
+        const path = `assets/media_vademecum/cont_${Date.now()}.${ext}`;
+        const reader = new FileReader();
+        const b64 = await new Promise((res, rej) => { reader.readAsDataURL(file); reader.onload = () => res(reader.result.split(',')[1]); });
+        
+        await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
+            method: 'PUT', headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: `Immagine contenitore aggiunta`, content: b64 })
+        });
+        
+        pin.immagineContenitore = path;
+        await salvaPlanimetriaSuGitHub(); 
+        apriModificaContenitore(pinId); 
+    } catch (e) { 
+        alert("Errore caricamento immagine."); 
+        apriModificaContenitore(pinId);
+    }
+}
+
+async function eliminaImmagineContenitore(pinId) {
+    if(!confirm("Eliminare l'immagine del contenitore?")) return;
+    const pin = planData.livelli[livelloCorrenteIdx].pins.find(p => p.id === pinId);
+    if (pin && pin.immagineContenitore) {
+        pin.immagineContenitore = null;
+        await salvaPlanimetriaSuGitHub();
+        apriModificaContenitore(pinId);
+    }
 }
 
 // ==========================================
@@ -736,11 +912,26 @@ function apriVisualizzatorePin(pin) {
     if (pin.tipo === 'singolo') {
         apriSchedaViewer(pin.elementi[0].schedaId, pin.elementi[0].qta);
     } else {
+        let iconaCont = pin.iconaContenitore || 'fa-solid fa-box-open';
+        if (!iconaCont.includes('fa-')) iconaCont = 'fa-solid ' + iconaCont;
+        
         let html = `
-            <div style="display:flex; align-items:center; gap:12px; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom:10px;">
-                <span style="display:flex; align-items:center; justify-content:center; width:40px; height:40px; background:#546e7a; color:white; border-radius:8px; font-size:20px;"><i class="fa-solid fa-box-open"></i></span>
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom: ${pin.immagineContenitore ? '15px' : '20px'}; border-bottom: 2px solid var(--border-color); padding-bottom:10px;">
+                <span style="display:flex; align-items:center; justify-content:center; width:40px; height:40px; background:#546e7a; color:white; border-radius:8px; font-size:20px;"><i class="${iconaCont}"></i></span>
                 <h2 style="color: var(--text-main); margin:0;">${pin.nomeContenitore}</h2>
             </div>
+        `;
+        
+        if (pin.immagineContenitore) {
+            const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${pin.immagineContenitore}`;
+            html += `
+                <div style="width:100%; height:150px; border-radius:8px; overflow:hidden; margin-bottom:15px; border: 1px solid var(--border-color);">
+                    <img src="${rawUrl}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;" onclick="window.Plan.apriImmagineSingola('${rawUrl}')">
+                </div>
+            `;
+        }
+
+        html += `
             <p style="font-size:13px; font-weight:bold; color:var(--text-muted); margin-bottom:10px;">Contenuto:</p>
             <div style="display:flex; flex-direction:column; gap:10px; max-height: 50vh; overflow-y:auto; padding-right:5px;">
         `;
@@ -933,12 +1124,61 @@ function creaContenitoreModali() {
     }
 }
 function mostraModale(html) { document.getElementById('plan-modal-content').innerHTML = html; document.getElementById('plan-modal-overlay').style.display = 'flex'; }
-function apriViewerPlan(idScheda, index) {
-    const s = inventarioGlobale.schede[idScheda]; const path = s.media[index]; const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${path}`; const ext = path.split('.').pop().toLowerCase();
-    if (window.creaViewerSeMancante) {
-        window.creaViewerSeMancante(); const contentDiv = document.getElementById('vd-media-viewer-content');
-        if (['mp4', 'webm', 'mov'].includes(ext)) { contentDiv.innerHTML = `<video src="${rawUrl}" controls autoplay playsinline style="max-width: 100vw; max-height: 100vh; object-fit: contain;"></video>`; } 
-        else { contentDiv.innerHTML = `<img id="vd-viewer-img" src="${rawUrl}" style="max-width: 100vw; max-height: 100vh; object-fit: contain; transform-origin: center center; transition: transform 0.2s ease-out;">`; if (window.inizializzaZoomImmagine) setTimeout(window.inizializzaZoomImmagine, 50); }
-        document.getElementById('vd-media-viewer').style.display = 'flex';
+
+// SISTEMA VISUALIZZATORE MEDIA
+function creaViewerLocale() {
+    if (!document.getElementById('vd-media-viewer')) {
+        const viewer = document.createElement('div');
+        viewer.id = 'vd-media-viewer';
+        viewer.style.cssText = 'display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; flex-direction:column;';
+        viewer.innerHTML = `
+            <button onclick="document.getElementById('vd-media-viewer').style.display='none'" style="position:absolute; top:20px; right:20px; background:transparent; border:none; color:white; font-size:30px; cursor:pointer; z-index:10000;"><i class="fa-solid fa-xmark"></i></button>
+            <div id="vd-media-viewer-content" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden;"></div>
+        `;
+        document.body.appendChild(viewer);
     }
+}
+
+function applicaZoomPanImmagine(img) {
+    let scale = 1, isDragging = false, startX, startY, translateX = 0, translateY = 0;
+    img.onwheel = (e) => {
+        e.preventDefault();
+        scale += e.deltaY * -0.005;
+        scale = Math.min(Math.max(0.5, scale), 5);
+        img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    };
+    const startDrag = (clientX, clientY) => { isDragging = true; startX = clientX - translateX; startY = clientY - translateY; img.style.cursor = 'grabbing'; };
+    const doDrag = (clientX, clientY) => { if (!isDragging) return; translateX = clientX - startX; translateY = clientY - startY; img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`; };
+    const stopDrag = () => { isDragging = false; img.style.cursor = 'grab'; };
+    img.onmousedown = (e) => { e.preventDefault(); startDrag(e.clientX, e.clientY); };
+    window.onmousemove = (e) => doDrag(e.clientX, e.clientY);
+    window.onmouseup = stopDrag;
+    img.addEventListener('touchstart', (e) => { if(e.touches.length === 1) startDrag(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
+    window.addEventListener('touchmove', (e) => { if(isDragging && e.touches.length === 1) { e.preventDefault(); doDrag(e.touches[0].clientX, e.touches[0].clientY); } }, {passive: false});
+    window.addEventListener('touchend', stopDrag);
+}
+
+function apriViewerPlan(idScheda, index) {
+    creaViewerLocale();
+    const s = inventarioGlobale.schede[idScheda];
+    const path = s.media[index];
+    const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${path}`;
+    const ext = path.split('.').pop().toLowerCase();
+    const contentDiv = document.getElementById('vd-media-viewer-content');
+    
+    if (['mp4', 'webm', 'mov'].includes(ext)) {
+        contentDiv.innerHTML = `<video src="${rawUrl}" controls autoplay playsinline style="max-width: 95vw; max-height: 95vh; object-fit: contain;"></video>`;
+    } else {
+        contentDiv.innerHTML = `<img id="vd-viewer-img" src="${rawUrl}" draggable="false" style="max-width: 95vw; max-height: 95vh; object-fit: contain; transform-origin: center center; transition: transform 0.1s ease-out; cursor: grab;">`;
+        setTimeout(() => { const img = document.getElementById('vd-viewer-img'); if(img) applicaZoomPanImmagine(img); }, 50);
+    }
+    document.getElementById('vd-media-viewer').style.display = 'flex';
+}
+
+function apriImmagineSingola(url) {
+    creaViewerLocale();
+    const contentDiv = document.getElementById('vd-media-viewer-content');
+    contentDiv.innerHTML = `<img id="vd-viewer-img" src="${url}" draggable="false" style="max-width: 95vw; max-height: 95vh; object-fit: contain; transform-origin: center center; transition: transform 0.1s ease-out; cursor: grab;">`;
+    setTimeout(() => { const img = document.getElementById('vd-viewer-img'); if(img) applicaZoomPanImmagine(img); }, 50);
+    document.getElementById('vd-media-viewer').style.display = 'flex';
 }
