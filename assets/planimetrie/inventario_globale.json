@@ -211,7 +211,9 @@
       "colore": "#00c717",
       "categoria": "Primo Soccorso",
       "testo_html": "<p>Dettagli...</p>",
-      "media": []
+      "media": [
+        "assets/media_vademecum/plan_1787844296840.jpg"
+      ]
     },
     "sch_1787701617488": {
       "nome": "Cima di rispetto",
