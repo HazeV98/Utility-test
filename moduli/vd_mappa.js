@@ -1,6 +1,24 @@
 const GH_OWNER = "HazeV98"; 
 const GH_REPO = "Utility-test";
 
+const stiliEtichette = document.createElement('style');
+stiliEtichette.innerHTML = `
+    .etichetta-canale {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #000;
+        font-weight: 900;
+        text-shadow: 1.5px 1.5px 0 #fff, -1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s, font-size 0.2s;
+        white-space: nowrap;
+    }
+    .etichetta-canale.visibile { opacity: 1; }
+`;
+document.head.appendChild(stiliEtichette);
+
 let mappaAttiva = null;
 let geoJsonLayer = null;
 let datiGeoJsonCache = null;
@@ -65,8 +83,10 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
 
     mappaAttiva = L.map('leaflet-map-container', { zoomControl: false }).setView([45.435, 12.325], 13);
     L.control.zoom({ position: 'topleft' }).addTo(mappaAttiva);
+    
+    mappaAttiva.on('zoomend', aggiornaDimensioneEtichette);
 
-        // Mappa Standard OpenStreetMap pura
+    // Mappa Standard OpenStreetMap pura
     layerStandard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors', maxZoom: 19
     });
@@ -75,7 +95,6 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     layerSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles &copy; Esri', maxZoom: 17
     });
-
 
     layerStandard.addTo(mappaAttiva);
     sfondoCorrente = 'standard';
@@ -126,6 +145,8 @@ function disegnaGeoJson() {
         style: impostaStileLinea,
         onEachFeature: aggiungiPopup
     }).addTo(mappaAttiva);
+    
+    setTimeout(aggiornaDimensioneEtichette, 100);
 }
 
 // ------------------------------------
@@ -226,6 +247,14 @@ function aggiungiPopup(feature, layer) {
             `;
         }
     });
+
+    if (feature.properties && feature.properties.Toponomast) {
+        layer.bindTooltip(feature.properties.Toponomast, {
+            permanent: true,
+            direction: 'center',
+            className: 'etichetta-canale'
+        });
+    }
 }
 
 async function salvaFeatureModificata(index) {
@@ -323,4 +352,21 @@ function toggleEdit() {
         icon.className = "fa-solid fa-pen";
         mappaAttiva.closePopup(); 
     }
+}
+
+function aggiornaDimensioneEtichette() {
+    if (!mappaAttiva) return;
+    const zoom = mappaAttiva.getZoom();
+    const etichette = document.querySelectorAll('.etichetta-canale');
+    
+    etichette.forEach(el => {
+        if (zoom < 15) {
+            el.classList.remove('visibile'); 
+        } else {
+            el.classList.add('visibile');
+            if (zoom >= 17) el.style.fontSize = '14px';
+            else if (zoom === 16) el.style.fontSize = '12px';
+            else el.style.fontSize = '10px';
+        }
+    });
 }
