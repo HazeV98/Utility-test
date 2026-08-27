@@ -1,6 +1,7 @@
 const GH_OWNER = "HazeV98"; 
 const GH_REPO = "Utility-test";
 
+// Stili alleggeriti: la dimensione ora è gestita tramite classi genitore
 const stiliEtichette = document.createElement('style');
 stiliEtichette.innerHTML = `
     .etichetta-canale {
@@ -11,11 +12,11 @@ stiliEtichette.innerHTML = `
         font-weight: 900;
         text-shadow: 1.5px 1.5px 0 #fff, -1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff;
         pointer-events: none;
-        opacity: 0;
-        transition: opacity 0.2s, font-size 0.2s;
         white-space: nowrap;
     }
-    .etichetta-canale.visibile { opacity: 1; }
+    .zoom-15 .etichetta-canale { font-size: 10px; }
+    .zoom-16 .etichetta-canale { font-size: 12px; }
+    .zoom-17-plus .etichetta-canale { font-size: 14px; }
 `;
 document.head.appendChild(stiliEtichette);
 
@@ -84,14 +85,14 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     mappaAttiva = L.map('leaflet-map-container', { zoomControl: false }).setView([45.435, 12.325], 13);
     L.control.zoom({ position: 'topleft' }).addTo(mappaAttiva);
     
-    mappaAttiva.on('zoomend', aggiornaDimensioneEtichette);
+    // Aggiornamento etichette calcolato sia sul cambio zoom che sullo spostamento (pan)
+    mappaAttiva.on('zoomend', gestisciEtichetteVisibili);
+    mappaAttiva.on('moveend', gestisciEtichetteVisibili);
 
-    // Mappa Standard OpenStreetMap pura
     layerStandard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors', maxZoom: 19
     });
     
-    // Mappa Satellite (limite zoom a 17 per prevenire errori di rendering ad altissimo ingrandimento)
     layerSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles &copy; Esri', maxZoom: 17
     });
@@ -146,7 +147,7 @@ function disegnaGeoJson() {
         onEachFeature: aggiungiPopup
     }).addTo(mappaAttiva);
     
-    setTimeout(aggiornaDimensioneEtichette, 100);
+    setTimeout(gestisciEtichetteVisibili, 100);
 }
 
 // ------------------------------------
@@ -159,14 +160,14 @@ function impostaStileLinea(feature) {
         const velStr = feature.properties.velocita;
         const vel = parseFloat(velStr);
         
-        if (isNaN(vel)) colore = '#a9a9a9';         // Altro (Grigio scuro)
-        else if (vel <= 5) colore = '#ff0000';      // Rosso vivo
-        else if (vel <= 7) colore = '#ff8c00';      // Arancione scuro
-        else if (vel <= 9) colore = '#ffd700';      // Oro / Giallo acceso
-        else if (vel <= 11) colore = '#32cd32';     // Verde lime
-        else if (vel <= 14) colore = '#00ced1';     // Turchese scuro
-        else if (vel <= 15) colore = '#1e90ff';     // Blu dodger
-        else if (vel >= 20) colore = '#8a2be2';     // Viola scuro
+        if (isNaN(vel)) colore = '#a9a9a9';         
+        else if (vel <= 5) colore = '#ff0000';      
+        else if (vel <= 7) colore = '#ff8c00';      
+        else if (vel <= 9) colore = '#ffd700';      
+        else if (vel <= 11) colore = '#32cd32';     
+        else if (vel <= 14) colore = '#00ced1';     
+        else if (vel <= 15) colore = '#1e90ff';     
+        else if (vel >= 20) colore = '#8a2be2';     
     } 
     else if (modalitaCorrente === 'giurisdizione') {
         const giu = (feature.properties.giurisdisz || '').toUpperCase();
@@ -180,7 +181,7 @@ function impostaStileLinea(feature) {
 
     return {
         color: colore,
-        weight: sfondoCorrente === 'satellite' ? 4 : 3, // Leggermente più spesse per risaltare
+        weight: sfondoCorrente === 'satellite' ? 4 : 3,
         fillColor: colore,
         fillOpacity: isPolygon ? (sfondoCorrente === 'satellite' ? 0.5 : 0.4) : 1,
         opacity: sfondoCorrente === 'satellite' ? 0.9 : 0.8
@@ -247,14 +248,42 @@ function aggiungiPopup(feature, layer) {
             `;
         }
     });
+}
 
-    if (feature.properties && feature.properties.Toponomast) {
-        layer.bindTooltip(feature.properties.Toponomast, {
-            permanent: true,
-            direction: 'center',
-            className: 'etichetta-canale'
-        });
-    }
+// ------------------------------------
+// GESTIONE OTTIMIZZATA ETICHETTE
+// ------------------------------------
+function gestisciEtichetteVisibili() {
+    if (!mappaAttiva || !geoJsonLayer) return;
+    
+    const zoom = mappaAttiva.getZoom();
+    const bounds = mappaAttiva.getBounds();
+    
+    // Gestione della dimensione CSS ancorata al contenitore mappa
+    const container = document.getElementById('leaflet-map-container');
+    container.classList.remove('zoom-15', 'zoom-16', 'zoom-17-plus');
+    if (zoom === 15) container.classList.add('zoom-15');
+    else if (zoom === 16) container.classList.add('zoom-16');
+    else if (zoom >= 17) container.classList.add('zoom-17-plus');
+    
+    // Carica etichette SOLO per i canali visibili a schermo (culling)
+    geoJsonLayer.eachLayer(layer => {
+        if (!layer.getBounds || !layer.feature || !layer.feature.properties || !layer.feature.properties.Toponomast) return;
+
+        if (zoom >= 15 && bounds.intersects(layer.getBounds())) {
+            if (!layer.getTooltip()) {
+                layer.bindTooltip(layer.feature.properties.Toponomast, {
+                    permanent: true,
+                    direction: 'center',
+                    className: 'etichetta-canale'
+                });
+            }
+        } else {
+            if (layer.getTooltip()) {
+                layer.unbindTooltip();
+            }
+        }
+    });
 }
 
 async function salvaFeatureModificata(index) {
@@ -352,21 +381,4 @@ function toggleEdit() {
         icon.className = "fa-solid fa-pen";
         mappaAttiva.closePopup(); 
     }
-}
-
-function aggiornaDimensioneEtichette() {
-    if (!mappaAttiva) return;
-    const zoom = mappaAttiva.getZoom();
-    const etichette = document.querySelectorAll('.etichetta-canale');
-    
-    etichette.forEach(el => {
-        if (zoom < 15) {
-            el.classList.remove('visibile'); 
-        } else {
-            el.classList.add('visibile');
-            if (zoom >= 17) el.style.fontSize = '14px';
-            else if (zoom === 16) el.style.fontSize = '12px';
-            else el.style.fontSize = '10px';
-        }
-    });
 }
