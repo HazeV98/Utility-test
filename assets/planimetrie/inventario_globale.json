@@ -65,7 +65,9 @@
       "colore": "#ff0000",
       "categoria": "Antincendio",
       "testo_html": "<p>Dettagli...</p>",
-      "media": []
+      "media": [
+        "assets/media_vademecum/plan_1787844219668.jpg"
+      ]
     },
     "sch_1787619101438": {
       "nome": "Comando scarico CO2",
