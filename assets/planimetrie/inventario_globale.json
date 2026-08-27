@@ -75,7 +75,9 @@
       "colore": "#ff0000",
       "categoria": "Antincendio",
       "testo_html": "Comando per scaricare la CO2 dall'impianto fisso in LAM, da utilizzare in caso di incendio in LAM solo dopo aver chiuso le serrande.",
-      "media": []
+      "media": [
+        "assets/media_vademecum/plan_1787864914110.jpg"
+      ]
     },
     "sch_1787619303916": {
       "nome": "Estintore a polvere",
