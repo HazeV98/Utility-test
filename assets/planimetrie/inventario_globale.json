@@ -105,7 +105,7 @@
     },
     "sch_1787619787142": {
       "nome": "Bombole impianto CO2",
-      "icona": "fa-solid",
+      "icona": "fa-solid fa-c",
       "colore": "#ff0000",
       "categoria": "Antincendio",
       "testo_html": "Bombole che contengono la CO2 dell'impianto di estinzione fisso. Vengono scaricate in LAM tramite un comanando presente in plancia.",
