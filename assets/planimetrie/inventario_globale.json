@@ -71,7 +71,7 @@
     },
     "sch_1787619101438": {
       "nome": "Comando scarico CO2",
-      "icona": "fa-solid",
+      "icona": "fa-solid fa-c",
       "colore": "#ff0000",
       "categoria": "Antincendio",
       "testo_html": "Comando per scaricare la CO2 dall'impianto fisso in LAM, da utilizzare in caso di incendio in LAM solo dopo aver chiuso le serrande.",
