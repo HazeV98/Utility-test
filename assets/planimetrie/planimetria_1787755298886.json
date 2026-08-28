@@ -51,6 +51,22 @@
           "size": 10,
           "iconaContenitore": "fa-solid fa-box-open",
           "immagineContenitore": null
+        },
+        {
+          "id": "pin_1787935076280",
+          "lat": 1383.5549923802287,
+          "lng": 1254.2330279904033,
+          "tipo": "singolo",
+          "nomeContenitore": null,
+          "elementi": [
+            {
+              "schedaId": "sch_1787669917757",
+              "qta": 9
+            }
+          ],
+          "size": 20,
+          "iconaContenitore": "fa-solid fa-box-open",
+          "immagineContenitore": null
         }
       ]
     }
