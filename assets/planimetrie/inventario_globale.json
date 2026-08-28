@@ -255,10 +255,10 @@
     },
     "sch_1787959844517": {
       "nome": "Torcia",
-      "icona": "fa-solid fa-flashlight",
+      "icona": "fa-regular fa-lightbulb",
       "colore": "#ffeb12",
       "categoria": "Dotazioni",
-      "testo_html": "<p>Dettagli...</p>",
+      "testo_html": "",
       "media": []
     }
   },
