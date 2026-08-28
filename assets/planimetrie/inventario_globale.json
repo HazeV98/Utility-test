@@ -252,6 +252,14 @@
       "media": [
         "assets/media_vademecum/plan_1787934767316.webp"
       ]
+    },
+    "sch_1787959844517": {
+      "nome": "Torcia",
+      "icona": "fa-solid fa-flashlight",
+      "colore": "#ffeb12",
+      "categoria": "Dotazioni",
+      "testo_html": "<p>Dettagli...</p>",
+      "media": []
     }
   },
   "coloriCat": {
