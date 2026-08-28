@@ -5,22 +5,6 @@
       "imgUrl": "assets/planimetrie/planimetria_1787755298886_L1787755364011.jpg",
       "pins": [
         {
-          "id": "pin_1787935018793",
-          "lat": 1515.7787033376183,
-          "lng": 2575.5812498345363,
-          "tipo": "singolo",
-          "nomeContenitore": null,
-          "elementi": [
-            {
-              "schedaId": "sch_1787619908832",
-              "qta": 2
-            }
-          ],
-          "size": 10,
-          "iconaContenitore": "fa-solid fa-box-open",
-          "immagineContenitore": null
-        },
-        {
           "id": "pin_1787935058601",
           "lat": 1620.6600206353326,
           "lng": 1252.7958453373171,
