@@ -246,8 +246,10 @@
       "icona": "fa-solid fa-star",
       "colore": "#ffeb12",
       "categoria": "Dotazioni",
-      "testo_html": "<p>Dettagli...</p>",
-      "media": []
+      "testo_html": "<h3>Segnale di Soccorso a Due Stelle Rosse</h3><h3>​Campi di utilizzo</h3><div>- ​<b>Inquadramento</b>: Dispositivo pirotecnico di segnalazione di emergenza per la navigazione entro le 3 miglia (e battelli da salvataggio).</div><div>- ​<b>Funzione</b>: Spara due distinte stelle luminose di colore rosso intenso in sequenza per richiamare l'attenzione a breve/media distanza.</div><div>- ​<b>Limiti</b>: Dispositivo monouso; inefficace se bagnato internamente o usato in presenza di forte nebbia fitta.</div><div>​Come usarlo</div><h3>Utilizzo</h3><div>- ​<b>Puntatore e orientamento</b>: Verificare la direzione del vento e sporgersi fuoribordo. Orientare il dispositivo in verticale spingendo la freccia \"LATO ALTO / TOP\" verso il cielo.</div><div>- ​<b>Prima stella</b>: Impugnare saldamente il corpo arancione, tirare il primo pomello verso il basso fino al punto di fermo e rilasciarlo.</div><div>- ​<b>Seconda stella</b>: Ripetere la medesima operazione azionando il secondo pomello per lanciare la seconda stella di segnalazione.</div><h3>​Avvertenze</h3><div>- ​<b>Traiettoria e sicurezza</b>: Non orientare mai il dispositivo verso il corpo, altre persone o la struttura dell'imbarcazione durante il lancio.</div><div>- ​<b>Residui e ustioni</b>: Tenere l'estremità superiore lontana da viso e mani: l'espulsione produce fiamme ed elevate temperature.</div><div>- ​<b>Impiego e conservazione</b>: Usare esclusivamente in caso di reale pericolo; verificare la data di scadenza riportata sull'etichetta e conservare al riparo da umidità e fonti di calore.&nbsp;</div>",
+      "media": [
+        "assets/media_vademecum/plan_1787934767316.webp"
+      ]
     }
   },
   "coloriCat": {
