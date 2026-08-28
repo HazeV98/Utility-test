@@ -240,6 +240,14 @@
       "categoria": "Dotazioni",
       "testo_html": "<h3>Coperta Isotermica</h3><h3>​Campi di utilizzo</h3><div>- ​<b>Inquadramento</b>: Presidio medico di emergenza impiegato nel primo soccorso per il controllo della temperatura corporea di feriti, naufraghi o soggetti in stato di shock, ipotermia o colpo di calore.</div><div>- ​<b>Funzionamento duale</b>: Realizzata in materiale metallizzato riflettente che trattiene il calore corporeo o respinge l'irraggiamento solare esterno a seconda del verso di applicazione.</div><h3>​Come usarla</h3><div>- ​<b>Protezione dal freddo / ipotermia</b>: Avvolgere completamente il soggetto con la faccia dorata rivolta all'esterno e la faccia d'argento a contatto con il corpo (il lato argentato riflette circa il 90% del calore corporeo verso l'interno).</div><div>- ​<b>Protezione dal caldo / colpo di calore</b>: Coprire il soggetto con la faccia d'argento rivolta all'esterno e la faccia dorata a contatto con il corpo (il lato argentato riflette i raggi solari verso l'esterno).</div><div>- ​<b>Fissaggio</b>: Assicurarsi di coprire bene il tronco e la testa lasciando libero il viso, facendola aderire senza stringere eccessivamente per evitare strappi.&nbsp;</div><h3>Avvertenze</h3><div>- ​<b>Resistenza al calore e fiamme libere</b>: Non è un presidio antincendio ignifugo. Evitare il contatto diretto con fiamme libere o superfici roventi per prevenire la fusione del materiale plastico (PET).</div><div>- ​<b>Rischio elettrico</b>: Materiale conduttivo; non utilizzare in prossimità di linee ad alta tensione o durante l'uso di defibrillatori automatici (DAE).</div><div>- ​<b>Isolamento dal suolo</b>: Non isola per conduzione; in caso di suolo bagnato o ghiacciato, interporre un ulteriore strato isolante sotto la vittima.</div>",
       "media": []
+    },
+    "sch_1787934225094": {
+      "nome": "Stelle di seganlazione",
+      "icona": "fa-solid fa-star",
+      "colore": "#ffeb12",
+      "categoria": "Dotazioni",
+      "testo_html": "<p>Dettagli...</p>",
+      "media": []
     }
   },
   "coloriCat": {
