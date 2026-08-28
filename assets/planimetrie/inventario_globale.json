@@ -89,7 +89,7 @@
     },
     "sch_1787619497012": {
       "nome": "Erogatore impianto CO2",
-      "icona": "fa-solid",
+      "icona": "fa-solid fa-shower",
       "colore": "#ff0000",
       "categoria": "Antincendio",
       "testo_html": "Erogatore da cui viene scaricata la CO2 utilizzando il comando in plancia.",
