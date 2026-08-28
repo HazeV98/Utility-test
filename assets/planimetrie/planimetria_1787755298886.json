@@ -211,6 +211,34 @@
           "size": 10,
           "iconaContenitore": "fa-solid fa-box-open",
           "immagineContenitore": null
+        },
+        {
+          "id": "pin_1787935377836",
+          "lat": 1509.3041186704063,
+          "lng": 2579.362158239819,
+          "tipo": "contenitore",
+          "nomeContenitore": "Contenitore Multiplo",
+          "elementi": [
+            {
+              "schedaId": "sch_1787701617488",
+              "qta": 1
+            },
+            {
+              "schedaId": "sch_1787701658851",
+              "qta": 1
+            },
+            {
+              "schedaId": "sch_1787619908832",
+              "qta": 2
+            },
+            {
+              "schedaId": "sch_1787620125458",
+              "qta": 1
+            }
+          ],
+          "size": 20,
+          "iconaContenitore": "fa-solid fa-box-open",
+          "immagineContenitore": null
         }
       ]
     }
