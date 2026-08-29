@@ -77,7 +77,8 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
         eliminaMediaPlan, scaricaFilePlan, apriViewerPlan, apriImmagineSingola, aggiungiNuovoLivello, eliminaPin, 
         aggiungiCategoria, salvaDimensionePin, cambiaColoreDaCategoria,
         apriInfoPlanimetria, salvaInfoPlanimetria, apriModificaContenitore, salvaModificheContenitore,
-        gestisciUploadImmagineContenitore, eliminaImmagineContenitore
+        gestisciUploadImmagineContenitore, eliminaImmagineContenitore,
+        apriGestioneMediaLocale, gestisciUploadMediaLocale, eliminaMediaLocale, apriViewerPinLocale
     };
 
     if (globalIsAdminCollab) document.getElementById('fab-edit-plan').style.display = 'flex';
@@ -328,6 +329,8 @@ function disegnaLivelloCorrente() {
                             ? `<button onclick="window.Plan.apriModificaContenitore('${pin.id}')" style="background:var(--primary); color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; width:100%; font-weight:bold; margin-bottom:10px;"><i class="fa-solid fa-pen"></i> Modifica Contenitore</button>` 
                             : '';
 
+                        let btnMediaLocale = `<button onclick="window.Plan.apriGestioneMediaLocale('${pin.id}')" style="background:var(--success); color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; width:100%; font-weight:bold; margin-bottom:10px;"><i class="fa-solid fa-camera"></i> Media Unità</button>`;
+
                         marker.bindPopup(`
                             <div style="text-align:center; min-width: 170px; padding: 5px;">
                                 <strong style="font-size:14px; color:var(--primary);">${pinName}</strong><br>
@@ -342,6 +345,7 @@ function disegnaLivelloCorrente() {
                                 </div>
                                 
                                 ${btnModifica}
+                                ${btnMediaLocale}
                                 <button onclick="window.Plan.eliminaPin('${pin.id}')" style="background:var(--danger); color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; width:100%; font-weight:bold;"><i class="fa-solid fa-trash"></i> Elimina</button>
                             </div>
                         `);
@@ -910,7 +914,7 @@ async function eliminaSchedaGlobale(id) {
 // ==========================================
 function apriVisualizzatorePin(pin) {
     if (pin.tipo === 'singolo') {
-        apriSchedaViewer(pin.elementi[0].schedaId, pin.elementi[0].qta);
+        apriSchedaViewer(pin.elementi[0].schedaId, pin.elementi[0].qta, pin.id);
     } else {
         let iconaCont = pin.iconaContenitore || 'fa-solid fa-box-open';
         if (!iconaCont.includes('fa-')) iconaCont = 'fa-solid ' + iconaCont;
@@ -927,6 +931,15 @@ function apriVisualizzatorePin(pin) {
             html += `
                 <div style="width:100%; height:150px; border-radius:8px; overflow:hidden; margin-bottom:15px; border: 1px solid var(--border-color);">
                     <img src="${rawUrl}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;" onclick="window.Plan.apriImmagineSingola('${rawUrl}')">
+                </div>
+            `;
+        }
+
+        if (pin.mediaLocale && pin.mediaLocale.length > 0) {
+            html += `
+                <p style="font-size:13px; font-weight:bold; color:var(--success); margin-bottom:10px;"><i class="fa-solid fa-camera"></i> Foto/Video di questa postazione:</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    ${generaHtmlGalleriaLocale(pin.mediaLocale, false, pin.id)}
                 </div>
             `;
         }
@@ -956,7 +969,7 @@ function apriVisualizzatorePin(pin) {
     }
 }
 
-function apriSchedaViewer(id, qta = null) {
+function apriSchedaViewer(id, qta = null, pinId = null) {
     const s = inventarioGlobale.schede[id];
     if(!s) return;
 
@@ -972,6 +985,21 @@ function apriSchedaViewer(id, qta = null) {
 
     const badgeQta = qta ? `<span style="background:rgba(0,102,204,0.1); color:var(--primary); padding:4px 12px; border-radius:16px; font-weight:bold; font-size:14px; margin-left:auto;">Presenti: N° ${qta}</span>` : '';
 
+    let htmlLocale = '';
+    if (pinId) {
+        const pin = planData.livelli[livelloCorrenteIdx].pins.find(p => p.id === pinId);
+        if (pin && pin.mediaLocale && pin.mediaLocale.length > 0) {
+            htmlLocale = `
+                <div style="margin-top: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border-color);">
+                    <p style="font-size:13px; font-weight:bold; color:var(--success); margin-bottom:10px;"><i class="fa-solid fa-camera"></i> Media Specifici di questa unità:</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        ${generaHtmlGalleriaLocale(pin.mediaLocale, false, pin.id)}
+                    </div>
+                </div>
+            `;
+        }
+    }
+
     let html = `
         <div style="display:flex; align-items:center; gap:12px; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom:10px; flex-wrap: wrap;">
             <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:${s.colore}; color:white; border-radius:50%; font-size:18px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"><i class="${s.icona.includes('fa-') ? s.icona : 'fa-solid ' + s.icona}"></i></span>
@@ -979,10 +1007,13 @@ function apriSchedaViewer(id, qta = null) {
             ${badgeQta}
         </div>
         
-        <div style="font-size: 15px; line-height: 1.6; color: var(--text-main); margin-bottom: 25px;">
+        <div style="font-size: 15px; line-height: 1.6; color: var(--text-main); margin-bottom: 20px;">
             ${formattato}
         </div>
+        
+        ${htmlLocale}
 
+        <p style="font-size:13px; font-weight:bold; color:var(--text-main); margin-bottom:10px;"><i class="fa-solid fa-globe"></i> Immagini Generali Scheda:</p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             ${generaHtmlGalleria(s.media, false, id)}
         </div>
@@ -1125,7 +1156,7 @@ function creaContenitoreModali() {
 }
 function mostraModale(html) { document.getElementById('plan-modal-content').innerHTML = html; document.getElementById('plan-modal-overlay').style.display = 'flex'; }
 
-// SISTEMA VISUALIZZATORE MEDIA
+// SISTEMA VISUALIZZATORE MEDIA GLOBALE
 function creaViewerLocale() {
     if (!document.getElementById('vd-media-viewer')) {
         const viewer = document.createElement('div');
@@ -1141,20 +1172,49 @@ function creaViewerLocale() {
 
 function applicaZoomPanImmagine(img) {
     let scale = 1, isDragging = false, startX, startY, translateX = 0, translateY = 0;
-    img.onwheel = (e) => {
-        e.preventDefault();
-        scale += e.deltaY * -0.005;
-        scale = Math.min(Math.max(0.5, scale), 5);
+    let initialDistance = null, initialScale = 1;
+
+    const updateTransform = () => {
         img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
     };
+
+    img.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        scale += e.deltaY * -0.005;
+        scale = Math.min(Math.max(0.5, scale), 8); 
+        updateTransform();
+    }, { passive: false });
+
     const startDrag = (clientX, clientY) => { isDragging = true; startX = clientX - translateX; startY = clientY - translateY; img.style.cursor = 'grabbing'; };
-    const doDrag = (clientX, clientY) => { if (!isDragging) return; translateX = clientX - startX; translateY = clientY - startY; img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`; };
-    const stopDrag = () => { isDragging = false; img.style.cursor = 'grab'; };
+    const doDrag = (clientX, clientY) => { if (!isDragging) return; translateX = clientX - startX; translateY = clientY - startY; updateTransform(); };
+    const stopDrag = () => { isDragging = false; initialDistance = null; img.style.cursor = 'grab'; };
+
     img.onmousedown = (e) => { e.preventDefault(); startDrag(e.clientX, e.clientY); };
     window.onmousemove = (e) => doDrag(e.clientX, e.clientY);
     window.onmouseup = stopDrag;
-    img.addEventListener('touchstart', (e) => { if(e.touches.length === 1) startDrag(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
-    window.addEventListener('touchmove', (e) => { if(isDragging && e.touches.length === 1) { e.preventDefault(); doDrag(e.touches[0].clientX, e.touches[0].clientY); } }, {passive: false});
+
+    img.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+            startDrag(e.touches[0].clientX, e.touches[0].clientY);
+        } else if (e.touches.length === 2) {
+            isDragging = false; 
+            initialDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            initialScale = scale;
+        }
+    }, { passive: false });
+
+    window.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1 && isDragging) {
+            e.preventDefault();
+            doDrag(e.touches[0].clientX, e.touches[0].clientY);
+        } else if (e.touches.length === 2 && initialDistance) {
+            e.preventDefault();
+            const currentDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            scale = Math.min(Math.max(0.5, initialScale * (currentDistance / initialDistance)), 8);
+            updateTransform();
+        }
+    }, { passive: false });
+
     window.addEventListener('touchend', stopDrag);
 }
 
@@ -1182,3 +1242,96 @@ function apriImmagineSingola(url) {
     setTimeout(() => { const img = document.getElementById('vd-viewer-img'); if(img) applicaZoomPanImmagine(img); }, 50);
     document.getElementById('vd-media-viewer').style.display = 'flex';
 }
+
+
+// ==========================================
+// MEDIA SPECIFICI DEL SINGOLO PIN
+// ==========================================
+window.Plan.apriGestioneMediaLocale = function(pinId) {
+    const pin = planData.livelli[livelloCorrenteIdx].pins.find(p => p.id === pinId);
+    if (!pin) return;
+    if (!pin.mediaLocale) pin.mediaLocale = [];
+
+    let html = `
+        <h3 style="margin-bottom: 15px; color: var(--success);"><i class="fa-solid fa-camera"></i> Media Specifici Unità</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Aggiungi foto o video validi <b>solo per questo punto</b> nella planimetria corrente.</p>
+
+        <div style="display:flex; justify-content:space-between; margin-bottom: 20px;">
+            <button onclick="document.getElementById('upload-media-locale').click()" style="width:100%; background:var(--primary); color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;"><i class="fa-solid fa-upload"></i> Carica Foto/Video</button>
+            <input type="file" id="upload-media-locale" accept="image/*, video/*" style="display:none;" onchange="window.Plan.gestisciUploadMediaLocale(event, '${pin.id}')">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+            ${generaHtmlGalleriaLocale(pin.mediaLocale, true, pin.id)}
+        </div>
+    `;
+    mostraModale(html);
+};
+
+window.Plan.gestisciUploadMediaLocale = async function(event, pinId) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const token = localStorage.getItem('gh_admin_token');
+    const pin = planData.livelli[livelloCorrenteIdx].pins.find(p => p.id === pinId);
+    if (!pin.mediaLocale) pin.mediaLocale = [];
+
+    try {
+        document.getElementById('plan-modal-content').innerHTML = `<div style="text-align:center; padding: 40px; color: var(--primary);"><i class="fa-solid fa-spinner fa-spin fa-3x"></i><br><br>Caricamento media in corso...</div>`;
+        const ext = file.name.split('.').pop().toLowerCase();
+        const path = `assets/media_vademecum/loc_${Date.now()}.${ext}`;
+        const reader = new FileReader();
+        const b64 = await new Promise((res, rej) => { reader.readAsDataURL(file); reader.onload = () => res(reader.result.split(',')[1]); });
+
+        await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
+            method: 'PUT', headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: `Media locale aggiunto al pin`, content: b64 })
+        });
+
+        pin.mediaLocale.push(path);
+        await salvaPlanimetriaSuGitHub();
+        window.Plan.apriGestioneMediaLocale(pinId);
+    } catch (e) { alert("Errore caricamento media locale."); window.Plan.apriGestioneMediaLocale(pinId); }
+};
+
+window.Plan.eliminaMediaLocale = async function(pinId, index) {
+    if(!confirm("Eliminare questo media locale?")) return;
+    const pin = planData.livelli[livelloCorrenteIdx].pins.find(p => p.id === pinId);
+    pin.mediaLocale.splice(index, 1);
+    await salvaPlanimetriaSuGitHub();
+    window.Plan.apriGestioneMediaLocale(pinId);
+};
+
+function generaHtmlGalleriaLocale(mediaArray, isEdit, pinId) {
+    if(!mediaArray || mediaArray.length === 0) return '<div style="grid-column: 1/-1; text-align:center; color:var(--text-muted); font-size:12px;">Nessun media locale presente.</div>';
+    let html = '';
+    mediaArray.forEach((path, index) => {
+        const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${path}`;
+        const filename = path.split('/').pop();
+        const ext = filename.split('.').pop().toLowerCase();
+        const isVideo = ['mp4', 'webm', 'mov'].includes(ext);
+        const tag = isVideo ? `<video src="${rawUrl}" style="width: 100%; height: 120px; object-fit: cover; display: block;"></video><i class="fa-solid fa-play" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:30px; pointer-events:none;"></i>` : `<img src="${rawUrl}" style="width: 100%; height: 120px; object-fit: cover; display: block;">`;
+        
+        html += `
+        <div style="position: relative; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); box-sizing: border-box;">
+            <div onclick="window.Plan.apriViewerPinLocale('${pinId}', ${index})" style="cursor: pointer; position: relative;">${tag}</div>
+            ${isEdit ? `<button onclick="window.Plan.eliminaMediaLocale('${pinId}', ${index})" style="position:absolute; top:5px; right:5px; background:var(--danger); color:white; border:2px solid white; border-radius:50%; width:30px; height:30px; cursor:pointer; z-index:10;"><i class="fa-solid fa-trash" style="font-size:11px;"></i></button>` : ``}
+        </div>`;
+    });
+    return html;
+}
+
+window.Plan.apriViewerPinLocale = function(pinId, index) {
+    creaViewerLocale();
+    const pin = planData.livelli[livelloCorrenteIdx].pins.find(p => p.id === pinId);
+    const path = pin.mediaLocale[index];
+    const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${path}`;
+    const ext = path.split('.').pop().toLowerCase();
+    const contentDiv = document.getElementById('vd-media-viewer-content');
+
+    if (['mp4', 'webm', 'mov'].includes(ext)) {
+        contentDiv.innerHTML = `<video src="${rawUrl}" controls autoplay playsinline style="max-width: 95vw; max-height: 95vh; object-fit: contain;"></video>`;
+    } else {
+        contentDiv.innerHTML = `<img id="vd-viewer-img" src="${rawUrl}" draggable="false" style="max-width: 95vw; max-height: 95vh; object-fit: contain; transform-origin: center center; transition: transform 0.1s ease-out; cursor: grab;">`;
+        setTimeout(() => { const img = document.getElementById('vd-viewer-img'); if(img) applicaZoomPanImmagine(img); }, 50);
+    }
+    document.getElementById('vd-media-viewer').style.display = 'flex';
+};
