@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
 import { avviaMotoreAuth } from './auth.js';
@@ -12,22 +12,36 @@ const ModuliLazyLoader = {
     cache: new Map(),
     initializedUIs: new Set(),
     
-    // Solo mappa di referenza, nessuna funzione UI hardcoded necessaria qui.
-    moduli: {},
+    // Mappa protetta dei moduli per evitare crash di caricamento
+    moduli: {
+        turni: { motore: './turni.js', ui: './ui_turni.js', exports: ['avviaMotoreTurni', 'initUITurni'] },
+        orari: { motore: './orari.js', ui: './ui_orari.js', exports: ['avviaMotoreOrari', 'initUIOrari'] },
+        link: { motore: './link.js', ui: './ui_link.js', exports: ['avviaMotoreLink', 'initUILink'] },
+        documenti: { motore: './documenti.js', ui: './ui_documenti.js', exports: ['avviaMotoreDocumenti', 'initUIDocumenti'] },
+        contatti: { motore: './contatti.js', ui: './ui_contatti.js', exports: ['avviaMotoreContatti', 'initUIContatti'] },
+        bacheca_utility: { motore: './bacheca_utility.js', ui: './ui_bacheca_utility.js', exports: ['avviaMotoreBachecaUtility', 'initUIBachecaUtility'] },
+        rubrica: { motore: './rubrica.js', ui: './ui_rubrica.js', exports: ['avviaMotoreRubrica', 'initUIRubrica'] },
+        bacheca_turni: { motore: './bacheca_turni.js', ui: './ui_bacheca_turni.js', exports: ['avviaMotoreBachecaTurni', 'initUIBachecaTurni'] },
+        barcadvisor: { motore: './barcadvisor.js', ui: './ui_barcadvisor.js', exports: ['avviaMotoreBarcadvisor', 'initUIBarcadvisor'] },
+        buoni_pasto: { motore: './buoni_pasto.js', ui: './ui_buoniPasto.js', exports: ['avviaMotoreBuoniPasto', 'initUIBuoniPasto'] },
+        statistiche: { motore: './statistiche.js', ui: './ui_statistiche.js', exports: ['avviaMotoreStatistiche', 'initUIStatistiche'] },
+        rotazioni: { motore: './rotazioni.js', ui: './ui_rotazioni.js', exports: ['avviaMotoreRotazioni', 'initUIRotazioni'] },
+        rotazione_ferie: { motore: './rotazione_ferie.js', ui: './ui_rotazione_ferie.js', exports: ['avviaMotoreRotazioneFerie', 'initUIRotazioneFerie'] },
+        promemoria: { motore: './promemoria.js', ui: './ui_promemoria.js', exports: ['avviaMotorePromemoria', 'initUIPromemoria'] },
+        dds: { motore: './dds.js', ui: './ui_dds.js', exports: ['avviaMotoreDDS', 'initUIDDS'] },
+        guida: { motore: './guida.js', ui: './ui_guida.js', exports: ['avviaMotoreGuida', 'initUIGuida'] },
+        admin: { motore: './admin.js', ui: './ui_admin.js', exports: ['avviaMotoreAdmin', 'initUIAdmin'] },
+        report: { motore: './report.js', ui: './ui_report.js', exports: ['avviaMotoreSegnalazioni', 'initUISegnalazioni'] }
+    },
     
     async caricaModulo(nomeModulo, isSplit = false) {
         let config = this.moduli[nomeModulo];
         
-        // Creazione dinamica configurazione se non esiste (usa CamelCase per le funzioni esportate)
         if (!config) {
             const camelName = nomeModulo.replace(/_([a-z])/g, g => g[1].toUpperCase());
             const capName = camelName.charAt(0).toUpperCase() + camelName.slice(1);
-            
-            if (isSplit) {
-                config = { motore: `./${nomeModulo}.js`, ui: `./ui_${nomeModulo}.js`, exports: [`avviaMotore${capName}`, `initUI${capName}`] };
-            } else {
-                config = { motore: `./${nomeModulo}.js`, ui: null, exports: [`avviaMotore${capName}`] };
-            }
+            if (isSplit) { config = { motore: `./${nomeModulo}.js`, ui: `./ui_${nomeModulo}.js`, exports: [`avviaMotore${capName}`, `initUI${capName}`] }; } 
+            else { config = { motore: `./${nomeModulo}.js`, ui: null, exports: [`avviaMotore${capName}`] }; }
             this.moduli[nomeModulo] = config;
         }
 
@@ -35,9 +49,7 @@ const ModuliLazyLoader = {
             const cached = this.cache.get(nomeModulo);
             if (config.exports.some(f => f.startsWith('initUI')) && !this.initializedUIs.has(nomeModulo)) {
                 const initFunc = config.exports.find(f => f.startsWith('initUI'));
-                if (cached[initFunc]) {
-                    try { cached[initFunc](); this.initializedUIs.add(nomeModulo); } catch (e) { console.warn(e); }
-                }
+                if (cached[initFunc]) { try { cached[initFunc](); this.initializedUIs.add(nomeModulo); } catch (e) { console.warn(e); } }
             }
             return cached;
         }
@@ -60,10 +72,7 @@ const ModuliLazyLoader = {
                 try { esporta[initFunc](); this.initializedUIs.add(nomeModulo); } catch (e) { console.warn(e); }
             }
             return esporta;
-        } catch (errore) {
-            console.error(`✗ Errore caricamento modulo '${nomeModulo}':`, errore);
-            return null;
-        }
+        } catch (errore) { console.error(`✗ Errore caricamento modulo '${nomeModulo}':`, errore); return null; }
     },
     
     async avviaMotore(nomeModulo, isSplit = false) {
@@ -110,9 +119,6 @@ window.chiudiMenuLaterale = () => {
     const o = document.getElementById('sidebar-overlay'); if(o) o.style.display = 'none'; 
 };
 
-// ============================================================================
-// FUNZIONI FISSE MANTENUTE (SOLO QUELLE DEL MENU SUPERIORE)
-// ============================================================================
 window.apriBachecaUtility = async () => {
     const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
     const modulo = await ModuliLazyLoader.avviaMotore('bacheca_utility', true);
@@ -133,7 +139,7 @@ window.apriModaleGuida = async () => {
 };
 
 // ============================================================================
-// GESTIONE GITHUB API PER MENU DINAMICO E RIORDINAMENTO
+// GESTIONE GITHUB API (Lettura Standard e Scrittura via API)
 // ============================================================================
 let remoteApps = [];
 
@@ -242,10 +248,7 @@ window.salvaAppSuGitHub = async () => {
 
 window.apriModificaIcona = (id) => {
     let app = remoteApps.find(a => a.id === id);
-    if(!app) {
-        // Modalità Nuova Icona
-        app = { id: '', tipo: 'modulo', nome: '', target: '', split: false, iconaTipo: 'fa', iconaValore: '', visibilita: [] };
-    }
+    if(!app) { app = { id: '', tipo: 'modulo', nome: '', target: '', split: false, iconaTipo: 'fa', iconaValore: '', visibilita: [] }; }
     
     document.getElementById('app-edit-id').value = app.id;
     document.getElementById('app-tipo').value = app.tipo;
@@ -255,9 +258,7 @@ window.apriModificaIcona = (id) => {
     document.getElementById('app-tipo-icona').value = app.iconaTipo;
     document.getElementById('app-icona-fa').value = (app.iconaTipo === 'fa') ? (app.iconaValore || '') : '';
     
-    document.querySelectorAll('.app-vis').forEach(cb => { 
-        cb.checked = app.visibilita ? app.visibilita.includes(cb.value) : false; 
-    });
+    document.querySelectorAll('.app-vis').forEach(cb => { cb.checked = app.visibilita ? app.visibilita.includes(cb.value) : false; });
     
     window.aggiornaUIFormApp();
     window.apriModal('modaleAggiuntaIcona');
@@ -284,9 +285,14 @@ window.LayoutEngine = {
         this.applicaGrafica();
         this.popolaModaleImpostazioni();
         
+        // RECUPERO STANDARD SENZA API GITHUB (Nessun rate limit, pagina sempre visibile)
         try {
-            const file = await fetchGitHubFile('assets/apps.json');
-            if (file) remoteApps = JSON.parse(file.content);
+            const res = await fetch(`assets/apps.json?v=${new Date().getTime()}`);
+            if (res.ok) {
+                remoteApps = await res.json();
+            } else {
+                console.error("File apps.json non trovato.");
+            }
         } catch (e) { console.warn("Impossibile caricare apps.json", e); }
 
         this.render();
@@ -349,7 +355,6 @@ window.LayoutEngine = {
             }
             if(!canSee) return;
 
-            // Creazione Wrapper Dinamico per il Modulo se non è un link
             let isLinkAttr = "";
             let sidebarLinkAttr = "";
             if (this.isEditMode) {
@@ -397,7 +402,6 @@ window.LayoutEngine = {
 
             let animDelay = this.isEditMode ? "0s" : `${index * 0.04}s`;
             
-            // Appendi alla griglia principale
             container.innerHTML += `
                 <a ${isLinkAttr} class="app-btn" id="btn-${app.id}" style="animation-delay: ${animDelay}">
                     ${badgeHtml}
@@ -405,7 +409,6 @@ window.LayoutEngine = {
                     <div class="app-label">${app.nome.replace('\n', '<br>')}</div>
                 </a>`;
             
-            // Appendi alla Sidebar
             sidebarContainer.innerHTML += `
                 <a ${sidebarLinkAttr} class="sidebar-link">
                     ${sidebarIconHtml} ${app.nome.replace('\n', ' ')}
@@ -421,10 +424,7 @@ window.LayoutEngine = {
         
         if(this.isEditMode) {
             this.sortableInstance = new Sortable(document.getElementById('app-container'), { 
-                animation: 250, 
-                delay: 150, 
-                delayOnTouchOnly: true, 
-                ghostClass: "sortable-ghost", 
+                animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: "sortable-ghost", 
                 onEnd: () => { this.aggiornaOrdineDaDOM(); } 
             });
         } else { 
@@ -441,7 +441,6 @@ window.LayoutEngine = {
             if (app) nuovoOrdine.push(app);
         });
         
-        // Aggiunge in fondo le app nascoste all'utente corrente per non perderle
         remoteApps.forEach(app => { 
             if (!nuovoOrdine.find(a => a.id === app.id)) nuovoOrdine.push(app); 
         });
@@ -490,7 +489,6 @@ window.LayoutEngine = {
         location.reload(); 
     }
 };
-
 
 // ============================================================================
 // GESTIONE GESTIONE ACCESSI E UTENTI
@@ -657,7 +655,7 @@ window.salvaEditorAdminUtente = async (uid) => {
 
 
 // ============================================================================
-// GESTIONE AUTENTICAZIONE PRINCIPALE
+// GESTIONE AUTENTICAZIONE PRINCIPALE E INIT
 // ============================================================================
 window.apriModal = (id, authMode) => { document.getElementById(id).style.display = 'flex'; if(id === 'authModal' && authMode) { window.currentAuthMode = authMode; window.aggiornaUIAuth(); } };
 window.chiudiModal = (id) => { document.getElementById(id).style.display = 'none'; };
