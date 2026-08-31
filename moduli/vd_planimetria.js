@@ -1243,11 +1243,10 @@ function apriImmagineSingola(url) {
     document.getElementById('vd-media-viewer').style.display = 'flex';
 }
 
-
 // ==========================================
 // MEDIA SPECIFICI DEL SINGOLO PIN
 // ==========================================
-window.Plan.apriGestioneMediaLocale = function(pinId) {
+function apriGestioneMediaLocale(pinId) {
     const pin = planData.livelli[livelloCorrenteIdx].pins.find(p => p.id === pinId);
     if (!pin) return;
     if (!pin.mediaLocale) pin.mediaLocale = [];
@@ -1266,9 +1265,9 @@ window.Plan.apriGestioneMediaLocale = function(pinId) {
         </div>
     `;
     mostraModale(html);
-};
+}
 
-window.Plan.gestisciUploadMediaLocale = async function(event, pinId) {
+async function gestisciUploadMediaLocale(event, pinId) {
     const file = event.target.files[0];
     if (!file) return;
     const token = localStorage.getItem('gh_admin_token');
@@ -1288,17 +1287,20 @@ window.Plan.gestisciUploadMediaLocale = async function(event, pinId) {
 
         pin.mediaLocale.push(path);
         await salvaPlanimetriaSuGitHub();
-        window.Plan.apriGestioneMediaLocale(pinId);
-    } catch (e) { alert("Errore caricamento media locale."); window.Plan.apriGestioneMediaLocale(pinId); }
-};
+        apriGestioneMediaLocale(pinId);
+    } catch (e) { 
+        alert("Errore caricamento media locale."); 
+        apriGestioneMediaLocale(pinId); 
+    }
+}
 
-window.Plan.eliminaMediaLocale = async function(pinId, index) {
+async function eliminaMediaLocale(pinId, index) {
     if(!confirm("Eliminare questo media locale?")) return;
     const pin = planData.livelli[livelloCorrenteIdx].pins.find(p => p.id === pinId);
     pin.mediaLocale.splice(index, 1);
     await salvaPlanimetriaSuGitHub();
-    window.Plan.apriGestioneMediaLocale(pinId);
-};
+    apriGestioneMediaLocale(pinId);
+}
 
 function generaHtmlGalleriaLocale(mediaArray, isEdit, pinId) {
     if(!mediaArray || mediaArray.length === 0) return '<div style="grid-column: 1/-1; text-align:center; color:var(--text-muted); font-size:12px;">Nessun media locale presente.</div>';
@@ -1319,7 +1321,7 @@ function generaHtmlGalleriaLocale(mediaArray, isEdit, pinId) {
     return html;
 }
 
-window.Plan.apriViewerPinLocale = function(pinId, index) {
+function apriViewerPinLocale(pinId, index) {
     creaViewerLocale();
     const pin = planData.livelli[livelloCorrenteIdx].pins.find(p => p.id === pinId);
     const path = pin.mediaLocale[index];
@@ -1334,4 +1336,4 @@ window.Plan.apriViewerPinLocale = function(pinId, index) {
         setTimeout(() => { const img = document.getElementById('vd-viewer-img'); if(img) applicaZoomPanImmagine(img); }, 50);
     }
     document.getElementById('vd-media-viewer').style.display = 'flex';
-};
+}
