@@ -20,7 +20,6 @@
     </script>
 
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
     
     <link rel="manifest" href="manifest.json">
@@ -178,18 +177,12 @@
         .app-list .app-icon { width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 6px 12px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1), inset 0 -4px 6px rgba(0,0,0,0.2); border: 1px solid rgba(0,0,0,0.04); overflow: hidden; }
         .app-list .app-label { font-size: calc(var(--label-size) + 2px); color: #1a1a1a; font-weight: 700; margin: 0; text-shadow: none; flex: 1; text-align: left; }
 
-        .transparent-icons .app-icon { background-color: transparent !important; box-shadow: none !important; border: none !important; color: var(--text-main) !important; }
-        .transparent-icons .app-icon::after, .transparent-icons .app-icon::before { display: none; }
-        .transparent-icons.app-grid .app-icon { font-size: 36px !important; } 
-        .transparent-icons.app-list .app-icon { font-size: 26px !important; }
-
         :root[data-theme="dark"] .app-grid .app-icon { box-shadow: 0 16px 32px -4px rgba(0,0,0,0.95), 0 8px 16px -4px rgba(0,0,0,0.8), inset 0 -8px 16px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.15); }
         :root[data-theme="dark"] .app-list .app-icon { box-shadow: 0 10px 20px -2px rgba(0,0,0,0.9), 0 4px 8px -2px rgba(0,0,0,0.7), inset 0 -6px 12px rgba(0,0,0,0.7), inset 1px 1px 3px rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.12); }
         :root[data-theme="dark"] .app-grid .app-label { text-shadow: none; }
 
         @keyframes wiggle { 0% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } 100% { transform: rotate(-2deg); } }
-        .wiggle-mode .app-btn { animation: wiggle 0.3s infinite; cursor: grab; }
-        .sortable-ghost { opacity: 0.3; transform: scale(0.9); }
+        .wiggle-mode .app-btn { animation: wiggle 0.3s infinite; }
         .edit-badge { position: absolute; top: -8px; right: 10px; background: var(--surface); color: var(--text-main); border-radius: 50%; width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; box-shadow: var(--shadow-md); font-size: 14px; z-index: 10; border: 1px solid var(--border-color); pointer-events: none; }
         .app-list .edit-badge { right: auto; left: 0; top: -10px; }
 
@@ -408,10 +401,9 @@
         <a href="calendario.html?oggi=true" class="sidebar-link"><i class="fa-solid fa-bullseye"></i> Oggi</a>
         <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
         
-        <!-- NUOVI COLLEGAMENTI MODALI AGGIUNTI (AL POSTO DEGLI HTML) -->
+        <!-- COLLEGAMENTI MODALI -->
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleStatistiche(); return false;" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleRotazioni(); return false;" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
-        <!-- FINE NUOVI COLLEGAMENTI -->
 
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleTurni(); return false;" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
         
@@ -420,7 +412,6 @@
         
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleRubrica(); return false;" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
         
-        <!-- NUOVO COLLEGAMENTO ROTAZIONE FERIE -->
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleRotazioneFerie(); return false;" class="sidebar-link"><i class="fa-solid fa-umbrella-beach"></i> Rotazione Ferie</a>
         
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleOrari(); return false;" class="sidebar-link"><i class="fa-regular fa-clock"></i> Orari Navigazione</a>
@@ -436,7 +427,6 @@
         
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleBuoniPasto(); return false;" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
         
-        <!-- NUOVI COLLEGAMENTI PROMEMORIA, DDS, GUIDA, ADMIN -->
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModalePromemoria(); return false;" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
         <a href="#" onclick="window.chiudiMenuLaterale(); window.apriModaleDDS(); return false;" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
         <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
@@ -534,7 +524,6 @@
                 <i class="fa-solid fa-triangle-exclamation"></i> Nuova DDS: <span id="titolo-dds-text"></span>
             </div>
 
-            <!-- MODIFICATO IL BANNER PROMEMORIA PER APRIRE LA MODALE -->
             <div id="banner-promemoria-alert" class="banner-alert banner-blue" style="display: none;" onclick="window.apriModalePromemoria()">
                 <i class="fa-solid fa-stopwatch fa-beat"></i> Hai dei promemoria per oggi!
             </div>
@@ -548,7 +537,7 @@
         </div>
     </div> 
 
-    <!-- Tutte le modali base (Settings, App, Profilo, Auth, Gestione Accessi) -->
+    <!-- Tutte le modali base (Settings, App, Profilo, Auth, Gestione Accessi, Aggiunta Icona) -->
     
     <div id="settingsModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'settingsModal')">
         <div class="modal-content">
@@ -595,106 +584,99 @@
                 </div>
             </div>
 
-            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Tema dell'App:</label>
-            <select id="set-theme" class="input-field" style="cursor:pointer;">
-                <option value="system">Impostazioni di Sistema</option>
-                <option value="light">Chiaro</option>
-                <option value="dark">Scuro</option>
-            </select>
-            
-            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; margin-top: 15px; display:block;">Colori Sfondo Onda:</label>
-            <div class="color-picker-row"><label>Colore 1 (Alto)</label><input type="color" id="set-col1"></div>
-            <div class="color-picker-row"><label>Colore 2 (Centrale)</label><input type="color" id="set-col2"></div>
-            <div class="color-picker-row"><label>Colore 3 (Basso)</label><input type="color" id="set-col3"></div>
-            
-            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; margin-top: 15px; display:block;">Colore Base App:</label>
-            <div class="color-picker-row"><label>Sfondo Icone</label><input type="color" id="set-appbg"></div>
+            <details style="margin-bottom: 10px; background: var(--surface-hover); padding: 10px; border-radius: 8px;">
+                <summary style="font-weight: 700; cursor: pointer; outline: none;">Aspetto e Colori</summary>
+                <div style="margin-top: 15px;">
+                    <label class="editor-label">Tema dell'App:</label>
+                    <select id="set-theme" class="input-field" style="cursor:pointer;">
+                        <option value="system">Impostazioni di Sistema</option>
+                        <option value="light">Chiaro</option>
+                        <option value="dark">Scuro</option>
+                    </select>
+                    
+                    <label class="editor-label" style="margin-top: 15px;">Colori Sfondo Onda:</label>
+                    <div class="color-picker-row"><label>Colore 1 (Alto)</label><input type="color" id="set-col1"></div>
+                    <div class="color-picker-row"><label>Colore 2 (Centrale)</label><input type="color" id="set-col2"></div>
+                    <div class="color-picker-row"><label>Colore 3 (Basso)</label><input type="color" id="set-col3"></div>
+                    
+                    <label class="editor-label" style="margin-top: 15px;">Colore Base App:</label>
+                    <div class="color-picker-row"><label>Sfondo Icone</label><input type="color" id="set-appbg"></div>
+                </div>
+            </details>
 
-            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Visualizzazione:</label>
-            <select id="set-viewmode" class="input-field" style="cursor:pointer;">
-                <option value="grid">Griglia app</option>
-                <option value="list">Lista</option>
-            </select>
+            <details style="margin-bottom: 10px; background: var(--surface-hover); padding: 10px; border-radius: 8px;">
+                <summary style="font-weight: 700; cursor: pointer; outline: none;">Visualizzazione</summary>
+                <div style="margin-top: 15px;">
+                    <label class="editor-label">Scelta Visualizzazione:</label>
+                    <select id="set-viewmode" class="input-field" style="cursor:pointer;">
+                        <option value="grid">Griglia app (Icone)</option>
+                        <option value="list">Lista</option>
+                    </select>
+                </div>
+            </details>
 
-            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Stile Icone:</label>
-            <select id="set-iconstyle" class="input-field" style="cursor:pointer;">
-                <option value="box">Con Sfondo (Box)</option>
-                <option value="transparent">Solo Icona (Trasparente)</option>
-            </select>
+            <div id="admin-settings-panel" style="display: none;">
+                <details style="margin-bottom: 10px; background: var(--danger-light); border: 1px solid var(--danger-border); padding: 10px; border-radius: 8px;">
+                    <summary style="font-weight: 700; color: var(--danger); cursor: pointer; outline: none;">Gestione App (Admin)</summary>
+                    <div style="margin-top: 15px;">
+                        <label class="editor-label">GitHub PAT (Utility-test)</label>
+                        <input type="password" id="github-pat" class="input-field" placeholder="ghp_...">
+                        <button class="btn-modal" style="background: var(--danger); color: white; margin-bottom:10px;" onclick="window.salvaPAT()"><i class="fa-solid fa-key"></i> Salva PAT</button>
+                        
+                        <button class="btn-modal" style="background: var(--primary); color: white;" onclick="window.chiudiModal('settingsModal'); window.apriModal('modaleAggiuntaIcona');"><i class="fa-solid fa-plus"></i> Aggiungi Icona</button>
+                        <button class="btn-modal" style="background: #ff9800; color: white;" onclick="window.LayoutEngine.toggleEditMode(); window.chiudiModal('settingsModal');"><i class="fa-solid fa-pen"></i> Attiva Modifica App</button>
+                    </div>
+                </details>
+            </div>
 
-            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Tipo Icone:</label>
-            <select id="set-icontype" class="input-field" style="cursor:pointer;">
-                <option value="minimal">Minimal</option>
-                <option value="emoji">Classiche (Emoji)</option>
-            </select>
-
-            <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Dimensione Testo App:</label>
-            <input type="range" id="set-labelsize" min="10" max="18" step="1">
-            <div style="text-align:center; font-size:11px; color:var(--text-muted); margin-bottom:20px; font-weight:500;">Regola la grandezza dei titoli sotto le icone</div>
-
-            <button class="btn-modal" style="background: #ff9800; color: white;" onclick="window.LayoutEngine.toggleEditMode(); window.chiudiModal('settingsModal');"><i class="fa-solid fa-arrows-up-down-left-right"></i> Modifica Layout</button>
-            <button class="btn-modal" style="background: #17a2b8; color: white;" onclick="window.apriModal('customAppModal'); window.chiudiModal('settingsModal');"><i class="fa-solid fa-plus"></i> Aggiungi App Personalizzata</button>
-            
             <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 24px 0;">
             <button class="btn-modal" style="background: var(--success); color: white;" onclick="window.LayoutEngine.salvaPreferenzeGlobali()"><i class="fa-solid fa-floppy-disk"></i> Salva Impostazioni</button>
             <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger);" onclick="window.LayoutEngine.ripristinaPredefiniti()"><i class="fa-solid fa-rotate-left"></i> Ripristina Predefiniti</button>
         </div>
     </div>
 
-    <div id="editAppModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'editAppModal')">
+    <!-- Nuova Modale per l'Aggiunta/Modifica delle Icone tramite apps.json -->
+    <div id="modaleAggiuntaIcona" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modaleAggiuntaIcona')">
         <div class="modal-content">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="window.chiudiModal('editAppModal')"></i>
-            <h3 style="text-align: center; color: var(--text-main); margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px;"><i class="fa-solid fa-pen-to-square" style="color:var(--primary);"></i> Modifica App</h3>
-            <input type="hidden" id="edit-app-id">
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="window.chiudiModal('modaleAggiuntaIcona')"></i>
+            <h3 style="margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px; color:var(--text-main);"><i class="fa-solid fa-layer-group" style="color:var(--primary);"></i> Configura App</h3>
             
-            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">TITOLO</label>
-            <input type="text" id="edit-app-label" class="input-field">
+            <input type="hidden" id="app-edit-id">
             
-            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">ICONA O IMMAGINE</label>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <input type="text" id="edit-app-icon" class="input-field" style="margin-bottom:0;" placeholder="es. fa-solid fa-star">
-                <button class="btn-modal" style="margin:0; background:var(--surface-hover); color:var(--text-main); border:1px solid var(--border-color); width:auto; padding:0 20px; font-size:20px;" onclick="document.getElementById('edit-upload').click()"><i class="fa-regular fa-image"></i></button>
-                <input type="file" id="edit-upload" accept="image/*" style="display:none;" onchange="window.LayoutEngine.handleImageUpload(event, 'edit')">
-            </div>
+            <label class="editor-label">Tipo App</label>
+            <select id="app-tipo" class="input-field" onchange="window.aggiornaUIFormApp()">
+                <option value="modulo">Modulo Interno</option>
+                <option value="link">Link Esterno</option>
+            </select>
             
-            <div id="edit-app-img-preview" style="display:none; text-align:center; margin-bottom:20px; background:var(--surface-hover); padding:15px; border-radius:12px; border:1px solid var(--border-color);">
-                <img id="edit-app-img-preview-src" src="" style="width:60px; height:60px; border-radius:14px; object-fit:cover; vertical-align:middle; box-shadow:var(--shadow-sm);">
-                <button class="btn-modal" style="background:var(--danger); color:white; width:auto; padding:8px 16px; margin-left:15px; display:inline-flex; align-items:center; gap:6px; font-size:13px;" onclick="window.LayoutEngine.rimuoviImmagine('edit')"><i class="fa-solid fa-trash"></i> Rimuovi Foto</button>
-            </div>
-            <input type="hidden" id="edit-app-img-data">
-
-            <div class="color-picker-row"><label>Colore Specifico</label><input type="color" id="edit-app-color"></div>
+            <label class="editor-label">Nome Icona</label>
+            <input type="text" id="app-nome" class="input-field" placeholder="Es. Turni, Intranet, ecc.">
             
-            <button class="btn-modal" style="background: var(--success); color: white; margin-top:20px;" onclick="window.LayoutEngine.salvaModificaSingolaApp()"><i class="fa-solid fa-check"></i> Conferma</button>
-            <button id="btn-elimina-custom" class="btn-modal" style="background: transparent; color: var(--danger); border: 2px dashed var(--danger); display: none;" onclick="window.LayoutEngine.eliminaAppCorrente()"><i class="fa-solid fa-trash-can"></i> Elimina App</button>
-        </div>
-    </div>
-
-    <div id="customAppModal" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'customAppModal')">
-        <div class="modal-content">
-            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="window.chiudiModal('customAppModal')"></i>
-            <h3 style="text-align: center; color: var(--text-main); margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px;"><i class="fa-solid fa-plus" style="color:var(--success);"></i> Nuova App</h3>
+            <label class="editor-label">Target (Nome modulo es. 'turni' o URL)</label>
+            <input type="text" id="app-target" class="input-field" placeholder="Link o Nome Modulo">
             
-            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">NOME APP</label>
-            <input type="text" id="new-app-label" class="input-field" placeholder="Es. Intranet Aziendale">
-            
-            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">LINK (URL)</label>
-            <input type="url" id="new-app-url" class="input-field" placeholder="https://...">
-            
-            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom:8px; display:block;">ICONA O IMMAGINE</label>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <input type="text" id="new-app-icon" class="input-field" style="margin-bottom:0;" placeholder="es. fa-solid fa-globe">
-                <button class="btn-modal" style="margin:0; background:var(--surface-hover); color:var(--text-main); border:1px solid var(--border-color); width:auto; padding:0 20px; font-size:20px;" onclick="document.getElementById('new-upload').click()"><i class="fa-regular fa-image"></i></button>
-                <input type="file" id="new-upload" accept="image/*" style="display:none;" onchange="window.LayoutEngine.handleImageUpload(event, 'new')">
+            <div id="div-modulo-split" style="margin-bottom: 15px;">
+                <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:var(--text-main);"><input type="checkbox" id="app-split" style="accent-color:var(--primary); width:16px; height:16px;"> Modulo diviso in modulo.js e ui_modulo.js</label>
             </div>
 
-            <div id="new-app-img-preview" style="display:none; text-align:center; margin-bottom:20px; background:var(--surface-hover); padding:15px; border-radius:12px; border:1px solid var(--border-color);">
-                <img id="new-app-img-preview-src" src="" style="width:60px; height:60px; border-radius:14px; object-fit:cover; vertical-align:middle; box-shadow:var(--shadow-sm);">
-                <button class="btn-modal" style="background:var(--danger); color:white; width:auto; padding:8px 16px; margin-left:15px; display:inline-flex; align-items:center; gap:6px; font-size:13px;" onclick="window.LayoutEngine.rimuoviImmagine('new')"><i class="fa-solid fa-trash"></i> Rimuovi Foto</button>
+            <label class="editor-label">Tipo Icona</label>
+            <select id="app-tipo-icona" class="input-field" onchange="window.aggiornaUIFormApp()">
+                <option value="fa">FontAwesome</option>
+                <option value="png">Carica PNG (su assets/icons)</option>
+                <option value="favicon">Favicon Sito (solo Link)</option>
+            </select>
+            
+            <input type="text" id="app-icona-fa" class="input-field" placeholder="es. fa-solid fa-star">
+            <input type="file" id="app-icona-file" accept="image/png" style="display:none;" class="input-field">
+            
+            <label class="editor-label" style="margin-top:15px;">Visibilità (Seleziona più opzioni, se nessuna = Solo Admin):</label>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
+                <label style="display:flex; align-items:center; gap:6px; font-size:14px; color:var(--text-main);"><input type="checkbox" class="app-vis" value="tutti" style="accent-color:var(--primary);"> Tutti</label>
+                <label style="display:flex; align-items:center; gap:6px; font-size:14px; color:var(--text-main);"><input type="checkbox" class="app-vis" value="collab" style="accent-color:var(--primary);"> Collaboratori</label>
+                <label style="display:flex; align-items:center; gap:6px; font-size:14px; color:var(--text-main);"><input type="checkbox" class="app-vis" value="vip" style="accent-color:var(--primary);"> VIP</label>
             </div>
-            <input type="hidden" id="new-app-img-data">
-
-            <button class="btn-modal" style="background: var(--success); color: white; margin-top:20px;" onclick="window.LayoutEngine.creaAppPersonalizzata()"><i class="fa-solid fa-plus"></i> Crea App</button>
+            
+            <button class="btn-modal" style="background: var(--success); color: white;" onclick="window.salvaAppSuGitHub()"><i class="fa-solid fa-cloud-arrow-up"></i> Salva in apps.json</button>
         </div>
     </div>
 
@@ -875,8 +857,9 @@
             <div id="dettaglio-utente-body" style="font-size: 14px; line-height: 1.6; background: var(--surface-hover); padding: 20px; border-radius: 14px; border: 1px solid var(--border-color); margin-bottom: 20px; color:var(--text-main);">
             </div>
             
-            <button id="btn-rendi-collab" class="btn-modal" style="background: #6f42c1; color: white; margin-bottom:10px;" onclick="window.cambiaRuoloUtente()"><i class="fa-solid fa-user-shield"></i> Rendi Collaboratore</button>
-            <button class="btn-modal" style="background: transparent; color: var(--text-muted); border: 2px solid var(--border-color);" onclick="window.chiudiModal('modal-dettaglio-utente')">Chiudi</button>
+            <!-- I bottoni VIP e Collaboratore verranno inseriti qui dal Javascript index.js -->
+            
+            <button class="btn-modal" style="background: transparent; color: var(--text-muted); border: 2px solid var(--border-color); margin-top: 10px;" onclick="window.chiudiModal('modal-dettaglio-utente')">Chiudi</button>
         </div>
     </div>
 
@@ -884,80 +867,10 @@
     <script type="module" src="./moduli/index.js"></script>
 
     <script>
-        // Funzioni ponte per chiamare i moduli dall'interfaccia utente (HTML onClick)
-        window.apriModaleTurni = async () => {
-            if (window.avviaMotoreTurniDaIndex) await window.avviaMotoreTurniDaIndex();
-            const modale = document.getElementById('modal-turni-main');
-            if (modale) modale.style.display = 'flex';
-        };
-        window.apriModaleOrari = async () => {
-            if (window.avviaMotoreOrariDaIndex) await window.avviaMotoreOrariDaIndex();
-            const modale = document.getElementById('modal-orari-main');
-            if (modale) modale.style.display = 'flex';
-        };
-        window.apriModaleLink = async () => {
-            if (window.avviaMotoreLinkDaIndex) await window.avviaMotoreLinkDaIndex();
-            const modale = document.getElementById('modal-link-main');
-            if (modale) modale.style.display = 'flex';
-        };
-        window.apriModaleDocumenti = async () => {
-            if (window.avviaMotoreDocumentiDaIndex) await window.avviaMotoreDocumentiDaIndex();
-            const modale = document.getElementById('modal-documenti-main');
-            if (modale) modale.style.display = 'flex';
-        };
-        window.apriModaleContatti = async () => {
-            if (window.avviaMotoreContattiDaIndex) await window.avviaMotoreContattiDaIndex();
-            const modale = document.getElementById('modal-contatti-main');
-            if (modale) modale.style.display = 'flex';
-        };
+        // Funzioni ponte di base richieste fisse
         window.apriBachecaUtility = async () => {
             if (window.avviaMotoreBachecaUtilityDaIndex) await window.avviaMotoreBachecaUtilityDaIndex();
             const modale = document.getElementById('modal-bacheca-utility-main');
-            if (modale) modale.style.display = 'flex';
-        };
-        window.apriModaleRubrica = async () => {
-            if (window.avviaMotoreRubricaDaIndex) await window.avviaMotoreRubricaDaIndex();
-            const modale = document.getElementById('modal-rubrica-main');
-            if (modale) modale.style.display = 'flex';
-        };
-        window.apriModaleBachecaTurni = async () => {
-            if (window.avviaMotoreBachecaTurniDaIndex) await window.avviaMotoreBachecaTurniDaIndex();
-            const modale = document.getElementById('modal-bachecaturni-main');
-            if (modale) modale.style.display = 'flex';
-        };
-        window.apriModaleBarcadvisor = async () => {
-            if (window.avviaMotoreBarcadvisorDaIndex) await window.avviaMotoreBarcadvisorDaIndex();
-            const modale = document.getElementById('modal-barcadvisor-main');
-            if (modale) modale.style.display = 'flex';
-        };
-        window.apriModaleBuoniPasto = async () => {
-            if (window.avviaMotoreBuoniPastoDaIndex) await window.avviaMotoreBuoniPastoDaIndex();
-            const modale = document.getElementById('modal-buoni-main');
-            if (modale) modale.style.display = 'flex';
-        };
-        window.apriModaleStatistiche = async () => {
-            if (window.avviaMotoreStatisticheDaIndex) await window.avviaMotoreStatisticheDaIndex();
-            const modale = document.getElementById('modal-statistiche-main');
-            if (modale) modale.style.display = 'flex';
-        };
-        window.apriModaleRotazioni = async () => {
-            if (window.avviaMotoreRotazioniDaIndex) await window.avviaMotoreRotazioniDaIndex();
-            const modale = document.getElementById('modal-rotazioni-main');
-            if (modale) modale.style.display = 'flex';
-        };
-        window.apriModaleRotazioneFerie = async () => {
-            if (window.avviaMotoreRotazioneFerieDaIndex) await window.avviaMotoreRotazioneFerieDaIndex();
-            const modale = document.getElementById('modal-rotazione-ferie-main');
-            if (modale) modale.style.display = 'flex';
-        };
-        window.apriModalePromemoria = async () => {
-            if (window.avviaMotorePromemoriaDaIndex) await window.avviaMotorePromemoriaDaIndex();
-            const modale = document.getElementById('modal-promemoria-main');
-            if (modale) modale.style.display = 'flex';
-        };
-        window.apriModaleDDS = async () => {
-            if (window.avviaMotoreDDSDaIndex) await window.avviaMotoreDDSDaIndex();
-            const modale = document.getElementById('modal-dds-main');
             if (modale) modale.style.display = 'flex';
         };
         window.apriModaleGuida = async () => {
@@ -965,17 +878,40 @@
             const modale = document.getElementById('modal-guida-main');
             if (modale) modale.style.display = 'flex';
         };
-        window.apriModaleAdmin = async () => {
-            if (window.avviaMotoreAdminDaIndex) await window.avviaMotoreAdminDaIndex();
-            const modale = document.getElementById('modal-admin-main');
-            if (modale) modale.style.display = 'flex';
-        };
 
-        // --- FUNZIONE AGGIUNTA PER SEGNALAZIONI (REPORT) ---
-        window.apriMainModaleSegnalazioni = async () => {
-            if (window.avviaMotoreSegnalazioniDaIndex) await window.avviaMotoreSegnalazioniDaIndex();
-            const modale = document.getElementById('modal-segnalazioni-main') || document.getElementById('modal-segnalazione-main');
-            if (modale) modale.style.display = 'flex';
+        // Mantengo gli altri fallback dei moduli nel caso in cui le applicazioni caricate da apps.json facciano riferimento ad essi via stringa testuale negli "onclick".
+        window.apriModaleTurni = async () => { if (window.avviaMotoreTurniDaIndex) await window.avviaMotoreTurniDaIndex(); const modale = document.getElementById('modal-turni-main'); if (modale) modale.style.display = 'flex'; };
+        window.apriModaleOrari = async () => { if (window.avviaMotoreOrariDaIndex) await window.avviaMotoreOrariDaIndex(); const modale = document.getElementById('modal-orari-main'); if (modale) modale.style.display = 'flex'; };
+        window.apriModaleLink = async () => { if (window.avviaMotoreLinkDaIndex) await window.avviaMotoreLinkDaIndex(); const modale = document.getElementById('modal-link-main'); if (modale) modale.style.display = 'flex'; };
+        window.apriModaleDocumenti = async () => { if (window.avviaMotoreDocumentiDaIndex) await window.avviaMotoreDocumentiDaIndex(); const modale = document.getElementById('modal-documenti-main'); if (modale) modale.style.display = 'flex'; };
+        window.apriModaleContatti = async () => { if (window.avviaMotoreContattiDaIndex) await window.avviaMotoreContattiDaIndex(); const modale = document.getElementById('modal-contatti-main'); if (modale) modale.style.display = 'flex'; };
+        window.apriModaleRubrica = async () => { if (window.avviaMotoreRubricaDaIndex) await window.avviaMotoreRubricaDaIndex(); const modale = document.getElementById('modal-rubrica-main'); if (modale) modale.style.display = 'flex'; };
+        window.apriModaleBachecaTurni = async () => { if (window.avviaMotoreBachecaTurniDaIndex) await window.avviaMotoreBachecaTurniDaIndex(); const modale = document.getElementById('modal-bachecaturni-main'); if (modale) modale.style.display = 'flex'; };
+        window.apriModaleBarcadvisor = async () => { if (window.avviaMotoreBarcadvisorDaIndex) await window.avviaMotoreBarcadvisorDaIndex(); const modale = document.getElementById('modal-barcadvisor-main'); if (modale) modale.style.display = 'flex'; };
+        window.apriModaleBuoniPasto = async () => { if (window.avviaMotoreBuoniPastoDaIndex) await window.avviaMotoreBuoniPastoDaIndex(); const modale = document.getElementById('modal-buoni-main'); if (modale) modale.style.display = 'flex'; };
+        window.apriModaleStatistiche = async () => { if (window.avviaMotoreStatisticheDaIndex) await window.avviaMotoreStatisticheDaIndex(); const modale = document.getElementById('modal-statistiche-main'); if (modale) modale.style.display = 'flex'; };
+        window.apriModaleRotazioni = async () => { if (window.avviaMotoreRotazioniDaIndex) await window.avviaMotoreRotazioniDaIndex(); const modale = document.getElementById('modal-rotazioni-main'); if (modale) modale.style.display = 'flex'; };
+        window.apriModaleRotazioneFerie = async () => { if (window.avviaMotoreRotazioneFerieDaIndex) await window.avviaMotoreRotazioneFerieDaIndex(); const modale = document.getElementById('modal-rotazione-ferie-main'); if (modale) modale.style.display = 'flex'; };
+        window.apriModalePromemoria = async () => { if (window.avviaMotorePromemoriaDaIndex) await window.avviaMotorePromemoriaDaIndex(); const modale = document.getElementById('modal-promemoria-main'); if (modale) modale.style.display = 'flex'; };
+        window.apriModaleDDS = async () => { if (window.avviaMotoreDDSDaIndex) await window.avviaMotoreDDSDaIndex(); const modale = document.getElementById('modal-dds-main'); if (modale) modale.style.display = 'flex'; };
+        window.apriModaleAdmin = async () => { if (window.avviaMotoreAdminDaIndex) await window.avviaMotoreAdminDaIndex(); const modale = document.getElementById('modal-admin-main'); if (modale) modale.style.display = 'flex'; };
+        window.apriMainModaleSegnalazioni = async () => { if (window.avviaMotoreSegnalazioniDaIndex) await window.avviaMotoreSegnalazioniDaIndex(); const modale = document.getElementById('modal-segnalazioni-main') || document.getElementById('modal-segnalazione-main'); if (modale) modale.style.display = 'flex'; };
+
+        // Funzione per aggiornare i campi all'interno della modale aggiunta icona
+        window.aggiornaUIFormApp = () => {
+            const tipo = document.getElementById('app-tipo').value;
+            const tipoIcona = document.getElementById('app-tipo-icona').value;
+            
+            document.getElementById('div-modulo-split').style.display = (tipo === 'modulo') ? 'block' : 'none';
+            
+            // Logica toggle per il tipo di icona
+            document.getElementById('app-icona-fa').style.display = (tipoIcona === 'fa') ? 'block' : 'none';
+            document.getElementById('app-icona-file').style.display = (tipoIcona === 'png') ? 'block' : 'none';
+            if(tipoIcona === 'favicon' && tipo !== 'link') {
+                alert("L'icona Favicon è supportata solo per i Link Esterni");
+                document.getElementById('app-tipo-icona').value = 'fa';
+                document.getElementById('app-icona-fa').style.display = 'block';
+            }
         };
     </script>
 </body>
