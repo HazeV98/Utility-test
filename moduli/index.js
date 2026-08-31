@@ -12,34 +12,17 @@ const ModuliLazyLoader = {
     cache: new Map(),
     initializedUIs: new Set(),
     
-    // Moduli base noti. Per quelli nuovi, li configureremo dinamicamente.
-    moduli: {
-        turni: { motore: './turni.js', ui: './ui_turni.js', exports: ['avviaMotoreTurni', 'initUITurni'] },
-        orari: { motore: './orari.js', ui: './ui_orari.js', exports: ['avviaMotoreOrari', 'initUIOrari'] },
-        link: { motore: './link.js', ui: './ui_link.js', exports: ['avviaMotoreLink', 'initUILink'] },
-        documenti: { motore: './documenti.js', ui: './ui_documenti.js', exports: ['avviaMotoreDocumenti', 'initUIDocumenti'] },
-        contatti: { motore: './contatti.js', ui: './ui_contatti.js', exports: ['avviaMotoreContatti', 'initUIContatti'] },
-        bacheca_utility: { motore: './bacheca_utility.js', ui: './ui_bacheca_utility.js', exports: ['avviaMotoreBachecaUtility', 'initUIBachecaUtility'] },
-        rubrica: { motore: './rubrica.js', ui: './ui_rubrica.js', exports: ['avviaMotoreRubrica', 'initUIRubrica'] },
-        bacheca_turni: { motore: './bacheca_turni.js', ui: './ui_bacheca_turni.js', exports: ['avviaMotoreBachecaTurni', 'initUIBachecaTurni'] },
-        barcadvisor: { motore: './barcadvisor.js', ui: './ui_barcadvisor.js', exports: ['avviaMotoreBarcadvisor', 'initUIBarcadvisor'] },
-        buoni_pasto: { motore: './buoni_pasto.js', ui: './ui_buoniPasto.js', exports: ['avviaMotoreBuoniPasto', 'initUIBuoniPasto'] },
-        statistiche: { motore: './statistiche.js', ui: './ui_statistiche.js', exports: ['avviaMotoreStatistiche', 'initUIStatistiche'] },
-        rotazioni: { motore: './rotazioni.js', ui: './ui_rotazioni.js', exports: ['avviaMotoreRotazioni', 'initUIRotazioni'] },
-        rotazione_ferie: { motore: './rotazione_ferie.js', ui: './ui_rotazione_ferie.js', exports: ['avviaMotoreRotazioneFerie', 'initUIRotazioneFerie'] },
-        promemoria: { motore: './promemoria.js', ui: './ui_promemoria.js', exports: ['avviaMotorePromemoria', 'initUIPromemoria'] },
-        dds: { motore: './dds.js', ui: './ui_dds.js', exports: ['avviaMotoreDDS', 'initUIDDS'] },
-        guida: { motore: './guida.js', ui: './ui_guida.js', exports: ['avviaMotoreGuida', 'initUIGuida'] },
-        admin: { motore: './admin.js', ui: './ui_admin.js', exports: ['avviaMotoreAdmin', 'initUIAdmin'] },
-        report: { motore: './report.js', ui: './ui_report.js', exports: ['avviaMotoreSegnalazioni', 'initUISegnalazioni'] }
-    },
+    // Solo mappa di referenza, nessuna funzione UI hardcoded necessaria qui.
+    moduli: {},
     
     async caricaModulo(nomeModulo, isSplit = false) {
         let config = this.moduli[nomeModulo];
         
-        // Creazione dinamica configurazione se non esiste nella lista hardcoded
+        // Creazione dinamica configurazione se non esiste (usa CamelCase per le funzioni esportate)
         if (!config) {
-            const capName = nomeModulo.charAt(0).toUpperCase() + nomeModulo.slice(1);
+            const camelName = nomeModulo.replace(/_([a-z])/g, g => g[1].toUpperCase());
+            const capName = camelName.charAt(0).toUpperCase() + camelName.slice(1);
+            
             if (isSplit) {
                 config = { motore: `./${nomeModulo}.js`, ui: `./ui_${nomeModulo}.js`, exports: [`avviaMotore${capName}`, `initUI${capName}`] };
             } else {
@@ -109,7 +92,7 @@ const provider = new GoogleAuthProvider();
 avviaMotoreAuth(auth, db, provider);
 
 const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2"; 
-const GITHUB_REPO = "HazeV98/Utility-test"; // Repo specificato
+const GITHUB_REPO = "HazeV98/Utility-test"; 
 
 let globalIsAdmin = false; 
 let globalIsCollab = false;
@@ -128,53 +111,29 @@ window.chiudiMenuLaterale = () => {
 };
 
 // ============================================================================
-// FUNZIONI HARDCODED MANTENUTE PER I PULSANTI IN ALTO E LA SIDEBAR
+// FUNZIONI FISSE MANTENUTE (SOLO QUELLE DEL MENU SUPERIORE)
 // ============================================================================
-window.avviaMotoreBachecaUtilityDaIndex = async () => {
+window.apriBachecaUtility = async () => {
     const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
-    const modulo = await ModuliLazyLoader.avviaMotore('bacheca_utility');
-    if (modulo) modulo(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
+    const modulo = await ModuliLazyLoader.avviaMotore('bacheca_utility', true);
+    if (modulo) {
+        modulo(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
+        const modale = document.getElementById('modal-bacheca-utility-main');
+        if (modale) modale.style.display = 'flex';
+    }
 };
-window.avviaMotoreGuidaDaIndex = async () => {
+window.apriModaleGuida = async () => {
     if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
-    const modulo = await ModuliLazyLoader.avviaMotore('guida');
-    if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin);
+    const modulo = await ModuliLazyLoader.avviaMotore('guida', true);
+    if (modulo) {
+        modulo(db, auth, window.currentUserData, globalIsAdmin);
+        const modale = document.getElementById('modal-guida-main');
+        if (modale) modale.style.display = 'flex';
+    }
 };
-// (Le altre funzioni avviaMotore*DaIndex restano intatte come prima per la sidebar)
-window.avviaMotoreTurniDaIndex = async () => { const modulo = await ModuliLazyLoader.avviaMotore('turni'); if (modulo) modulo(); };
-window.avviaMotoreOrariDaIndex = async () => { const modulo = await ModuliLazyLoader.avviaMotore('orari'); if (modulo) modulo(); };
-window.avviaMotoreLinkDaIndex = async () => { const modulo = await ModuliLazyLoader.avviaMotore('link'); if (modulo) modulo(db, auth); };
-window.avviaMotoreDocumentiDaIndex = async () => { const modulo = await ModuliLazyLoader.avviaMotore('documenti'); if (modulo) modulo(); };
-window.avviaMotoreContattiDaIndex = async () => { const modulo = await ModuliLazyLoader.avviaMotore('contatti'); if (modulo) modulo(db, auth); };
-window.avviaMotoreRubricaDaIndex = async () => { const modulo = await ModuliLazyLoader.avviaMotore('rubrica'); if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin); };
-window.avviaMotoreBachecaTurniDaIndex = async () => { const modulo = await ModuliLazyLoader.avviaMotore('bacheca_turni'); if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin); };
-window.avviaMotoreBarcadvisorDaIndex = async () => { const modulo = await ModuliLazyLoader.avviaMotore('barcadvisor'); if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin); };
-window.avviaMotoreBuoniPastoDaIndex = async () => { const modulo = await ModuliLazyLoader.avviaMotore('buoni_pasto'); if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin); };
-window.avviaMotoreStatisticheDaIndex = async () => { const modulo = await ModuliLazyLoader.avviaMotore('statistiche'); if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin); };
-window.avviaMotoreRotazioniDaIndex = async () => { const modulo = await ModuliLazyLoader.avviaMotore('rotazioni'); if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin); };
-window.avviaMotoreRotazioneFerieDaIndex = async () => { const modulo = await ModuliLazyLoader.avviaMotore('rotazione_ferie'); if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin); };
-window.avviaMotorePromemoriaDaIndex = async () => { const modulo = await ModuliLazyLoader.avviaMotore('promemoria'); if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin); };
-window.avviaMotoreDDSDaIndex = async () => { const modulo = await ModuliLazyLoader.avviaMotore('dds'); if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin); };
-window.avviaMotoreAdminDaIndex = async () => { const modulo = await ModuliLazyLoader.avviaMotore('admin'); if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin); };
-window.avviaMotoreSegnalazioniDaIndex = async () => { const modulo = await ModuliLazyLoader.avviaMotore('report'); if (modulo) { modulo(db, auth, auth.currentUser.uid, globalIsAdmin); if(window.apriModaleSegnalazioni) window.apriModaleSegnalazioni(); } };
-
 
 // ============================================================================
-// LOGICA CONTROLLI BACKGROUND (SEGNALAZIONI, BACHECA, PROMEMORIA, ETC.)
-// ============================================================================
-// (Le logiche di check badge restano invariate poiché dipendono dal database e non dalla UI)
-window.controllaSegnalazioni = async () => { /* Logica invariata */ };
-window.controllaBacheca = async () => { /* Logica invariata */ };
-window.controllaRichiesteSospese = async () => { /* Logica invariata */ };
-window.controllaPromemoria = async () => { /* Logica invariata */ };
-window.inizializzaNotificheSeNativa = async (userData) => { /* Logica invariata */ };
-window.gestisciNotificheNative = async () => { /* Logica invariata */ };
-window.disattivaNotifiche = async () => { /* Logica invariata */ };
-window.salvaPreferenzeNotifiche = async () => { /* Logica invariata */ };
-
-
-// ============================================================================
-// GESTIONE GITHUB API PER MENU DINAMICO
+// GESTIONE GITHUB API PER MENU DINAMICO E RIORDINAMENTO
 // ============================================================================
 let remoteApps = [];
 
@@ -222,7 +181,6 @@ window.salvaAppSuGitHub = async () => {
     const tipoIcona = document.getElementById('app-tipo-icona').value;
     let iconaVal = document.getElementById('app-icona-fa').value;
     
-    // Gestione caricamento immagine PNG su GitHub
     if (tipoIcona === 'png') {
         const fileInput = document.getElementById('app-icona-file');
         if (fileInput.files.length > 0) {
@@ -230,17 +188,15 @@ window.salvaAppSuGitHub = async () => {
             const fileName = `icon_${id}.png`;
             iconaVal = `assets/icons/${fileName}`;
             
-            // Convert to Base64 e Carica su GitHub
             const reader = new FileReader();
             reader.onload = async function(e) {
                 const base64Content = e.target.result.split(',')[1];
-                // Controlla se il file esiste già (per recuperare lo SHA se in modifica)
                 const existingImg = await fetchGitHubFile(iconaVal);
                 await pushGitHubFile(iconaVal, base64Content, `Aggiunta icona ${fileName}`, existingImg?.sha);
                 procediSalvataggioJson();
             };
             reader.readAsDataURL(file);
-            return; // Interrompe qui perché procediSalvataggioJson viene chiamata in asincrono
+            return; 
         } else if (!document.getElementById('app-edit-id').value) {
             alert("Seleziona un'immagine PNG!"); return;
         }
@@ -256,7 +212,7 @@ window.salvaAppSuGitHub = async () => {
             target: targetVal,
             split: document.getElementById('app-split').checked,
             iconaTipo: tipoIcona,
-            iconaValore: iconaVal, // Può essere la classe FA o il percorso assets/icons/...
+            iconaValore: iconaVal, 
             visibilita: visInputs
         };
 
@@ -277,27 +233,49 @@ window.salvaAppSuGitHub = async () => {
         document.querySelector('#modaleAggiuntaIcona .btn-modal').innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Salva in apps.json';
 
         if(success) { 
-            alert("App salvata e caricata su GitHub!"); 
+            alert("App salvata con successo su GitHub!"); 
             window.chiudiModal('modaleAggiuntaIcona'); 
             window.LayoutEngine.init(); 
         }
     }
 };
 
+window.apriModificaIcona = (id) => {
+    let app = remoteApps.find(a => a.id === id);
+    if(!app) {
+        // Modalità Nuova Icona
+        app = { id: '', tipo: 'modulo', nome: '', target: '', split: false, iconaTipo: 'fa', iconaValore: '', visibilita: [] };
+    }
+    
+    document.getElementById('app-edit-id').value = app.id;
+    document.getElementById('app-tipo').value = app.tipo;
+    document.getElementById('app-nome').value = app.nome;
+    document.getElementById('app-target').value = app.target;
+    document.getElementById('app-split').checked = app.split || false;
+    document.getElementById('app-tipo-icona').value = app.iconaTipo;
+    document.getElementById('app-icona-fa').value = (app.iconaTipo === 'fa') ? (app.iconaValore || '') : '';
+    
+    document.querySelectorAll('.app-vis').forEach(cb => { 
+        cb.checked = app.visibilita ? app.visibilita.includes(cb.value) : false; 
+    });
+    
+    window.aggiornaUIFormApp();
+    window.apriModal('modaleAggiuntaIcona');
+};
+
 // ============================================================================
-// NUOVO LAYOUT ENGINE SEMPLIFICATO 
+// LAYOUT ENGINE - RENDERING E SORTABLE JS (DRAG&DROP)
 // ============================================================================
 window.LayoutEngine = {
     prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#0066cc", view: "grid", theme: "system" },
     isEditMode: false,
+    sortableInstance: null,
     
     init: async function() {
         if(globalIsAdmin) document.getElementById('admin-settings-panel').style.display = 'block';
         
         let localStr = localStorage.getItem('preferenze_layout_haze');
-        if (localStr) {
-            try { this.prefs = { ...this.prefs, ...JSON.parse(localStr) }; } catch(e) {}
-        }
+        if (localStr) { try { this.prefs = { ...this.prefs, ...JSON.parse(localStr) }; } catch(e) {} }
         
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
             if(this.prefs.theme === 'system') this.applicaGrafica();
@@ -306,13 +284,10 @@ window.LayoutEngine = {
         this.applicaGrafica();
         this.popolaModaleImpostazioni();
         
-        // Fetch dinamico da GitHub
         try {
             const file = await fetchGitHubFile('assets/apps.json');
             if (file) remoteApps = JSON.parse(file.content);
-        } catch (e) {
-            console.warn("Impossibile caricare apps.json", e);
-        }
+        } catch (e) { console.warn("Impossibile caricare apps.json", e); }
 
         this.render();
     },
@@ -355,38 +330,46 @@ window.LayoutEngine = {
     
     render: function() {
         const container = document.getElementById('app-container');
+        const sidebarContainer = document.getElementById('dynamic-sidebar-links');
+        
         container.innerHTML = '';
+        sidebarContainer.innerHTML = '';
+        
         if(this.isEditMode) container.classList.add('wiggle-mode'); else container.classList.remove('wiggle-mode');
         
         remoteApps.forEach((app, index) => {
-            // Gestione Visibilità (Tutti, Collab, VIP, Admin)
             const vis = app.visibilita || [];
             let canSee = globalIsAdmin; 
             
             if (!canSee) {
-                if (vis.length === 0) return; // Vuota significa solo Admin
+                if (vis.length === 0) return; 
                 if (vis.includes('tutti')) canSee = true;
                 if (vis.includes('collab') && (globalIsCollab || globalIsVip)) canSee = true;
                 if (vis.includes('vip') && globalIsVip) canSee = true;
             }
             if(!canSee) return;
 
+            // Creazione Wrapper Dinamico per il Modulo se non è un link
             let isLinkAttr = "";
+            let sidebarLinkAttr = "";
             if (this.isEditMode) {
                 isLinkAttr = `onclick="event.preventDefault(); window.apriModificaIcona('${app.id}');"`;
             } else {
                 if (app.tipo === 'link') {
                     isLinkAttr = `href="${app.target}" target="_blank"`;
+                    sidebarLinkAttr = isLinkAttr;
                 } else {
-                    // Crea un wrapper per chiamare dinamicamente il modulo
                     window[`avviaDin_${app.id}`] = async () => {
                         const moduloFunc = await ModuliLazyLoader.avviaMotore(app.target, app.split);
                         if(moduloFunc) {
-                            // Passa genericamente i parametri più comuni ai moduli
                             moduloFunc(db, auth, window.currentUserData, globalIsAdmin); 
+                            const nomeModale = `modal-${app.target.replace('_', '')}-main`;
+                            const modale = document.getElementById(nomeModale) || document.getElementById(`modal-${app.target}-main`);
+                            if (modale) modale.style.display = 'flex';
                         }
                     };
                     isLinkAttr = `onclick="window.avviaDin_${app.id}()"`;
+                    sidebarLinkAttr = `href="#" onclick="window.chiudiMenuLaterale(); window.avviaDin_${app.id}(); return false;"`;
                 }
             }
 
@@ -394,30 +377,40 @@ window.LayoutEngine = {
             
             let iconStyle = `background-color: ${this.prefs.appBg};`;
             let iconContent = "";
+            let sidebarIconHtml = "";
             
             if (app.iconaTipo === 'png' && app.iconaValore) {
-                // Generiamo il raw URL per l'immagine da GitHub per bypassare le restrizioni API
                 const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${app.iconaValore}`;
                 iconStyle += ` background-image: url('${rawUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;`;
+                sidebarIconHtml = `<img src="${rawUrl}" style="width:20px; height:20px; border-radius:4px; margin-right:8px; display:inline-block; vertical-align:middle;">`;
             } else if (app.iconaTipo === 'favicon' && app.tipo === 'link') {
                 try {
                     const urlObj = new URL(app.target);
                     const faviconUrl = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`;
                     iconStyle += ` background-image: url('${faviconUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;`;
-                } catch(e) { iconContent = "🔗"; }
+                    sidebarIconHtml = `<img src="https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=32" style="width:20px; height:20px; border-radius:4px; margin-right:8px; display:inline-block; vertical-align:middle;">`;
+                } catch(e) { iconContent = "🔗"; sidebarIconHtml = `<i class="fa-solid fa-link" style="width:28px; text-align:left;"></i>`; }
             } else {
-                // FontAwesome
                 iconContent = `<i class="${app.iconaValore || 'fa-solid fa-link'}"></i>`;
+                sidebarIconHtml = `<i class="${app.iconaValore || 'fa-solid fa-link'}" style="width:28px; text-align:left;"></i>`;
             }
 
             let animDelay = this.isEditMode ? "0s" : `${index * 0.04}s`;
             
+            // Appendi alla griglia principale
             container.innerHTML += `
                 <a ${isLinkAttr} class="app-btn" id="btn-${app.id}" style="animation-delay: ${animDelay}">
                     ${badgeHtml}
                     <div class="app-icon" style="${iconStyle}">${iconContent}</div>
                     <div class="app-label">${app.nome.replace('\n', '<br>')}</div>
                 </a>`;
+            
+            // Appendi alla Sidebar
+            sidebarContainer.innerHTML += `
+                <a ${sidebarLinkAttr} class="sidebar-link">
+                    ${sidebarIconHtml} ${app.nome.replace('\n', ' ')}
+                </a>
+            `;
         });
     },
     
@@ -425,6 +418,50 @@ window.LayoutEngine = {
         this.isEditMode = !this.isEditMode;
         document.getElementById('btn-salva-layout').style.display = this.isEditMode ? 'flex' : 'none';
         this.render(); 
+        
+        if(this.isEditMode) {
+            this.sortableInstance = new Sortable(document.getElementById('app-container'), { 
+                animation: 250, 
+                delay: 150, 
+                delayOnTouchOnly: true, 
+                ghostClass: "sortable-ghost", 
+                onEnd: () => { this.aggiornaOrdineDaDOM(); } 
+            });
+        } else { 
+            if(this.sortableInstance) this.sortableInstance.destroy(); 
+            this.salvaOrdineSuGitHub(); 
+        }
+    },
+
+    aggiornaOrdineDaDOM: function() {
+        const nuovoOrdine = []; 
+        document.querySelectorAll('#app-container .app-btn').forEach(nodo => {
+            const id = nodo.id.replace('btn-', ''); 
+            const app = remoteApps.find(a => a.id === id); 
+            if (app) nuovoOrdine.push(app);
+        });
+        
+        // Aggiunge in fondo le app nascoste all'utente corrente per non perderle
+        remoteApps.forEach(app => { 
+            if (!nuovoOrdine.find(a => a.id === app.id)) nuovoOrdine.push(app); 
+        });
+        remoteApps = nuovoOrdine;
+    },
+
+    salvaOrdineSuGitHub: async function() {
+        const btnSalva = document.getElementById('btn-salva-layout');
+        btnSalva.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvataggio...';
+        btnSalva.style.display = 'flex';
+        
+        const existingFile = await fetchGitHubFile('assets/apps.json');
+        const strJson = JSON.stringify(remoteApps, null, 2);
+        const b64Json = btoa(unescape(encodeURIComponent(strJson)));
+
+        const success = await pushGitHubFile('assets/apps.json', b64Json, "Riordinamento app da interfaccia Admin", existingFile?.sha);
+        
+        btnSalva.style.display = 'none';
+        btnSalva.innerHTML = '<i class="fa-solid fa-check"></i> Fatto (Salva Layout)';
+        if(!success) alert("Errore durante il salvataggio del nuovo ordine su GitHub!");
     },
     
     salvaPreferenzeGlobali: function() {
@@ -454,32 +491,10 @@ window.LayoutEngine = {
     }
 };
 
-window.apriModificaIcona = (id) => {
-    const app = remoteApps.find(a => a.id === id);
-    if(!app) return;
-    document.getElementById('app-edit-id').value = app.id;
-    document.getElementById('app-tipo').value = app.tipo;
-    document.getElementById('app-nome').value = app.nome;
-    document.getElementById('app-target').value = app.target;
-    document.getElementById('app-split').checked = app.split || false;
-    document.getElementById('app-tipo-icona').value = app.iconaTipo;
-    document.getElementById('app-icona-fa').value = (app.iconaTipo === 'fa') ? (app.iconaValore || '') : '';
-    
-    document.querySelectorAll('.app-vis').forEach(cb => { 
-        cb.checked = app.visibilita ? app.visibilita.includes(cb.value) : false; 
-    });
-    
-    window.aggiornaUIFormApp();
-    window.apriModal('modaleAggiuntaIcona');
-};
 
 // ============================================================================
-// FUNZIONI GLOBALI UI E MODALI
+// GESTIONE GESTIONE ACCESSI E UTENTI
 // ============================================================================
-window.apriModal = (id, authMode) => { document.getElementById(id).style.display = 'flex'; if(id === 'authModal' && authMode) { currentAuthMode = authMode; window.aggiornaUIAuth(); } };
-window.chiudiModal = (id) => { document.getElementById(id).style.display = 'none'; };
-window.chiudiSuSfondo = (e, id) => { if (e.target.id === id) window.chiudiModal(id); };
-
 window.apriGestioneAccessi = async () => {
     window.apriModal('modal-gestione');
     const container = document.getElementById('lista-utenti-accessi');
@@ -644,6 +659,10 @@ window.salvaEditorAdminUtente = async (uid) => {
 // ============================================================================
 // GESTIONE AUTENTICAZIONE PRINCIPALE
 // ============================================================================
+window.apriModal = (id, authMode) => { document.getElementById(id).style.display = 'flex'; if(id === 'authModal' && authMode) { window.currentAuthMode = authMode; window.aggiornaUIAuth(); } };
+window.chiudiModal = (id) => { document.getElementById(id).style.display = 'none'; };
+window.chiudiSuSfondo = (e, id) => { if (e.target.id === id) window.chiudiModal(id); };
+
 onAuthStateChanged(auth, async (user) => {
     const vLoad = document.getElementById('view-loading'); const vGuest = document.getElementById('view-guest'); const vApp = document.getElementById('view-app'); const vBanned = document.getElementById('view-banned');
     
