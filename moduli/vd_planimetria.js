@@ -1,6 +1,49 @@
 const GH_OWNER = "HazeV98"; 
 const GH_REPO = "Utility-test";
 
+// Stili base e Dark Mode
+const stiliPlan = document.createElement('style');
+stiliPlan.innerHTML = `
+    .plan-glass-panel {
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.6) !important;
+    }
+    :root[data-theme="dark"] .plan-glass-panel, 
+    @media (prefers-color-scheme: dark) { 
+        :root:not([data-theme="light"]) .plan-glass-panel {
+            background: rgba(26, 29, 36, 0.85) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+    }
+
+    /* Inversione Colori Planimetria Standard (Immagine base) in Dark Mode */
+    :root[data-theme="dark"] .leaflet-image-layer,
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) .leaflet-image-layer {
+            filter: invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        }
+    }
+    
+    /* Overlay mappa base scuro per il dark mode */
+    :root[data-theme="dark"] #plan-map-container,
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) #plan-map-container {
+            background: var(--bg-color) !important;
+        }
+    }
+
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+        background: var(--surface) !important;
+        color: var(--text-main) !important;
+        box-shadow: var(--shadow-lg) !important;
+    }
+    .leaflet-container a.leaflet-popup-close-button {
+        color: var(--text-muted) !important;
+    }
+`;
+document.head.appendChild(stiliPlan);
+
 let mappaPlan = null;
 let markersLayer = null;
 let imageOverlay = null;
@@ -30,24 +73,31 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
 
     const container = document.getElementById(containerId);
     if (!container) return;
-    container.parentElement.style.padding = "0"; 
+    
+    // Forzatura Fullscreen sotto l'header
+    if (container.parentElement) {
+        container.parentElement.style.top = "0";
+        container.parentElement.style.height = "100vh";
+        container.parentElement.style.padding = "0";
+        container.parentElement.style.zIndex = "10"; 
+    }
 
     container.innerHTML = `
         <div id="plan-map-container" style="width: 100%; height: 100%; z-index: 1; background: #e0e0e0;"></div>
         
-        <div id="plan-legenda-panel" style="display: none; position: absolute; top: max(15px, env(safe-area-inset-top)); right: 70px; background: var(--surface); padding: 15px; border-radius: 12px; box-shadow: var(--shadow-md); z-index: 1000; font-size: 13px; min-width: 230px; max-width: calc(100vw - 90px); box-sizing: border-box; max-height: 70vh; overflow-y: auto; border: 1px solid var(--border-color);">
+        <div id="plan-legenda-panel" class="plan-glass-panel" style="display: none; position: absolute; top: calc(95px + env(safe-area-inset-top)); right: 70px; padding: 15px; border-radius: var(--radius-md); box-shadow: var(--shadow-md); z-index: 1000; font-size: 13px; min-width: 230px; max-width: calc(100vw - 90px); box-sizing: border-box; max-height: 70vh; overflow-y: auto;">
             <div style="font-weight: 700; margin-bottom: 12px; color: var(--text-main); font-size: 14px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px;"><i class="fa-solid fa-clipboard-list"></i> Inventario Unità</div>
             <div id="plan-legenda-content"></div>
         </div>
 
-        <div style="position: absolute; top: max(15px, env(safe-area-inset-top)); right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 12px; align-items: center;">
-            <button class="icon-btn fab-btn" title="Inventario" onclick="window.Plan.toggleLegenda()" style="width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: var(--primary); box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
+        <div style="position: absolute; top: calc(95px + env(safe-area-inset-top)); right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 12px; align-items: center;">
+            <button class="icon-btn fab-btn plan-glass-panel" title="Inventario" onclick="window.Plan.toggleLegenda()" style="width: 45px; height: 45px; border-radius: 50%; color: var(--primary); box-shadow: var(--shadow-md);">
                 <i class="fa-solid fa-list"></i>
             </button>
-            <button class="icon-btn fab-btn" title="Info Planimetria" onclick="window.Plan.apriInfoPlanimetria()" style="width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: var(--text-main); box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
+            <button class="icon-btn fab-btn plan-glass-panel" title="Info Planimetria" onclick="window.Plan.apriInfoPlanimetria()" style="width: 45px; height: 45px; border-radius: 50%; color: var(--text-main); box-shadow: var(--shadow-md);">
                 <i class="fa-solid fa-circle-info"></i>
             </button>
-            <button id="fab-livelli" class="icon-btn fab-btn" title="Cambia Livello" onclick="window.Plan.apriModaleLivelli()" style="width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: var(--text-main); box-shadow: var(--shadow-md); border: 2px solid var(--border-color); display: none;">
+            <button id="fab-livelli" class="icon-btn fab-btn plan-glass-panel" title="Cambia Livello" onclick="window.Plan.apriModaleLivelli()" style="width: 45px; height: 45px; border-radius: 50%; color: var(--text-main); box-shadow: var(--shadow-md); display: none;">
                 <i class="fa-solid fa-layer-group"></i>
             </button>
             
@@ -56,7 +106,7 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
             </button>
 
             <!-- Tasti visibili solo in modalità modifica -->
-            <button id="fab-db-schede" class="icon-btn fab-btn" title="Database Schede" onclick="window.Plan.apriGestioneSchede()" style="display: none; width: 40px; height: 40px; border-radius: 50%; background: var(--surface); color: var(--primary); box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
+            <button id="fab-db-schede" class="icon-btn fab-btn plan-glass-panel" title="Database Schede" onclick="window.Plan.apriGestioneSchede()" style="display: none; width: 40px; height: 40px; border-radius: 50%; color: var(--primary); box-shadow: var(--shadow-md);">
                 <i class="fa-solid fa-database"></i>
             </button>
             <button id="fab-add-pin" class="icon-btn fab-btn" title="Piazza Pin" onclick="window.Plan.apriSelezionePin()" style="display: none; width: 40px; height: 40px; border-radius: 50%; background: var(--warning); color: #000; box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
@@ -64,7 +114,7 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
             </button>
         </div>
 
-        <div id="plan-drop-indicator" style="display:none; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: var(--warning); color: #000; padding: 10px 20px; border-radius: 20px; font-weight: bold; z-index: 2000; box-shadow: var(--shadow-md); pointer-events: none;">
+        <div id="plan-drop-indicator" style="display:none; position: absolute; top: calc(95px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: var(--warning); color: #000; padding: 10px 20px; border-radius: 20px; font-weight: bold; z-index: 2000; box-shadow: var(--shadow-md); pointer-events: none;">
             <i class="fa-solid fa-crosshairs"></i> Clicca sulla planimetria per piazzare l'elemento
         </div>
     `;
@@ -85,7 +135,7 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
 
     if (mappaPlan) mappaPlan.remove(); 
     mappaPlan = L.map('plan-map-container', { crs: L.CRS.Simple, minZoom: -4, zoomControl: false, zoomSnap: 0 });
-    L.control.zoom({ position: 'topleft' }).addTo(mappaPlan);
+    L.control.zoom({ position: 'bottomleft' }).addTo(mappaPlan); // Spostato bottomleft per non dare fastidio
     markersLayer = L.layerGroup().addTo(mappaPlan);
 
     mappaPlan.on('click', (e) => {
@@ -114,9 +164,6 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
     await caricaDatiPlanimetria();
 }
 
-// ==========================================
-// INFO PLANIMETRIA
-// ==========================================
 function apriInfoPlanimetria() {
     let infoText = planData.infoTesto || "";
     let html = `<h3 style="margin-bottom: 15px; color: var(--primary);"><i class="fa-solid fa-circle-info"></i> Info Planimetria</h3>`;
@@ -124,7 +171,7 @@ function apriInfoPlanimetria() {
     if (isEditMode) {
         html += `
             <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Aggiungi qui informazioni generali riguardanti l'oggetto della planimetria (es. nome nave, specifiche, appunti).</p>
-            <textarea id="info-plan-text" style="width:100%; min-height:150px; padding:10px; border-radius:8px; border:1px solid var(--border-color); box-sizing:border-box; margin-bottom:15px; font-family:inherit;">${infoText}</textarea>
+            <textarea id="info-plan-text" style="width:100%; min-height:150px; padding:10px; border-radius:8px; border:1px solid var(--border-color); box-sizing:border-box; margin-bottom:15px; font-family:inherit; background:var(--bg-color); color:var(--text-main);">${infoText}</textarea>
             <button onclick="window.Plan.salvaInfoPlanimetria()" style="width:100%; background:var(--success); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-floppy-disk"></i> Salva Informazioni</button>
         `;
     } else {
@@ -141,9 +188,6 @@ function salvaInfoPlanimetria() {
     chiudiModaleGlobale();
 }
 
-// ==========================================
-// CARICAMENTO DATI IN TEMPO REALE (API)
-// ==========================================
 async function caricaDatiPlanimetria() {
     const token = localStorage.getItem('gh_admin_token');
     
@@ -252,9 +296,6 @@ async function migrazioneVecchiDati(token) {
     }
 }
 
-// ==========================================
-// RENDER MAPPA E PIN
-// ==========================================
 function disegnaLivelloCorrente() {
     if (imageOverlay) mappaPlan.removeLayer(imageOverlay);
     markersLayer.clearLayers();
@@ -362,9 +403,6 @@ function disegnaLivelloCorrente() {
     }
 }
 
-// ==========================================
-// SALVATAGGI
-// ==========================================
 async function salvaInventarioGlobaleSuGitHub() {
     const token = localStorage.getItem('gh_admin_token');
     if (!token) return;
@@ -411,9 +449,6 @@ function salvaDimensionePin(idPin, newSize) {
     }
 }
 
-// ==========================================
-// LEGENDA E TOGGLE MODALITÀ
-// ==========================================
 function toggleEditMode() {
     isEditMode = !isEditMode;
     const btn = document.getElementById('fab-edit-plan');
@@ -480,9 +515,6 @@ function aggiornaLegenda() {
     contenitore.innerHTML = html;
 }
 
-// ==========================================
-// EDITOR INVENTARIO GLOBALE
-// ==========================================
 function apriGestioneSchede() {
     let html = `
         <h3 style="margin-bottom: 5px; color: var(--primary);"><i class="fa-solid fa-database"></i> Database Schede</h3>
@@ -550,9 +582,6 @@ function toggleSchedaNave(id) {
     }
 }
 
-// ==========================================
-// AGGIUNTA PIN ALLA MAPPA E CONTENITORI
-// ==========================================
 function apriSelezionePin() {
     if(planData.schedeNave.length === 0) return alert("Aggiungi prima delle dotazioni dal Database Schede.");
 
@@ -611,7 +640,7 @@ function chiediQuantitaPin(idScheda) {
 function componiContenitore() {
     let html = `
         <h3 style="margin-bottom: 15px; color: #546e7a;"><i class="fa-solid fa-box-open"></i> Crea Pin Contenitore</h3>
-        <input type="text" id="cont-nome" placeholder="Es. Cassetta Sicurezza Prua" style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; font-weight:bold;">
+        <input type="text" id="cont-nome" placeholder="Es. Cassetta Sicurezza Prua" style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-main); box-sizing:border-box; font-weight:bold;">
         <p style="font-size: 13px; font-weight:bold; margin-bottom:10px;">Quantità degli elementi nel contenitore:</p>
         <div style="max-height: 300px; overflow-y: auto; margin-bottom: 15px; padding-right:5px;">
     `;
@@ -625,7 +654,7 @@ function componiContenitore() {
                         <i class="${scheda.icona.includes('fa-') ? scheda.icona : 'fa-solid ' + scheda.icona}" style="color:${scheda.colore};"></i>
                         <span style="font-size:13px; font-weight:600; color:var(--text-main);">${scheda.nome}</span>
                     </div>
-                    <input type="number" id="cont-qta-${id}" min="0" value="0" style="width:50px; padding:4px; text-align:center; border:1px solid #ccc; border-radius:4px;">
+                    <input type="number" id="cont-qta-${id}" min="0" value="0" style="width:50px; padding:4px; text-align:center; border:1px solid var(--border-color); border-radius:4px; background:var(--bg-color); color:var(--text-main);">
                 </div>
             `;
         }
@@ -661,7 +690,6 @@ function salvaContenitore() {
     document.getElementById('plan-map-container').style.cursor = 'crosshair';
 }
 
-// MODIFICA CONTENITORE ESISTENTE
 function apriModificaContenitore(pinId) {
     const pin = planData.livelli[livelloCorrenteIdx].pins.find(p => p.id === pinId);
     if (!pin) return;
@@ -673,10 +701,10 @@ function apriModificaContenitore(pinId) {
         <h3 style="margin-bottom: 15px; color: #546e7a;"><i class="${icona}"></i> Modifica Contenitore</h3>
         
         <label style="font-size:11px; font-weight:bold;">Nome Contenitore</label>
-        <input type="text" id="edit-cont-nome" value="${pin.nomeContenitore}" style="width:100%; padding:10px; margin-bottom:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; font-weight:bold;">
+        <input type="text" id="edit-cont-nome" value="${pin.nomeContenitore}" style="width:100%; padding:10px; margin-bottom:10px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-main); box-sizing:border-box; font-weight:bold;">
         
         <label style="font-size:11px; font-weight:bold;">Classe Icona (es. fa-solid fa-box)</label>
-        <input type="text" id="edit-cont-icona" value="${icona}" style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
+        <input type="text" id="edit-cont-icona" value="${icona}" style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-main); box-sizing:border-box;">
         
         <div style="margin-bottom: 15px; padding: 10px; background: var(--surface); border: 1px solid var(--border-color); border-radius: 8px;">
             <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:8px;">Immagine Contenitore</label>
@@ -685,7 +713,7 @@ function apriModificaContenitore(pinId) {
     if (pin.immagineContenitore) {
         const rawUrl = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${pin.immagineContenitore}`;
         html += `
-            <div style="position:relative; width:100%; height:120px; border-radius:6px; overflow:hidden; border:1px solid #ccc;">
+            <div style="position:relative; width:100%; height:120px; border-radius:6px; overflow:hidden; border:1px solid var(--border-color);">
                 <img src="${rawUrl}" style="width:100%; height:100%; object-fit:cover;">
                 <button onclick="window.Plan.eliminaImmagineContenitore('${pinId}')" style="position:absolute; top:5px; right:5px; background:var(--danger); color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
             </div>
@@ -715,7 +743,7 @@ function apriModificaContenitore(pinId) {
                         <i class="${scheda.icona.includes('fa-') ? scheda.icona : 'fa-solid ' + scheda.icona}" style="color:${scheda.colore};"></i>
                         <span style="font-size:13px; font-weight:600; color:var(--text-main);">${scheda.nome}</span>
                     </div>
-                    <input type="number" id="edit-cont-qta-${id}" min="0" value="${qta}" style="width:50px; padding:4px; text-align:center; border:1px solid #ccc; border-radius:4px;">
+                    <input type="number" id="edit-cont-qta-${id}" min="0" value="${qta}" style="width:50px; padding:4px; text-align:center; border:1px solid var(--border-color); border-radius:4px; background:var(--bg-color); color:var(--text-main);">
                 </div>
             `;
         }
@@ -787,9 +815,6 @@ async function eliminaImmagineContenitore(pinId) {
     }
 }
 
-// ==========================================
-// CREAZIONE E MODIFICA SINGOLA SCHEDA GLOBALE
-// ==========================================
 function creaNuovaScheda() {
     const id = 'sch_' + Date.now();
     const colDef = inventarioGlobale.coloriCat?.["Sicurezza"] || "#ff0000";
@@ -828,13 +853,13 @@ function apriEditorScheda(id) {
         <h3 style="margin-bottom: 15px; color: var(--primary);"><i class="fa-solid fa-pen-to-square"></i> Scheda: ${s.nome}</h3>
         
         <label style="font-size:11px; font-weight:600;">Nome Elemento</label>
-        <input type="text" id="sch-nome" value="${s.nome}" style="width:100%; padding:8px; margin-bottom:10px; border-radius:4px; border:1px solid #ccc; box-sizing:border-box;">
+        <input type="text" id="sch-nome" value="${s.nome}" style="width:100%; padding:8px; margin-bottom:10px; border-radius:4px; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-main); box-sizing:border-box;">
         
         <div style="display:flex; gap:10px; margin-bottom:10px;">
             <div style="flex:2;">
                 <label style="font-size:11px; font-weight:600;">Categoria</label>
                 <div style="display:flex; gap:5px;">
-                    <select id="sch-categoria" onchange="window.Plan.cambiaColoreDaCategoria(this.value)" style="flex:1; padding:8px; border-radius:4px; border:1px solid #ccc;">${catOptions}</select>
+                    <select id="sch-categoria" onchange="window.Plan.cambiaColoreDaCategoria(this.value)" style="flex:1; padding:8px; border-radius:4px; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-main);">${catOptions}</select>
                     <button onclick="window.Plan.aggiungiCategoria()" style="background:var(--primary); color:white; border:none; border-radius:4px; padding:0 10px;" title="Nuova Categoria"><i class="fa-solid fa-plus"></i></button>
                 </div>
             </div>
@@ -845,15 +870,15 @@ function apriEditorScheda(id) {
         </div>
 
         <label style="font-size:11px; font-weight:600;">Classe Icona (es. fa-solid fa-fire)</label>
-        <input type="text" id="sch-icona" value="${s.icona}" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; box-sizing:border-box; margin-bottom:15px;">
+        <input type="text" id="sch-icona" value="${s.icona}" style="width:100%; padding:8px; border-radius:4px; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-main); box-sizing:border-box; margin-bottom:15px;">
 
         <label style="font-size:11px; font-weight:600;">Testo Descrittivo</label>
-        <div style="display:flex; gap: 5px; margin-bottom: 5px; background: #f0f0f0; padding: 5px; border-radius: 4px;">
-            <button onclick="document.execCommand('bold', false, null)" style="background:transparent; border:none; padding:5px; cursor:pointer;"><i class="fa-solid fa-bold"></i></button>
-            <button onclick="document.execCommand('formatBlock', false, 'H3')" style="background:transparent; border:none; padding:5px; cursor:pointer;"><i class="fa-solid fa-heading"></i></button>
-            <button onclick="document.execCommand('insertUnorderedList', false, null)" style="background:transparent; border:none; padding:5px; cursor:pointer;"><i class="fa-solid fa-list-ul"></i></button>
+        <div style="display:flex; gap: 5px; margin-bottom: 5px; background: var(--bg-color); padding: 5px; border-radius: 4px;">
+            <button onclick="document.execCommand('bold', false, null)" style="background:transparent; border:none; padding:5px; cursor:pointer; color:var(--text-main);"><i class="fa-solid fa-bold"></i></button>
+            <button onclick="document.execCommand('formatBlock', false, 'H3')" style="background:transparent; border:none; padding:5px; cursor:pointer; color:var(--text-main);"><i class="fa-solid fa-heading"></i></button>
+            <button onclick="document.execCommand('insertUnorderedList', false, null)" style="background:transparent; border:none; padding:5px; cursor:pointer; color:var(--text-main);"><i class="fa-solid fa-list-ul"></i></button>
         </div>
-        <div id="sch-testo" contenteditable="true" style="width:100%; min-height: 120px; padding:10px; border-radius:4px; border:1px solid #ccc; box-sizing:border-box; margin-bottom:15px; background: white; font-size:14px;">${s.testo_html}</div>
+        <div id="sch-testo" contenteditable="true" style="width:100%; min-height: 120px; padding:10px; border-radius:4px; border:1px solid var(--border-color); box-sizing:border-box; margin-bottom:15px; background: var(--surface); color:var(--text-main); font-size:14px;">${s.testo_html}</div>
 
         <div style="display:flex; justify-content:space-between; margin-bottom: 20px;">
             <button onclick="document.getElementById('upload-media-plan').click()" style="background:var(--primary); color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-photo-film"></i> Immagine/Video</button>
@@ -909,9 +934,6 @@ async function eliminaSchedaGlobale(id) {
     await salvaInventarioGlobaleSuGitHub(); await salvaPlanimetriaSuGitHub(); apriGestioneSchede();
 }
 
-// ==========================================
-// VIEWER (LETTURA MAPPA) E GALLERIA
-// ==========================================
 function apriVisualizzatorePin(pin) {
     if (pin.tipo === 'singolo') {
         apriSchedaViewer(pin.elementi[0].schedaId, pin.elementi[0].qta, pin.id);
@@ -1021,7 +1043,6 @@ function apriSchedaViewer(id, qta = null, pinId = null) {
     mostraModale(html);
 }
 
-// UPLOAD MEDIA E FUNZIONI GESTIONE FILE E MODALI
 async function gestisciUploadMediaPlan(event, cartellaTarget, idScheda) {
     const file = event.target.files[0];
     if (!file) return;
@@ -1084,9 +1105,6 @@ function generaHtmlGalleria(mediaArray, isEdit, idScheda) {
 window.scaricaFilePlan = async (url, filename) => { try { const response = await fetch(url); const blob = await response.blob(); const urlBlob = window.URL.createObjectURL(blob); const a = document.createElement('a'); a.href = urlBlob; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); window.URL.revokeObjectURL(urlBlob); } catch(e) { window.open(url, '_blank'); } }
 function eliminaMediaPlan(idScheda, index) { if(!confirm("Eliminare la foto dal server?")) return; inventarioGlobale.schede[idScheda].media.splice(index, 1); document.getElementById('sch-gallery').innerHTML = generaHtmlGalleria(inventarioGlobale.schede[idScheda].media, true, idScheda); }
 
-// ==========================================
-// GESTIONE LIVELLI (PONTI)
-// ==========================================
 function apriModaleLivelli() {
     let html = `<h3 style="margin-bottom: 15px; color: var(--primary);"><i class="fa-solid fa-layer-group"></i> Ponti / Livelli</h3><div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 20px;">`;
     planData.livelli.forEach((liv, idx) => {
@@ -1101,10 +1119,11 @@ function apriModaleLivelli() {
     });
     html += `</div>`;
     if (isEditMode) {
-        html += `<div style="border-top: 2px solid var(--border-color); padding-top: 15px;"><p style="font-size: 13px; font-weight: bold; margin-bottom:8px;">Aggiungi Nuovo Ponte (JPG/PNG)</p><input type="text" id="nuovo-livello-nome" placeholder="es. Ponte Coperta" style="width:100%; padding:8px; box-sizing:border-box; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 10px;"><button onclick="document.getElementById('upload-livello-base').click()" style="width:100%; background:var(--success); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-upload"></i> Carica Planimetria JPG</button><input type="file" id="upload-livello-base" accept="image/jpeg, image/png" style="display:none;" onchange="window.Plan.aggiungiNuovoLivello(event)"></div>`;
+        html += `<div style="border-top: 2px solid var(--border-color); padding-top: 15px;"><p style="font-size: 13px; font-weight: bold; margin-bottom:8px;">Aggiungi Nuovo Ponte (JPG/PNG)</p><input type="text" id="nuovo-livello-nome" placeholder="es. Ponte Coperta" style="width:100%; padding:8px; box-sizing:border-box; border: 1px solid var(--border-color); background:var(--bg-color); color:var(--text-main); border-radius: 6px; margin-bottom: 10px;"><button onclick="document.getElementById('upload-livello-base').click()" style="width:100%; background:var(--success); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-upload"></i> Carica Planimetria JPG</button><input type="file" id="upload-livello-base" accept="image/jpeg, image/png" style="display:none;" onchange="window.Plan.aggiungiNuovoLivello(event)"></div>`;
     }
     mostraModale(html);
 }
+
 function cambiaLivello(idx) { livelloCorrenteIdx = idx; chiudiModaleGlobale(); disegnaLivelloCorrente(); }
 function eliminaPin(idPin) { if(confirm("Rimuovere questo elemento dalla mappa?")) { planData.livelli[livelloCorrenteIdx].pins = planData.livelli[livelloCorrenteIdx].pins.filter(p => p.id !== idPin); salvaPlanimetriaSuGitHub(); mappaPlan.closePopup(); } }
 
@@ -1149,14 +1168,13 @@ async function eliminaLivello(idx) {
 function creaContenitoreModali() {
     if (!document.getElementById('plan-modal-overlay')) {
         const overlay = document.createElement('div'); overlay.id = 'plan-modal-overlay'; overlay.className = 'modal-overlay'; overlay.style.cssText = 'display:none; align-items:center; justify-content:center; padding: 20px; z-index: 2500; background: rgba(0,0,0,0.7); box-sizing: border-box;';
-        overlay.innerHTML = `<div id="plan-modal-box" style="background: var(--surface); width: 95%; max-width: 500px; border-radius: 16px; padding: 25px; box-sizing: border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; position: relative; margin: 0 auto;"><button onclick="window.chiudiModaleGlobale()" style="position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer;"><i class="fa-solid fa-xmark"></i></button><div id="plan-modal-content"></div></div>`;
+        overlay.innerHTML = `<div id="plan-modal-box" style="background: var(--surface); color: var(--text-main); width: 95%; max-width: 500px; border-radius: 16px; padding: 25px; box-sizing: border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; position: relative; margin: 0 auto; border: 1px solid var(--border-color);"><button onclick="window.chiudiModaleGlobale()" style="position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer;"><i class="fa-solid fa-xmark"></i></button><div id="plan-modal-content"></div></div>`;
         document.body.appendChild(overlay);
         window.chiudiModaleGlobale = () => { overlay.style.display = 'none'; document.getElementById('plan-modal-content').innerHTML = ''; };
     }
 }
 function mostraModale(html) { document.getElementById('plan-modal-content').innerHTML = html; document.getElementById('plan-modal-overlay').style.display = 'flex'; }
 
-// SISTEMA VISUALIZZATORE MEDIA GLOBALE
 function creaViewerLocale() {
     if (!document.getElementById('vd-media-viewer')) {
         const viewer = document.createElement('div');
@@ -1243,9 +1261,6 @@ function apriImmagineSingola(url) {
     document.getElementById('vd-media-viewer').style.display = 'flex';
 }
 
-// ==========================================
-// MEDIA SPECIFICI DEL SINGOLO PIN
-// ==========================================
 function apriGestioneMediaLocale(pinId) {
     const pin = planData.livelli[livelloCorrenteIdx].pins.find(p => p.id === pinId);
     if (!pin) return;
