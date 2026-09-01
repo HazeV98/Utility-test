@@ -25,7 +25,7 @@
 
 
     <style>
-                :root { 
+        :root { 
             --primary: #0066cc; 
             --primary-hover: #0052a3;
             --primary-glow: rgba(0, 102, 204, 0.2);
@@ -110,10 +110,16 @@
             transition: var(--transition);
         }
 
-        :root[data-theme="dark"] .vd-header, 
-        @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .vd-header } {
+        :root[data-theme="dark"] .vd-header {
             background: rgba(26, 29, 36, 0.85);
             border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        @media (prefers-color-scheme: dark) { 
+            :root:not([data-theme="light"]) .vd-header {
+                background: rgba(26, 29, 36, 0.85);
+                border-color: rgba(255, 255, 255, 0.1);
+            }
         }
 
         .vd-header-left { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
@@ -129,7 +135,7 @@
             background: var(--surface); border: 1px solid var(--border-color); font-size: 18px;
             color: var(--primary); cursor: pointer; width: 38px; height: 38px; 
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            transition: var(--transition); box-shadow: var(--shadow-sm);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: var(--shadow-sm);
         }
         .icon-btn:hover {
             transform: translateY(-2px);
@@ -169,10 +175,16 @@
             box-shadow: 0 6px 12px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.03), inset 0 -4px 6px rgba(0,0,0,0.02);
         }
         
-        :root[data-theme="dark"] .vd-list-item,
-        @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .vd-list-item } {
+        :root[data-theme="dark"] .vd-list-item {
              box-shadow: 0 10px 20px -2px rgba(0,0,0,0.9), 0 4px 8px -2px rgba(0,0,0,0.7), inset 0 -6px 12px rgba(0,0,0,0.7), inset 1px 1px 3px rgba(255,255,255,0.05);
-             border: 1px solid rgba(255,255,255,0.12);
+             border: 1px solid rgba(255,255,255,0.15);
+        }
+        
+        @media (prefers-color-scheme: dark) { 
+            :root:not([data-theme="light"]) .vd-list-item {
+                 box-shadow: 0 10px 20px -2px rgba(0,0,0,0.9), 0 4px 8px -2px rgba(0,0,0,0.7), inset 0 -6px 12px rgba(0,0,0,0.7), inset 1px 1px 3px rgba(255,255,255,0.05);
+                 border: 1px solid rgba(255,255,255,0.15);
+            }
         }
         
         .vd-list-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--primary); }
@@ -207,6 +219,11 @@
             100% { opacity: 1; transform: translateY(0) scale(1); } 
         }
 
+        /* --- VISIBILITA' TASTO INFO & CONTROLLI --- */
+        .vd-list-item .info-btn-view { display: none; }
+        .vd-list-item.has-info .info-btn-view { display: flex; }
+        .edit-mode .vd-list-item .info-btn-view,
+        .edit-mode .edit-controls { display: flex; }
 
     </style>
 </head>
