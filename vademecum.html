@@ -16,10 +16,19 @@
     <!-- Librerie esterne -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+    </script>
+
 
     <style>
-        :root { 
+                :root { 
             --primary: #0066cc; 
+            --primary-hover: #0052a3;
+            --primary-glow: rgba(0, 102, 204, 0.2);
             --surface: #ffffff;
             --surface-hover: #f8f9fa;
             --text-main: #1a1a1a; 
@@ -29,21 +38,82 @@
             --danger: #d93025;
             --success: #0f9d58;
             --warning: #ffb74d;
-            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05);
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-md: 0 10px 20px -5px rgba(0,0,0,0.12), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.15), 0 10px 10px -5px rgba(0,0,0,0.04);
+            --radius-md: 14px;
+            --radius-lg: 24px;
             --transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        body {
-            font-family: 'Inter', sans-serif; background-color: var(--bg-color);
-            margin: 0; padding: 0; overflow: hidden; color: var(--text-main);
+        :root[data-theme="dark"] {
+            --primary: #4da3ff;
+            --primary-hover: #73b9ff;
+            --primary-glow: rgba(77, 163, 255, 0.25);
+            --bg-color: #0f1115;
+            --surface: #1a1d24;
+            --surface-hover: #232730;
+            --text-main: #e8eaed;
+            --text-muted: #9aa0a6;
+            --border-color: #2f333d;
+            --success: #34a853;
+            --danger: #ea4335;
+            --warning: #ffb74d;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
+            --shadow-md: 0 10px 20px -5px rgba(0,0,0,0.4);
+            --shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.5);
         }
 
-        /* --- HEADER DINAMICO --- */
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --primary: #4da3ff;
+                --primary-hover: #73b9ff;
+                --primary-glow: rgba(77, 163, 255, 0.25);
+                --bg-color: #0f1115;
+                --surface: #1a1d24;
+                --surface-hover: #232730;
+                --text-main: #e8eaed;
+                --text-muted: #9aa0a6;
+                --border-color: #2f333d;
+                --success: #34a853;
+                --danger: #ea4335;
+                --warning: #ffb74d;
+                --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
+                --shadow-md: 0 10px 20px -5px rgba(0,0,0,0.4);
+                --shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.5);
+            }
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background-color: var(--bg-color);
+            margin: 0; padding: 0; overflow: hidden; color: var(--text-main);
+            transition: background-color 0.4s ease;
+        }
+
+        /* --- HEADER DINAMICO FLUTTUANTE --- */
         .vd-header {
-            position: fixed; top: 0; left: 0; width: 100%; height: 65px; 
-            padding: env(safe-area-inset-top) 20px 0 20px; background: var(--surface);
-            box-shadow: var(--shadow-sm); z-index: 100; box-sizing: border-box;
+            position: fixed; 
+            top: calc(12px + env(safe-area-inset-top)); 
+            left: 50%; transform: translateX(-50%);
+            width: calc(100% - 32px); max-width: 1168px;
+            height: 65px; 
+            padding: 0 20px; 
+            background: var(--surface);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-md); 
+            z-index: 100; box-sizing: border-box;
             display: flex; align-items: center; justify-content: space-between;
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            transition: var(--transition);
+        }
+
+        :root[data-theme="dark"] .vd-header, 
+        @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .vd-header } {
+            background: rgba(26, 29, 36, 0.85);
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
         .vd-header-left { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
@@ -54,25 +124,33 @@
 
         .vd-title { font-size: 19px; font-weight: 800; margin: 0; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.5px; }
         
+        /* BOTTONI ICONA HEADER & INTERFACCIA */
         .icon-btn {
-            background: var(--surface-hover); border: 1px solid var(--border-color); font-size: 18px;
+            background: var(--surface); border: 1px solid var(--border-color); font-size: 18px;
             color: var(--primary); cursor: pointer; width: 38px; height: 38px; 
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
             transition: var(--transition); box-shadow: var(--shadow-sm);
         }
-        .icon-btn:active { transform: scale(0.9); }
+        .icon-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+            color: var(--primary-hover);
+        }
+        .icon-btn:active { transform: scale(0.92) translateY(2px); box-shadow: var(--shadow-sm); }
         .icon-btn.btn-transparent { background: transparent; border: none; box-shadow: none; font-size: 20px; width: auto; height: auto; }
+        .icon-btn.btn-transparent:hover { transform: none; color: var(--primary-hover); }
 
-        /* --- CONTENITORE SLIDE (DRILL-DOWN) --- */
+        /* --- CONTENITORE SLIDE (DRILL-DOWN) ADATTATO PER HEADER FLUTTUANTE --- */
         .vd-viewport {
             position: relative; width: 100%; height: 100vh;
-            padding-top: calc(65px + env(safe-area-inset-top));
+            padding-top: calc(90px + env(safe-area-inset-top)); 
             overflow-x: hidden; box-sizing: border-box;
         }
 
         .vd-panel {
-            position: absolute; top: calc(65px + env(safe-area-inset-top)); left: 0;
-            width: 100%; height: calc(100vh - 65px - env(safe-area-inset-top));
+            position: absolute; top: calc(90px + env(safe-area-inset-top)); left: 0;
+            width: 100%; height: calc(100vh - 90px - env(safe-area-inset-top));
             padding: 20px; box-sizing: border-box; overflow-y: auto;
             transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
@@ -81,39 +159,55 @@
         .panel-left { transform: translateX(-100%); }
         .panel-right { transform: translateX(100%); }
 
-        /* --- ELEMENTI LISTA E MODALI --- */
+        /* --- CLAY MORPHISM - ELEMENTI LISTA --- */
         .vd-list-item {
             display: flex; align-items: center; justify-content: space-between;
-            background: var(--surface); padding: 18px 20px; border-radius: 14px; margin-bottom: 12px;
-            box-shadow: var(--shadow-sm); cursor: pointer; border: 1px solid var(--border-color);
+            background: var(--surface); padding: 18px 20px; border-radius: var(--radius-md); 
+            margin-bottom: 12px; cursor: pointer; 
+            border: 1px solid var(--border-color); 
+            transition: var(--transition);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.03), inset 0 -4px 6px rgba(0,0,0,0.02);
         }
-        .vd-list-item:active { background: var(--surface-hover); transform: scale(0.98); }
+        
+        :root[data-theme="dark"] .vd-list-item,
+        @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .vd-list-item } {
+             box-shadow: 0 10px 20px -2px rgba(0,0,0,0.9), 0 4px 8px -2px rgba(0,0,0,0.7), inset 0 -6px 12px rgba(0,0,0,0.7), inset 1px 1px 3px rgba(255,255,255,0.05);
+             border: 1px solid rgba(255,255,255,0.12);
+        }
+        
+        .vd-list-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--primary); }
+        .vd-list-item:active { background: var(--surface-hover); transform: scale(0.97) translateY(2px); box-shadow: var(--shadow-sm); }
+
         .item-title { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 14px; }
-        
         .edit-controls { display: none; gap: 10px; align-items: center; }
-        .edit-mode .edit-controls { display: flex; }
-        .edit-mode .vd-list-item { cursor: grab; }
-        .drag-handle { color: var(--text-muted); cursor: grab; font-size: 18px; padding-right: 10px; }
+        .drag-handle { color: var(--text-muted); cursor: grab; padding: 10px; font-size: 18px; }
+        .drag-handle:active { cursor: grabbing; }
 
-        /* Regole CSS dinamiche per Tasto Info Menù */
-        .info-btn-view { display: none; }
-        .has-info .info-btn-view { display: flex; align-items: center; justify-content: center; }
-        .edit-mode .info-btn-view { display: flex !important; align-items: center; justify-content: center; }
-
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px);
+        /* --- ANIMAZIONI MODALI (Stile Index) --- */
+        .modal-overlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; 
+            z-index: 7000; padding: 20px; box-sizing: border-box; 
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); 
+            animation: fadeIn 0.3s ease; 
         }
-        .modal-content { background: var(--surface); padding: 28px; border-radius: 20px; width: 90%; max-width: 400px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .input-field { width: 100%; padding: 14px; margin-bottom: 16px; border: 2px solid var(--border-color); border-radius: 12px; box-sizing: border-box; font-size: 15px; font-family: inherit; }
-        .btn-action { width: 100%; padding: 14px; background: var(--success); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; }
-        .btn-action:active { transform: scale(0.96); }
+        .modal-content { 
+            background: var(--surface); padding: 32px; border-radius: var(--radius-lg); 
+            width: 100%; max-width: 380px; text-align: left; 
+            box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.1) inset; 
+            border: 1px solid var(--border-color); position: relative; 
+            color: var(--text-main); max-height: 90vh; overflow-y: auto; 
+            animation: slideInUpBouncy 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+        }
         
-        /* Stili Editor Scheda */
-        .scheda-content-box h3 { color: var(--primary); margin-top: 15px; margin-bottom: 10px; }
-        .scheda-content-box ul { padding-left: 20px; margin-bottom: 15px; }
-        .scheda-content-box li { margin-bottom: 5px; }
-        .scheda-content-box:focus { outline: none; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInUpBouncy { 
+            0% { opacity: 0; transform: translateY(35px) scale(0.9); } 
+            65% { opacity: 1; transform: translateY(-4px) scale(1.02); } 
+            100% { opacity: 1; transform: translateY(0) scale(1); } 
+        }
+
+
     </style>
 </head>
 <body>
