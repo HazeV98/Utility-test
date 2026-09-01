@@ -1,7 +1,6 @@
 const GH_OWNER = "HazeV98"; 
 const GH_REPO = "Utility-test";
 
-// Stili alleggeriti: la dimensione ora è gestita tramite classi genitore e aggiunto supporto Dark Mode
 const stiliEtichette = document.createElement('style');
 stiliEtichette.innerHTML = `
     .etichetta-canale {
@@ -18,7 +17,6 @@ stiliEtichette.innerHTML = `
     .zoom-16 .etichetta-canale { font-size: 12px; }
     .zoom-17-plus .etichetta-canale { font-size: 14px; }
 
-    /* Inversione Colori Mappa Standard in Dark Mode */
     :root[data-theme="dark"] .layer-standard,
     @media (prefers-color-scheme: dark) {
         :root:not([data-theme="light"]) .layer-standard {
@@ -26,7 +24,6 @@ stiliEtichette.innerHTML = `
         }
     }
 
-    /* Stile Glassmorphism per pannelli mappa (allineato all'header) */
     .mappa-glass-panel {
         background: rgba(255, 255, 255, 0.85) !important;
         backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -40,7 +37,6 @@ stiliEtichette.innerHTML = `
         }
     }
 
-    /* Sovrascittura colori default popup Leaflet per supportare Tema Scuro */
     .leaflet-popup-content-wrapper, .leaflet-popup-tip {
         background: var(--surface) !important;
         color: var(--text-main) !important;
@@ -71,14 +67,19 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    container.parentElement.style.padding = "0"; 
+    // FORZATURA FULLSCREEN: Espande il pannello per coprire lo sfondo sotto l'header
+    if (container.parentElement) {
+        container.parentElement.style.top = "0";
+        container.parentElement.style.height = "100vh";
+        container.parentElement.style.padding = "0";
+        container.parentElement.style.zIndex = "10"; 
+    }
 
-    // Layout mappa a tutto schermo con pannelli stile glassmorphism
     container.innerHTML = `
         <div id="leaflet-map-container" style="width: 100%; height: 100%; z-index: 1;"></div>
         
-        <!-- Legenda e Filtri -->
-        <div id="mappa-legenda-panel" class="mappa-glass-panel" style="display: none; position: absolute; top: 15px; right: 70px; padding: 15px; border-radius: var(--radius-md); box-shadow: var(--shadow-md); z-index: 1000; font-size: 13px; min-width: 180px;">
+        <!-- Legenda e Filtri (spostati a 95px per evitare l'header) -->
+        <div id="mappa-legenda-panel" class="mappa-glass-panel" style="display: none; position: absolute; top: calc(95px + env(safe-area-inset-top)); right: 70px; padding: 15px; border-radius: var(--radius-md); box-shadow: var(--shadow-md); z-index: 1000; font-size: 13px; min-width: 180px;">
             <div style="font-weight: 700; margin-bottom: 10px; color: var(--text-main); font-size: 14px;">Mostra in mappa:</div>
             <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 15px;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">
@@ -91,8 +92,8 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
             <div id="legenda-colori"></div>
         </div>
 
-        <!-- Pulsanti Fluttuanti (FAB) -->
-        <div style="position: absolute; top: 15px; right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 15px;">
+        <!-- Pulsanti Fluttuanti (FAB) (spostati a 95px per evitare l'header) -->
+        <div style="position: absolute; top: calc(95px + env(safe-area-inset-top)); right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 15px;">
             <button class="icon-btn fab-btn mappa-glass-panel" title="Filtri e Legenda" onclick="window.Mappa.toggleLegend()" style="width: 45px; height: 45px; border-radius: 50%; color: var(--primary); box-shadow: var(--shadow-md);">
                 <i class="fa-solid fa-filter"></i>
             </button>
@@ -117,13 +118,11 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
 
     mappaAttiva = L.map('leaflet-map-container', { zoomControl: false }).setView([45.435, 12.325], 13);
     
-    // Spostato lo zoom control per non accavallarsi ai nuovi elementi
     L.control.zoom({ position: 'bottomleft' }).addTo(mappaAttiva);
     
     mappaAttiva.on('zoomend', gestisciEtichetteVisibili);
     mappaAttiva.on('moveend', gestisciEtichetteVisibili);
 
-    // Aggiunta className per intercettare il dark mode CSS
     layerStandard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors', maxZoom: 19, className: 'layer-standard'
     });
