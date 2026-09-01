@@ -16,7 +16,26 @@ export function inizializzaScheda(containerId, idScheda, databaseFirebaseIgnorat
     creaViewerSeMancante();
 
     container.innerHTML = `
-        <div id="scheda-toolbar-${idScheda}" style="display:none; gap: 8px; margin-bottom: 15px; background: var(--surface); padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); overflow-x: auto;">
+        <style>
+            .clay-panel {
+                background: var(--surface);
+                border-radius: 14px;
+                border: 1px solid var(--border-color);
+                box-shadow: 0 6px 12px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.03), inset 0 -4px 6px rgba(0,0,0,0.02);
+            }
+            :root[data-theme="dark"] .clay-panel {
+                box-shadow: 0 10px 20px -2px rgba(0,0,0,0.9), 0 4px 8px -2px rgba(0,0,0,0.7), inset 0 -6px 12px rgba(0,0,0,0.7), inset 1px 1px 3px rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.15);
+            }
+            @media (prefers-color-scheme: dark) { 
+                :root:not([data-theme="light"]) .clay-panel {
+                    box-shadow: 0 10px 20px -2px rgba(0,0,0,0.9), 0 4px 8px -2px rgba(0,0,0,0.7), inset 0 -6px 12px rgba(0,0,0,0.7), inset 1px 1px 3px rgba(255,255,255,0.05);
+                    border: 1px solid rgba(255,255,255,0.15);
+                }
+            }
+        </style>
+
+        <div id="scheda-toolbar-${idScheda}" class="clay-panel" style="display:none; gap: 8px; margin-bottom: 15px; padding: 10px; overflow-x: auto;">
             <button class="icon-btn" onclick="document.execCommand('bold', false, null)" title="Grassetto"><i class="fa-solid fa-bold"></i></button>
             <button class="icon-btn" onclick="document.execCommand('formatBlock', false, 'H3')" title="Titolo"><i class="fa-solid fa-heading"></i></button>
             <button class="icon-btn" onclick="document.execCommand('insertUnorderedList', false, null)" title="Elenco Puntato"><i class="fa-solid fa-list-ul"></i></button>
@@ -34,15 +53,15 @@ export function inizializzaScheda(containerId, idScheda, databaseFirebaseIgnorat
             <input type="file" id="upload-pdf-scheda-${idScheda}" accept="application/pdf" style="display:none;" onchange="window.Scheda.gestisciUploadMedia(event, 'pdf')">
         </div>
 
-        <div id="scheda-contenuto-${idScheda}" class="scheda-content-box" style="background: var(--surface); padding: 20px; border-radius: 14px; min-height: 200px; border: 1px solid var(--border-color); font-size: 15px; line-height: 1.6;">
+        <div id="scheda-contenuto-${idScheda}" class="scheda-content-box clay-panel" style="padding: 20px; min-height: 200px; font-size: 15px; line-height: 1.6;">
             <div style="text-align:center; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Caricamento...</div>
         </div>
 
         <div id="scheda-media-gallery-${idScheda}" style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
 
         <div id="scheda-admin-actions-${idScheda}" style="display:none; margin-top: 20px; gap: 10px;">
-            <button id="btn-edit-scheda-${idScheda}" class="btn-action" style="background: var(--primary); flex: 1;" onclick="window.Scheda.attivaEditor()"><i class="fa-solid fa-pen"></i> Modifica Scheda</button>
-            <button id="btn-salva-scheda-${idScheda}" class="btn-action" style="background: var(--success); flex: 1; display:none;" onclick="window.Scheda.salvaSchedaSuGitHub()"><i class="fa-solid fa-floppy-disk"></i> Salva</button>
+            <button id="btn-edit-scheda-${idScheda}" class="btn-action" style="background: var(--primary); flex: 1; border: none; box-shadow: var(--shadow-sm); border-radius: var(--radius-md); padding: 12px; color: white; font-weight: 600;" onclick="window.Scheda.attivaEditor()"><i class="fa-solid fa-pen"></i> Modifica Scheda</button>
+            <button id="btn-salva-scheda-${idScheda}" class="btn-action" style="background: var(--success); flex: 1; display:none; border: none; box-shadow: var(--shadow-sm); border-radius: var(--radius-md); padding: 12px; color: white; font-weight: 600;" onclick="window.Scheda.salvaSchedaSuGitHub()"><i class="fa-solid fa-floppy-disk"></i> Salva</button>
         </div>
     `;
 
@@ -223,7 +242,7 @@ async function salvaSchedaSuGitHub() {
 
         isEditMode = false;
         contenutoDiv.contentEditable = "false";
-        contenutoDiv.style.border = "1px solid var(--border-color)";
+        contenutoDiv.style.border = "1px solid var(--border-color)"; // Ripristinato lo stile tramite la classe base
         contenutoDiv.innerHTML = formattaTestoLettura(datiSchedaCache.testo_html);
         
         document.getElementById(`scheda-toolbar-${schedaAttivaId}`).style.display = 'none';
@@ -310,9 +329,10 @@ function renderizzaGalleria(mediaArray) {
         const numeroVisuale = index + 1;
 
         const mediaDiv = document.createElement('div');
+        mediaDiv.className = "clay-panel";
         
         if (isPdf) {
-            mediaDiv.style = "grid-column: 1 / -1; display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden;";
+            mediaDiv.style = "grid-column: 1 / -1; display: flex; align-items: center; overflow: hidden;";
             
             const actionBtn = isEditMode 
                 ? `<button class="icon-btn" style="width: 50px; height: 100%; border-radius: 0; background: transparent; border: none; color: var(--danger); cursor: pointer; box-shadow: none;" onclick="window.Scheda.eliminaMedia('${path}')" title="Elimina"><i class="fa-solid fa-trash" style="font-size: 16px;"></i></button>`
@@ -328,7 +348,7 @@ function renderizzaGalleria(mediaArray) {
                 </div>
             `;
         } else {
-            mediaDiv.style = "position: relative; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color);";
+            mediaDiv.style = "position: relative; overflow: hidden;";
             const mediaTag = isVideo 
                 ? `<video src="${rawUrl}" style="width: 100%; height: 150px; object-fit: cover; display: block;"></video>
                    <i class="fa-solid fa-play" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:30px; text-shadow: 0 2px 4px rgba(0,0,0,0.6); pointer-events:none;"></i>`
