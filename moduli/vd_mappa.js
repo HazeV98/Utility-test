@@ -1,7 +1,7 @@
 const GH_OWNER = "HazeV98"; 
 const GH_REPO = "Utility-test";
 
-// Stili alleggeriti: la dimensione ora è gestita tramite classi genitore
+// Stili alleggeriti: la dimensione ora è gestita tramite classi genitore e aggiunto supporto Dark Mode
 const stiliEtichette = document.createElement('style');
 stiliEtichette.innerHTML = `
     .etichetta-canale {
@@ -17,6 +17,38 @@ stiliEtichette.innerHTML = `
     .zoom-15 .etichetta-canale { font-size: 10px; }
     .zoom-16 .etichetta-canale { font-size: 12px; }
     .zoom-17-plus .etichetta-canale { font-size: 14px; }
+
+    /* Inversione Colori Mappa Standard in Dark Mode */
+    :root[data-theme="dark"] .layer-standard,
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) .layer-standard {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        }
+    }
+
+    /* Stile Glassmorphism per pannelli mappa (allineato all'header) */
+    .mappa-glass-panel {
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.6) !important;
+    }
+    :root[data-theme="dark"] .mappa-glass-panel, 
+    @media (prefers-color-scheme: dark) { 
+        :root:not([data-theme="light"]) .mappa-glass-panel {
+            background: rgba(26, 29, 36, 0.85) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+    }
+
+    /* Sovrascittura colori default popup Leaflet per supportare Tema Scuro */
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+        background: var(--surface) !important;
+        color: var(--text-main) !important;
+        box-shadow: var(--shadow-lg) !important;
+    }
+    .leaflet-container a.leaflet-popup-close-button {
+        color: var(--text-muted) !important;
+    }
 `;
 document.head.appendChild(stiliEtichette);
 
@@ -41,11 +73,12 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
 
     container.parentElement.style.padding = "0"; 
 
+    // Layout mappa a tutto schermo con pannelli stile glassmorphism
     container.innerHTML = `
         <div id="leaflet-map-container" style="width: 100%; height: 100%; z-index: 1;"></div>
         
         <!-- Legenda e Filtri -->
-        <div id="mappa-legenda-panel" style="display: none; position: absolute; top: max(15px, env(safe-area-inset-top)); right: 70px; background: var(--surface); padding: 15px; border-radius: 12px; box-shadow: var(--shadow-md); z-index: 1000; font-size: 13px; min-width: 180px; border: 1px solid var(--border-color);">
+        <div id="mappa-legenda-panel" class="mappa-glass-panel" style="display: none; position: absolute; top: 15px; right: 70px; padding: 15px; border-radius: var(--radius-md); box-shadow: var(--shadow-md); z-index: 1000; font-size: 13px; min-width: 180px;">
             <div style="font-weight: 700; margin-bottom: 10px; color: var(--text-main); font-size: 14px;">Mostra in mappa:</div>
             <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 15px;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">
@@ -59,14 +92,14 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
         </div>
 
         <!-- Pulsanti Fluttuanti (FAB) -->
-        <div style="position: absolute; top: max(15px, env(safe-area-inset-top)); right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 15px;">
-            <button class="icon-btn fab-btn" title="Filtri e Legenda" onclick="window.Mappa.toggleLegend()" style="width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: var(--primary); box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
+        <div style="position: absolute; top: 15px; right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 15px;">
+            <button class="icon-btn fab-btn mappa-glass-panel" title="Filtri e Legenda" onclick="window.Mappa.toggleLegend()" style="width: 45px; height: 45px; border-radius: 50%; color: var(--primary); box-shadow: var(--shadow-md);">
                 <i class="fa-solid fa-filter"></i>
             </button>
-            <button class="icon-btn fab-btn" title="Cambia Sfondo" onclick="window.Mappa.toggleSfondo()" style="width: 45px; height: 45px; border-radius: 50%; background: var(--surface); color: var(--text-main); box-shadow: var(--shadow-md); border: 2px solid var(--border-color);">
+            <button class="icon-btn fab-btn mappa-glass-panel" title="Cambia Sfondo" onclick="window.Mappa.toggleSfondo()" style="width: 45px; height: 45px; border-radius: 50%; color: var(--text-main); box-shadow: var(--shadow-md);">
                 <i class="fa-solid fa-layer-group"></i>
             </button>
-            <button id="fab-edit-mappa" class="icon-btn fab-btn" title="Modifica Dati" onclick="window.Mappa.toggleEdit()" style="display: none; width: 45px; height: 45px; border-radius: 50%; background: var(--primary); color: white; box-shadow: var(--shadow-md); border: none;">
+            <button id="fab-edit-mappa" class="icon-btn fab-btn" title="Modifica Dati" onclick="window.Mappa.toggleEdit()" style="display: none; width: 45px; height: 45px; border-radius: 50%; background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(0,102,204,0.4); border: none;">
                 <i class="fa-solid fa-pen" id="icon-edit-mappa"></i>
             </button>
         </div>
@@ -83,14 +116,16 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     if (mappaAttiva) mappaAttiva.remove(); 
 
     mappaAttiva = L.map('leaflet-map-container', { zoomControl: false }).setView([45.435, 12.325], 13);
-    L.control.zoom({ position: 'topleft' }).addTo(mappaAttiva);
     
-    // Aggiornamento etichette calcolato sia sul cambio zoom che sullo spostamento (pan)
+    // Spostato lo zoom control per non accavallarsi ai nuovi elementi
+    L.control.zoom({ position: 'bottomleft' }).addTo(mappaAttiva);
+    
     mappaAttiva.on('zoomend', gestisciEtichetteVisibili);
     mappaAttiva.on('moveend', gestisciEtichetteVisibili);
 
+    // Aggiunta className per intercettare il dark mode CSS
     layerStandard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors', maxZoom: 19
+        attribution: '© OpenStreetMap contributors', maxZoom: 19, className: 'layer-standard'
     });
     
     layerSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -150,9 +185,6 @@ function disegnaGeoJson() {
     setTimeout(gestisciEtichetteVisibili, 100);
 }
 
-// ------------------------------------
-// GESTIONE COLORI E STILI
-// ------------------------------------
 function impostaStileLinea(feature) {
     let colore = '#a9a9a9'; 
 
@@ -215,9 +247,6 @@ function aggiornaUI_Legenda() {
     contenitore.innerHTML = html;
 }
 
-// ------------------------------------
-// POPUP E MODALITÀ MODIFICA
-// ------------------------------------
 function aggiungiPopup(feature, layer) {
     layer.bindPopup(() => {
         const p = feature.properties;
@@ -227,13 +256,13 @@ function aggiungiPopup(feature, layer) {
                 <div style="font-family: 'Inter', sans-serif; min-width: 180px;">
                     <div style="font-weight:bold; margin-bottom: 8px; color:var(--primary);"><i class="fa-solid fa-pen-to-square"></i> Modifica Dati</div>
                     <label style="font-size:11px; font-weight:600;">Nome Canale</label>
-                    <input type="text" id="edit-nome-${p._internal_id}" value="${p.Toponomast || ''}" style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                    <input type="text" id="edit-nome-${p._internal_id}" value="${p.Toponomast || ''}" style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:6px; background:var(--bg-color); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
                     
                     <label style="font-size:11px; font-weight:600;">Velocità (km/h)</label>
-                    <input type="text" id="edit-vel-${p._internal_id}" value="${p.velocita || ''}" style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:6px; border:1px solid #ccc; border-radius:4px;" placeholder="es: 11">
+                    <input type="text" id="edit-vel-${p._internal_id}" value="${p.velocita || ''}" style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:6px; background:var(--bg-color); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;" placeholder="es: 11">
                     
                     <label style="font-size:11px; font-weight:600;">Giurisdizione / Ente</label>
-                    <input type="text" id="edit-giu-${p._internal_id}" value="${p.giurisdisz || ''}" style="width:100%; box-sizing:border-box; margin-bottom:12px; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                    <input type="text" id="edit-giu-${p._internal_id}" value="${p.giurisdisz || ''}" style="width:100%; box-sizing:border-box; margin-bottom:12px; padding:6px; background:var(--bg-color); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
                     
                     <button onclick="window.Mappa.salvaFeatureModificata(${p._internal_id})" style="width:100%; background:var(--success); color:white; border:none; padding:8px; border-radius:6px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-cloud-arrow-up"></i> Salva Modifica</button>
                 </div>
@@ -250,23 +279,18 @@ function aggiungiPopup(feature, layer) {
     });
 }
 
-// ------------------------------------
-// GESTIONE OTTIMIZZATA ETICHETTE
-// ------------------------------------
 function gestisciEtichetteVisibili() {
     if (!mappaAttiva || !geoJsonLayer) return;
     
     const zoom = mappaAttiva.getZoom();
     const bounds = mappaAttiva.getBounds();
     
-    // Gestione della dimensione CSS ancorata al contenitore mappa
     const container = document.getElementById('leaflet-map-container');
     container.classList.remove('zoom-15', 'zoom-16', 'zoom-17-plus');
     if (zoom === 15) container.classList.add('zoom-15');
     else if (zoom === 16) container.classList.add('zoom-16');
     else if (zoom >= 17) container.classList.add('zoom-17-plus');
     
-    // Carica etichette SOLO per i canali visibili a schermo (culling)
     geoJsonLayer.eachLayer(layer => {
         if (!layer.getBounds || !layer.feature || !layer.feature.properties || !layer.feature.properties.Toponomast) return;
 
@@ -340,9 +364,6 @@ async function salvaFeatureModificata(index) {
     }
 }
 
-// ------------------------------------
-// FUNZIONI FAB (PULSANTI FLUTTUANTI)
-// ------------------------------------
 function toggleLegend() {
     const panel = document.getElementById('mappa-legenda-panel');
     panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
