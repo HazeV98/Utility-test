@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteField, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -20,8 +20,8 @@ window.utenteLoggato = null;
 window.deleteCloudData = async () => {
     if (window.utenteLoggato) {
         try {
-            await setDoc(doc(db, "utenti", window.utenteLoggato), { deleted: true, lastUpdate: new Date().getTime() });
-            await deleteDoc(doc(db, "utenti", window.utenteLoggato));
+            await setDoc(doc(db, "calendario", window.utenteLoggato), { deleted: true, lastUpdate: new Date().getTime() });
+            await deleteDoc(doc(db, "calendario", window.utenteLoggato));
         } catch(e) { console.error("Errore eliminazione Cloud:", e); }
     }
 };
@@ -29,7 +29,8 @@ window.deleteCloudData = async () => {
 window.syncToCloud = async (dati) => {
     if (window.utenteLoggato) {
         try {
-            await setDoc(doc(db, "utenti", window.utenteLoggato), dati);
+            dati.migrazioneCompletata = true;
+            await setDoc(doc(db, "calendario", window.utenteLoggato), dati);
         } catch(e) { console.error("Errore salvataggio Cloud:", e); }
     }
 };
@@ -2476,36 +2477,75 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         try {
-            const docSnap = await getDoc(doc(db, "utenti", user.uid));
-            
-            if (docSnap.exists() && !appenaResettato) {
-                const cloudData = docSnap.data();
-                
-                if (!cloudData.deleted) {
-                    const localData = JSON.parse(localStorage.getItem('myTurniApp'));
-                    let usaCloud = false;
-                    
-                    if (!localData || Object.keys(localData).length <= 2) {
-                        usaCloud = true;
-                    } else if (cloudData.lastUpdate && (!localData.lastUpdate || cloudData.lastUpdate > localData.lastUpdate)) {
-                        usaCloud = true;
+            const calendarioRef = doc(db, "calendario", user.uid);
+            const profiloRef = doc(db, "utenti", user.uid);
+            const calendarioSnap = await getDoc(calendarioRef);
+            let cloudData = null;
+
+            if (calendarioSnap.exists() && calendarioSnap.data().migrazioneCompletata === true) {
+                cloudData = calendarioSnap.data();
+            } else {
+                const profiloSnap = await getDoc(profiloRef);
+
+                if (profiloSnap.exists()) {
+                    const profiloData = profiloSnap.data();
+                    const campiCalendario = [
+                        "depositoAttivo", "riposoStart", "rotazioneStart", "turnoIndex", "tcPattern",
+                        "history", "futureConfig", "baseDataFutura", "variazioni", "note", "colori",
+                        "ferie", "nebbia", "straordinario", "sospesoRiposo", "buonoPasto", "permessoSP",
+                        "setupStep", "setupSkipped", "version", "profiliSalvati", "coloriRotazione"
+                    ];
+                    const datiCalendario = { migrazioneCompletata: true, lastUpdate: new Date().getTime() };
+                    let datiMigrati = false;
+
+                    campiCalendario.forEach((campo) => {
+                        if (Object.prototype.hasOwnProperty.call(profiloData, campo)) {
+                            datiCalendario[campo] = profiloData[campo];
+                            datiMigrati = true;
+                        }
+                    });
+
+                    await setDoc(calendarioRef, datiCalendario);
+
+                    if (datiMigrati) {
+                        const campiDaRimuovere = {};
+                        campiCalendario.forEach((campo) => {
+                            campiDaRimuovere[campo] = deleteField();
+                        });
+                        await updateDoc(profiloRef, campiDaRimuovere);
                     }
 
-                    if (usaCloud) {
-                        state = { ...state, ...cloudData };
-                        
-                        let copiaDati = JSON.parse(JSON.stringify(state));
-                        delete copiaDati.dbCache;
-                        delete copiaDati.rotCache;
-                        delete copiaDati.dispCache;
-                        localStorage.setItem('myTurniApp', JSON.stringify(copiaDati));
-                    } else if (localData && (!cloudData.lastUpdate || localData.lastUpdate > cloudData.lastUpdate)) {
-                        let copiaDati = JSON.parse(JSON.stringify(state));
-                        delete copiaDati.dbCache;
-                        delete copiaDati.rotCache;
-                        delete copiaDati.dispCache;
-                        window.syncToCloud(copiaDati);
-                    }
+                    cloudData = datiCalendario;
+                } else {
+                    cloudData = { migrazioneCompletata: true, lastUpdate: new Date().getTime() };
+                    await setDoc(calendarioRef, cloudData);
+                }
+            }
+
+            if (cloudData && !cloudData.deleted && !appenaResettato) {
+                const localData = JSON.parse(localStorage.getItem('myTurniApp'));
+                let usaCloud = false;
+
+                if (!localData || Object.keys(localData).length <= 2) {
+                    usaCloud = true;
+                } else if (cloudData.lastUpdate && (!localData.lastUpdate || cloudData.lastUpdate > localData.lastUpdate)) {
+                    usaCloud = true;
+                }
+
+                if (usaCloud) {
+                    state = { ...state, ...cloudData };
+
+                    let copiaDati = JSON.parse(JSON.stringify(state));
+                    delete copiaDati.dbCache;
+                    delete copiaDati.rotCache;
+                    delete copiaDati.dispCache;
+                    localStorage.setItem('myTurniApp', JSON.stringify(copiaDati));
+                } else if (localData && (!cloudData.lastUpdate || localData.lastUpdate > cloudData.lastUpdate)) {
+                    let copiaDati = JSON.parse(JSON.stringify(state));
+                    delete copiaDati.dbCache;
+                    delete copiaDati.rotCache;
+                    delete copiaDati.dispCache;
+                    window.syncToCloud(copiaDati);
                 }
             }
         } catch(e) {
