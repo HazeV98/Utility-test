@@ -127,10 +127,8 @@
         "label": "Vademecum",
         "icon": "fa-solid fa-book",
         "defaultColor": "#8e8e93",
-        "href": "vademecum.html",
-        "conditions": [
-            "tutti"
-        ]
+        "conditions": [],
+        "href": "vademecum.html"
     },
     {
         "id": "link",
