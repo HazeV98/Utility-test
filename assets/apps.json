@@ -184,13 +184,16 @@
     },
     {
         "id": "buoni",
-        "label": "Buoni\nPasto",
+        "label": "Buoni Pasto",
         "icon": "fa-solid fa-utensils",
         "defaultColor": "#d63384",
-        "onclick": "window.avviaMotoreGenerico('buoni_pasto')",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "buoni",
+        "moduleName": "buoni_pasto",
+        "splitModule": true
     },
     {
         "id": "promemoria",
