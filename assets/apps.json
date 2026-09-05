@@ -200,10 +200,13 @@
         "label": "Promemoria",
         "icon": "fa-solid fa-stopwatch",
         "defaultColor": "#0dcaf0",
-        "onclick": "window.avviaMotoreGenerico('promemoria')",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "promemoria",
+        "moduleName": "promemoria",
+        "splitModule": true
     },
     {
         "id": "dds",
