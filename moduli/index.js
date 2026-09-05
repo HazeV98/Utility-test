@@ -3,20 +3,14 @@ import { getAuth, onAuthStateChanged, GoogleAuthProvider } from "https://www.gst
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
-// Solo auth viene importato staticamente (sempre necessario)
 import { avviaMotoreAuth } from './auth.js';
 
 // ============================================================================
 // SISTEMA DI LAZY LOADING INTEGRATO
 // ============================================================================
 const ModuliLazyLoader = {
-    // Cache per memorizzare i moduli già caricati
     cache: new Map(),
-    
-    // Set dei moduli UI già inizializzati
     initializedUIs: new Set(),
-    
-    // Map dei moduli disponibili
     moduli: {
         turni: { motore: './turni.js', ui: './ui_turni.js', exports: ['avviaMotoreTurni', 'initUITurni'] },
         orari: { motore: './orari.js', ui: './ui_orari.js', exports: ['avviaMotoreOrari', 'initUIOrari'] },
@@ -38,68 +32,39 @@ const ModuliLazyLoader = {
         report: { motore: './report.js', ui: './ui_report.js', exports: ['avviaMotoreSegnalazioni', 'initUISegnalazioni'] }
     },
     
-    /**
-     * Carica un modulo specifico (motore + UI)
-     * @param {string} nomeModulo - Nome del modulo (es: 'turni')
-     * @returns {Promise<Object>} Oggetto con le funzioni esportate dal modulo
-     */
     async caricaModulo(nomeModulo) {
         const config = this.moduli[nomeModulo];
-        if (!config) {
-            console.error(`✗ Modulo '${nomeModulo}' non trovato`);
-            return null;
-        }
+        if (!config) { console.error(`✗ Modulo '${nomeModulo}' non trovato`); return null; }
 
-        // Controlla se il modulo è già in cache
         if (this.cache.has(nomeModulo)) {
             const cached = this.cache.get(nomeModulo);
             if (config.exports.some(f => f.startsWith('initUI')) && !this.initializedUIs.has(nomeModulo)) {
                 const initFunc = config.exports.find(f => f.startsWith('initUI'));
                 if (cached[initFunc]) {
-                    try {
-                        cached[initFunc]();
-                        this.initializedUIs.add(nomeModulo);
-                    } catch (initError) {
-                        console.warn(`⚠️ Errore init UI cached '${nomeModulo}':`, initError);
-                    }
+                    try { cached[initFunc](); this.initializedUIs.add(nomeModulo); } 
+                    catch (initError) { console.warn(`⚠️ Errore init UI cached '${nomeModulo}':`, initError); }
                 }
             }
-            console.log(`✓ Modulo '${nomeModulo}' caricato da cache`);
             return cached;
         }
         
         try {
-            console.log(`⏳ Caricamento modulo '${nomeModulo}'...`);
-            
-            // Carica il modulo motore
             const motoreModule = await import(config.motore);
-            
-            // Carica l'interfaccia UI
             const uiModule = await import(config.ui);
-            
-            // Estrai le funzioni richieste
             const esporta = {};
+            
             config.exports.forEach(funz => {
                 if (motoreModule[funz]) esporta[funz] = motoreModule[funz];
                 if (uiModule[funz]) esporta[funz] = uiModule[funz];
             });
             
-            // Salva in cache
             this.cache.set(nomeModulo, esporta);
 
-            // Inizializza l'interfaccia UI una sola volta
             const initFunc = config.exports.find(f => f.startsWith('initUI'));
             if (initFunc && esporta[initFunc] && !this.initializedUIs.has(nomeModulo)) {
-                try {
-                    esporta[initFunc]();
-                    this.initializedUIs.add(nomeModulo);
-                } catch (initError) {
-                    console.warn(`⚠️ Errore init UI '${nomeModulo}':`, initError);
-                }
+                try { esporta[initFunc](); this.initializedUIs.add(nomeModulo); } 
+                catch (initError) { console.warn(`⚠️ Errore init UI '${nomeModulo}':`, initError); }
             }
-            
-            console.log(`✓ Modulo '${nomeModulo}' caricato con successo`);
-            
             return esporta;
         } catch (errore) {
             console.error(`✗ Errore caricamento modulo '${nomeModulo}':`, errore);
@@ -107,79 +72,37 @@ const ModuliLazyLoader = {
         }
     },
     
-    /**
-     * Carica e inizializza solo la UI di un modulo
-     * @param {string} nomeModulo - Nome del modulo
-     * @returns {Promise<Function|null>} La funzione initUI del modulo
-     */
     async inizializzaUI(nomeModulo) {
         const modulo = await this.caricaModulo(nomeModulo);
         if (!modulo) return null;
-        
         const config = this.moduli[nomeModulo];
         const initFunc = config.exports.find(f => f.startsWith('initUI'));
-        
         return modulo[initFunc] || null;
     },
     
-    /**
-     * Carica e avvia il motore di un modulo
-     * @param {string} nomeModulo - Nome del modulo
-     * @returns {Promise<Function|null>} La funzione avviaMotore del modulo
-     */
     async avviaMotore(nomeModulo) {
         const modulo = await this.caricaModulo(nomeModulo);
         if (!modulo) return null;
-        
         const config = this.moduli[nomeModulo];
         const motoreFunc = config.exports.find(f => f.startsWith('avviaMotore'));
-        
         return modulo[motoreFunc] || null;
     },
     
-    /**
-     * Precarica uno o più moduli in background (senza bloccare l'UI)
-     * Utile per precaricamento preventivo
-     * @param {Array<string>} nomiModuli - Array di nomi moduli da precaricare
-     */
     async precarica(nomiModuli = []) {
-        // Se non vengono specificati moduli, li ottiene TUTTI dall'oggetto 'moduli'
         const daPrecaricare = nomiModuli.length > 0 ? nomiModuli : Object.keys(this.moduli);
-        
-        console.log(`⏳ Precarico ${daPrecaricare.length} moduli in background...`);
-        
-        // Usa requestIdleCallback se disponibile, altrimenti setTimeout
         if ('requestIdleCallback' in window) {
             requestIdleCallback(() => {
-                daPrecaricare.forEach(nome => {
-                    this.caricaModulo(nome).catch(e => console.warn(`Errore precaricamento ${nome}:`, e));
-                });
+                daPrecaricare.forEach(nome => { this.caricaModulo(nome).catch(e => console.warn(`Errore precaricamento ${nome}:`, e)); });
             }, { timeout: 3000 });
         } else {
             setTimeout(() => {
-                daPrecaricare.forEach(nome => {
-                    this.caricaModulo(nome).catch(e => console.warn(`Errore precaricamento ${nome}:`, e));
-                });
+                daPrecaricare.forEach(nome => { this.caricaModulo(nome).catch(e => console.warn(`Errore precaricamento ${nome}:`, e)); });
             }, 2000);
         }
     },
     
-    /**
-     * Svuota la cache (utile per forza il ricaricamento di moduli)
-     */
-    svuotaCache() {
-        this.cache.clear();
-        console.log('✓ Cache svuotata');
-    },
-    
-    /**
-     * Mostra statistiche di caricamento
-     */
-    mostraStatistiche() {
-        console.log('📊 Statistiche Lazy Loading:');
-        console.log(`   Moduli in cache: ${this.cache.size}`);
-        this.cache.forEach((val, key) => console.log(`   - ${key}`));
-    }
+    svuotaCache() { this.cache.clear(); },
+    mostraStatistiche() { console.log(`Moduli in cache: ${this.cache.size}`); }
 };
 // ============================================================================
 
@@ -198,7 +121,6 @@ const auth = getAuth(app);
 const db = getFirestore(app); 
 const provider = new GoogleAuthProvider();
 
-// Inizializziamo il sottomodulo di Autenticazione (sempre necessario)
 avviaMotoreAuth(auth, db, provider);
 
 const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2"; 
@@ -221,53 +143,29 @@ window.ROTAZIONI_MAP = {
     "rot_17tr": "Rotazione Linea 17 Tron.", "tc_rot_17tr": "T.C. Rotazione Linea 17 Tronc."
 };
 
-const ICON_MAP = {
-    oggi: "fa-solid fa-bullseye", calendario: "fa-solid fa-calendar-days", statistiche: "fa-solid fa-chart-simple",
-    rotazioni: "fa-solid fa-users", turni: "fa-solid fa-rotate", bachecaturni: "fa-solid fa-handshake-angle",
-    rubrica: "fa-solid fa-address-book", ferie: "fa-solid fa-umbrella-beach", orari: "fa-regular fa-clock",
-    documenti: "fa-solid fa-file-lines", link: "fa-solid fa-link", contatti: "fa-solid fa-id-card",
-    buoni: "fa-solid fa-utensils", promemoria: "fa-solid fa-stopwatch", dds: "fa-solid fa-box-archive",
-    report: "fa-solid fa-headset", admin: "fa-solid fa-lock", accessi: "fa-solid fa-users-gear", vademecum: "fa-solid fa-book"
-};
-
-const EMOJI_MAP = {
-    oggi: "🎯", calendario: "📅", statistiche: "📊", rotazioni: "👥", turni: "🔄",
-    bachecaturni: "🤝", rubrica: "📒", ferie: "⛱️", orari: "🕒", documenti: "📄",
-    link: "🔗", contatti: "🪪", buoni: "🍽️", promemoria: "⏱️", dds: "🗃️",
-    report: "🎧", admin: "🔒", accessi: "👨‍💻", vademecum: "📖"
-};
-
 const DEFAULT_APPS = [
-    { id: "oggi", label: "Oggi", href: "calendario.html?oggi=true", defaultColor: "#28a745" },
-    { id: "calendario", label: "Calendario", href: "calendario.html", defaultColor: "#0066cc" },
-    
-    { id: "statistiche", label: "Statistiche\nCalendario", onclick: "window.apriModaleStatistiche()", defaultColor: "#6f42c1" },
-    { id: "rotazioni", label: "Rotazioni", onclick: "window.apriModaleRotazioni()", defaultColor: "#fd7e14" },
-    
-    { id: "turni", label: "Turni", onclick: "window.apriModaleTurni()", defaultColor: "#20c997" },
-    { id: "bachecaturni", label: "Bacheca\nTurni", onclick: "window.apriModaleBachecaTurni()", defaultColor: "#e83e8c" },
+    { id: "oggi", label: "Oggi", href: "calendario.html?oggi=true", icon: "fa-solid fa-bullseye", defaultColor: "#28a745" },
+    { id: "calendario", label: "Calendario", href: "calendario.html", icon: "fa-solid fa-calendar-days", defaultColor: "#0066cc" },
+    { id: "statistiche", label: "Statistiche\nCalendario", onclick: "window.apriModaleStatistiche()", icon: "fa-solid fa-chart-simple", defaultColor: "#6f42c1" },
+    { id: "rotazioni", label: "Rotazioni", onclick: "window.apriModaleRotazioni()", icon: "fa-solid fa-users", defaultColor: "#fd7e14" },
+    { id: "turni", label: "Turni", onclick: "window.apriModaleTurni()", icon: "fa-solid fa-rotate", defaultColor: "#20c997" },
+    { id: "bachecaturni", label: "Bacheca\nTurni", onclick: "window.apriModaleBachecaTurni()", icon: "fa-solid fa-handshake-angle", defaultColor: "#e83e8c" },
     { id: "barcadvisor", label: "BarcAdvisor", image: "icone_app/iconba.png", onclick: "window.apriModaleBarcadvisor()" },
-    { id: "rubrica", label: "Rubrica", onclick: "window.apriModaleRubrica()", defaultColor: "#343a40" },
-    
-    { id: "ferie", label: "Rotazione\nFerie", onclick: "window.apriModaleRotazioneFerie()", defaultColor: "#ffc107" },
-    
-    { id: "orari", label: "Orari\nNavigazione", onclick: "window.apriModaleOrari()", defaultColor: "#17a2b8" },
+    { id: "rubrica", label: "Rubrica", onclick: "window.apriModaleRubrica()", icon: "fa-solid fa-address-book", defaultColor: "#343a40" },
+    { id: "ferie", label: "Rotazione\nFerie", onclick: "window.apriModaleRotazioneFerie()", icon: "fa-solid fa-umbrella-beach", defaultColor: "#ffc107" },
+    { id: "orari", label: "Orari\nNavigazione", onclick: "window.apriModaleOrari()", icon: "fa-regular fa-clock", defaultColor: "#17a2b8" },
     { id: "chebateo", label: "CheBateo", image: "icone_app/iconcb.png", href: "https://m.chebateo.it/" },
-    { id: "documenti", label: "Documenti", onclick: "window.apriModaleDocumenti()", defaultColor: "#6c757d" },
-    { id: "vademecum", label: "Vademecum", href: "vademecum.html", defaultColor: "#8e8e93" },
-    { id: "link", label: "Link", onclick: "window.apriModaleLink()", defaultColor: "#495057" },
-    { id: "contatti", label: "Contatti", onclick: "window.apriModaleContatti()", defaultColor: "#2c3e50" },
-    { id: "buoni", label: "Buoni\nPasto", onclick: "window.apriModaleBuoniPasto()", defaultColor: "#d63384" },
-    
-    { id: "promemoria", label: "Promemoria", onclick: "window.apriModalePromemoria()", defaultColor: "#0dcaf0" },
-    { id: "dds", label: "Archivio\nDDS", onclick: "window.apriModaleDDS()", defaultColor: "#5856d6" },
-    
-    { id: "report", label: "Assistenza\nApp", onclick: "window.avviaMotoreSegnalazioniDaIndex()", defaultColor: "#0088ff" },
+    { id: "documenti", label: "Documenti", onclick: "window.apriModaleDocumenti()", icon: "fa-solid fa-file-lines", defaultColor: "#6c757d" },
+    { id: "vademecum", label: "Vademecum", href: "vademecum.html", icon: "fa-solid fa-book", defaultColor: "#8e8e93" },
+    { id: "link", label: "Link", onclick: "window.apriModaleLink()", icon: "fa-solid fa-link", defaultColor: "#495057" },
+    { id: "contatti", label: "Contatti", onclick: "window.apriModaleContatti()", icon: "fa-solid fa-id-card", defaultColor: "#2c3e50" },
+    { id: "buoni", label: "Buoni\nPasto", onclick: "window.apriModaleBuoniPasto()", icon: "fa-solid fa-utensils", defaultColor: "#d63384" },
+    { id: "promemoria", label: "Promemoria", onclick: "window.apriModalePromemoria()", icon: "fa-solid fa-stopwatch", defaultColor: "#0dcaf0" },
+    { id: "dds", label: "Archivio\nDDS", onclick: "window.apriModaleDDS()", icon: "fa-solid fa-box-archive", defaultColor: "#5856d6" },
+    { id: "report", label: "Assistenza\nApp", onclick: "window.avviaMotoreSegnalazioniDaIndex()", icon: "fa-solid fa-headset", defaultColor: "#0088ff" },
     { id: "spriss", label: "Spriss", image: "icone_app/iconspriss.png", href: "https://spriss.avmspa.it/" },
-    
-    { id: "admin", label: "Admin", onclick: "window.apriModaleAdmin()", condition: "admin", defaultColor: "#ff3b30" },
-    
-    { id: "accessi", label: "Accessi", onclick: "window.apriGestioneAccessi()", condition: "admin", defaultColor: "#1c1c1e" }
+    { id: "admin", label: "Admin", onclick: "window.apriModaleAdmin()", condition: "admin", icon: "fa-solid fa-lock", defaultColor: "#ff3b30" },
+    { id: "accessi", label: "Accessi", onclick: "window.apriGestioneAccessi()", condition: "admin", icon: "fa-solid fa-users-gear", defaultColor: "#1c1c1e" }
 ];
 
 window.apriMenuLaterale = () => { 
@@ -282,9 +180,7 @@ window.chiudiMenuLaterale = () => {
 window.avviaMotoreTurniDaIndex = async () => {
     if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai turni."); return; }
     if (window.currentUserData) {
-        if (window.currentUserData.turni_banned === true) {
-            alert("Il tuo accesso alla pagina Turni è stato temporaneamente revocato."); return;
-        }
+        if (window.currentUserData.turni_banned === true) { alert("Il tuo accesso alla pagina Turni è stato temporaneamente revocato."); return; }
         if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined || window.currentUserData.matricola === "") {
             alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per visualizzare i turni.");
             window.apriModal('profileModal'); return;
@@ -307,19 +203,14 @@ window.avviaMotoreOrariDaIndex = async () => {
 window.avviaMotoreLinkDaIndex = async () => {
     if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai link aziendali."); return; }
     if (window.currentUserData) {
-        if (window.currentUserData.link_banned === true) {
-            alert("L'accesso ai Link ti è stato revocato da un Amministratore."); return;
-        }
+        if (window.currentUserData.link_banned === true) { alert("L'accesso ai Link ti è stato revocato da un Amministratore."); return; }
         if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined) {
             alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per accedere.");
             window.apriModal('profileModal'); return;
         }
     }
     const modulo = await ModuliLazyLoader.avviaMotore('link');
-    
-    // CORREZIONE QUI: Aggiunti i parametri db e auth!
     if (modulo) modulo(db, auth); 
-    
     const oggiStr = new Date().toISOString().split('T')[0];
     if (window.currentUserData && (window.currentUserData.link_access !== true || window.currentUserData.last_link_access !== oggiStr)) {
         setDoc(doc(db, "utenti", auth.currentUser.uid), { link_access: true, last_link_access: oggiStr }, { merge: true });
@@ -330,9 +221,7 @@ window.avviaMotoreLinkDaIndex = async () => {
 window.avviaMotoreDocumentiDaIndex = async () => {
     if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai documenti."); return; }
     if (window.currentUserData) {
-        if (window.currentUserData.documenti_banned === true) {
-            alert("L'accesso ai Documenti ti è stato revocato da un Amministratore."); return;
-        }
+        if (window.currentUserData.documenti_banned === true) { alert("L'accesso ai Documenti ti è stato revocato da un Amministratore."); return; }
         if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined) {
             alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per accedere all'archivio.");
             window.apriModal('profileModal'); return;
@@ -350,17 +239,14 @@ window.avviaMotoreDocumentiDaIndex = async () => {
 window.avviaMotoreContattiDaIndex = async () => {
     if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai contatti aziendali."); return; }
     if (window.currentUserData) {
-        if (window.currentUserData.contatti_banned === true) {
-            alert("L'accesso ai Contatti ti è stato revocato da un Amministratore."); return;
-        }
+        if (window.currentUserData.contatti_banned === true) { alert("L'accesso ai Contatti ti è stato revocato da un Amministratore."); return; }
         if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined) {
             alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per accedere ai contatti.");
             window.apriModal('profileModal'); return;
         }
     }
     const modulo = await ModuliLazyLoader.avviaMotore('contatti');
-    if (modulo) modulo(db, auth); // PASSIAMO DB E AUTH AL MODULO
-    
+    if (modulo) modulo(db, auth); 
     const oggiStr = new Date().toISOString().split('T')[0];
     if (window.currentUserData && (window.currentUserData.contatti_access !== true || window.currentUserData.last_contatti_access !== oggiStr)) {
         setDoc(doc(db, "utenti", auth.currentUser.uid), { contatti_access: true, last_contatti_access: oggiStr }, { merge: true });
@@ -375,130 +261,81 @@ window.avviaMotoreBachecaUtilityDaIndex = async () => {
 };
 
 window.avviaMotoreRubricaDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
-    }
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
     const modulo = await ModuliLazyLoader.avviaMotore('rubrica');
     if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreBachecaTurniDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
-    }
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
     const modulo = await ModuliLazyLoader.avviaMotore('bacheca_turni');
     if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreBarcadvisorDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
-    }
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
     const modulo = await ModuliLazyLoader.avviaMotore('barcadvisor');
     if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreBuoniPastoDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
-    }
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
     const modulo = await ModuliLazyLoader.avviaMotore('buoni_pasto');
     if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreStatisticheDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
-    }
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
     const modulo = await ModuliLazyLoader.avviaMotore('statistiche');
     if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreRotazioniDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
-    }
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
     const modulo = await ModuliLazyLoader.avviaMotore('rotazioni');
     if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreRotazioneFerieDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
-    }
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
     const modulo = await ModuliLazyLoader.avviaMotore('rotazione_ferie');
     if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotorePromemoriaDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
-    }
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
     const modulo = await ModuliLazyLoader.avviaMotore('promemoria');
     if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreDDSDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
-    }
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
     const modulo = await ModuliLazyLoader.avviaMotore('dds');
     if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreGuidaDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
-    }
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
     const modulo = await ModuliLazyLoader.avviaMotore('guida');
     if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin);
 };
 
 window.avviaMotoreAdminDaIndex = async () => {
-    if (!globalIsAdmin) {
-        alert("Accesso negato. Solo gli amministratori possono accedere a questa sezione."); 
-        return;
-    }
+    if (!globalIsAdmin) { alert("Accesso negato. Solo gli amministratori possono accedere a questa sezione."); return; }
     const modulo = await ModuliLazyLoader.avviaMotore('admin');
     if (modulo) modulo(db, auth, window.currentUserData, globalIsAdmin);
 };
 
-
-// ============================================================================
-// AGGIORNATO: GESTIONE DEFINITIVA NOTIFICHE SEGNALAZIONI
-// ============================================================================
-
-// Questa è la funzione che scatta quando premi sull'app "Assistenza App"
 window.avviaMotoreSegnalazioniDaIndex = async () => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) {
-        alert("L'accesso alle funzioni ti è stato revocato."); 
-        return;
-    }
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("L'accesso alle funzioni ti è stato revocato."); return; }
     if (auth.currentUser) {
         const modulo = await ModuliLazyLoader.avviaMotore('report');
         if (modulo) {
             modulo(db, auth, auth.currentUser.uid, globalIsAdmin);
-            
-            // Dopo l'avvio, chiamiamo l'apertura modale
             if(window.apriModaleSegnalazioni) {
                 window.apriModaleSegnalazioni();
-                
-                // SPEGNE IL BADGE ISTANTANEAMENTE SULL'INTERFACCIA APPENA APRI!
                 const btn = document.getElementById('btn-report');
-                if (btn) {
-                    let b = btn.querySelector('.badge-notif');
-                    if (b) b.remove();
-                }
+                if (btn) { let b = btn.querySelector('.badge-notif'); if (b) b.remove(); }
                 const banner = document.getElementById('banner-segnalazioni-alert');
                 if (banner) banner.style.display = 'none';
             }
@@ -509,24 +346,16 @@ window.avviaMotoreSegnalazioniDaIndex = async () => {
 window.controllaSegnalazioni = async () => {
     if (!auth.currentUser) return;
     try {
-        let count = 0;
-        let messaggioBanner = "";
-        
+        let count = 0; let messaggioBanner = "";
         if (globalIsAdmin) {
-            // Conta solo i ticket in attesa dove la variabile letta_da_admin è "false"
             const q = query(collection(db, "segnalazioni"), where("stato", "==", "in_attesa"));
             const snap = await getDocs(q);
-            snap.forEach(d => {
-                if (d.data().letta_da_admin === false) count++;
-            });
+            snap.forEach(d => { if (d.data().letta_da_admin === false) count++; });
             if (count > 0) messaggioBanner = count === 1 ? "Hai 1 nuovo messaggio nei ticket!" : `Hai ${count} nuovi messaggi nei ticket!`;
         } else {
-            // Conta tutti i ticket dell'utente dove letta_da_utente è "false"
             const q = query(collection(db, "segnalazioni"), where("mittente_uid", "==", auth.currentUser.uid));
             const snap = await getDocs(q);
-            snap.forEach(d => {
-                if (d.data().letta_da_utente === false) count++;
-            });
+            snap.forEach(d => { if (d.data().letta_da_utente === false) count++; });
             if (count > 0) messaggioBanner = count === 1 ? "L'Admin ha risposto al tuo ticket!" : `L'Admin ha risposto a ${count} tuoi ticket!`;
         }
 
@@ -540,21 +369,15 @@ window.controllaSegnalazioni = async () => {
                 banner.style.display = 'flex';
             }
             if (btn) {
-                let b = btn.querySelector('.badge-notif');
-                if (b) b.remove();
+                let b = btn.querySelector('.badge-notif'); if (b) b.remove();
                 btn.insertAdjacentHTML('beforeend', `<div class="badge-notif" style="background:var(--danger);">${count}</div>`);
             }
         } else {
             if (banner) banner.style.display = 'none';
-            if (btn) {
-                let b = btn.querySelector('.badge-notif');
-                if (b) b.remove();
-            }
+            if (btn) { let b = btn.querySelector('.badge-notif'); if (b) b.remove(); }
         }
     } catch(e) { console.error("Errore check segnalazioni:", e); }
 };
-// ============================================================================
-
 
 window.controllaBacheca = async () => {
     if (!auth.currentUser) return;
@@ -574,19 +397,15 @@ window.controllaBacheca = async () => {
         const q = query(collection(db, "bacheca_utility"), orderBy("timestamp", "desc"));
         const snap = await getDocs(q);
 
-        let avvisiNormali = 0;
-        let avvisiDDS = [];
+        let avvisiNormali = 0; let avvisiDDS = [];
 
         snap.forEach(d => {
             let m = d.data();
             if (m.scadenza && m.scadenza < oggiStr) return; 
-            
             if (!globalIsAdmin && !globalIsCollab && m.target && m.target !== "tutti") {
                 if (!rotazioneUtente || !m.target.includes(rotazioneUtente)) return;
             }
-
             const giaLetto = localStorage.getItem('letto_' + d.id);
-
             if (m.timestamp > ultimoAccesso && !giaLetto) {
                 if (m.tipo === "dds") avvisiDDS.push(m.titolo_dds);
                 else avvisiNormali++;
@@ -613,37 +432,23 @@ window.controllaBacheca = async () => {
             if (avvisiDDS.length > 0) {
                 textDDS.innerText = avvisiDDS[0] + (avvisiDDS.length > 1 ? ` (+${avvisiDDS.length - 1})` : '');
                 bannerDDS.style.display = 'flex';
-            } else {
-                bannerDDS.style.display = 'none';
-            }
+            } else { bannerDDS.style.display = 'none'; }
         }
-        
     } catch(e) { console.error("Errore check bacheca:", e); }
 };
 
 window.addEventListener('bacheca-utility-letta', async () => {
-    const badge = document.getElementById('badge-messaggi');
-    if (badge) badge.style.display = 'none';
-    
-    const bannerNormal = document.getElementById('banner-nuovo-messaggio');
-    if (bannerNormal) bannerNormal.style.display = 'none';
-    
-    const bannerDDS = document.getElementById('banner-dds-alert');
-    if (bannerDDS) bannerDDS.style.display = 'none';
+    const badge = document.getElementById('badge-messaggi'); if (badge) badge.style.display = 'none';
+    const bannerNormal = document.getElementById('banner-nuovo-messaggio'); if (bannerNormal) bannerNormal.style.display = 'none';
+    const bannerDDS = document.getElementById('banner-dds-alert'); if (bannerDDS) bannerDDS.style.display = 'none';
 
     const now = Date.now();
     localStorage.setItem('ultimo_accesso_bacheca', now);
     
-    if (window.currentUserData) {
-        window.currentUserData.ultimo_accesso_bacheca = now;
-    }
-    
+    if (window.currentUserData) window.currentUserData.ultimo_accesso_bacheca = now;
     if (auth.currentUser) {
-        try {
-            await setDoc(doc(db, "utenti", auth.currentUser.uid), { ultimo_accesso_bacheca: now }, { merge: true });
-        } catch(e) {
-            console.error("Errore salvataggio ultimo accesso bacheca:", e);
-        }
+        try { await setDoc(doc(db, "utenti", auth.currentUser.uid), { ultimo_accesso_bacheca: now }, { merge: true }); } 
+        catch(e) { console.error("Errore salvataggio ultimo accesso bacheca:", e); }
     }
 });
 
@@ -664,17 +469,13 @@ window.controllaRichiesteSospese = async () => {
         
         snap.forEach(d => {
             const p = d.data();
-            if (globalIsAdmin) {
-                count++;
-            } else if (globalIsCollab && permessiGestione.includes(p.rotazione_richiesta)) {
-                count++;
-            }
+            if (globalIsAdmin) count++;
+            else if (globalIsCollab && permessiGestione.includes(p.rotazione_richiesta)) count++;
         });
         
         const btnRot = document.getElementById('btn-rotazioni');
         if (btnRot) {
-            let b = btnRot.querySelector('.badge-notif');
-            if (b) b.remove();
+            let b = btnRot.querySelector('.badge-notif'); if (b) b.remove();
             if (count > 0) btnRot.insertAdjacentHTML('beforeend', `<div class="badge-notif">${count}</div>`);
         }
     } catch(e) { console.error("Errore check richieste rotazioni:", e); }
@@ -703,8 +504,7 @@ window.controllaPromemoria = async () => {
             }
             const btn = document.getElementById('btn-promemoria');
             if (btn) {
-                let b = btn.querySelector('.badge-notif');
-                if (b) b.remove();
+                let b = btn.querySelector('.badge-notif'); if (b) b.remove();
                 btn.insertAdjacentHTML('beforeend', `<div class="badge-notif" style="background:#17a2b8; border-color:var(--bg-color);">${activeCount}</div>`);
             }
         }
@@ -761,10 +561,7 @@ window.inizializzaNotificheSeNativa = async (userData) => {
             const PushNotifications = window.Capacitor.Plugins.PushNotifications;
             PushNotifications.addListener('registration', async (token) => {
                 if (auth.currentUser) {
-                    await setDoc(doc(db, "utenti", auth.currentUser.uid), {
-                        fcm_token: token.value,
-                        device_type: 'android_app'
-                    }, { merge: true });
+                    await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: token.value, device_type: 'android_app' }, { merge: true });
                     aggiornaGraficaPermessi(true);
                 }
             });
@@ -784,15 +581,10 @@ window.inizializzaNotificheSeNativa = async (userData) => {
                         serviceWorkerRegistration: swRegistration
                     });
                     if (token && auth.currentUser) {
-                        await setDoc(doc(db, "utenti", auth.currentUser.uid), {
-                            fcm_token: token,
-                            device_type: 'pwa_web'
-                        }, { merge: true });
+                        await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: token, device_type: 'pwa_web' }, { merge: true });
                     }
                 } catch (e) { console.warn("Nessun token web ottenuto:", e); }
-            } else {
-                aggiornaGraficaPermessi(false);
-            }
+            } else { aggiornaGraficaPermessi(false); }
         }
     }
 };
@@ -831,10 +623,7 @@ window.gestisciNotificheNative = async () => {
                         serviceWorkerRegistration: swRegistration
                     });
                     if (token && auth.currentUser) {
-                        await setDoc(doc(db, "utenti", auth.currentUser.uid), {
-                            fcm_token: token,
-                            device_type: 'pwa_web'
-                        }, { merge: true });
+                        await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: token, device_type: 'pwa_web' }, { merge: true });
                     }
                 } catch (e) { console.error("Errore recupero token FCM Web:", e); }
             } else {
@@ -854,9 +643,7 @@ window.disattivaNotifiche = async () => {
     statusText.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Disattivazione in corso...";
     
     try {
-        if (auth.currentUser) {
-            await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: null, device_type: null }, { merge: true });
-        }
+        if (auth.currentUser) await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: null, device_type: null }, { merge: true });
         const isWeb = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
         if (isWeb) {
             try { const messaging = getMessaging(app); await deleteToken(messaging); } 
@@ -890,90 +677,40 @@ window.salvaPreferenzeNotifiche = async () => {
     catch (error) { console.error("Errore salvataggio preferenze notifiche:", error); }
 };
 
+
+// ============================================================================
+// GESTIONE LAYOUT GRAFICA SEMPLIFICATA E FISSATA
+// ============================================================================
 window.LayoutEngine = {
-    prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#0066cc", view: "grid", iconStyle: "box", iconType: "minimal", fontSize: 14, theme: "system", apps: [] },
-    isEditMode: false,
-    sortableInstance: null,
+    prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#0066cc" },
     init: function(firebasePrefsStr) {
         let localStr = localStorage.getItem('preferenze_layout_haze');
         let targetStr = firebasePrefsStr || localStr;
         if (targetStr) {
             try { 
                 let parsed = JSON.parse(targetStr);
-                this.prefs = { ...this.prefs, ...parsed };
-                
-                // Rimuove forzatamente l'app "guida" e la vecchia "impostazioni" se presenti nelle preferenze salvate
-                this.prefs.apps = this.prefs.apps.filter(app => app.id !== 'guida' && app.id !== 'impostazioni');
-                
-                // SISTEMA DI FORZATURA AGGIORNAMENTO ICONE
-                const currentLayoutVersion = localStorage.getItem('layout_version_1') || 0;
-                if (currentLayoutVersion < 1) {
-                    this.prefs.apps.forEach(app => {
-                        if (!app.id.startsWith('custom_')) {
-                            const def = DEFAULT_APPS.find(d => d.id === app.id);
-                            if (def) {
-                                app.label = def.label;
-                                app.icon = def.icon;
-                                app.image = def.image;
-                                if (def.href) app.href = def.href;
-                                if (def.onclick) app.onclick = def.onclick;
-                            }
-                        }
-                    });
-                    localStorage.setItem('layout_version_1', '1');
-                    this.sincronizzaConFirebase();
-                }
-
-                this.mergeWithDefaults();
+                // Recuperiamo solo i colori per impedire riordini o vecchie impostazioni
+                if (parsed.c1) this.prefs.c1 = parsed.c1;
+                if (parsed.c2) this.prefs.c2 = parsed.c2;
+                if (parsed.c3) this.prefs.c3 = parsed.c3;
+                if (parsed.appBg) this.prefs.appBg = parsed.appBg;
             } catch(e) {}
-        } else { this.prefs.apps = JSON.parse(JSON.stringify(DEFAULT_APPS)); }
+        }
         
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-            if(this.prefs.theme === 'system') this.applicaGrafica();
+            this.applicaGrafica();
         });
 
         this.applicaGrafica();
         this.popolaModaleImpostazioni();
         this.render();
     },
-    mergeWithDefaults: function() {
-        const defaultIds = DEFAULT_APPS.map(a => a.id);
-        this.prefs.apps = this.prefs.apps.filter(app => app.id.startsWith('custom_') || defaultIds.includes(app.id));
-        this.prefs.apps.forEach(app => {
-            if (!app.id.startsWith('custom_')) {
-                const def = DEFAULT_APPS.find(d => d.id === app.id);
-                if (def) {
-                    if (def.href) app.href = def.href; else delete app.href;
-                    if (def.onclick) app.onclick = def.onclick; else delete app.onclick;
-                    if (def.condition) app.condition = def.condition; else delete app.condition;
-                }
-            }
-        });
-        DEFAULT_APPS.forEach((defApp, defaultIndex) => {
-            let currentIds = this.prefs.apps.map(a => a.id);
-            if(!currentIds.includes(defApp.id)) {
-                let insertIndex = this.prefs.apps.length; 
-                if (defaultIndex > 0) {
-                    let prevAppId = DEFAULT_APPS[defaultIndex - 1].id;
-                    let userIndex = this.prefs.apps.findIndex(a => a.id === prevAppId);
-                    if (userIndex !== -1) insertIndex = userIndex + 1;
-                } else if (defaultIndex === 0) { insertIndex = 0; }
-                this.prefs.apps.splice(insertIndex, 0, JSON.parse(JSON.stringify(defApp)));
-            }
-        });
-    },
     isDarkMode: function() {
-        if (this.prefs.theme === 'dark') return true;
-        if (this.prefs.theme === 'light') return false;
         return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     },
     applicaGrafica: function() {
-        const themePref = this.prefs.theme || 'system';
-        if(themePref !== 'system') {
-            document.documentElement.setAttribute('data-theme', themePref);
-        } else {
-            document.documentElement.removeAttribute('data-theme');
-        }
+        // Rimuoviamo il forzare il tema (Light/Dark seguono automaticamente il sistema grazie alle @media query)
+        document.documentElement.removeAttribute('data-theme'); 
 
         let isDark = this.isDarkMode();
         
@@ -987,85 +724,46 @@ window.LayoutEngine = {
         
         const svg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Crect width='100' height='100' fill='${c3}'/%3E%3Cpath d='M0,60 C35,90 65,30 100,60 L100,0 L0,0 Z' fill='${c2}'/%3E%3Cpath d='M0,45 C35,65 65,25 100,45 L100,0 L0,0 Z' fill='${c1}'/%3E%3C/svg%3E`;
         document.body.style.backgroundImage = `url("${svg}")`;
-        document.documentElement.style.setProperty('--label-size', this.prefs.fontSize + 'px');
-        let baseClass = this.prefs.view === 'list' ? 'app-list' : 'app-grid';
-        if (this.prefs.iconStyle === 'transparent') baseClass += ' transparent-icons';
-        document.getElementById('app-container').className = baseClass;
+        document.documentElement.style.setProperty('--label-size', '14px');
+        
+        // Fissato lo stile a grid ed eliminato il cambio stile icone
+        document.getElementById('app-container').className = 'app-grid';
     },
     popolaModaleImpostazioni: function() {
-        document.getElementById('set-col1').value = this.prefs.c1 || "#a9dfcd";
-        document.getElementById('set-col2').value = this.prefs.c2 || "#ffffff";
-        document.getElementById('set-col3').value = this.prefs.c3 || "#a4c5e3";
-        document.getElementById('set-appbg').value = this.prefs.appBg || "#0066cc";
-        document.getElementById('set-viewmode').value = this.prefs.view || "grid";
-        document.getElementById('set-iconstyle').value = this.prefs.iconStyle || "box";
-        document.getElementById('set-icontype').value = this.prefs.iconType || "minimal";
-        document.getElementById('set-labelsize').value = this.prefs.fontSize || 14;
-        document.getElementById('set-theme').value = this.prefs.theme || 'system';
+        document.getElementById('set-col1').value = this.prefs.c1;
+        document.getElementById('set-col2').value = this.prefs.c2;
+        document.getElementById('set-col3').value = this.prefs.c3;
+        document.getElementById('set-appbg').value = this.prefs.appBg;
     },
     render: function() {
         const container = document.getElementById('app-container');
         container.innerHTML = '';
-        if(this.isEditMode) container.classList.add('wiggle-mode'); else container.classList.remove('wiggle-mode');
         
-        this.prefs.apps.forEach((app, index) => {
+        // Renderizza direttamente dall'array fisso DEFAULT_APPS
+        DEFAULT_APPS.forEach((app, index) => {
             if (app.condition === 'admin' && !globalIsAdmin) return;
             if (app.condition === 'collab' && !(globalIsAdmin || globalIsCollab)) return;
             
-            const finalColor = app.color || app.defaultColor || this.prefs.appBg;
+            const finalColor = app.defaultColor || this.prefs.appBg;
             const isLink = app.href ? `href="${app.href}"` : `onclick="${app.onclick}"`;
-            const editHandler = this.isEditMode ? `onclick="event.preventDefault(); window.LayoutEngine.apriEditorApp('${app.id}');"` : isLink;
-            const badgeHtml = this.isEditMode ? `<div class="edit-badge"><i class="fa-solid fa-pen"></i></div>` : '';
             
             let iconStyle = `background-color: ${finalColor};`;
             let iconContent = "";
-            let isImagePath = false;
-            let imagePath = "";
-            
-            let currentImage = app.image;
-            let currentIcon = app.icon;
-            let useEmoji = (this.prefs.iconType === "emoji");
 
-            if (app.id === 'barcadvisor') {
-                if (!useEmoji) { currentIcon = "fa-solid fa-sailboat"; currentImage = null; }
-                else { currentImage = "icone_app/iconba.png"; currentIcon = null; }
-            }
-            if (app.id === 'spriss') {
-                if (!useEmoji) { currentIcon = "fa-solid fa-martini-glass"; currentImage = null; }
-                else { currentImage = "icone_app/iconspriss.png"; currentIcon = null; }
-            }
-            if (app.id === 'chebateo') {
-                if (!useEmoji) { currentIcon = "fa-solid fa-water"; currentImage = null; }
-                else { currentImage = "icone_app/iconcb.png"; currentIcon = null; }
-            }
-
-            if (currentImage) {
-                isImagePath = true;
-                imagePath = currentImage;
-            } else if (currentIcon && (currentIcon.includes('.png') || currentIcon.includes('.jpg') || currentIcon.includes('.svg') || currentIcon.includes('icone_app/'))) {
-                isImagePath = true;
-                imagePath = currentIcon;
-            }
-
-            if (isImagePath) { 
-                iconStyle += ` background-image: url('${imagePath}'); background-size: cover; background-position: center; background-repeat: no-repeat;`; 
-                iconContent = ""; 
-            } else if (currentIcon) {
-                if (currentIcon.includes('fa-')) iconContent = `<i class="${currentIcon}"></i>`;
-                else iconContent = currentIcon;
+            if (app.image) { 
+                iconStyle += ` background-image: url('${app.image}'); background-size: cover; background-position: center; background-repeat: no-repeat;`; 
+            } else if (app.icon) {
+                iconContent = `<i class="${app.icon}"></i>`;
             } else {
-                if (useEmoji && EMOJI_MAP[app.id]) iconContent = EMOJI_MAP[app.id];
-                else if (!useEmoji && ICON_MAP[app.id]) iconContent = `<i class="${ICON_MAP[app.id]}"></i>`;
-                else iconContent = "🔗"; 
+                iconContent = "🔗"; 
             }
 
-            let animDelay = this.isEditMode ? "0s" : `${index * 0.04}s`;
+            let animDelay = `${index * 0.04}s`;
             
             container.innerHTML += `
-                <a ${editHandler} class="app-btn" id="btn-${app.id}" style="animation-delay: ${animDelay}">
-                    ${badgeHtml}
+                <a ${isLink} class="app-btn" id="btn-${app.id}" style="animation-delay: ${animDelay}">
                     <div class="app-icon" style="${iconStyle}">${iconContent}</div>
-                    <div class="app-label">${app.label.replace('\n', '<br>')}</div>
+                    <div class="app-label">${app.label.replace(/\n/g, '<br>')}</div>
                 </a>`;
         });
 
@@ -1076,102 +774,30 @@ window.LayoutEngine = {
             if(window.controllaBacheca) window.controllaBacheca();
         }, 200);
     },
-    handleImageUpload: function(event, modalType) {
-        const file = event.target.files[0]; if (!file) return;
-        const reader = new FileReader(); reader.onload = function(e) {
-            const img = new Image(); img.onload = function() {
-                const canvas = document.createElement('canvas'); const MAX = 120; let w = img.width; let h = img.height;
-                if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } } else { if (h > MAX) { w *= MAX / h; h = MAX; } }
-                canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
-                const dataUrl = canvas.toDataURL('image/webp', 0.8);
-                document.getElementById(modalType + '-app-img-data').value = dataUrl;
-                document.getElementById(modalType + '-app-img-preview-src').src = dataUrl;
-                document.getElementById(modalType + '-app-img-preview').style.display = 'block';
-                document.getElementById(modalType + '-app-icon').value = ""; 
-            }; img.src = e.target.result;
-        }; reader.readAsDataURL(file);
-    },
-    rimuoviImmagine: function(modalType) { document.getElementById(modalType + '-app-img-data').value = ""; document.getElementById(modalType + '-app-img-preview').style.display = 'none'; },
-    toggleEditMode: function() {
-        this.isEditMode = !this.isEditMode;
-        document.getElementById('btn-salva-layout').style.display = this.isEditMode ? 'flex' : 'none';
-        this.render(); 
-        if(this.isEditMode) {
-            this.sortableInstance = new Sortable(document.getElementById('app-container'), { animation: 250, delay: 150, delayOnTouchOnly: true, ghostClass: "sortable-ghost", onEnd: () => { this.aggiornaOrdineDaDOM(); } });
-        } else { if(this.sortableInstance) this.sortableInstance.destroy(); this.sincronizzaConFirebase(); }
-    },
-    aggiornaOrdineDaDOM: function() {
-        const nuovoOrdine = []; 
-        document.querySelectorAll('#app-container .app-btn').forEach(nodo => {
-            const id = nodo.id.replace('btn-', ''); 
-            const app = this.prefs.apps.find(a => a.id === id); 
-            if (app) { nuovoOrdine.push(app); }
-        });
-        this.prefs.apps.forEach(app => { 
-            if (!nuovoOrdine.find(a => a.id === app.id)) { nuovoOrdine.push(app); }
-        });
-        this.prefs.apps = nuovoOrdine;
-    },
-    apriEditorApp: function(appId) {
-        const app = this.prefs.apps.find(a => a.id === appId); if(!app) return;
-        document.getElementById('edit-app-id').value = app.id;
-        document.getElementById('edit-app-label').value = app.label.replace('\n', ' ');
-        document.getElementById('edit-app-icon').value = app.icon || "";
-        document.getElementById('edit-app-color').value = app.color || app.defaultColor || this.prefs.appBg || "#0066cc";
-        
-        if (app.image) { 
-            document.getElementById('edit-app-img-data').value = app.image; 
-            document.getElementById('edit-app-img-preview-src').src = app.image; 
-            document.getElementById('edit-app-img-preview').style.display = 'block'; 
-        } else { 
-            this.rimuoviImmagine('edit'); 
-        }
-        document.getElementById('btn-elimina-custom').style.display = app.id.startsWith('custom_') ? 'flex' : 'none';
-        window.apriModal('editAppModal');
-    },
-    salvaModificaSingolaApp: function() {
-        const id = document.getElementById('edit-app-id').value; const index = this.prefs.apps.findIndex(a => a.id === id);
-        if(index > -1) {
-            this.prefs.apps[index].label = document.getElementById('edit-app-label').value;
-            this.prefs.apps[index].color = document.getElementById('edit-app-color').value;
-            const imgData = document.getElementById('edit-app-img-data').value;
-            if (imgData) { 
-                this.prefs.apps[index].image = imgData; 
-                this.prefs.apps[index].icon = ""; 
-            } else { 
-                delete this.prefs.apps[index].image; 
-                this.prefs.apps[index].icon = document.getElementById('edit-app-icon').value || "🔗"; 
-            }
-        } 
-        window.chiudiModal('editAppModal'); this.render(); this.sincronizzaConFirebase();
-    },
-    creaAppPersonalizzata: function() {
-        const label = document.getElementById('new-app-label').value.trim(); let url = document.getElementById('new-app-url').value.trim();
-        if(!label || !url) { alert("Dati mancanti"); return; }
-        if(!url.startsWith('http')) url = 'https://' + url;
-        const imgData = document.getElementById('new-app-img-data').value;
-        const newApp = { id: "custom_" + Date.now(), label: label, href: url, color: this.prefs.appBg };
-        if (imgData) newApp.image = imgData; else newApp.icon = document.getElementById('new-app-icon').value || "🔗";
-        this.prefs.apps.push(newApp); window.chiudiModal('customAppModal'); 
-        document.getElementById('new-app-label').value = ""; document.getElementById('new-app-url').value = "";
-        document.getElementById('new-app-icon').value = ""; this.rimuoviImmagine('new');
-        this.sincronizzaConFirebase(); this.render();
-    },
-    eliminaAppCorrente: function() { const id = document.getElementById('edit-app-id').value; this.prefs.apps = this.prefs.apps.filter(a => a.id !== id); window.chiudiModal('editAppModal'); this.render(); this.sincronizzaConFirebase(); },
     salvaPreferenzeGlobali: function() {
-        this.prefs.c1 = document.getElementById('set-col1').value; this.prefs.c2 = document.getElementById('set-col2').value; this.prefs.c3 = document.getElementById('set-col3').value;
-        this.prefs.appBg = document.getElementById('set-appbg').value; this.prefs.view = document.getElementById('set-viewmode').value;
-        this.prefs.iconStyle = document.getElementById('set-iconstyle').value; this.prefs.fontSize = parseInt(document.getElementById('set-labelsize').value);
-        this.prefs.iconType = document.getElementById('set-icontype').value;
-        this.prefs.theme = document.getElementById('set-theme').value;
-        this.applicaGrafica(); this.render(); window.chiudiModal('settingsModal'); this.sincronizzaConFirebase();
+        this.prefs.c1 = document.getElementById('set-col1').value; 
+        this.prefs.c2 = document.getElementById('set-col2').value; 
+        this.prefs.c3 = document.getElementById('set-col3').value;
+        this.prefs.appBg = document.getElementById('set-appbg').value; 
+        
+        this.applicaGrafica(); 
+        this.render(); 
+        window.chiudiModal('settingsModal'); 
+        this.sincronizzaConFirebase();
     },
     sincronizzaConFirebase: async function() {
-        const str = JSON.stringify(this.prefs); localStorage.setItem('preferenze_layout_haze', str);
+        const str = JSON.stringify(this.prefs); 
+        localStorage.setItem('preferenze_layout_haze', str);
         if (auth.currentUser) await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_layout: str }, { merge: true });
     },
-    ripristinaPredefiniti: async function() { if(!confirm("Ripristinare tutto?")) return; localStorage.removeItem('preferenze_layout_haze'); if (auth.currentUser) await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_layout: null }, { merge: true }); location.reload(); }
+    ripristinaPredefiniti: async function() { 
+        if(!confirm("Vuoi ripristinare i colori originali?")) return; 
+        localStorage.removeItem('preferenze_layout_haze'); 
+        if (auth.currentUser) await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_layout: null }, { merge: true }); 
+        location.reload(); 
+    }
 };
+
 
 window.apriModal = (id, authMode) => { document.getElementById(id).style.display = 'flex'; if(id === 'authModal' && authMode) { currentAuthMode = authMode; window.aggiornaUIAuth(); } };
 window.chiudiModal = (id) => { document.getElementById(id).style.display = 'none'; };
@@ -1283,7 +909,6 @@ window.apriDettaglioUtente = (uid) => {
     if (isCollab) { btnCollab.innerHTML = "<i class='fa-solid fa-user-minus'></i> Revoca Collaboratore"; btnCollab.style.background = "transparent"; btnCollab.style.color = "var(--danger)"; btnCollab.style.border = "2px solid var(--danger)"; btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'user'); }
     else { btnCollab.innerHTML = "<i class='fa-solid fa-user-shield'></i> Rendi Collaboratore"; btnCollab.style.background = "#6f42c1"; btnCollab.style.color = "white"; btnCollab.style.border = "none"; btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'collaborator'); }
     
-    // NUOVO PULSANTE EDIT
     document.getElementById('dettaglio-utente-body').insertAdjacentHTML('beforeend', `<button class="btn-modal" style="background: #ff9800; color: white; margin-top:15px; margin-bottom:5px;" onclick="window.apriEditorAdminUtente('${uid}')"><i class="fa-solid fa-pen"></i> Correggi Dati Utente</button>`);
     
     window.apriModal('modal-dettaglio-utente');
@@ -1324,9 +949,6 @@ onAuthStateChanged(auth, async (user) => {
     const vLoad = document.getElementById('view-loading'); const vGuest = document.getElementById('view-guest'); const vApp = document.getElementById('view-app'); const vBanned = document.getElementById('view-banned');
     
     if (user) {
-        // ====================================================================
-        // 1. CARICAMENTO ISTANTANEO DALLA CACHE LOCALE (Zero attese)
-        // ====================================================================
         vLoad.style.display = 'none';
         vGuest.style.display = 'none';
         vApp.style.display = 'flex';
@@ -1335,7 +957,6 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('btnOpenProfile').style.display = 'flex';
         document.getElementById('profileEmail').value = user.email;
 
-        // Recupera dati utente in cache se esistono
         let cachedData = {};
         try { cachedData = JSON.parse(localStorage.getItem('userDataCache_haze')) || {}; } catch(e) {}
         window.currentUserData = cachedData;
@@ -1344,35 +965,22 @@ onAuthStateChanged(auth, async (user) => {
         globalIsCollab = cachedData.ruolo === 'collaborator';
         if(globalIsAdmin) { document.getElementById('adminBadge').style.display = 'block'; document.getElementById('menu-admin').style.display = 'flex'; }
 
-        // Inizializza la griglia istantaneamente
         window.LayoutEngine.init();
 
-        // ====================================================================
-        // 2. SINCRONIZZAZIONE SILENZIOSA E FIX DEL BUG "DATI MANCANTI"
-        // ====================================================================
         try {
             const docSnap = await getDoc(doc(db, "utenti", user.uid)); 
             let data = docSnap.exists() ? docSnap.data() : {};
-            
-            // FIX BUG: Uniamo i dati freschi di Firebase con quelli in cache. 
-            // Se la rete fa le bizze, i dati locali ci salvano ed evitano la modale.
             let safeData = { ...cachedData, ...data };
             
-            // Aggiorniamo la cache sul telefono solo se il fetch è andato a buon fine
-            if (docSnap.exists()) {
-                localStorage.setItem('userDataCache_haze', JSON.stringify(safeData));
-            }
-            
+            if (docSnap.exists()) { localStorage.setItem('userDataCache_haze', JSON.stringify(safeData)); }
             window.currentUserData = safeData; 
             
-            // Controllo del Ban
             if (safeData.app_banned === true) { 
                 document.body.style.backgroundImage = 'none'; document.body.style.backgroundColor = "var(--bg-color)"; 
                 vApp.style.display = 'none'; vBanned.style.display = 'flex'; 
                 return; 
             }
             
-            // Mostra la modale SOLO se i dati mancano sia su Firebase che nella memoria locale
             if (!safeData.nome || !safeData.cognome || !safeData.matricola) {
                 document.getElementById('modal-dati-obbligatori').style.display = 'flex';
             }
@@ -1387,14 +995,12 @@ onAuthStateChanged(auth, async (user) => {
                 setDoc(doc(db, "utenti", user.uid), { last_app_access: oggiLogStr, last_access_full: oggiLog.toISOString(), email: user.email }, { merge: true }); 
             }
             
-            // Aggiorna il layout in tempo reale se su Firebase è diverso da quello locale
             if (safeData.preferenze_layout && safeData.preferenze_layout !== localStorage.getItem('preferenze_layout_haze')) {
                 window.LayoutEngine.init(safeData.preferenze_layout);
             }
             
             if(window.inizializzaNotificheSeNativa) window.inizializzaNotificheSeNativa(safeData);
 
-            // Popola i campi del profilo in background
             document.getElementById('profileNome').value = safeData.nome || ''; 
             document.getElementById('profileCognome').value = safeData.cognome || '';
             document.getElementById('profileMatricola').value = safeData.matricola || ''; 
@@ -1403,9 +1009,7 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('profileTelefono').value = safeData.telefono || '';
             document.getElementById('profileMansione').value = safeData.mansione || '';
             
-        } catch(e) { 
-            console.error("Errore aggiornamento dati in background:", e); 
-        }
+        } catch(e) { console.error("Errore aggiornamento dati in background:", e); }
     } else { 
         vLoad.style.display = 'none'; window.LayoutEngine.init(); vGuest.style.display = 'flex'; vApp.style.display = 'none'; vBanned.style.display = 'none'; 
     }
