@@ -147,7 +147,7 @@ const DEFAULT_APPS = [
     { id: "rotazioni", label: "Rotazioni", onclick: "window.apriModaleRotazioni()", icon: "fa-solid fa-users", defaultColor: "#fd7e14" },
     { id: "turni", label: "Turni", onclick: "window.apriModaleTurni()", icon: "fa-solid fa-rotate", defaultColor: "#20c997" },
     { id: "bachecaturni", label: "Bacheca\nTurni", onclick: "window.apriModaleBachecaTurni()", icon: "fa-solid fa-handshake-angle", defaultColor: "#e83e8c" },
-    { id: "barcadvisor", label: "BarcAdvisor", onclick: "window.apriModaleBarcadvisor()", icon: "fa-solid fa-sailboat", defaultColor: "#ff9800" },
+    { id: "barcadvisor", label: "BarcAdvisor", onclick: "window.apriModaleBarcadvisor()", icon: "fa-solid fa-sailboat", defaultColor: "#0066cc" },
     { id: "rubrica", label: "Rubrica", onclick: "window.apriModaleRubrica()", icon: "fa-solid fa-address-book", defaultColor: "#343a40" },
     { id: "ferie", label: "Rotazione\nFerie", onclick: "window.apriModaleRotazioneFerie()", icon: "fa-solid fa-umbrella-beach", defaultColor: "#ffc107" },
     { id: "orari", label: "Orari\nNavigazione", onclick: "window.apriModaleOrari()", icon: "fa-regular fa-clock", defaultColor: "#17a2b8" },
@@ -160,7 +160,7 @@ const DEFAULT_APPS = [
     { id: "promemoria", label: "Promemoria", onclick: "window.apriModalePromemoria()", icon: "fa-solid fa-stopwatch", defaultColor: "#0dcaf0" },
     { id: "dds", label: "Archivio\nDDS", onclick: "window.apriModaleDDS()", icon: "fa-solid fa-box-archive", defaultColor: "#5856d6" },
     { id: "report", label: "Assistenza\nApp", onclick: "window.avviaMotoreSegnalazioniDaIndex()", icon: "fa-solid fa-headset", defaultColor: "#0088ff" },
-    { id: "spriss", label: "Spriss", href: "https://spriss.avmspa.it/", icon: "fa-solid fa-martini-glass", defaultColor: "#dc3545" },
+    { id: "spriss", label: "Spriss", href: "https://spriss.avmspa.it/", icon: "fa-solid fa-martini-glass", defaultColor: "#0066cc" },
     { id: "admin", label: "Admin", onclick: "window.apriModaleAdmin()", condition: "admin", icon: "fa-solid fa-lock", defaultColor: "#ff3b30" },
     { id: "accessi", label: "Accessi", onclick: "window.apriGestioneAccessi()", condition: "admin", icon: "fa-solid fa-users-gear", defaultColor: "#1c1c1e" }
 ];
