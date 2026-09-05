@@ -223,7 +223,7 @@
     },
     {
         "id": "report",
-        "label": "AssistenzaApp",
+        "label": "Assistenza App",
         "icon": "fa-solid fa-headset",
         "defaultColor": "#0088ff",
         "conditions": [
