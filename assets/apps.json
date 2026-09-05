@@ -170,23 +170,23 @@
         "label": "Promemoria",
         "icon": "fa-solid fa-stopwatch",
         "defaultColor": "#0dcaf0",
+        "onclick": "window.avviaMotoreGenerico('promemoria')",
+        "conditions": [
+            "tutti"
+        ]
+    },
+    {
+        "id": "dds",
+        "label": "ArchivioDDS",
+        "icon": "fa-solid fa-box-archive",
+        "defaultColor": "#5856d6",
         "conditions": [
             "tutti"
         ],
         "isModule": true,
-        "moduleId": "promemoria",
-        "moduleName": "promemoria",
+        "moduleId": "dds",
+        "moduleName": "dds",
         "splitModule": true
-    },
-    {
-        "id": "dds",
-        "label": "Archivio\nDDS",
-        "icon": "fa-solid fa-box-archive",
-        "defaultColor": "#5856d6",
-        "onclick": "window.avviaMotoreGenerico('dds')",
-        "conditions": [
-            "tutti"
-        ]
     },
     {
         "id": "report",
