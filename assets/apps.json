@@ -60,13 +60,16 @@
     },
     {
         "id": "bachecaturni",
-        "label": "Bacheca\nTurni",
+        "label": "BachecaTurni",
         "icon": "fa-solid fa-handshake-angle",
         "defaultColor": "#e83e8c",
-        "onclick": "window.avviaMotoreGenerico('bacheca_turni')",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "bachecaturni",
+        "moduleName": "bacheca_turni",
+        "splitModule": true
     },
     {
         "id": "barcadvisor",
