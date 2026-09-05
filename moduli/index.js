@@ -297,29 +297,106 @@ window.chiudiSuSfondo = (e, id) => { if (e.target.id === id) window.chiudiModal(
 window.apriGestioneAccessi = async () => {
     window.apriModal('modal-gestione');
     const container = document.getElementById('lista-utenti-accessi');
-    container.innerHTML = `<div style="text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> Attendere...</div>`;
+    const bTot = document.getElementById('badge-totali'); 
+    const bOggi = document.getElementById('badge-oggi');
+    container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Attendere...</div>`;
+    
     try {
         const snap = await getDocs(collection(db, "utenti")); 
+        let tot = 0; let oggi = 0; 
+        const formatterDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' });
+        const oggiStr = formatterDate.format(new Date());
+        
         window.utentiArrayCache = []; window.utentiMap = {};
-        snap.forEach(d => { const u = d.data(); u.uid = d.id; window.utentiMap[d.id] = u; window.utentiArrayCache.push(u); });
+
+        snap.forEach(d => {
+            const u = d.data(); tot++; const isOggi = (u.last_app_access === oggiStr); if (isOggi) oggi++;
+            u.uid = d.id;
+            window.utentiMap[d.id] = u;
+            window.utentiArrayCache.push(u);
+        });
+        
+        if (bTot) bTot.innerText = tot; 
+        if (bOggi) bOggi.innerText = oggi;
         window.renderGestioneAccessi();
-    } catch(e) {}
+
+    } catch(e) { container.innerHTML = "<div style='color:var(--danger); text-align:center;'><i class='fa-solid fa-triangle-exclamation'></i> Errore.</div>"; }
 };
 
 window.renderGestioneAccessi = () => {
     const container = document.getElementById('lista-utenti-accessi');
-    container.innerHTML = window.utentiArrayCache.map(u => {
-        const isBanned = u.app_banned === true;
-        const fn = `${u.cognome||''} ${u.nome||''}`.trim() || 'Sconosciuto';
-        let roleBadge = "";
-        if(u.ruolo==='admin') roleBadge=" <span style='background:red;color:white;padding:2px 5px;border-radius:4px;font-size:10px;'>ADMIN</span>";
-        if(u.ruolo==='collaborator') roleBadge=" <span style='background:#6f42c1;color:white;padding:2px 5px;border-radius:4px;font-size:10px;'>COLLAB</span>";
-        if(u.ruolo==='vip') roleBadge=" <span style='background:gold;color:black;padding:2px 5px;border-radius:4px;font-size:10px;'>VIP</span>";
+    const sortMode = document.getElementById('sort-utenti-app') ? document.getElementById('sort-utenti-app').value : 'recente';
+    const formatterDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' });
+    const oggiStr = formatterDate.format(new Date());
+    
+    let dataCopy = [...window.utentiArrayCache];
+
+    const sortAlpha = (a, b) => {
+        let cognomeA = (a.cognome || '').trim().toUpperCase(); let cognomeB = (b.cognome || '').trim().toUpperCase();
+        if (cognomeA < cognomeB) return -1; if (cognomeA > cognomeB) return 1;
+        let nomeA = (a.nome || '').trim().toUpperCase(); let nomeB = (b.nome || '').trim().toUpperCase();
+        if (nomeA < nomeB) return -1; if (nomeA > nomeB) return 1;
+        return 0;
+    };
+
+    if (sortMode === 'alfabetico') { dataCopy.sort(sortAlpha); } 
+    else {
+        dataCopy.sort((a, b) => {
+            let dateA = a.last_access_full || a.last_app_access || '1970-01-01';
+            let dateB = b.last_access_full || b.last_app_access || '1970-01-01';
+            if (dateA > dateB) return -1; if (dateA < dateB) return 1;
+            return sortAlpha(a, b);
+        });
+    }
+
+    const buildRiga = (u) => {
+        const isOggi = (u.last_app_access === oggiStr); const isBanned = u.app_banned === true; 
+        const fullName = `${u.cognome || ''} ${u.nome || ''} ${u.progressivo || ''}`.trim() || 'Sconosciuto';
         
-        return `<div class="utente-row-app" style="display:flex; justify-content:space-between; align-items:center; background:${isBanned?'var(--danger-light)':'var(--surface)'}; padding:14px; border-radius:12px; margin-bottom:12px; border:1px solid var(--border-color);">
-            <div><div style="font-weight:700;cursor:pointer;" onclick="window.apriDettaglioUtente('${u.uid}')">${fn}${roleBadge}</div><div style="font-size:12px;color:gray;">${u.matricola||'??'}</div></div>
-            </div>`;
-    }).join('');
+        let roleBadge = "";
+        if(u.ruolo === 'admin') roleBadge = " <span style='background:red;color:white;padding:2px 5px;border-radius:4px;font-size:10px;margin-left:5px;'>ADMIN</span>";
+        if(u.ruolo === 'collaborator') roleBadge = " <span style='background:#6f42c1;color:white;padding:2px 5px;border-radius:4px;font-size:10px;margin-left:5px;'>COLLAB</span>";
+        if(u.ruolo === 'vip') roleBadge = " <span style='background:gold;color:black;padding:2px 5px;border-radius:4px;font-size:10px;margin-left:5px;'>VIP</span>";
+
+        const dot = isOggi ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:8px; box-shadow: 0 0 5px rgba(15,157,88,0.5);"></span>` : '';
+        const clickableName = `<span style="font-weight:700; font-size:14px; cursor:pointer; color:var(--primary); text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" onclick="window.apriDettaglioUtente('${u.uid}')">${fullName}${roleBadge}</span>`;
+        const searchData = `${u.cognome || ''} ${u.nome || ''} ${u.matricola || ''}`.toUpperCase();
+        
+        let accessDisplay = 'Mai';
+        if (u.last_access_full) {
+            let d = new Date(u.last_access_full);
+            accessDisplay = d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
+        } else if (u.last_app_access) {
+            let p = u.last_app_access.split('-');
+            if(p.length === 3) accessDisplay = `${p[2]}/${p[1]}/${p[0]}`; else accessDisplay = u.last_app_access;
+        }
+        
+        return `<div class="utente-row-app" data-search="${searchData}" style="display:flex; justify-content:space-between; align-items:center; background:${isBanned ? 'var(--danger-light)' : 'var(--surface-hover)'}; padding:14px; border-radius:12px; margin-bottom:12px; border:1px solid ${isBanned ? 'var(--danger-border)' : 'var(--border-color)'}; box-shadow:var(--shadow-sm); transition: transform 0.2s;"><div><div style="display:flex; align-items:center;">${clickableName}${dot}</div><div style="font-size:12px; color:var(--text-muted); margin-top:4px;"><i class="fa-regular fa-id-badge"></i> ${u.matricola || '??'} • <i class="fa-regular fa-clock"></i> ${accessDisplay}</div></div><button style="border:1px solid ${isBanned ? 'var(--success)' : 'var(--danger)'}; color:${isBanned ? 'var(--success)' : 'var(--danger)'}; background:var(--surface); padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:13px; transition:all 0.2s;" onmouseover="this.style.background='${isBanned ? 'var(--success)' : 'var(--danger)'}'; this.style.color='white';" onmouseout="this.style.background='var(--surface)'; this.style.color='${isBanned ? 'var(--success)' : 'var(--danger)'}';" onclick="window.toggleAppBan('${u.uid}', ${!isBanned})">${isBanned ? '<i class="fa-solid fa-unlock"></i> Sblocca' : '<i class="fa-solid fa-ban"></i> Blocca'}</button></div>`;
+    };
+
+    let html = dataCopy.map(u => buildRiga(u)).join('');
+    container.innerHTML = html;
+    
+    if (window.filtraUtentiApp) window.filtraUtentiApp();
+};
+
+window.filtraUtentiApp = () => {
+    let input = document.getElementById('search-utenti-app');
+    if (!input) return;
+    let filter = input.value.toUpperCase();
+    let rows = document.getElementsByClassName('utente-row-app');
+    for (let i = 0; i < rows.length; i++) {
+        let txtValue = rows[i].getAttribute('data-search');
+        if (txtValue.indexOf(filter) > -1) rows[i].style.display = "flex";
+        else rows[i].style.display = "none";
+    }
+};
+
+window.toggleAppBan = async (uid, status) => { 
+    if(confirm("Confermi l'azione?")) { 
+        await setDoc(doc(db, "utenti", uid), { app_banned: status }, { merge: true }); 
+        window.apriGestioneAccessi(); 
+    } 
 };
 
 window.apriDettaglioUtente = (uid) => {
@@ -328,20 +405,71 @@ window.apriDettaglioUtente = (uid) => {
     const isVip = u.ruolo === 'vip';
     
     document.getElementById('dettaglio-utente-body').innerHTML = `
-        <div style="margin-bottom:10px;"><strong>Nome:</strong> ${u.nome || '-'} ${u.cognome || '-'}</div>
-        <div style="margin-bottom:10px;"><strong>Matricola:</strong> ${u.matricola || '-'}</div>
-        <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
-            <button class="btn-modal" style="flex:1; background:${isCollab?'transparent':'#6f42c1'}; color:${isCollab?'var(--danger)':'white'}; border:1px solid ${isCollab?'var(--danger)':'#6f42c1'};" onclick="window.cambiaRuoloUtente('${uid}', '${isCollab?'user':'collaborator'}')">${isCollab?'Revoca Collab':'Rendi Collab'}</button>
-            <button class="btn-modal" style="flex:1; background:${isVip?'transparent':'gold'}; color:${isVip?'var(--danger)':'black'}; border:1px solid ${isVip?'var(--danger)':'gold'};" onclick="window.cambiaRuoloUtente('${uid}', '${isVip?'user':'vip'}')">${isVip?'Revoca VIP':'Rendi VIP'}</button>
-        </div>`;
+        <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-user" style="color:var(--primary); width:16px;"></i> <strong>Nome:</strong> ${u.nome || '-'}</div>
+        <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-regular fa-user" style="color:var(--primary); width:16px;"></i> <strong>Cognome:</strong> ${u.cognome || '-'}</div>
+        <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-hashtag" style="color:var(--primary); width:16px;"></i> <strong>Matricola:</strong> ${u.matricola || '-'}</div>
+        <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-tag" style="color:var(--primary); width:16px;"></i> <strong>Omonimia:</strong> ${u.progressivo || '-'}</div>
+        <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-envelope" style="color:var(--primary); width:16px;"></i> <strong>Email:</strong> ${u.email || 'Non registrata'}</div>
+        <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-phone" style="color:var(--primary); width:16px;"></i> <strong>Telefono:</strong> ${u.telefono || 'Non registrato'}</div>
+        <div style="margin-bottom:5px; font-size:12px; color:var(--text-muted); word-break: break-all; margin-top:20px; border-top:1px solid var(--border-color); padding-top:10px;"><i class="fa-solid fa-fingerprint"></i> <strong>ID Account:</strong> ${u.uid || '-'}</div>`;
+    
+    const btnCollab = document.getElementById('btn-rendi-collab');
+    if (btnCollab) {
+        if (isCollab) { 
+            btnCollab.innerHTML = "<i class='fa-solid fa-user-minus'></i> Revoca Collaboratore"; btnCollab.style.background = "transparent"; btnCollab.style.color = "var(--danger)"; btnCollab.style.border = "2px solid var(--danger)"; btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'user'); 
+        } else { 
+            btnCollab.innerHTML = "<i class='fa-solid fa-user-shield'></i> Rendi Collaboratore"; btnCollab.style.background = "#6f42c1"; btnCollab.style.color = "white"; btnCollab.style.border = "none"; btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'collaborator'); 
+        }
+    }
+
+    document.getElementById('dettaglio-utente-body').insertAdjacentHTML('beforeend', `
+        <button class="btn-modal" style="background:${isVip?'transparent':'gold'}; color:${isVip?'var(--danger)':'black'}; border:1px solid ${isVip?'var(--danger)':'gold'}; margin-top:15px; margin-bottom:5px; display:flex; align-items:center; justify-content:center; gap:6px; width: 100%;" onclick="window.cambiaRuoloUtente('${uid}', '${isVip?'user':'vip'}')"><i class="fa-solid fa-star"></i> ${isVip?'Revoca VIP':'Rendi VIP'}</button>
+        <button class="btn-modal" style="background: #ff9800; color: white; margin-top:5px; margin-bottom:5px; display:flex; align-items:center; justify-content:center; gap:6px; width: 100%;" onclick="window.apriEditorAdminUtente('${uid}')"><i class="fa-solid fa-pen"></i> Correggi Dati Utente</button>
+    `);
+    
     window.apriModal('modal-dettaglio-utente');
 };
 
-window.cambiaRuoloUtente = async (uid, nuovoRuolo) => {
-    if(!confirm("Confermi il cambio ruolo?")) return;
-    await setDoc(doc(db, "utenti", uid), { ruolo: nuovoRuolo }, { merge: true });
-    window.utentiMap[uid].ruolo = nuovoRuolo; window.apriDettaglioUtente(uid); window.renderGestioneAccessi();
+window.apriEditorAdminUtente = (uid) => {
+    const u = window.utentiMap[uid]; if(!u) return;
+    document.getElementById('dettaglio-utente-body').innerHTML = `
+        <div class="float-wrapper"><input type="text" id="adm-edit-nome" class="input-field" value="${u.nome || ''}"><label style="top:12px; font-size:11px; color:var(--primary); font-weight:700;">Nome</label></div>
+        <div class="float-wrapper"><input type="text" id="adm-edit-cognome" class="input-field" value="${u.cognome || ''}"><label style="top:12px; font-size:11px; color:var(--primary); font-weight:700;">Cognome</label></div>
+        <div class="float-wrapper"><input type="text" id="adm-edit-matricola" class="input-field" value="${u.matricola || ''}"><label style="top:12px; font-size:11px; color:var(--primary); font-weight:700;">Matricola</label></div>
+        <div class="float-wrapper"><input type="text" id="adm-edit-prog" class="input-field" value="${u.progressivo || ''}"><label style="top:12px; font-size:11px; color:var(--primary); font-weight:700;">Omonimia</label></div>
+        <div class="float-wrapper"><input type="text" id="adm-edit-tel" class="input-field" value="${u.telefono || ''}"><label style="top:12px; font-size:11px; color:var(--primary); font-weight:700;">Telefono</label></div>
+        <button class="btn-modal" style="background: var(--success); color: white;" onclick="window.salvaEditorAdminUtente('${uid}')"><i class="fa-solid fa-floppy-disk"></i> Salva Dati Corretti</button>
+    `;
 };
+
+window.salvaEditorAdminUtente = async (uid) => {
+    if(!confirm("Confermi la modifica dei dati di questo utente?")) return;
+    const datiAggiornati = {
+        nome: document.getElementById('adm-edit-nome').value.trim(),
+        cognome: document.getElementById('adm-edit-cognome').value.trim(),
+        matricola: document.getElementById('adm-edit-matricola').value.trim(),
+        progressivo: document.getElementById('adm-edit-prog').value.trim(),
+        telefono: document.getElementById('adm-edit-tel').value.trim()
+    };
+    try {
+        await setDoc(doc(db, "utenti", uid), datiAggiornati, { merge: true });
+        window.utentiMap[uid] = { ...window.utentiMap[uid], ...datiAggiornati };
+        window.apriDettaglioUtente(uid);
+        window.renderGestioneAccessi();
+    } catch(e) { alert("Errore nel salvataggio su Firebase."); }
+};
+
+window.cambiaRuoloUtente = async (uid, nuovoRuolo) => { 
+    if(!confirm("Confermi il cambio ruolo?")) return; 
+    try { 
+        await setDoc(doc(db, "utenti", uid), { ruolo: nuovoRuolo }, { merge: true }); 
+        window.utentiMap[uid].ruolo = nuovoRuolo; 
+        window.chiudiModal('modal-dettaglio-utente'); 
+        alert("Ruolo aggiornato!"); 
+        window.renderGestioneAccessi();
+    } catch(e) { alert("Errore."); } 
+};
+
 
 // ============================================================================
 // SISTEMA GESTIONE LAYOUT ADMIN / GITHUB
