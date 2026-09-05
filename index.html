@@ -601,22 +601,27 @@
                 </div>
             </div>
 
-            <!-- CATEGORIA COLORI -->
-            <div class="setting-category">
-                <div class="setting-header" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open');">
-                    <span><i class="fa-solid fa-palette" style="color:var(--primary); width:24px;"></i> Colori e Tema</span>
-                    <i class="fa-solid fa-chevron-down"></i>
-                </div>
-                <div class="setting-content">
-                    <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Colori Sfondo Onda:</label>
-                    <div class="color-picker-row"><label>Colore Alto</label><input type="color" id="set-col1"></div>
-                    <div class="color-picker-row"><label>Colore Centrale</label><input type="color" id="set-col2"></div>
-                    <div class="color-picker-row"><label>Colore Basso</label><input type="color" id="set-col3"></div>
-                    
-                    <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; margin-top: 15px; display:block;">Colore Base App:</label>
-                    <div class="color-picker-row"><label>Sfondo Icone App</label><input type="color" id="set-appbg"></div>
-                </div>
-            </div>
+            <!-- CATEGORIA COLORI E TEMA -->
+<div class="setting-category">
+    <div class="setting-header" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open');">
+        <span><i class="fa-solid fa-palette" style="color:var(--primary); width:24px;"></i> Colori e Tema</span>
+        <i class="fa-solid fa-chevron-down"></i>
+    </div>
+    <div class="setting-content">
+        <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display:block;">Tema dell'App:</label>
+        <select id="set-theme" class="input-field" style="cursor:pointer;">
+            <option value="system">Impostazioni di Sistema</option>
+            <option value="light">Chiaro</option>
+            <option value="dark">Scuro</option>
+        </select>
+        
+        <label style="font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; margin-top: 15px; display:block;">Colori Sfondo Onda:</label>
+        <div class="color-picker-row"><label>Colore Alto</label><input type="color" id="set-col1"></div>
+        <div class="color-picker-row"><label>Colore Centrale</label><input type="color" id="set-col2"></div>
+        <div class="color-picker-row"><label>Colore Basso</label><input type="color" id="set-col3"></div>
+    </div>
+</div>
+
 
             <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 24px 0;">
             <button class="btn-modal" style="background: var(--success); color: white;" onclick="window.LayoutEngine.salvaPreferenzeGlobali()"><i class="fa-solid fa-floppy-disk"></i> Salva Impostazioni</button>
