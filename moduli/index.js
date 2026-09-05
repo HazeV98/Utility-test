@@ -46,7 +46,6 @@ const ModuliLazyLoader = {
         return motoreFuncKey ? modulo[motoreFuncKey] : (modulo.default || modulo);
     }
 };
-// ============================================================================
 
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -81,11 +80,22 @@ window.caricaAppsConfig = async () => {
     } catch(e) { window.DYNAMIC_APPS = []; }
 };
 
+// ============================================================================
+// ROUTER DINAMICO E LANCIATORI DI SICUREZZA
+// ============================================================================
 window.eseguiAzioneApp = async (appId) => {
     const appConfig = window.DYNAMIC_APPS.find(a => a.id === appId);
     if (!appConfig) return;
 
-    if (appConfig.isModule && appConfig.moduleName) {
+    if (appConfig.href) {
+        window.location.href = appConfig.href;
+    } else if (appConfig.onclick) {
+        // Estrazione sicura del comando senza usare eval()
+        const match = appConfig.onclick.match(/window\.([a-zA-Z0-9_]+)(?:\(['"]?(.*?)['"]?\))?/);
+        if (match && match[1] && typeof window[match[1]] === 'function') {
+            window[match[1]](match[2] || undefined);
+        }
+    } else if (appConfig.isModule && appConfig.moduleName) {
         if (!auth.currentUser) { alert("Devi effettuare il login per questa funzione."); return; }
         if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
         const fn = await ModuliLazyLoader.avviaMotore(appConfig.moduleName);
@@ -93,9 +103,6 @@ window.eseguiAzioneApp = async (appId) => {
     }
 };
 
-// ============================================================================
-// LANCIATORI DI SICUREZZA
-// ============================================================================
 window.avviaMotoreTurniDaIndex = async () => {
     if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai turni."); return; }
     if (window.currentUserData) {
@@ -146,7 +153,6 @@ window.avviaMotoreSegnalazioniDaIndex = async () => {
         }
     }
 };
-// ============================================================================
 
 window.controllaBacheca = async () => {};
 window.controllaRichiesteSospese = async () => {};
@@ -154,10 +160,11 @@ window.controllaPromemoria = async () => {};
 window.controllaSegnalazioni = async () => {};
 
 // ============================================================================
-// GESTIONE LAYOUT GRAFICA (BUG FIX DOPPIO CLICK E CSP RESOLVED)
+// GESTIONE LAYOUT GRAFICA - APPLICATA EVENT DELEGATION
 // ============================================================================
 window.LayoutEngine = {
     prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", theme: "system" },
+    _eventsBound: false,
     init: async function(firebasePrefsStr) {
         let localStr = localStorage.getItem('preferenze_layout_haze');
         let targetStr = firebasePrefsStr || localStr;
@@ -177,6 +184,21 @@ window.LayoutEngine = {
 
         this.applicaGrafica();
         this.popolaModaleImpostazioni();
+        
+        // Listener globale per intercettare i click (Event Delegation)
+        if (!this._eventsBound) {
+            const container = document.getElementById('app-container');
+            if (container) {
+                container.addEventListener('click', (e) => {
+                    const btn = e.target.closest('.app-btn');
+                    if (btn && btn.dataset.id) {
+                        e.preventDefault();
+                        window.eseguiAzioneApp(btn.dataset.id);
+                    }
+                });
+                this._eventsBound = true;
+            }
+        }
         
         await window.caricaAppsConfig();
         this.render();
@@ -230,19 +252,8 @@ window.LayoutEngine = {
             const finalColor = app.defaultColor || "#0066cc";
             let animDelay = `${index * 0.04}s`;
             
-            // Fix per Safari Mobile: l'attributo href javascript:void(0) forza il clic al primo tocco
-            let hrefAttr = app.href ? `href="${app.href}"` : `href="javascript:void(0)"`;
-            
-            // Fix Sicurezza: Costruiamo l'onclick nativamente sull'elemento per bypassare blocchi CSP
-            let onclickAttr = "";
-            if (app.onclick) {
-                onclickAttr = `onclick="${app.onclick}"`;
-            } else if (app.isModule) {
-                onclickAttr = `onclick="window.eseguiAzioneApp('${app.id}')"`;
-            }
-            
             container.innerHTML += `
-                <a ${hrefAttr} ${onclickAttr} class="app-btn" id="btn-${app.id}" style="animation-delay: ${animDelay}; cursor:pointer;">
+                <a href="javascript:void(0)" data-id="${app.id}" class="app-btn" style="animation-delay: ${animDelay}; cursor:pointer;">
                     <div class="app-icon" style="background-color: ${finalColor};"><i class="${app.icon || 'fa-solid fa-link'}"></i></div>
                     <div class="app-label">${app.label.replace(/\n/g, '<br>')}</div>
                 </a>`;
