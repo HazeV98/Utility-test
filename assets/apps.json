@@ -250,7 +250,7 @@
         "icon": "fa-solid fa-map-location-dot",
         "defaultColor": "#0066cc",
         "conditions": [
-            "admin"
+            "vip"
         ],
         "href": "https://bateolive.tailec23c3.ts.net/"
     },
