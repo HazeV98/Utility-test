@@ -37,10 +37,13 @@
         "label": "Rotazioni",
         "icon": "fa-solid fa-users",
         "defaultColor": "#fd7e14",
-        "onclick": "window.avviaMotoreGenerico('rotazioni')",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "rotazioni",
+        "moduleName": "rotazioni",
+        "splitModule": true
     },
     {
         "id": "turni",
@@ -130,7 +133,9 @@
         "label": "Vademecum",
         "icon": "fa-solid fa-book",
         "defaultColor": "#8e8e93",
-        "conditions": ["admin"],
+        "conditions": [
+            "admin"
+        ],
         "href": "vademecum.html"
     },
     {
@@ -211,7 +216,9 @@
         "label": "BateoLive",
         "icon": "fa-solid fa-map-location-dot",
         "defaultColor": "#0066cc",
-        "conditions": ["admin"],
+        "conditions": [
+            "admin"
+        ],
         "href": "https://bateolive.tailec23c3.ts.net/"
     },
     {
@@ -219,7 +226,9 @@
         "label": "Admin",
         "icon": "fa-solid fa-lock",
         "defaultColor": "#ff3b30",
-        "conditions": ["admin"],
+        "conditions": [
+            "admin"
+        ],
         "isModule": true,
         "moduleId": "admin",
         "moduleName": "admin",
