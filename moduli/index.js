@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 import { avviaMotoreAuth } from './auth.js';
 
@@ -19,14 +19,12 @@ const ModuliLazyLoader = {
             let esporta = {};
             
             if (isSplit) {
-                // index.js è già in /moduli/, quindi ./ punta direttamente alla cartella corretta
                 const [motoreRes, uiRes] = await Promise.all([
                     import(`./${nomeModulo}.js`),
                     import(`./ui_${nomeModulo}.js`).catch(() => ({})) 
                 ]);
                 esporta = { ...motoreRes, ...uiRes };
             } else {
-                // Carica solo il file unificato
                 esporta = await import(`./${nomeModulo}.js`);
             }
             
@@ -89,7 +87,7 @@ window.caricaAppsConfig = async () => {
 };
 
 // ============================================================================
-// ROUTER DINAMICO E LANCIATORI NATIVI (Basato su ID, immune a errori JSON)
+// ROUTER DINAMICO E LANCIATORI NATIVI 
 // ============================================================================
 window.eseguiAzioneApp = async (appId) => {
     const appConfig = window.DYNAMIC_APPS.find(a => a.id === appId);
@@ -100,7 +98,6 @@ window.eseguiAzioneApp = async (appId) => {
         return;
     }
 
-    // 1. CONTROLLI DI SICUREZZA GLOBALI E SPECIFICI
     if (!auth.currentUser && appId !== 'orari') {
         alert("Devi effettuare il login per accedere a questa funzione."); 
         return;
@@ -116,7 +113,6 @@ window.eseguiAzioneApp = async (appId) => {
             alert("Completa il profilo (Nome e Matricola) per visualizzare i turni.");
             window.apriModal('profileModal'); return;
         }
-        // Tracking accessi ai turni
         const oggiStr = new Date().toISOString().split('T')[0];
         if (window.currentUserData && (window.currentUserData.turni_access !== true || window.currentUserData.last_turni_access !== oggiStr)) {
             setDoc(doc(db, "utenti", auth.currentUser.uid), { turni_access: true, last_turni_access: oggiStr }, { merge: true });
@@ -128,17 +124,14 @@ window.eseguiAzioneApp = async (appId) => {
         alert("Accesso ai Documenti revocato."); return;
     }
 
-    // 2. ECCEZIONI NON-MODULARI
     if (appId === 'accessi') { return window.apriGestioneAccessi(); }
 
-    // 3. CARICAMENTO LOGICA MODULO
     let moduleName = (appConfig.isModule && appConfig.moduleName) ? appConfig.moduleName : null;
-    
-    // Legge la preferenza dal JSON, o applica true di default per le vecchie app legacy non aggiornate
     let isSplit = appConfig.hasOwnProperty('splitModule') ? appConfig.splitModule : true;
     
     if (!moduleName) {
         const legacyMap = { 
+            'bacheca_utility': 'bacheca_utility', 'guida': 'guida',
             'statistiche':'statistiche', 'rotazioni':'rotazioni', 'turni':'turni', 
             'bachecaturni':'bacheca_turni', 'barcadvisor':'barcadvisor', 'rubrica':'rubrica', 
             'ferie':'rotazione_ferie', 'orari':'orari', 'documenti':'documenti', 'link':'link', 
@@ -149,12 +142,10 @@ window.eseguiAzioneApp = async (appId) => {
     }
 
     if (moduleName) {
-        // Passa la direttiva isSplit al Lazy Loader
         const fn = await ModuliLazyLoader.avviaMotore(moduleName, isSplit);
         if (fn) await fn(db, auth, window.currentUserData, globalIsAdmin);
     }
 
-    // 4. AUTO-APERTURA MODAL
     const legacyModals = { 
         'bachecaturni': 'modal-bachecaturni-main', 
         'buoni': 'modal-buoni-main', 
@@ -169,7 +160,94 @@ window.eseguiAzioneApp = async (appId) => {
     else console.warn(`Interfaccia non trovata: nessun elemento HTML con id "${modalId}"`);
 };
 
-window.controllaBacheca = async () => {};
+window.avviaMotoreGuidaDaIndex = async () => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) { 
+        alert("L'accesso alle funzioni ti è stato revocato."); 
+        return; 
+    }
+    const fn = await ModuliLazyLoader.avviaMotore('guida', true);
+    if (fn) fn(db, auth, window.currentUserData, globalIsAdmin);
+};
+
+window.avviaMotoreBachecaUtilityDaIndex = async () => {
+    const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
+    const fn = await ModuliLazyLoader.avviaMotore('bacheca_utility', true);
+    if (fn) fn(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
+};
+
+window.controllaBacheca = async () => {
+    if (!auth.currentUser) return;
+    try {
+        let fbAccess = parseInt(window.currentUserData?.ultimo_accesso_bacheca || 0);
+        let localAccess = parseInt(localStorage.getItem('ultimo_accesso_bacheca') || 0);
+        let ultimoAccesso = Math.max(fbAccess, localAccess);
+
+        const stateApp = JSON.parse(localStorage.getItem('myTurniApp')) || {};
+        const pid = stateApp.profiloAttivoId || 'default';
+        const profileObj = stateApp.profiliSalvati ? stateApp.profiliSalvati[pid] : stateApp;
+        const rotazioneUtente = profileObj ? profileObj.depositoAttivo : null;
+        
+        const formatterDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' });
+        const oggiStr = formatterDate.format(new Date());
+
+        const q = query(collection(db, "bacheca_utility"), orderBy("timestamp", "desc"));
+        const snap = await getDocs(q);
+
+        let avvisiNormali = 0; let avvisiDDS = [];
+
+        snap.forEach(d => {
+            let m = d.data();
+            if (m.scadenza && m.scadenza < oggiStr) return; 
+            if (!globalIsAdmin && !globalIsCollab && m.target && m.target !== "tutti") {
+                if (!rotazioneUtente || !m.target.includes(rotazioneUtente)) return;
+            }
+            const giaLetto = localStorage.getItem('letto_' + d.id);
+            if (m.timestamp > ultimoAccesso && !giaLetto) {
+                if (m.tipo === "dds") avvisiDDS.push(m.titolo_dds);
+                else avvisiNormali++;
+            }
+        });
+
+        let totali = avvisiNormali + avvisiDDS.length;
+
+        const badge = document.getElementById('badge-messaggi');
+        if (badge) { 
+            if (totali > 0) { badge.innerText = totali; badge.style.display = 'flex'; }
+            else { badge.style.display = 'none'; }
+        }
+
+        const bannerNormal = document.getElementById('banner-nuovo-messaggio');
+        if (bannerNormal) {
+            if (avvisiNormali > 0) bannerNormal.style.display = 'flex';
+            else bannerNormal.style.display = 'none';
+        }
+        
+        const bannerDDS = document.getElementById('banner-dds-alert');
+        const textDDS = document.getElementById('titolo-dds-text');
+        if (bannerDDS && textDDS) {
+            if (avvisiDDS.length > 0) {
+                textDDS.innerText = avvisiDDS[0] + (avvisiDDS.length > 1 ? ` (+${avvisiDDS.length - 1})` : '');
+                bannerDDS.style.display = 'flex';
+            } else { bannerDDS.style.display = 'none'; }
+        }
+    } catch(e) { console.error("Errore check bacheca:", e); }
+};
+
+window.addEventListener('bacheca-utility-letta', async () => {
+    const badge = document.getElementById('badge-messaggi'); if (badge) badge.style.display = 'none';
+    const bannerNormal = document.getElementById('banner-nuovo-messaggio'); if (bannerNormal) bannerNormal.style.display = 'none';
+    const bannerDDS = document.getElementById('banner-dds-alert'); if (bannerDDS) bannerDDS.style.display = 'none';
+
+    const now = Date.now();
+    localStorage.setItem('ultimo_accesso_bacheca', now);
+    
+    if (window.currentUserData) window.currentUserData.ultimo_accesso_bacheca = now;
+    if (auth.currentUser) {
+        try { await setDoc(doc(db, "utenti", auth.currentUser.uid), { ultimo_accesso_bacheca: now }, { merge: true }); } 
+        catch(e) { console.error("Errore salvataggio ultimo accesso bacheca:", e); }
+    }
+});
+
 window.controllaRichiesteSospese = async () => {};
 window.controllaPromemoria = async () => {};
 window.controllaSegnalazioni = async () => {};
@@ -277,6 +355,10 @@ window.LayoutEngine = {
             
             container.appendChild(btn);
         });
+
+        setTimeout(() => {
+            if(window.controllaBacheca) window.controllaBacheca();
+        }, 200);
     },
     salvaPreferenzeGlobali: function() {
         this.prefs.c1 = document.getElementById('set-col1').value; 
@@ -301,7 +383,6 @@ window.apriModal = (id, authMode) => {
         window.aggiornaUIAuth(); 
     }
     
-    // Popolamento dinamico dei dati quando si apre il Profilo
     if (id === 'profileModal' && window.currentUserData) {
         if (auth.currentUser) document.getElementById('profileEmail').value = auth.currentUser.email || '';
         document.getElementById('profileNome').value = window.currentUserData.nome || '';
@@ -762,9 +843,18 @@ onAuthStateChanged(auth, async (user) => {
         globalIsVip = cachedData.ruolo === 'vip';
         
         if(globalIsAdmin) { 
-            document.getElementById('adminBadge').style.display = 'block'; 
-            document.getElementById('menu-admin').style.display = 'flex'; 
+            const admBadge = document.getElementById('adminBadge');
+            if (admBadge) admBadge.style.display = 'block'; 
+            
+            const menuAdm = document.getElementById('menu-admin');
+            if (menuAdm) menuAdm.style.display = 'flex'; 
+            
             window.injectAdminConfigTools();
+        }
+
+        if(globalIsVip) {
+            const vipBadge = document.getElementById('vipBadge');
+            if (vipBadge) vipBadge.style.display = 'block';
         }
 
         window.LayoutEngine.init();
@@ -775,6 +865,15 @@ onAuthStateChanged(auth, async (user) => {
             window.currentUserData = safeData; 
             globalIsCollab = safeData.ruolo === 'collaborator';
             globalIsVip = safeData.ruolo === 'vip';
+            
+            if (globalIsVip) {
+                const vBadge = document.getElementById('vipBadge');
+                if (vBadge) vBadge.style.display = 'block';
+            } else {
+                const vBadge = document.getElementById('vipBadge');
+                if (vBadge) vBadge.style.display = 'none';
+            }
+
             localStorage.setItem('userDataCache_haze', JSON.stringify(safeData));
         } catch(e) {}
     } else { 
