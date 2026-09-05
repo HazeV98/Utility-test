@@ -1,51 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 import { avviaMotoreAuth } from './auth.js';
-
-// ============================================================================
-// SISTEMA DI LAZY LOADING DINAMICO E INTELLIGENTE
-// ============================================================================
-const ModuliLazyLoader = {
-    cache: new Map(),
-    initializedUIs: new Set(),
-    
-    async caricaModulo(nomeModulo) {
-        if (!nomeModulo) return null;
-        if (this.cache.has(nomeModulo)) return this.cache.get(nomeModulo);
-        
-        try {
-            const motoreModule = await import(`./${nomeModulo}.js`);
-            let uiModule = {};
-            try { uiModule = await import(`./ui_${nomeModulo}.js`); } catch(e) {} 
-            
-            const esporta = { ...motoreModule, ...uiModule };
-            this.cache.set(nomeModulo, esporta);
-            
-            const initFuncKey = Object.keys(esporta).find(k => k.startsWith('initUI'));
-            if (initFuncKey && typeof esporta[initFuncKey] === 'function' && !this.initializedUIs.has(nomeModulo)) {
-                try {
-                    esporta[initFuncKey]();
-                    this.initializedUIs.add(nomeModulo);
-                } catch(err) { console.warn(`Errore durante initUI di ${nomeModulo}:`, err); }
-            }
-            return esporta;
-        } catch (errore) {
-            console.error(`✗ Errore caricamento modulo dinamico '${nomeModulo}':`, errore);
-            alert(`Impossibile caricare i file del modulo: ${nomeModulo}.js`);
-            return null;
-        }
-    },
-    
-    async avviaMotore(nomeModulo) {
-        const modulo = await this.caricaModulo(nomeModulo);
-        if (!modulo) return null;
-        const motoreFuncKey = Object.keys(modulo).find(k => k.startsWith('avviaMotore'));
-        return motoreFuncKey ? modulo[motoreFuncKey] : (modulo.default || modulo);
-    }
-};
 
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
@@ -81,89 +38,23 @@ window.caricaAppsConfig = async () => {
 };
 
 // ============================================================================
-// ROUTER DINAMICO E LANCIATORI DI SICUREZZA
+// ROUTER ESECUTIVO NATIVO (Bypassa Blocchi CSP)
 // ============================================================================
-window.eseguiAzioneApp = async (appId) => {
+window.eseguiAzioneApp = (appId) => {
     const appConfig = window.DYNAMIC_APPS.find(a => a.id === appId);
     if (!appConfig) return;
 
     if (appConfig.href) {
         window.location.href = appConfig.href;
     } else if (appConfig.onclick) {
-        const cmd = appConfig.onclick;
-        if (cmd.includes('statistiche')) window.avviaMotoreGenerico('statistiche');
-        else if (cmd.includes('rotazioni')) window.avviaMotoreGenerico('rotazioni');
-        else if (cmd.includes('turni')) window.avviaMotoreTurniDaIndex();
-        else if (cmd.includes('bacheca_turni')) window.avviaMotoreGenerico('bacheca_turni');
-        else if (cmd.includes('barcadvisor')) window.avviaMotoreGenerico('barcadvisor');
-        else if (cmd.includes('rubrica')) window.avviaMotoreGenerico('rubrica');
-        else if (cmd.includes('rotazione_ferie')) window.avviaMotoreGenerico('rotazione_ferie');
-        else if (cmd.includes('orari')) window.avviaMotoreOrariDaIndex();
-        else if (cmd.includes('documenti')) window.avviaMotoreDocumentiDaIndex();
-        else if (cmd.includes('link')) window.avviaMotoreLinkDaIndex();
-        else if (cmd.includes('contatti')) window.avviaMotoreContattiDaIndex();
-        else if (cmd.includes('buoni_pasto')) window.avviaMotoreGenerico('buoni_pasto');
-        else if (cmd.includes('promemoria')) window.avviaMotoreGenerico('promemoria');
-        else if (cmd.includes('dds')) window.avviaMotoreGenerico('dds');
-        else if (cmd.includes('report')) window.avviaMotoreSegnalazioniDaIndex();
-        else if (cmd.includes('admin')) window.avviaMotoreGenerico('admin');
-        else if (cmd.includes('apriGestioneAccessi')) window.apriGestioneAccessi();
-        else console.warn("Azione onClick non mappata:", cmd);
-    } else if (appConfig.isModule && appConfig.moduleName) {
-        if (!auth.currentUser) { alert("Devi effettuare il login per questa funzione."); return; }
-        if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
-        const fn = await ModuliLazyLoader.avviaMotore(appConfig.moduleName);
-        if (fn) fn(db, auth, window.currentUserData, globalIsAdmin);
-    }
-};
-
-window.avviaMotoreTurniDaIndex = async () => {
-    if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai turni."); return; }
-    if (window.currentUserData) {
-        if (window.currentUserData.turni_banned === true) { alert("Il tuo accesso alla pagina Turni è stato temporaneamente revocato."); return; }
-        if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined || window.currentUserData.matricola === "") {
-            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per visualizzare i turni.");
-            window.apriModal('profileModal'); return;
-        }
-    }
-    const fn = await ModuliLazyLoader.avviaMotore('turni'); if (fn) fn();
-    const oggiStr = new Date().toISOString().split('T')[0];
-    if (window.currentUserData && (window.currentUserData.turni_access !== true || window.currentUserData.last_turni_access !== oggiStr)) {
-        setDoc(doc(db, "utenti", auth.currentUser.uid), { turni_access: true, last_turni_access: oggiStr }, { merge: true });
-        window.currentUserData.turni_access = true; window.currentUserData.last_turni_access = oggiStr;
-    }
-};
-window.avviaMotoreOrariDaIndex = async () => { const m = await ModuliLazyLoader.avviaMotore('orari'); if(m) m(); };
-window.avviaMotoreLinkDaIndex = async () => {
-    if (!auth.currentUser) { alert("Effettua il login per i link aziendali."); return; }
-    if (window.currentUserData && window.currentUserData.link_banned === true) { alert("Accesso ai Link revocato."); return; }
-    const m = await ModuliLazyLoader.avviaMotore('link'); if(m) m(db, auth); 
-};
-window.avviaMotoreDocumentiDaIndex = async () => {
-    if (!auth.currentUser) { alert("Effettua il login per i documenti."); return; }
-    if (window.currentUserData && window.currentUserData.documenti_banned === true) { alert("Accesso Documenti revocato."); return; }
-    const m = await ModuliLazyLoader.avviaMotore('documenti'); if(m) m();
-};
-window.avviaMotoreContattiDaIndex = async () => {
-    if (!auth.currentUser) { alert("Effettua il login per i contatti."); return; }
-    const m = await ModuliLazyLoader.avviaMotore('contatti'); if(m) m(db, auth); 
-};
-window.avviaMotoreBachecaUtilityDaIndex = async () => {
-    const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
-    const m = await ModuliLazyLoader.avviaMotore('bacheca_utility'); 
-    if(m) m(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
-};
-window.avviaMotoreGenerico = async (moduloID) => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
-    const m = await ModuliLazyLoader.avviaMotore(moduloID);
-    if(m) m(db, auth, window.currentUserData, globalIsAdmin);
-};
-window.avviaMotoreSegnalazioniDaIndex = async () => {
-    if (auth.currentUser) {
-        const m = await ModuliLazyLoader.avviaMotore('report');
-        if (m) {
-            m(db, auth, auth.currentUser.uid, globalIsAdmin);
-            if(window.apriModaleSegnalazioni) window.apriModaleSegnalazioni();
+        // Estrae il nome della funzione e la lancia nativamente sull'oggetto window
+        const match = appConfig.onclick.match(/(?:window\.)?([a-zA-Z0-9_]+)/);
+        if (match && match[1] && typeof window[match[1]] === 'function') {
+            window[match[1]]();
+        } else {
+            console.warn("Tentativo di fallback per:", appConfig.onclick);
+            try { new Function(appConfig.onclick)(); }
+            catch (e) { alert("Errore: impossibile lanciare il comando " + appConfig.onclick); }
         }
     }
 };
@@ -191,7 +82,7 @@ window.LayoutEngine = {
             } catch(e) {}
         }
         
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
             if(this.prefs.theme === 'system') this.applicaGrafica();
         });
 
