@@ -97,33 +97,52 @@ window.eseguiAzioneApp = async (appId) => {
         return;
     }
 
-    switch (appId) {
-        case 'statistiche': return window.avviaMotoreGenerico('statistiche');
-        case 'rotazioni': return window.avviaMotoreGenerico('rotazioni');
-        case 'turni': return window.avviaMotoreTurniDaIndex();
-        case 'bachecaturni': return window.avviaMotoreGenerico('bacheca_turni');
-        case 'barcadvisor': return window.avviaMotoreGenerico('barcadvisor');
-        case 'rubrica': return window.avviaMotoreGenerico('rubrica');
-        case 'ferie': return window.avviaMotoreGenerico('rotazione_ferie');
-        case 'orari': return window.avviaMotoreOrariDaIndex();
-        case 'documenti': return window.avviaMotoreDocumentiDaIndex();
-        case 'link': return window.avviaMotoreLinkDaIndex();
-        case 'contatti': return window.avviaMotoreContattiDaIndex();
-        case 'buoni': return window.avviaMotoreGenerico('buoni_pasto');
-        case 'promemoria': return window.avviaMotoreGenerico('promemoria');
-        case 'dds': return window.avviaMotoreGenerico('dds');
-        case 'report': return window.avviaMotoreSegnalazioniDaIndex();
-        case 'admin': return window.avviaMotoreGenerico('admin');
-        case 'accessi': return window.apriGestioneAccessi();
+    // 1. CONTROLLO SICUREZZA (Eredità modulo Turni)
+    if (appId === 'turni' && window.currentUserData) {
+        if (window.currentUserData.turni_banned) { alert("Accesso alla pagina Turni revocato."); return; }
+        if (!window.currentUserData.nome || !window.currentUserData.matricola) {
+            alert("Completa il profilo (Nome e Matricola) per visualizzare i turni.");
+            window.apriModal('profileModal'); return;
+        }
     }
 
-    if (appConfig.isModule && appConfig.moduleName) {
-        if (!auth.currentUser) { alert("Devi effettuare il login per questa funzione."); return; }
-        if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
-        const fn = await ModuliLazyLoader.avviaMotore(appConfig.moduleName);
+    // 2. CARICAMENTO LOGICA MODULO (100% Dinamico)
+    let moduleName = (appConfig.isModule && appConfig.moduleName) ? appConfig.moduleName : null;
+    
+    // Fallback automatico per le tue app storiche
+    if (!moduleName) {
+        const legacyMap = { 
+            'statistiche':'statistiche', 'rotazioni':'rotazioni', 'turni':'turni', 
+            'bachecaturni':'bacheca_turni', 'barcadvisor':'barcadvisor', 'rubrica':'rubrica', 
+            'ferie':'rotazione_ferie', 'orari':'orari', 'documenti':'documenti', 'link':'link', 
+            'contatti':'contatti', 'buoni':'buoni_pasto', 'promemoria':'promemoria', 
+            'dds':'dds', 'report':'report', 'admin':'admin' 
+        };
+        moduleName = legacyMap[appId];
+    }
+
+    if (moduleName) {
+        const fn = await ModuliLazyLoader.avviaMotore(moduleName);
         if (fn) fn(db, auth, window.currentUserData, globalIsAdmin);
-    } else if (appConfig.onclick) {
-        try { new Function(appConfig.onclick)(); } catch (e) { console.error("Azione fallita:", e); }
+    }
+
+    // 3. AUTO-APERTURA MODAL (Sostituisce le funzioni in index.html)
+    // Eccezioni per i nomi storici leggermente diversi dall'ID
+    const legacyModals = { 
+        'bachecaturni': 'modal-bachecaturni-main', 
+        'buoni': 'modal-buoni-main', 
+        'ferie': 'modal-rotazione-ferie-main', 
+        'report': 'modal-segnalazioni-main' 
+    };
+    
+    // Ricava l'ID del modal basandosi sul nome dell'app (es. modal-statistiche-main)
+    const modalId = legacyModals[appId] || `modal-${appId}-main`;
+    const modale = document.getElementById(modalId);
+    
+    if (modale) {
+        modale.style.display = 'flex';
+    } else {
+        console.warn(`Interfaccia non trovata: nessun elemento HTML con id "${modalId}"`);
     }
 };
 
