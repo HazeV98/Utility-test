@@ -210,7 +210,7 @@
     },
     {
         "id": "dds",
-        "label": "ArchivioDDS",
+        "label": "Archivio DDS",
         "icon": "fa-solid fa-box-archive",
         "defaultColor": "#5856d6",
         "conditions": [
