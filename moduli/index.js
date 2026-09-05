@@ -536,11 +536,13 @@ window.injectAdminConfigTools = () => {
                     </div>
 
                     <div style="background:var(--surface-hover); padding:10px; border-radius:8px; margin-bottom:15px;">
-                        <label style="font-size:12px; font-weight:700; display:block; margin-bottom:5px;">Visibilità extra (Admin sempre incluso):</label>
+                        <label style="font-size:12px; font-weight:700; display:block; margin-bottom:5px;">Visibilità:</label>
+                        <label style="display:block; font-size:13px; margin-bottom:4px;"><input type="checkbox" class="chk-cond" value="admin"> Solo Admin</label>
                         <label style="display:block; font-size:13px; margin-bottom:4px;"><input type="checkbox" class="chk-cond" value="vip"> VIP</label>
                         <label style="display:block; font-size:13px; margin-bottom:4px;"><input type="checkbox" class="chk-cond" value="collab"> Collaboratori</label>
                         <label style="display:block; font-size:13px;"><input type="checkbox" class="chk-cond" value="tutti"> Tutti (Pubblica)</label>
                     </div>
+
 
                     <button class="btn-modal" style="background:var(--success); color:white;" onclick="window.salvaAppConfig()"><i class="fa-solid fa-cloud-arrow-up"></i> Salva su GitHub</button>
                 </div>
