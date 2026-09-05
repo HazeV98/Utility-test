@@ -47,23 +47,23 @@
         "label": "Turni",
         "icon": "fa-solid fa-rotate",
         "defaultColor": "#20c997",
+        "onclick": "window.avviaMotoreTurniDaIndex()",
+        "conditions": [
+            "tutti"
+        ]
+    },
+    {
+        "id": "bachecaturni",
+        "label": "BachecaTurni",
+        "icon": "fa-solid fa-handshake-angle",
+        "defaultColor": "#e83e8c",
         "conditions": [
             "tutti"
         ],
         "isModule": true,
-        "moduleId": "turni",
-        "moduleName": "turni",
+        "moduleId": "bachecaturni",
+        "moduleName": "bacheca_turni",
         "splitModule": true
-    },
-    {
-        "id": "bachecaturni",
-        "label": "Bacheca\nTurni",
-        "icon": "fa-solid fa-handshake-angle",
-        "defaultColor": "#e83e8c",
-        "onclick": "window.avviaMotoreGenerico('bacheca_turni')",
-        "conditions": [
-            "tutti"
-        ]
     },
     {
         "id": "barcadvisor",
