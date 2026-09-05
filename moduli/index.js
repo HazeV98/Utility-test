@@ -55,15 +55,6 @@ const ModuliLazyLoader = {
     }
 };
 
-    
-    async avviaMotore(nomeModulo, isSplit) {
-        const modulo = await this.caricaModulo(nomeModulo, isSplit);
-        if (!modulo) return null;
-        const motoreFuncKey = Object.keys(modulo).find(k => k.startsWith('avviaMotore'));
-        return motoreFuncKey ? modulo[motoreFuncKey] : (modulo.default || modulo);
-    }
-};
-
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
     authDomain: "utility-haze.firebaseapp.com", 
