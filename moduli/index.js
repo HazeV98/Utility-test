@@ -106,6 +106,9 @@ window.eseguiAzioneApp = async (appId) => {
         }
     }
 
+    // 1bis. CASO SPECIALE: Gestione Accessi (non è un modulo/modal standard)
+    if (appId === 'accessi') { return window.apriGestioneAccessi(); }
+
     // 2. CARICAMENTO LOGICA MODULO (100% Dinamico)
     let moduleName = (appConfig.isModule && appConfig.moduleName) ? appConfig.moduleName : null;
     
@@ -123,7 +126,7 @@ window.eseguiAzioneApp = async (appId) => {
 
     if (moduleName) {
         const fn = await ModuliLazyLoader.avviaMotore(moduleName);
-        if (fn) fn(db, auth, window.currentUserData, globalIsAdmin);
+        if (fn) await fn(db, auth, window.currentUserData, globalIsAdmin);
     }
 
     // 3. AUTO-APERTURA MODAL (Sostituisce le funzioni in index.html)
