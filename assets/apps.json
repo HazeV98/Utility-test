@@ -5,7 +5,9 @@
         "icon": "fa-solid fa-bullseye",
         "defaultColor": "#28a745",
         "href": "calendario.html?oggi=true",
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "calendario",
@@ -13,7 +15,9 @@
         "icon": "fa-solid fa-calendar-days",
         "defaultColor": "#0066cc",
         "href": "calendario.html",
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "statistiche",
@@ -24,7 +28,9 @@
         "moduleId": "statistiche",
         "moduleName": "statistiche",
         "splitModule": true,
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "rotazioni",
@@ -35,7 +41,9 @@
         "moduleId": "rotazioni",
         "moduleName": "rotazioni",
         "splitModule": true,
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "turni",
@@ -46,7 +54,9 @@
         "moduleId": "turni",
         "moduleName": "turni",
         "splitModule": true,
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "bachecaturni",
@@ -57,7 +67,9 @@
         "moduleId": "bacheca_turni",
         "moduleName": "bacheca_turni",
         "splitModule": true,
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "barcadvisor",
@@ -68,7 +80,9 @@
         "moduleId": "barcadvisor",
         "moduleName": "barcadvisor",
         "splitModule": true,
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "rubrica",
@@ -79,7 +93,9 @@
         "moduleId": "rubrica",
         "moduleName": "rubrica",
         "splitModule": true,
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "ferie",
@@ -90,7 +106,9 @@
         "moduleId": "rotazione_ferie",
         "moduleName": "rotazione_ferie",
         "splitModule": true,
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "orari",
@@ -101,7 +119,9 @@
         "moduleId": "orari",
         "moduleName": "orari",
         "splitModule": true,
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "chebateo",
@@ -109,7 +129,9 @@
         "icon": "fa-solid fa-water",
         "defaultColor": "#0066cc",
         "href": "https://m.chebateo.it/",
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "documenti",
@@ -120,15 +142,17 @@
         "moduleId": "documenti",
         "moduleName": "documenti",
         "splitModule": true,
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "vademecum",
         "label": "Vademecum",
         "icon": "fa-solid fa-book",
         "defaultColor": "#8e8e93",
-        "href": "vademecum.html",
-        "conditions": ["tutti"]
+        "conditions": [],
+        "href": "vademecum.html"
     },
     {
         "id": "link",
@@ -139,7 +163,9 @@
         "moduleId": "link",
         "moduleName": "link",
         "splitModule": true,
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "contatti",
@@ -150,7 +176,9 @@
         "moduleId": "contatti",
         "moduleName": "contatti",
         "splitModule": true,
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "buoni",
@@ -161,7 +189,9 @@
         "moduleId": "buoni_pasto",
         "moduleName": "buoni_pasto",
         "splitModule": true,
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "promemoria",
@@ -172,7 +202,9 @@
         "moduleId": "promemoria",
         "moduleName": "promemoria",
         "splitModule": true,
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "dds",
@@ -183,7 +215,9 @@
         "moduleId": "dds",
         "moduleName": "dds",
         "splitModule": true,
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "report",
@@ -194,7 +228,9 @@
         "moduleId": "report",
         "moduleName": "report",
         "splitModule": true,
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "spriss",
@@ -202,7 +238,9 @@
         "icon": "fa-solid fa-martini-glass",
         "defaultColor": "#dc3545",
         "href": "https://spriss.avmspa.it/",
-        "conditions": ["tutti"]
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "admin",
@@ -213,7 +251,9 @@
         "moduleId": "admin",
         "moduleName": "admin",
         "splitModule": true,
-        "conditions": ["admin"]
+        "conditions": [
+            "admin"
+        ]
     },
     {
         "id": "accessi",
@@ -221,6 +261,8 @@
         "icon": "fa-solid fa-users-gear",
         "defaultColor": "#1c1c1e",
         "onclick": "window.apriGestioneAccessi()",
-        "conditions": ["admin"]
+        "conditions": [
+            "admin"
+        ]
     }
 ]
