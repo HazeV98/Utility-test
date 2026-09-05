@@ -392,58 +392,7 @@
 </head>
 <body>
 
-    <div id="sidebar-overlay" class="sidebar-overlay" onclick="window.chiudiMenuLaterale()"></div>
-    <div id="sidebar" class="sidebar">
-        <div class="sidebar-header">
-            <h3><i class="fa-solid fa-layer-group"></i> Menu</h3>
-            <button style="background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:1; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="window.chiudiMenuLaterale()"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        
-        <a href="index.html" class="sidebar-link" style="background-color: var(--primary-glow); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary);"><i class="fa-solid fa-house" style="color: var(--primary);"></i> Home Page</a>
-        
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('bachecautility'); return false;" class="sidebar-link"><i class="fa-solid fa-bullhorn"></i> Bacheca Avvisi</a>
-        
-        <a href="calendario.html?oggi=true" class="sidebar-link"><i class="fa-solid fa-bullseye"></i> Oggi</a>
-        <a href="calendario.html" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i> Calendario</a>
-        
-        <!-- NUOVI COLLEGAMENTI MODALI AGGIUNTI (AL POSTO DEGLI HTML) -->
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('statistiche'); return false;" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> Statistiche</a>
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('rotazioni'); return false;" class="sidebar-link"><i class="fa-solid fa-users"></i> Rotazioni</a>
-        <!-- FINE NUOVI COLLEGAMENTI -->
-
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('turni'); return false;" class="sidebar-link"><i class="fa-solid fa-rotate"></i> Turni</a>
-        
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('bachecaturni'); return false;" class="sidebar-link"><i class="fa-solid fa-handshake-angle"></i> Bacheca Turni</a>
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('barcadvisor'); return false;" class="sidebar-link"><i class="fa-solid fa-ship"></i> BarcAdvisor</a>
-        
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('rubrica'); return false;" class="sidebar-link"><i class="fa-solid fa-address-book"></i> Rubrica Colleghi</a>
-        
-        <!-- NUOVO COLLEGAMENTO ROTAZIONE FERIE -->
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('ferie'); return false;" class="sidebar-link"><i class="fa-solid fa-umbrella-beach"></i> Rotazione Ferie</a>
-        
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('orari'); return false;" class="sidebar-link"><i class="fa-regular fa-clock"></i> Orari Navigazione</a>
-        
-        <a href="https://m.chebateo.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-water"></i> CheBateo</a>
-        
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('documenti'); return false;" class="sidebar-link"><i class="fa-solid fa-file-lines"></i> Documenti</a>
-        <a href="vademecum.html" class="sidebar-link"><i class="fa-solid fa-book"></i> Vademecum</a>
-        
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('link'); return false;" class="sidebar-link"><i class="fa-solid fa-link"></i> Link Utili</a>
-        
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('contatti'); return false;" class="sidebar-link"><i class="fa-solid fa-id-card"></i> Contatti</a>
-        
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('buoni'); return false;" class="sidebar-link"><i class="fa-solid fa-utensils"></i> Buoni Pasto</a>
-        
-        <!-- NUOVI COLLEGAMENTI PROMEMORIA, DDS, GUIDA, ADMIN -->
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('promemoria'); return false;" class="sidebar-link"><i class="fa-solid fa-stopwatch"></i> Promemoria</a>
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('dds'); return false;" class="sidebar-link"><i class="fa-solid fa-box-archive"></i> Archivio DDS</a>
-        <a href="https://spriss.avmspa.it/" class="sidebar-link" target="_blank"><i class="fa-solid fa-glass-water-droplet"></i> Spriss</a>
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('report'); return false;" class="sidebar-link"><i class="fa-solid fa-headset"></i> Segnalazioni</a>
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('guida'); return false;" class="sidebar-link"><i class="fa-solid fa-book"></i> Guida</a>
-        
-        <a href="#" onclick="window.chiudiMenuLaterale(); window.eseguiAzioneApp('admin'); return false;" class="sidebar-link" id="menu-admin" style="display:none; color: var(--danger); font-weight: bold;"><i class="fa-solid fa-lock" style="color: var(--danger);"></i> Admin</a>
-    </div>
-
+    
     <div id="view-loading" class="view-container" style="display: flex; justify-content: flex-start; align-items: center; height: 100vh; padding-top: 60px;">
         <div style="width: 100%; padding: 20px; display:flex; justify-content:space-between; align-items:center;">
             <div class="skeleton" style="width: 80px; height: 35px; border-radius: 20px;"></div>
