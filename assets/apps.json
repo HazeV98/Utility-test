@@ -187,13 +187,16 @@
     },
     {
         "id": "report",
-        "label": "Assistenza\nApp",
+        "label": "AssistenzaApp",
         "icon": "fa-solid fa-headset",
         "defaultColor": "#0088ff",
-        "onclick": "window.avviaMotoreSegnalazioniDaIndex()",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "report",
+        "moduleName": "report",
+        "splitModule": true
     },
     {
         "id": "spriss",
