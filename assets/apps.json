@@ -89,10 +89,13 @@
         "label": "Rubrica",
         "icon": "fa-solid fa-address-book",
         "defaultColor": "#343a40",
-        "onclick": "window.avviaMotoreGenerico('rubrica')",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "rubrica",
+        "moduleName": "rubrica",
+        "splitModule": true
     },
     {
         "id": "ferie",
