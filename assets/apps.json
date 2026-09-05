@@ -77,23 +77,23 @@
         "label": "Rubrica",
         "icon": "fa-solid fa-address-book",
         "defaultColor": "#343a40",
+        "onclick": "window.avviaMotoreGenerico('rubrica')",
+        "conditions": [
+            "tutti"
+        ]
+    },
+    {
+        "id": "ferie",
+        "label": "RotazioneFerie",
+        "icon": "fa-solid fa-umbrella-beach",
+        "defaultColor": "#ffc107",
         "conditions": [
             "tutti"
         ],
         "isModule": true,
-        "moduleId": "rubrica",
-        "moduleName": "rubrica",
+        "moduleId": "ferie",
+        "moduleName": "rotazione_ferie",
         "splitModule": true
-    },
-    {
-        "id": "ferie",
-        "label": "Rotazione\nFerie",
-        "icon": "fa-solid fa-umbrella-beach",
-        "defaultColor": "#ffc107",
-        "onclick": "window.avviaMotoreGenerico('rotazione_ferie')",
-        "conditions": [
-            "tutti"
-        ]
     },
     {
         "id": "orari",
