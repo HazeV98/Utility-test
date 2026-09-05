@@ -19,20 +19,22 @@ const ModuliLazyLoader = {
         try {
             const motoreModule = await import(`./${nomeModulo}.js`);
             let uiModule = {};
-            try { uiModule = await import(`./ui_${nomeModulo}.js`); } catch(e) {} // Se non c'è ui_ diviso, prosegue
+            try { uiModule = await import(`./ui_${nomeModulo}.js`); } catch(e) {} 
             
             const esporta = { ...motoreModule, ...uiModule };
             this.cache.set(nomeModulo, esporta);
             
-            // Inizializza l'UI se trova la funzione adatta
             const initFuncKey = Object.keys(esporta).find(k => k.startsWith('initUI'));
             if (initFuncKey && typeof esporta[initFuncKey] === 'function' && !this.initializedUIs.has(nomeModulo)) {
-                esporta[initFuncKey]();
-                this.initializedUIs.add(nomeModulo);
+                try {
+                    esporta[initFuncKey]();
+                    this.initializedUIs.add(nomeModulo);
+                } catch(err) { console.warn(`Errore durante initUI di ${nomeModulo}:`, err); }
             }
             return esporta;
         } catch (errore) {
             console.error(`✗ Errore caricamento modulo dinamico '${nomeModulo}':`, errore);
+            alert(`Impossibile caricare i file del modulo: ${nomeModulo}.js`);
             return null;
         }
     },
@@ -83,22 +85,16 @@ window.eseguiAzioneApp = async (appId) => {
     const appConfig = window.DYNAMIC_APPS.find(a => a.id === appId);
     if (!appConfig) return;
 
-    if (appConfig.href) {
-        window.location.href = appConfig.href;
-    } else if (appConfig.onclick) {
-        try { eval(appConfig.onclick); } catch(e) { console.error("Errore esecuzione onclick:", e); }
-    } else if (appConfig.isModule && appConfig.moduleName) {
-        // Logica generica per moduli nativi aggiunti in futuro senza "lanciatori"
+    if (appConfig.isModule && appConfig.moduleName) {
         if (!auth.currentUser) { alert("Devi effettuare il login per questa funzione."); return; }
         if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
         const fn = await ModuliLazyLoader.avviaMotore(appConfig.moduleName);
         if (fn) fn(db, auth, window.currentUserData, globalIsAdmin);
-        else alert(`Impossibile avviare il modulo: ${appConfig.moduleName}`);
     }
 };
 
 // ============================================================================
-// LANCIATORI DI SICUREZZA (NON ELIMINARE, servono per check Matricola e Ban)
+// LANCIATORI DI SICUREZZA
 // ============================================================================
 window.avviaMotoreTurniDaIndex = async () => {
     if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai turni."); return; }
@@ -158,7 +154,7 @@ window.controllaPromemoria = async () => {};
 window.controllaSegnalazioni = async () => {};
 
 // ============================================================================
-// GESTIONE LAYOUT GRAFICA
+// GESTIONE LAYOUT GRAFICA (BUG FIX DOPPIO CLICK E CSP RESOLVED)
 // ============================================================================
 window.LayoutEngine = {
     prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", theme: "system" },
@@ -234,12 +230,22 @@ window.LayoutEngine = {
             const finalColor = app.defaultColor || "#0066cc";
             let animDelay = `${index * 0.04}s`;
             
-            // Passaggio pulito solo con ID evita bug di \n nei JSON stringify
+            // Fix per Safari Mobile: l'attributo href javascript:void(0) forza il clic al primo tocco
+            let hrefAttr = app.href ? `href="${app.href}"` : `href="javascript:void(0)"`;
+            
+            // Fix Sicurezza: Costruiamo l'onclick nativamente sull'elemento per bypassare blocchi CSP
+            let onclickAttr = "";
+            if (app.onclick) {
+                onclickAttr = `onclick="${app.onclick}"`;
+            } else if (app.isModule) {
+                onclickAttr = `onclick="window.eseguiAzioneApp('${app.id}')"`;
+            }
+            
             container.innerHTML += `
-                <div class="app-btn" id="btn-${app.id}" style="animation-delay: ${animDelay}; cursor:pointer;" onclick="window.eseguiAzioneApp('${app.id}')">
+                <a ${hrefAttr} ${onclickAttr} class="app-btn" id="btn-${app.id}" style="animation-delay: ${animDelay}; cursor:pointer;">
                     <div class="app-icon" style="background-color: ${finalColor};"><i class="${app.icon || 'fa-solid fa-link'}"></i></div>
                     <div class="app-label">${app.label.replace(/\n/g, '<br>')}</div>
-                </div>`;
+                </a>`;
         });
     },
     salvaPreferenzeGlobali: function() {
