@@ -174,10 +174,13 @@
         "label": "Contatti",
         "icon": "fa-solid fa-id-card",
         "defaultColor": "#2c3e50",
-        "onclick": "window.avviaMotoreContattiDaIndex()",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "contatti",
+        "moduleName": "contatti",
+        "splitModule": true
     },
     {
         "id": "buoni",
