@@ -187,16 +187,13 @@
     },
     {
         "id": "report",
-        "label": "AssistenzaApp",
+        "label": "Assistenza\nApp",
         "icon": "fa-solid fa-headset",
         "defaultColor": "#0088ff",
+        "onclick": "window.avviaMotoreSegnalazioniDaIndex()",
         "conditions": [
             "tutti"
-        ],
-        "isModule": true,
-        "moduleId": "report",
-        "moduleName": "report",
-        "splitModule": true
+        ]
     },
     {
         "id": "spriss",
@@ -221,10 +218,11 @@
         "label": "Admin",
         "icon": "fa-solid fa-lock",
         "defaultColor": "#ff3b30",
-        "onclick": "window.avviaMotoreGenerico('admin')",
-        "conditions": [
-            "admin"
-        ]
+        "conditions": [],
+        "isModule": true,
+        "moduleId": "admin",
+        "moduleName": "admin",
+        "splitModule": true
     },
     {
         "id": "accessi",
