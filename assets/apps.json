@@ -21,7 +21,7 @@
     },
     {
         "id": "statistiche",
-        "label": "StatisticheCalendario",
+        "label": "Statistiche Calendario",
         "icon": "fa-solid fa-chart-simple",
         "defaultColor": "#6f42c1",
         "conditions": [
