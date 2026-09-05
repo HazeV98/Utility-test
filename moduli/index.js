@@ -5,7 +5,7 @@ import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://
 import { avviaMotoreAuth } from './auth.js';
 
 // ============================================================================
-// SISTEMA DI LAZY LOADING (Supporto nativo per la cartella "moduli")
+// SISTEMA DI LAZY LOADING (Risoluzione automatica cartella "moduli")
 // ============================================================================
 const ModuliLazyLoader = {
     cache: new Map(),
@@ -17,7 +17,6 @@ const ModuliLazyLoader = {
         
         try {
             let motoreModule;
-            // Cerca prima nella cartella moduli, poi prova nella root
             try { motoreModule = await import(`./moduli/${nomeModulo}.js`); } 
             catch(e1) { motoreModule = await import(`./${nomeModulo}.js`); }
             
@@ -87,7 +86,7 @@ window.caricaAppsConfig = async () => {
 };
 
 // ============================================================================
-// ROUTER DINAMICO E LANCIATORI NATIVI (Bypassa Policy Sicurezza)
+// ROUTER DINAMICO E LANCIATORI NATIVI (Basato su ID, immune a errori JSON)
 // ============================================================================
 window.eseguiAzioneApp = async (appId) => {
     const appConfig = window.DYNAMIC_APPS.find(a => a.id === appId);
@@ -95,35 +94,36 @@ window.eseguiAzioneApp = async (appId) => {
 
     if (appConfig.href) {
         window.location.href = appConfig.href;
-    } else if (appConfig.onclick) {
-        const cmd = appConfig.onclick;
-        
-        // Mappatura sicura e diretta: non viene usato eval()
-        if (cmd.includes("('statistiche')")) window.avviaMotoreGenerico('statistiche');
-        else if (cmd.includes("('rotazioni')")) window.avviaMotoreGenerico('rotazioni');
-        else if (cmd.includes("('bacheca_turni')")) window.avviaMotoreGenerico('bacheca_turni');
-        else if (cmd.includes("('barcadvisor')")) window.avviaMotoreGenerico('barcadvisor');
-        else if (cmd.includes("('rubrica')")) window.avviaMotoreGenerico('rubrica');
-        else if (cmd.includes("('rotazione_ferie')")) window.avviaMotoreGenerico('rotazione_ferie');
-        else if (cmd.includes("('buoni_pasto')")) window.avviaMotoreGenerico('buoni_pasto');
-        else if (cmd.includes("('promemoria')")) window.avviaMotoreGenerico('promemoria');
-        else if (cmd.includes("('dds')")) window.avviaMotoreGenerico('dds');
-        else if (cmd.includes("('admin')")) window.avviaMotoreGenerico('admin');
-        
-        else if (cmd.includes('avviaMotoreTurniDaIndex')) window.avviaMotoreTurniDaIndex();
-        else if (cmd.includes('avviaMotoreOrariDaIndex')) window.avviaMotoreOrariDaIndex();
-        else if (cmd.includes('avviaMotoreDocumentiDaIndex')) window.avviaMotoreDocumentiDaIndex();
-        else if (cmd.includes('avviaMotoreLinkDaIndex')) window.avviaMotoreLinkDaIndex();
-        else if (cmd.includes('avviaMotoreContattiDaIndex')) window.avviaMotoreContattiDaIndex();
-        else if (cmd.includes('avviaMotoreSegnalazioniDaIndex')) window.avviaMotoreSegnalazioniDaIndex();
-        else if (cmd.includes('apriGestioneAccessi')) window.apriGestioneAccessi();
-        else console.warn("Comando non riconosciuto:", cmd);
-        
-    } else if (appConfig.isModule && appConfig.moduleName) {
+        return;
+    }
+
+    switch (appId) {
+        case 'statistiche': return window.avviaMotoreGenerico('statistiche');
+        case 'rotazioni': return window.avviaMotoreGenerico('rotazioni');
+        case 'turni': return window.avviaMotoreTurniDaIndex();
+        case 'bachecaturni': return window.avviaMotoreGenerico('bacheca_turni');
+        case 'barcadvisor': return window.avviaMotoreGenerico('barcadvisor');
+        case 'rubrica': return window.avviaMotoreGenerico('rubrica');
+        case 'ferie': return window.avviaMotoreGenerico('rotazione_ferie');
+        case 'orari': return window.avviaMotoreOrariDaIndex();
+        case 'documenti': return window.avviaMotoreDocumentiDaIndex();
+        case 'link': return window.avviaMotoreLinkDaIndex();
+        case 'contatti': return window.avviaMotoreContattiDaIndex();
+        case 'buoni': return window.avviaMotoreGenerico('buoni_pasto');
+        case 'promemoria': return window.avviaMotoreGenerico('promemoria');
+        case 'dds': return window.avviaMotoreGenerico('dds');
+        case 'report': return window.avviaMotoreSegnalazioniDaIndex();
+        case 'admin': return window.avviaMotoreGenerico('admin');
+        case 'accessi': return window.apriGestioneAccessi();
+    }
+
+    if (appConfig.isModule && appConfig.moduleName) {
         if (!auth.currentUser) { alert("Devi effettuare il login per questa funzione."); return; }
         if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
         const fn = await ModuliLazyLoader.avviaMotore(appConfig.moduleName);
         if (fn) fn(db, auth, window.currentUserData, globalIsAdmin);
+    } else if (appConfig.onclick) {
+        try { new Function(appConfig.onclick)(); } catch (e) { console.error("Azione fallita:", e); }
     }
 };
 
@@ -179,10 +179,11 @@ window.controllaPromemoria = async () => {};
 window.controllaSegnalazioni = async () => {};
 
 // ============================================================================
-// GESTIONE LAYOUT GRAFICA - DOM NATIVO
+// GESTIONE LAYOUT GRAFICA - DOM NATIVO & EVENT DELEGATION
 // ============================================================================
 window.LayoutEngine = {
     prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", theme: "system" },
+    _eventsBound: false,
     init: async function(firebasePrefsStr) {
         let localStr = localStorage.getItem('preferenze_layout_haze');
         let targetStr = firebasePrefsStr || localStr;
@@ -202,6 +203,19 @@ window.LayoutEngine = {
 
         this.applicaGrafica();
         this.popolaModaleImpostazioni();
+        
+        if (!this._eventsBound) {
+            const gridContainer = document.getElementById('app-container');
+            if (gridContainer) {
+                gridContainer.addEventListener('click', (e) => {
+                    const card = e.target.closest('.app-btn');
+                    if (card && card.dataset.id) {
+                        window.eseguiAzioneApp(card.dataset.id);
+                    }
+                });
+                this._eventsBound = true;
+            }
+        }
         
         await window.caricaAppsConfig();
         this.render();
@@ -264,11 +278,6 @@ window.LayoutEngine = {
                 <div class="app-icon" style="background-color: ${finalColor};"><i class="${app.icon || 'fa-solid fa-link'}"></i></div>
                 <div class="app-label">${app.label.replace(/\n/g, '<br>')}</div>
             `;
-            
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                window.eseguiAzioneApp(app.id);
-            });
             
             container.appendChild(btn);
         });
