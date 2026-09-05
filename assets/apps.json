@@ -84,26 +84,26 @@
     },
     {
         "id": "ferie",
-        "label": "RotazioneFerie",
+        "label": "Rotazione\nFerie",
         "icon": "fa-solid fa-umbrella-beach",
         "defaultColor": "#ffc107",
+        "onclick": "window.avviaMotoreGenerico('rotazione_ferie')",
+        "conditions": [
+            "tutti"
+        ]
+    },
+    {
+        "id": "orari",
+        "label": "OrariNavigazione",
+        "icon": "fa-regular fa-clock",
+        "defaultColor": "#17a2b8",
         "conditions": [
             "tutti"
         ],
         "isModule": true,
-        "moduleId": "ferie",
-        "moduleName": "rotazione_ferie",
+        "moduleId": "orari",
+        "moduleName": "orari",
         "splitModule": true
-    },
-    {
-        "id": "orari",
-        "label": "Orari\nNavigazione",
-        "icon": "fa-regular fa-clock",
-        "defaultColor": "#17a2b8",
-        "onclick": "window.avviaMotoreOrariDaIndex()",
-        "conditions": [
-            "tutti"
-        ]
     },
     {
         "id": "chebateo",
