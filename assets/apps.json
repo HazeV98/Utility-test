@@ -37,23 +37,23 @@
         "label": "Rotazioni",
         "icon": "fa-solid fa-users",
         "defaultColor": "#fd7e14",
+        "onclick": "window.avviaMotoreGenerico('rotazioni')",
         "conditions": [
             "tutti"
-        ],
-        "isModule": true,
-        "moduleId": "rotazioni",
-        "moduleName": "rotazioni",
-        "splitModule": true
+        ]
     },
     {
         "id": "turni",
         "label": "Turni",
         "icon": "fa-solid fa-rotate",
         "defaultColor": "#20c997",
-        "onclick": "window.avviaMotoreTurniDaIndex()",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "turni",
+        "moduleName": "turni",
+        "splitModule": true
     },
     {
         "id": "bachecaturni",
