@@ -5,7 +5,7 @@ import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://
 import { avviaMotoreAuth } from './auth.js';
 
 // ============================================================================
-// SISTEMA DI LAZY LOADING OTTIMIZZATO
+// SISTEMA DI LAZY LOADING OTTIMIZZATO E CORRETTO
 // ============================================================================
 const ModuliLazyLoader = {
     cache: new Map(),
@@ -19,15 +19,15 @@ const ModuliLazyLoader = {
             let esporta = {};
             
             if (isSplit) {
-                // Scarica motore e UI in parallelo dalla cartella /moduli/
+                // index.js è già in /moduli/, quindi ./ punta direttamente alla cartella corretta
                 const [motoreRes, uiRes] = await Promise.all([
-                    import(`./moduli/${nomeModulo}.js`),
-                    import(`./moduli/ui_${nomeModulo}.js`).catch(() => ({})) 
+                    import(`./${nomeModulo}.js`),
+                    import(`./ui_${nomeModulo}.js`).catch(() => ({})) 
                 ]);
                 esporta = { ...motoreRes, ...uiRes };
             } else {
                 // Carica solo il file unificato
-                esporta = await import(`./moduli/${nomeModulo}.js`);
+                esporta = await import(`./${nomeModulo}.js`);
             }
             
             this.cache.set(nomeModulo, esporta);
@@ -41,11 +41,20 @@ const ModuliLazyLoader = {
             }
             return esporta;
         } catch (errore) {
-            console.error(`✗ Errore caricamento modulo '${nomeModulo}' da /moduli/:`, errore);
-            alert(`Impossibile trovare il modulo: ${nomeModulo}. Assicurati che il file esista nella cartella moduli.`);
+            console.error(`✗ Errore caricamento modulo '${nomeModulo}':`, errore);
+            alert(`Impossibile trovare il modulo: ${nomeModulo}. Assicurati che esista e sia configurato correttamente.`);
             return null;
         }
     },
+    
+    async avviaMotore(nomeModulo, isSplit) {
+        const modulo = await this.caricaModulo(nomeModulo, isSplit);
+        if (!modulo) return null;
+        const motoreFuncKey = Object.keys(modulo).find(k => k.startsWith('avviaMotore'));
+        return motoreFuncKey ? modulo[motoreFuncKey] : (modulo.default || modulo);
+    }
+};
+
     
     async avviaMotore(nomeModulo, isSplit) {
         const modulo = await this.caricaModulo(nomeModulo, isSplit);
