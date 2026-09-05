@@ -130,7 +130,7 @@
         "label": "Vademecum",
         "icon": "fa-solid fa-book",
         "defaultColor": "#8e8e93",
-        "conditions": [],
+        "conditions": ["admin"],
         "href": "vademecum.html"
     },
     {
@@ -211,7 +211,7 @@
         "label": "BateoLive",
         "icon": "fa-solid fa-map-location-dot",
         "defaultColor": "#0066cc",
-        "conditions": [],
+        "conditions": ["admin"],
         "href": "https://bateolive.tailec23c3.ts.net/"
     },
     {
@@ -219,7 +219,7 @@
         "label": "Admin",
         "icon": "fa-solid fa-lock",
         "defaultColor": "#ff3b30",
-        "conditions": [],
+        "conditions": ["admin"],
         "isModule": true,
         "moduleId": "admin",
         "moduleName": "admin",
