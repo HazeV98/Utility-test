@@ -6,7 +6,7 @@ import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/fir
 import { avviaMotoreAuth } from './auth.js';
 
 // ============================================================================
-// SISTEMA DI LAZY LOADING DINAMICO (Eliminati riferimenti hardcoded ai moduli)
+// SISTEMA DI LAZY LOADING DINAMICO E INTELLIGENTE
 // ============================================================================
 const ModuliLazyLoader = {
     cache: new Map(),
@@ -18,11 +18,18 @@ const ModuliLazyLoader = {
         
         try {
             const motoreModule = await import(`./${nomeModulo}.js`);
-            let uiModule = null;
-            try { uiModule = await import(`./ui_${nomeModulo}.js`); } catch(e) {}
+            let uiModule = {};
+            try { uiModule = await import(`./ui_${nomeModulo}.js`); } catch(e) {} // Se non c'è ui_ diviso, prosegue
             
-            const esporta = { ...motoreModule, ...(uiModule || {}) };
+            const esporta = { ...motoreModule, ...uiModule };
             this.cache.set(nomeModulo, esporta);
+            
+            // Inizializza l'UI se trova la funzione adatta
+            const initFuncKey = Object.keys(esporta).find(k => k.startsWith('initUI'));
+            if (initFuncKey && typeof esporta[initFuncKey] === 'function' && !this.initializedUIs.has(nomeModulo)) {
+                esporta[initFuncKey]();
+                this.initializedUIs.add(nomeModulo);
+            }
             return esporta;
         } catch (errore) {
             console.error(`✗ Errore caricamento modulo dinamico '${nomeModulo}':`, errore);
@@ -33,8 +40,8 @@ const ModuliLazyLoader = {
     async avviaMotore(nomeModulo) {
         const modulo = await this.caricaModulo(nomeModulo);
         if (!modulo) return null;
-        const motoreFunc = Object.keys(modulo).find(k => k.startsWith('avviaMotore'));
-        return motoreFunc ? modulo[motoreFunc] : (modulo.default || null);
+        const motoreFuncKey = Object.keys(modulo).find(k => k.startsWith('avviaMotore'));
+        return motoreFuncKey ? modulo[motoreFuncKey] : (modulo.default || modulo);
     }
 };
 // ============================================================================
@@ -72,20 +79,78 @@ window.caricaAppsConfig = async () => {
     } catch(e) { window.DYNAMIC_APPS = []; }
 };
 
-window.eseguiAzioneApp = async (appConfig) => {
-    if (!auth.currentUser) { alert("Devi effettuare il login per questa funzione."); return; }
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
-    
+window.eseguiAzioneApp = async (appId) => {
+    const appConfig = window.DYNAMIC_APPS.find(a => a.id === appId);
+    if (!appConfig) return;
+
     if (appConfig.href) {
         window.location.href = appConfig.href;
     } else if (appConfig.onclick) {
         try { eval(appConfig.onclick); } catch(e) { console.error("Errore esecuzione onclick:", e); }
     } else if (appConfig.isModule && appConfig.moduleName) {
+        // Logica generica per moduli nativi aggiunti in futuro senza "lanciatori"
+        if (!auth.currentUser) { alert("Devi effettuare il login per questa funzione."); return; }
+        if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
         const fn = await ModuliLazyLoader.avviaMotore(appConfig.moduleName);
         if (fn) fn(db, auth, window.currentUserData, globalIsAdmin);
         else alert(`Impossibile avviare il modulo: ${appConfig.moduleName}`);
     }
 };
+
+// ============================================================================
+// LANCIATORI DI SICUREZZA (NON ELIMINARE, servono per check Matricola e Ban)
+// ============================================================================
+window.avviaMotoreTurniDaIndex = async () => {
+    if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai turni."); return; }
+    if (window.currentUserData) {
+        if (window.currentUserData.turni_banned === true) { alert("Il tuo accesso alla pagina Turni è stato temporaneamente revocato."); return; }
+        if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined || window.currentUserData.matricola === "") {
+            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per visualizzare i turni.");
+            window.apriModal('profileModal'); return;
+        }
+    }
+    const fn = await ModuliLazyLoader.avviaMotore('turni'); if (fn) fn();
+    const oggiStr = new Date().toISOString().split('T')[0];
+    if (window.currentUserData && (window.currentUserData.turni_access !== true || window.currentUserData.last_turni_access !== oggiStr)) {
+        setDoc(doc(db, "utenti", auth.currentUser.uid), { turni_access: true, last_turni_access: oggiStr }, { merge: true });
+        window.currentUserData.turni_access = true; window.currentUserData.last_turni_access = oggiStr;
+    }
+};
+window.avviaMotoreOrariDaIndex = async () => { const m = await ModuliLazyLoader.avviaMotore('orari'); if(m) m(); };
+window.avviaMotoreLinkDaIndex = async () => {
+    if (!auth.currentUser) { alert("Effettua il login per i link aziendali."); return; }
+    if (window.currentUserData && window.currentUserData.link_banned === true) { alert("Accesso ai Link revocato."); return; }
+    const m = await ModuliLazyLoader.avviaMotore('link'); if(m) m(db, auth); 
+};
+window.avviaMotoreDocumentiDaIndex = async () => {
+    if (!auth.currentUser) { alert("Effettua il login per i documenti."); return; }
+    if (window.currentUserData && window.currentUserData.documenti_banned === true) { alert("Accesso Documenti revocato."); return; }
+    const m = await ModuliLazyLoader.avviaMotore('documenti'); if(m) m();
+};
+window.avviaMotoreContattiDaIndex = async () => {
+    if (!auth.currentUser) { alert("Effettua il login per i contatti."); return; }
+    const m = await ModuliLazyLoader.avviaMotore('contatti'); if(m) m(db, auth); 
+};
+window.avviaMotoreBachecaUtilityDaIndex = async () => {
+    const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
+    const m = await ModuliLazyLoader.avviaMotore('bacheca_utility'); 
+    if(m) m(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
+};
+window.avviaMotoreGenerico = async (moduloID) => {
+    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
+    const m = await ModuliLazyLoader.avviaMotore(moduloID);
+    if(m) m(db, auth, window.currentUserData, globalIsAdmin);
+};
+window.avviaMotoreSegnalazioniDaIndex = async () => {
+    if (auth.currentUser) {
+        const m = await ModuliLazyLoader.avviaMotore('report');
+        if (m) {
+            m(db, auth, auth.currentUser.uid, globalIsAdmin);
+            if(window.apriModaleSegnalazioni) window.apriModaleSegnalazioni();
+        }
+    }
+};
+// ============================================================================
 
 window.controllaBacheca = async () => {};
 window.controllaRichiesteSospese = async () => {};
@@ -157,21 +222,21 @@ window.LayoutEngine = {
             const cond = app.conditions || [app.condition].filter(Boolean);
             const isVisibleByCond = () => {
                 if(globalIsAdmin) return true;
-                if(!cond || cond.length === 0) return true; // Tutti
+                if(!cond || cond.length === 0) return true; 
                 if(cond.includes('vip') && (globalIsVip || globalIsCollab)) return true;
                 if(cond.includes('collab') && globalIsCollab) return true;
                 if(cond.includes('tutti')) return true;
                 return false;
             };
 
-            if(app.condition === 'admin' && !globalIsAdmin) return;
             if(!isVisibleByCond() && !globalIsAdmin) return;
             
             const finalColor = app.defaultColor || "#0066cc";
             let animDelay = `${index * 0.04}s`;
             
+            // Passaggio pulito solo con ID evita bug di \n nei JSON stringify
             container.innerHTML += `
-                <div class="app-btn" id="btn-${app.id}" style="animation-delay: ${animDelay}; cursor:pointer;" onclick='window.eseguiAzioneApp(${JSON.stringify(app)})'>
+                <div class="app-btn" id="btn-${app.id}" style="animation-delay: ${animDelay}; cursor:pointer;" onclick="window.eseguiAzioneApp('${app.id}')">
                     <div class="app-icon" style="background-color: ${finalColor};"><i class="${app.icon || 'fa-solid fa-link'}"></i></div>
                     <div class="app-label">${app.label.replace(/\n/g, '<br>')}</div>
                 </div>`;
@@ -250,7 +315,7 @@ window.cambiaRuoloUtente = async (uid, nuovoRuolo) => {
 };
 
 // ============================================================================
-// SISTEMA GESTIONE LAYOUT ADMIN / GITHUB CON TOOLBAR AGGIORNATA
+// SISTEMA GESTIONE LAYOUT ADMIN / GITHUB
 // ============================================================================
 window.injectAdminConfigTools = () => {
     if(!document.getElementById('admin-settings-panel')) {
@@ -273,7 +338,6 @@ window.injectAdminConfigTools = () => {
             </div>`);
             
             document.body.insertAdjacentHTML('beforeend', `
-            <!-- MODAL ADD/EDIT APP -->
             <div id="modal-add-app" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-add-app')">
                 <div class="modal-content">
                     <h2 id="modal-app-title">Aggiungi Icona</h2>
@@ -318,7 +382,6 @@ window.injectAdminConfigTools = () => {
                 </div>
             </div>
 
-            <!-- MODAL EDIT LIST -->
             <div id="modal-edit-list" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-edit-list')">
                 <div class="modal-content">
                     <h2>Modifica / Elimina Icone</h2>
@@ -326,7 +389,6 @@ window.injectAdminConfigTools = () => {
                 </div>
             </div>
             
-            <!-- MODAL REORDER -->
             <div id="modal-reorder-app" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-reorder-app')">
                 <div class="modal-content">
                     <h2>Riordina Layout</h2>
