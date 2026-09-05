@@ -99,13 +99,16 @@
     },
     {
         "id": "ferie",
-        "label": "Rotazione\nFerie",
+        "label": "RotazioneFerie",
         "icon": "fa-solid fa-umbrella-beach",
         "defaultColor": "#ffc107",
-        "onclick": "window.avviaMotoreGenerico('rotazione_ferie')",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "ferie",
+        "moduleName": "rotazione_ferie",
+        "splitModule": true
     },
     {
         "id": "orari",
