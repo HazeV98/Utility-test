@@ -50,10 +50,13 @@
         "label": "Turni",
         "icon": "fa-solid fa-rotate",
         "defaultColor": "#20c997",
-        "onclick": "window.avviaMotoreTurniDaIndex()",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "turni",
+        "moduleName": "turni",
+        "splitModule": true
     },
     {
         "id": "bachecaturni",
