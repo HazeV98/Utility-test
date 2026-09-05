@@ -5,28 +5,31 @@ import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://
 import { avviaMotoreAuth } from './auth.js';
 
 // ============================================================================
-// SISTEMA DI LAZY LOADING (Risoluzione automatica cartella "moduli")
+// SISTEMA DI LAZY LOADING OTTIMIZZATO
 // ============================================================================
 const ModuliLazyLoader = {
     cache: new Map(),
     initializedUIs: new Set(),
     
-    async caricaModulo(nomeModulo) {
+    async caricaModulo(nomeModulo, isSplit = false) {
         if (!nomeModulo) return null;
         if (this.cache.has(nomeModulo)) return this.cache.get(nomeModulo);
         
         try {
-            let motoreModule;
-            try { motoreModule = await import(`./moduli/${nomeModulo}.js`); } 
-            catch(e1) { motoreModule = await import(`./${nomeModulo}.js`); }
+            let esporta = {};
             
-            let uiModule = {};
-            try { uiModule = await import(`./moduli/ui_${nomeModulo}.js`); } 
-            catch(e2) {
-                try { uiModule = await import(`./ui_${nomeModulo}.js`); } catch(e3) {}
-            } 
+            if (isSplit) {
+                // Scarica motore e UI in parallelo dalla cartella /moduli/
+                const [motoreRes, uiRes] = await Promise.all([
+                    import(`./moduli/${nomeModulo}.js`),
+                    import(`./moduli/ui_${nomeModulo}.js`).catch(() => ({})) 
+                ]);
+                esporta = { ...motoreRes, ...uiRes };
+            } else {
+                // Carica solo il file unificato
+                esporta = await import(`./moduli/${nomeModulo}.js`);
+            }
             
-            const esporta = { ...motoreModule, ...uiModule };
             this.cache.set(nomeModulo, esporta);
             
             const initFuncKey = Object.keys(esporta).find(k => k.startsWith('initUI'));
@@ -38,14 +41,14 @@ const ModuliLazyLoader = {
             }
             return esporta;
         } catch (errore) {
-            console.error(`✗ Errore caricamento modulo dinamico '${nomeModulo}':`, errore);
-            alert(`Impossibile trovare il modulo: ${nomeModulo}. Assicurati che il file esista.`);
+            console.error(`✗ Errore caricamento modulo '${nomeModulo}' da /moduli/:`, errore);
+            alert(`Impossibile trovare il modulo: ${nomeModulo}. Assicurati che il file esista nella cartella moduli.`);
             return null;
         }
     },
     
-    async avviaMotore(nomeModulo) {
-        const modulo = await this.caricaModulo(nomeModulo);
+    async avviaMotore(nomeModulo, isSplit) {
+        const modulo = await this.caricaModulo(nomeModulo, isSplit);
         if (!modulo) return null;
         const motoreFuncKey = Object.keys(modulo).find(k => k.startsWith('avviaMotore'));
         return motoreFuncKey ? modulo[motoreFuncKey] : (modulo.default || modulo);
@@ -131,6 +134,9 @@ window.eseguiAzioneApp = async (appId) => {
     // 3. CARICAMENTO LOGICA MODULO
     let moduleName = (appConfig.isModule && appConfig.moduleName) ? appConfig.moduleName : null;
     
+    // Legge la preferenza dal JSON, o applica true di default per le vecchie app legacy non aggiornate
+    let isSplit = appConfig.hasOwnProperty('splitModule') ? appConfig.splitModule : true;
+    
     if (!moduleName) {
         const legacyMap = { 
             'statistiche':'statistiche', 'rotazioni':'rotazioni', 'turni':'turni', 
@@ -143,7 +149,8 @@ window.eseguiAzioneApp = async (appId) => {
     }
 
     if (moduleName) {
-        const fn = await ModuliLazyLoader.avviaMotore(moduleName);
+        // Passa la direttiva isSplit al Lazy Loader
+        const fn = await ModuliLazyLoader.avviaMotore(moduleName, isSplit);
         if (fn) await fn(db, auth, window.currentUserData, globalIsAdmin);
     }
 
