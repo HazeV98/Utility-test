@@ -76,10 +76,13 @@
         "label": "BarcAdvisor",
         "icon": "fa-solid fa-sailboat",
         "defaultColor": "#ff9800",
-        "onclick": "window.avviaMotoreGenerico('barcadvisor')",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "barcadvisor",
+        "moduleName": "barcadvisor",
+        "splitModule": true
     },
     {
         "id": "rubrica",
