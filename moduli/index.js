@@ -880,3 +880,7 @@ onAuthStateChanged(auth, async (user) => {
         vLoad.style.display = 'none'; window.LayoutEngine.init(); vGuest.style.display = 'flex'; vApp.style.display = 'none';
     }
 });
+
+window.avviaMotoreGuidaDaIndex = avviaMotoreGuidaDaIndex;
+window.avviaMotoreBachecaUtilityDaIndex = avviaMotoreBachecaUtilityDaIndex;
+ 
