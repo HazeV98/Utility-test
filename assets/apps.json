@@ -112,13 +112,16 @@
     },
     {
         "id": "orari",
-        "label": "Orari\nNavigazione",
+        "label": "Orari Navigazione",
         "icon": "fa-regular fa-clock",
         "defaultColor": "#17a2b8",
-        "onclick": "window.avviaMotoreOrariDaIndex()",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "orari",
+        "moduleName": "orari",
+        "splitModule": true
     },
     {
         "id": "chebateo",
