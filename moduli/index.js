@@ -294,7 +294,26 @@ window.LayoutEngine = {
     }
 };
 
-window.apriModal = (id, authMode) => { document.getElementById(id).style.display = 'flex'; if(id === 'authModal' && authMode) { currentAuthMode = authMode; window.aggiornaUIAuth(); } };
+window.apriModal = (id, authMode) => { 
+    document.getElementById(id).style.display = 'flex'; 
+    if(id === 'authModal' && authMode) { 
+        currentAuthMode = authMode; 
+        window.aggiornaUIAuth(); 
+    }
+    
+    // Popolamento dinamico dei dati quando si apre il Profilo
+    if (id === 'profileModal' && window.currentUserData) {
+        if (auth.currentUser) document.getElementById('profileEmail').value = auth.currentUser.email || '';
+        document.getElementById('profileNome').value = window.currentUserData.nome || '';
+        document.getElementById('profileCognome').value = window.currentUserData.cognome || '';
+        document.getElementById('profileMatricola').value = window.currentUserData.matricola || '';
+        document.getElementById('profileProgressivo').value = window.currentUserData.progressivo || '';
+        document.getElementById('profileSoprannome').value = window.currentUserData.soprannome || '';
+        document.getElementById('profileTelefono').value = window.currentUserData.telefono || '';
+        document.getElementById('profileMansione').value = window.currentUserData.mansione || '';
+    }
+};
+
 window.chiudiModal = (id) => { document.getElementById(id).style.display = 'none'; };
 window.chiudiSuSfondo = (e, id) => { if (e.target.id === id) window.chiudiModal(id); };
 
