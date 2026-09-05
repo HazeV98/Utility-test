@@ -140,10 +140,13 @@
         "label": "Link",
         "icon": "fa-solid fa-link",
         "defaultColor": "#495057",
-        "onclick": "window.avviaMotoreLinkDaIndex()",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "link",
+        "moduleName": "link",
+        "splitModule": true
     },
     {
         "id": "contatti",
