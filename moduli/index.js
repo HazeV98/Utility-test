@@ -97,22 +97,40 @@ window.eseguiAzioneApp = async (appId) => {
         return;
     }
 
-    // 1. CONTROLLO SICUREZZA (Eredità modulo Turni)
-    if (appId === 'turni' && window.currentUserData) {
-        if (window.currentUserData.turni_banned) { alert("Accesso alla pagina Turni revocato."); return; }
-        if (!window.currentUserData.nome || !window.currentUserData.matricola) {
+    // 1. CONTROLLI DI SICUREZZA GLOBALI E SPECIFICI
+    if (!auth.currentUser && appId !== 'orari') {
+        alert("Devi effettuare il login per accedere a questa funzione."); 
+        return;
+    }
+    if (window.currentUserData && window.currentUserData.app_banned) {
+        alert("Accesso all'app revocato dal sistema."); 
+        return; 
+    }
+
+    if (appId === 'turni') {
+        if (window.currentUserData?.turni_banned) { alert("Accesso alla pagina Turni revocato."); return; }
+        if (!window.currentUserData?.nome || !window.currentUserData?.matricola) {
             alert("Completa il profilo (Nome e Matricola) per visualizzare i turni.");
             window.apriModal('profileModal'); return;
         }
+        // Tracking accessi ai turni
+        const oggiStr = new Date().toISOString().split('T')[0];
+        if (window.currentUserData && (window.currentUserData.turni_access !== true || window.currentUserData.last_turni_access !== oggiStr)) {
+            setDoc(doc(db, "utenti", auth.currentUser.uid), { turni_access: true, last_turni_access: oggiStr }, { merge: true });
+            window.currentUserData.turni_access = true; window.currentUserData.last_turni_access = oggiStr;
+        }
+    } else if (appId === 'link' && window.currentUserData?.link_banned) {
+        alert("Accesso ai Link revocato."); return;
+    } else if (appId === 'documenti' && window.currentUserData?.documenti_banned) {
+        alert("Accesso ai Documenti revocato."); return;
     }
 
-    // 1bis. CASO SPECIALE: Gestione Accessi (non è un modulo/modal standard)
+    // 2. ECCEZIONI NON-MODULARI
     if (appId === 'accessi') { return window.apriGestioneAccessi(); }
 
-    // 2. CARICAMENTO LOGICA MODULO (100% Dinamico)
+    // 3. CARICAMENTO LOGICA MODULO
     let moduleName = (appConfig.isModule && appConfig.moduleName) ? appConfig.moduleName : null;
     
-    // Fallback automatico per le tue app storiche
     if (!moduleName) {
         const legacyMap = { 
             'statistiche':'statistiche', 'rotazioni':'rotazioni', 'turni':'turni', 
@@ -129,8 +147,7 @@ window.eseguiAzioneApp = async (appId) => {
         if (fn) await fn(db, auth, window.currentUserData, globalIsAdmin);
     }
 
-    // 3. AUTO-APERTURA MODAL (Sostituisce le funzioni in index.html)
-    // Eccezioni per i nomi storici leggermente diversi dall'ID
+    // 4. AUTO-APERTURA MODAL
     const legacyModals = { 
         'bachecaturni': 'modal-bachecaturni-main', 
         'buoni': 'modal-buoni-main', 
@@ -138,61 +155,11 @@ window.eseguiAzioneApp = async (appId) => {
         'report': 'modal-segnalazioni-main' 
     };
     
-    // Ricava l'ID del modal basandosi sul nome dell'app (es. modal-statistiche-main)
     const modalId = legacyModals[appId] || `modal-${appId}-main`;
     const modale = document.getElementById(modalId);
     
-    if (modale) {
-        modale.style.display = 'flex';
-    } else {
-        console.warn(`Interfaccia non trovata: nessun elemento HTML con id "${modalId}"`);
-    }
-};
-
-window.avviaMotoreTurniDaIndex = async () => {
-    if (!auth.currentUser) { alert("Devi effettuare il login per accedere ai turni."); return; }
-    if (window.currentUserData) {
-        if (window.currentUserData.turni_banned === true) { alert("Il tuo accesso alla pagina Turni è stato temporaneamente revocato."); return; }
-        if (!window.currentUserData.nome || !window.currentUserData.cognome || window.currentUserData.matricola === undefined || window.currentUserData.matricola === "") {
-            alert("Devi prima completare il tuo profilo (Nome, Cognome e Matricola) per visualizzare i turni.");
-            window.apriModal('profileModal'); return;
-        }
-    }
-    const fn = await ModuliLazyLoader.avviaMotore('turni'); if (fn) fn();
-    const oggiStr = new Date().toISOString().split('T')[0];
-    if (window.currentUserData && (window.currentUserData.turni_access !== true || window.currentUserData.last_turni_access !== oggiStr)) {
-        setDoc(doc(db, "utenti", auth.currentUser.uid), { turni_access: true, last_turni_access: oggiStr }, { merge: true });
-        window.currentUserData.turni_access = true; window.currentUserData.last_turni_access = oggiStr;
-    }
-};
-window.avviaMotoreOrariDaIndex = async () => { const m = await ModuliLazyLoader.avviaMotore('orari'); if(m) m(); };
-window.avviaMotoreLinkDaIndex = async () => {
-    if (!auth.currentUser) { alert("Effettua il login per i link aziendali."); return; }
-    if (window.currentUserData && window.currentUserData.link_banned === true) { alert("Accesso ai Link revocato."); return; }
-    const m = await ModuliLazyLoader.avviaMotore('link'); if(m) m(db, auth); 
-};
-window.avviaMotoreDocumentiDaIndex = async () => {
-    if (!auth.currentUser) { alert("Effettua il login per i documenti."); return; }
-    if (window.currentUserData && window.currentUserData.documenti_banned === true) { alert("Accesso Documenti revocato."); return; }
-    const m = await ModuliLazyLoader.avviaMotore('documenti'); if(m) m();
-};
-window.avviaMotoreContattiDaIndex = async () => {
-    if (!auth.currentUser) { alert("Effettua il login per i contatti."); return; }
-    const m = await ModuliLazyLoader.avviaMotore('contatti'); if(m) m(db, auth); 
-};
-window.avviaMotoreGenerico = async (moduloID) => {
-    if (window.currentUserData && window.currentUserData.app_banned === true) { alert("Accesso revocato."); return; }
-    const m = await ModuliLazyLoader.avviaMotore(moduloID);
-    if(m) m(db, auth, window.currentUserData, globalIsAdmin);
-};
-window.avviaMotoreSegnalazioniDaIndex = async () => {
-    if (auth.currentUser) {
-        const m = await ModuliLazyLoader.avviaMotore('report');
-        if (m) {
-            m(db, auth, auth.currentUser.uid, globalIsAdmin);
-            if(window.apriModaleSegnalazioni) window.apriModaleSegnalazioni();
-        }
-    }
+    if (modale) modale.style.display = 'flex';
+    else console.warn(`Interfaccia non trovata: nessun elemento HTML con id "${modalId}"`);
 };
 
 window.controllaBacheca = async () => {};
