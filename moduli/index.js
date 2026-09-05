@@ -881,6 +881,4 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-window.avviaMotoreGuidaDaIndex = avviaMotoreGuidaDaIndex;
-window.avviaMotoreBachecaUtilityDaIndex = avviaMotoreBachecaUtilityDaIndex;
  
