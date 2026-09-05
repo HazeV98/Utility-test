@@ -37,10 +37,13 @@
         "label": "Rotazioni",
         "icon": "fa-solid fa-users",
         "defaultColor": "#fd7e14",
-        "onclick": "window.avviaMotoreGenerico('rotazioni')",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "rotazioni",
+        "moduleName": "rotazioni",
+        "splitModule": true
     },
     {
         "id": "turni",
