@@ -210,13 +210,16 @@
     },
     {
         "id": "dds",
-        "label": "Archivio\nDDS",
+        "label": "ArchivioDDS",
         "icon": "fa-solid fa-box-archive",
         "defaultColor": "#5856d6",
-        "onclick": "window.avviaMotoreGenerico('dds')",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "dds",
+        "moduleName": "dds",
+        "splitModule": true
     },
     {
         "id": "report",
