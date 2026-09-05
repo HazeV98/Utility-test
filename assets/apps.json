@@ -127,8 +127,10 @@
         "label": "Vademecum",
         "icon": "fa-solid fa-book",
         "defaultColor": "#8e8e93",
-        "conditions": [],
-        "href": "vademecum.html"
+        "href": "vademecum.html",
+        "conditions": [
+            "tutti"
+        ]
     },
     {
         "id": "link",
@@ -219,5 +221,13 @@
         "conditions": [
             "admin"
         ]
+    },
+    {
+        "id": "bateolive",
+        "label": "BateoLive",
+        "icon": "fa-solid fa-map-location-dot",
+        "defaultColor": "#0066cc",
+        "conditions": [],
+        "href": "https://bateolive.tailec23c3.ts.net/"
     }
 ]
