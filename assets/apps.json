@@ -14,18 +14,18 @@
         "defaultColor": "#0066cc"
     },
     {
-        "id": "rotazioni",
-        "label": "Rotazioni",
-        "onclick": "window.apriModaleRotazioni()",
-        "icon": "fa-solid fa-users",
-        "defaultColor": "#fd7e14"
-    },
-    {
         "id": "statistiche",
         "label": "Statistiche\nCalendario",
         "onclick": "window.apriModaleStatistiche()",
         "icon": "fa-solid fa-chart-simple",
         "defaultColor": "#6f42c1"
+    },
+    {
+        "id": "rotazioni",
+        "label": "Rotazioni",
+        "onclick": "window.apriModaleRotazioni()",
+        "icon": "fa-solid fa-users",
+        "defaultColor": "#fd7e14"
     },
     {
         "id": "turni",
