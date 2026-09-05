@@ -60,7 +60,7 @@
     },
     {
         "id": "bachecaturni",
-        "label": "BachecaTurni",
+        "label": "Bacheca Turni",
         "icon": "fa-solid fa-handshake-angle",
         "defaultColor": "#e83e8c",
         "conditions": [
