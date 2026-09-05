@@ -203,6 +203,14 @@
         ]
     },
     {
+        "id": "bateolive",
+        "label": "BateoLive",
+        "icon": "fa-solid fa-map-location-dot",
+        "defaultColor": "#0066cc",
+        "conditions": [],
+        "href": "https://bateolive.tailec23c3.ts.net/"
+    },
+    {
         "id": "admin",
         "label": "Admin",
         "icon": "fa-solid fa-lock",
@@ -221,13 +229,5 @@
         "conditions": [
             "admin"
         ]
-    },
-    {
-        "id": "bateolive",
-        "label": "BateoLive",
-        "icon": "fa-solid fa-map-location-dot",
-        "defaultColor": "#0066cc",
-        "conditions": [],
-        "href": "https://bateolive.tailec23c3.ts.net/"
     }
 ]
