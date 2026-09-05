@@ -106,7 +106,6 @@ const ModuliLazyLoader = {
 };
 // ============================================================================
 
-
 const firebaseConfig = { 
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4", 
     authDomain: "utility-haze.firebaseapp.com", 
@@ -124,8 +123,6 @@ const provider = new GoogleAuthProvider();
 avviaMotoreAuth(auth, db, provider);
 
 const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2"; 
-const COLLABORATORE_UIDS = ["INSERISCI_QUI_UID_1", "INSERISCI_QUI_UID_2"]; 
-
 let globalIsAdmin = false; 
 let globalIsCollab = false;
 window.currentUserData = {}; 
@@ -150,11 +147,11 @@ const DEFAULT_APPS = [
     { id: "rotazioni", label: "Rotazioni", onclick: "window.apriModaleRotazioni()", icon: "fa-solid fa-users", defaultColor: "#fd7e14" },
     { id: "turni", label: "Turni", onclick: "window.apriModaleTurni()", icon: "fa-solid fa-rotate", defaultColor: "#20c997" },
     { id: "bachecaturni", label: "Bacheca\nTurni", onclick: "window.apriModaleBachecaTurni()", icon: "fa-solid fa-handshake-angle", defaultColor: "#e83e8c" },
-    { id: "barcadvisor", label: "BarcAdvisor", image: "icone_app/iconba.png", onclick: "window.apriModaleBarcadvisor()" },
+    { id: "barcadvisor", label: "BarcAdvisor", onclick: "window.apriModaleBarcadvisor()", icon: "fa-solid fa-sailboat", defaultColor: "#ff9800" },
     { id: "rubrica", label: "Rubrica", onclick: "window.apriModaleRubrica()", icon: "fa-solid fa-address-book", defaultColor: "#343a40" },
     { id: "ferie", label: "Rotazione\nFerie", onclick: "window.apriModaleRotazioneFerie()", icon: "fa-solid fa-umbrella-beach", defaultColor: "#ffc107" },
     { id: "orari", label: "Orari\nNavigazione", onclick: "window.apriModaleOrari()", icon: "fa-regular fa-clock", defaultColor: "#17a2b8" },
-    { id: "chebateo", label: "CheBateo", image: "icone_app/iconcb.png", href: "https://m.chebateo.it/" },
+    { id: "chebateo", label: "CheBateo", href: "https://m.chebateo.it/", icon: "fa-solid fa-water", defaultColor: "#0066cc" },
     { id: "documenti", label: "Documenti", onclick: "window.apriModaleDocumenti()", icon: "fa-solid fa-file-lines", defaultColor: "#6c757d" },
     { id: "vademecum", label: "Vademecum", href: "vademecum.html", icon: "fa-solid fa-book", defaultColor: "#8e8e93" },
     { id: "link", label: "Link", onclick: "window.apriModaleLink()", icon: "fa-solid fa-link", defaultColor: "#495057" },
@@ -163,7 +160,7 @@ const DEFAULT_APPS = [
     { id: "promemoria", label: "Promemoria", onclick: "window.apriModalePromemoria()", icon: "fa-solid fa-stopwatch", defaultColor: "#0dcaf0" },
     { id: "dds", label: "Archivio\nDDS", onclick: "window.apriModaleDDS()", icon: "fa-solid fa-box-archive", defaultColor: "#5856d6" },
     { id: "report", label: "Assistenza\nApp", onclick: "window.avviaMotoreSegnalazioniDaIndex()", icon: "fa-solid fa-headset", defaultColor: "#0088ff" },
-    { id: "spriss", label: "Spriss", image: "icone_app/iconspriss.png", href: "https://spriss.avmspa.it/" },
+    { id: "spriss", label: "Spriss", href: "https://spriss.avmspa.it/", icon: "fa-solid fa-martini-glass", defaultColor: "#dc3545" },
     { id: "admin", label: "Admin", onclick: "window.apriModaleAdmin()", condition: "admin", icon: "fa-solid fa-lock", defaultColor: "#ff3b30" },
     { id: "accessi", label: "Accessi", onclick: "window.apriGestioneAccessi()", condition: "admin", icon: "fa-solid fa-users-gear", defaultColor: "#1c1c1e" }
 ];
@@ -677,28 +674,26 @@ window.salvaPreferenzeNotifiche = async () => {
     catch (error) { console.error("Errore salvataggio preferenze notifiche:", error); }
 };
 
-
 // ============================================================================
 // GESTIONE LAYOUT GRAFICA SEMPLIFICATA E FISSATA
 // ============================================================================
 window.LayoutEngine = {
-    prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", appBg: "#0066cc" },
+    prefs: { c1: "#a9dfcd", c2: "#ffffff", c3: "#a4c5e3", theme: "system" },
     init: function(firebasePrefsStr) {
         let localStr = localStorage.getItem('preferenze_layout_haze');
         let targetStr = firebasePrefsStr || localStr;
         if (targetStr) {
             try { 
                 let parsed = JSON.parse(targetStr);
-                // Recuperiamo solo i colori per impedire riordini o vecchie impostazioni
                 if (parsed.c1) this.prefs.c1 = parsed.c1;
                 if (parsed.c2) this.prefs.c2 = parsed.c2;
                 if (parsed.c3) this.prefs.c3 = parsed.c3;
-                if (parsed.appBg) this.prefs.appBg = parsed.appBg;
+                if (parsed.theme) this.prefs.theme = parsed.theme;
             } catch(e) {}
         }
         
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-            this.applicaGrafica();
+            if(this.prefs.theme === 'system') this.applicaGrafica();
         });
 
         this.applicaGrafica();
@@ -706,14 +701,19 @@ window.LayoutEngine = {
         this.render();
     },
     isDarkMode: function() {
+        if (this.prefs.theme === 'dark') return true;
+        if (this.prefs.theme === 'light') return false;
         return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     },
     applicaGrafica: function() {
-        // Rimuoviamo il forzare il tema (Light/Dark seguono automaticamente il sistema grazie alle @media query)
-        document.documentElement.removeAttribute('data-theme'); 
+        const themePref = this.prefs.theme || 'system';
+        if(themePref !== 'system') {
+            document.documentElement.setAttribute('data-theme', themePref);
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+        }
 
         let isDark = this.isDarkMode();
-        
         let actualC1 = isDark ? "#1a1a1a" : this.prefs.c1;
         let actualC2 = isDark ? "#2d2d2d" : this.prefs.c2;
         let actualC3 = isDark ? "#1a1a1a" : this.prefs.c3;
@@ -725,39 +725,27 @@ window.LayoutEngine = {
         const svg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Crect width='100' height='100' fill='${c3}'/%3E%3Cpath d='M0,60 C35,90 65,30 100,60 L100,0 L0,0 Z' fill='${c2}'/%3E%3Cpath d='M0,45 C35,65 65,25 100,45 L100,0 L0,0 Z' fill='${c1}'/%3E%3C/svg%3E`;
         document.body.style.backgroundImage = `url("${svg}")`;
         document.documentElement.style.setProperty('--label-size', '14px');
-        
-        // Fissato lo stile a grid ed eliminato il cambio stile icone
         document.getElementById('app-container').className = 'app-grid';
     },
     popolaModaleImpostazioni: function() {
         document.getElementById('set-col1').value = this.prefs.c1;
         document.getElementById('set-col2').value = this.prefs.c2;
         document.getElementById('set-col3').value = this.prefs.c3;
-        document.getElementById('set-appbg').value = this.prefs.appBg;
+        document.getElementById('set-theme').value = this.prefs.theme || 'system';
     },
     render: function() {
         const container = document.getElementById('app-container');
         container.innerHTML = '';
         
-        // Renderizza direttamente dall'array fisso DEFAULT_APPS
         DEFAULT_APPS.forEach((app, index) => {
             if (app.condition === 'admin' && !globalIsAdmin) return;
             if (app.condition === 'collab' && !(globalIsAdmin || globalIsCollab)) return;
             
-            const finalColor = app.defaultColor || this.prefs.appBg;
+            const finalColor = app.defaultColor || "#0066cc";
             const isLink = app.href ? `href="${app.href}"` : `onclick="${app.onclick}"`;
             
             let iconStyle = `background-color: ${finalColor};`;
-            let iconContent = "";
-
-            if (app.image) { 
-                iconStyle += ` background-image: url('${app.image}'); background-size: cover; background-position: center; background-repeat: no-repeat;`; 
-            } else if (app.icon) {
-                iconContent = `<i class="${app.icon}"></i>`;
-            } else {
-                iconContent = "🔗"; 
-            }
-
+            let iconContent = `<i class="${app.icon || 'fa-solid fa-link'}"></i>`;
             let animDelay = `${index * 0.04}s`;
             
             container.innerHTML += `
@@ -778,7 +766,7 @@ window.LayoutEngine = {
         this.prefs.c1 = document.getElementById('set-col1').value; 
         this.prefs.c2 = document.getElementById('set-col2').value; 
         this.prefs.c3 = document.getElementById('set-col3').value;
-        this.prefs.appBg = document.getElementById('set-appbg').value; 
+        this.prefs.theme = document.getElementById('set-theme').value; 
         
         this.applicaGrafica(); 
         this.render(); 
@@ -797,7 +785,6 @@ window.LayoutEngine = {
         location.reload(); 
     }
 };
-
 
 window.apriModal = (id, authMode) => { document.getElementById(id).style.display = 'flex'; if(id === 'authModal' && authMode) { currentAuthMode = authMode; window.aggiornaUIAuth(); } };
 window.chiudiModal = (id) => { document.getElementById(id).style.display = 'none'; };
