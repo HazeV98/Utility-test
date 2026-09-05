@@ -99,7 +99,7 @@
     },
     {
         "id": "ferie",
-        "label": "RotazioneFerie",
+        "label": "Rotazione Ferie",
         "icon": "fa-solid fa-umbrella-beach",
         "defaultColor": "#ffc107",
         "conditions": [
