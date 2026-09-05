@@ -140,23 +140,23 @@
         "label": "Link",
         "icon": "fa-solid fa-link",
         "defaultColor": "#495057",
+        "onclick": "window.avviaMotoreLinkDaIndex()",
         "conditions": [
             "tutti"
-        ],
-        "isModule": true,
-        "moduleId": "link",
-        "moduleName": "link",
-        "splitModule": true
+        ]
     },
     {
         "id": "contatti",
         "label": "Contatti",
         "icon": "fa-solid fa-id-card",
         "defaultColor": "#2c3e50",
-        "onclick": "window.avviaMotoreContattiDaIndex()",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "contatti",
+        "moduleName": "contatti",
+        "splitModule": true
     },
     {
         "id": "buoni",
