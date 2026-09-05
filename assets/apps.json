@@ -54,26 +54,26 @@
     },
     {
         "id": "bachecaturni",
-        "label": "BachecaTurni",
+        "label": "Bacheca\nTurni",
         "icon": "fa-solid fa-handshake-angle",
         "defaultColor": "#e83e8c",
+        "onclick": "window.avviaMotoreGenerico('bacheca_turni')",
         "conditions": [
             "tutti"
-        ],
-        "isModule": true,
-        "moduleId": "bachecaturni",
-        "moduleName": "bacheca_turni",
-        "splitModule": true
+        ]
     },
     {
         "id": "barcadvisor",
         "label": "BarcAdvisor",
         "icon": "fa-solid fa-sailboat",
         "defaultColor": "#ff9800",
-        "onclick": "window.avviaMotoreGenerico('barcadvisor')",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "barcadvisor",
+        "moduleName": "barcadvisor",
+        "splitModule": true
     },
     {
         "id": "rubrica",
