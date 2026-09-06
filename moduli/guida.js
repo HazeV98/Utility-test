@@ -19,5 +19,6 @@ export function avviaMotoreGuida() {
             accordionItem.classList.add('active');
         }
     };
-    
+
+    document.getElementById('modal-guida-main').style.display = 'flex';
 }
