@@ -29,6 +29,8 @@ export function avviaMotoreBachecaUtility(appInstance, dbInstance, authInstance,
     // --- FINE AGGIUNTA ---
 
     window.caricaBacheca();
+
+    document.getElementById('modal-bacheca-utility-main').style.display = 'flex';
 }
 
 window.attivaNotificheBacheca = async () => {
