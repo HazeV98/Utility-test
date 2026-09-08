@@ -21,6 +21,7 @@ export function initUIVariantiAdmin() {
     <div id="modal-varianti-admin-main" class="modal-overlay" onclick="if(event.target.id === 'modal-varianti-admin-main') this.style.display='none'">
         <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px; position: relative;">
             
+            <i id="btn-migra-consensi" class="fa-solid fa-database" style="position: absolute; right: 100px; top: 20px; font-size: 24px; cursor: pointer; color: var(--success);" onclick="window.migraConsensiAdmin()" title="Migra Dati Consenso su Utenti"></i>
             <i class="fa-solid fa-users-slash" style="position: absolute; right: 60px; top: 20px; font-size: 24px; cursor: pointer; color: var(--warning);" onclick="window.apriListaRevocheAdmin()" title="Gestione Revoche e Ban"></i>
             <i class="fa-solid fa-xmark" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="document.getElementById('modal-varianti-admin-main').style.display='none'"></i>
             
@@ -140,16 +141,38 @@ export function avviaMotoreVariantiAdmin(db, auth, userDataPrivate) {
         imgElemAdmin.addEventListener('dblclick', function(e) { eseguiZoomToggleAdmin(e); });
     }
 
-    function dateToLocalISOAdmin(d) { 
-        return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0'); 
-    }
-
     function stringToNum(s) { 
         if(!s) return 0; let p = s.split('-'); return Math.floor(Date.UTC(p[0], p[1]-1, p[2]) / 86400000); 
     }
 
     function creaDataSicura(dataStr) { 
         if(!dataStr) return new Date(); let p = dataStr.split('-'); return new Date(p[0], p[1] - 1, p[2], 12, 0, 0); 
+    }
+
+    function dateToLocalISOAdmin(d) { 
+        return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0'); 
+    }
+
+    // Helper: Converte il turno in base alla mansione
+    function convertiTurnoPerMansione(turno, mansione) {
+        if (!turno || !mansione) return turno;
+        let t = String(turno).toUpperCase();
+        let m = String(mansione).toLowerCase();
+
+        let isMarinaio = m.includes('marinaio') || m.includes('timoniere');
+
+        if (isMarinaio) {
+            let matchP = t.match(/^([1-9])[CP](\d{2})$/);
+            if (matchP) return `${matchP[1]}B${matchP[2]}`;
+        } else {
+            let matchB = t.match(/^([1-9])B(\d{2})$/);
+            if (matchB) {
+                let l = matchB[1]; let f = matchB[2];
+                let letPilota = (l === '1' || l === '2') ? 'C' : 'P';
+                return `${l}${letPilota}${f}`;
+            }
+        }
+        return t;
     }
 
     function isGiornoRiposoBase(curr, cfg) { 
@@ -360,6 +383,47 @@ export function avviaMotoreVariantiAdmin(db, auth, userDataPrivate) {
         }
     }
 
+    // --- NUOVA FUNZIONE DI MIGRAZIONE ---
+    window.migraConsensiAdmin = async function() {
+        if (!confirm("Vuoi avviare la migrazione dei dati di consenso (Varianti) dalla raccolta 'calendario' alla raccolta 'utenti'?\n\nL'operazione è sicura e non eliminerà i turni degli utenti.")) return;
+        
+        const btn = document.getElementById('btn-migra-consensi');
+        if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        
+        try {
+            const calSnap = await getDocs(collection(db, "calendario"));
+            let count = 0;
+            let promises = [];
+            
+            calSnap.forEach(calDoc => {
+                const data = calDoc.data();
+                let updates = {};
+                let hasUpdates = false;
+                
+                // Rileva eventuali dati di consenso lasciati nella collezione calendario
+                if (data.condivisioneVarianti !== undefined) { updates.condivisioneVarianti = data.condivisioneVarianti; hasUpdates = true; }
+                if (data.revocheCondivisione !== undefined) { updates.revocheCondivisione = data.revocheCondivisione; hasUpdates = true; }
+                if (data.bannatoVarianti !== undefined) { updates.bannatoVarianti = data.bannatoVarianti; hasUpdates = true; }
+                
+                if (hasUpdates) {
+                    const userRef = doc(db, "utenti", calDoc.id);
+                    promises.push(updateDoc(userRef, updates).then(() => count++).catch(e => {
+                        console.warn("Documento utente non trovato per la migrazione: ", calDoc.id);
+                    }));
+                }
+            });
+            
+            await Promise.all(promises);
+            alert(`Migrazione completata con successo! Sono stati aggiornati ${count} profili.`);
+            
+        } catch (error) {
+            console.error("Errore durante la migrazione:", error);
+            alert("Errore durante la migrazione dei dati.");
+        } finally {
+            if(btn) btn.innerHTML = '<i class="fa-solid fa-database"></i>';
+        }
+    };
+
     // GESTIONE REVOCHE E BAN
     window.apriListaRevocheAdmin = async function() {
         document.getElementById('modal-revoche-admin').style.display = 'flex';
@@ -373,21 +437,30 @@ export function avviaMotoreVariantiAdmin(db, auth, userDataPrivate) {
 
             const calSnapshot = await getDocs(collection(db, "calendario"));
             let revocati = [];
+            let uidsProcessati = new Set();
 
-            calSnapshot.forEach(doc => {
-                const data = doc.data();
-                if (data.revocheCondivisione > 0 || data.bannatoVarianti) {
-                    const utenteData = utentiMap[doc.id] || {};
+            // Raccoglie i dati fondendo le due collezioni (nel caso ci siano utenti non migrati)
+            const checkAndAdd = (uid, utenteData, calData) => {
+                if (uidsProcessati.has(uid)) return;
+                
+                let revoche = (utenteData && utenteData.revocheCondivisione !== undefined) ? utenteData.revocheCondivisione : (calData && calData.revocheCondivisione) || 0;
+                let bannato = (utenteData && utenteData.bannatoVarianti !== undefined) ? utenteData.bannatoVarianti : (calData && calData.bannatoVarianti) || false;
+                
+                if (revoche > 0 || bannato) {
                     revocati.push({
-                        uid: doc.id,
-                        nome: utenteData.nome || data.nomePubblico || "Utente",
-                        cognome: utenteData.cognome || data.cognomePubblico || "Sconosciuto",
-                        matricola: utenteData.matricola || data.matricolaPubblico || "N/D",
-                        revoche: data.revocheCondivisione || 0,
-                        bannato: data.bannatoVarianti || false
+                        uid: uid,
+                        nome: (utenteData && utenteData.nome) || (calData && calData.nomePubblico) || "Utente",
+                        cognome: (utenteData && utenteData.cognome) || (calData && calData.cognomePubblico) || "Sconosciuto",
+                        matricola: (utenteData && utenteData.matricola) || (calData && calData.matricolaPubblico) || "N/D",
+                        revoche: revoche,
+                        bannato: bannato
                     });
+                    uidsProcessati.add(uid);
                 }
-            });
+            };
+
+            utentiSnapshot.forEach(doc => checkAndAdd(doc.id, doc.data(), null));
+            calSnapshot.forEach(doc => checkAndAdd(doc.id, utentiMap[doc.id], doc.data()));
 
             listDiv.innerHTML = "";
             if (revocati.length === 0) {
@@ -425,11 +498,19 @@ export function avviaMotoreVariantiAdmin(db, auth, userDataPrivate) {
     window.azzeraRevocheUtente = async function(uid) {
         if (!confirm("Sei sicuro di voler azzerare le revoche e sbloccare questo utente?")) return;
         try {
-            const calRef = doc(db, "calendario", uid);
-            await updateDoc(calRef, {
+            // Sblocca nella nuova collezione Utenti
+            await updateDoc(doc(db, "utenti", uid), {
                 revocheCondivisione: 0,
                 bannatoVarianti: false
             });
+            // Sblocca anche in Calendario per scrupolo (per chi non ha ancora subìto la migrazione)
+            try {
+                await updateDoc(doc(db, "calendario", uid), {
+                    revocheCondivisione: 0,
+                    bannatoVarianti: false
+                });
+            } catch(e) {}
+            
             window.apriListaRevocheAdmin(); 
         } catch (error) {
             console.error(error);
@@ -445,8 +526,17 @@ export function avviaMotoreVariantiAdmin(db, auth, userDataPrivate) {
         
         try {
             let state = JSON.parse(localStorage.getItem('myTurniApp')) || {};
-            let mioTurnoOggi = state.variazioni && state.variazioni[dataScelta] ? state.variazioni[dataScelta] : calcolaTurnoBase(dataScelta, state);
+            
+            // Calcolo e conversione turno admin
+            let mioTurnoBase = calcolaTurnoBase(dataScelta, state);
+            let mioTurnoConvertito = convertiTurnoPerMansione(mioTurnoBase, userDataPrivate.mansione);
+            let mioTurnoOggi = state.variazioni && state.variazioni[dataScelta] ? state.variazioni[dataScelta] : mioTurnoConvertito;
+            
+            let mioTurnoClean = String(mioTurnoOggi).toUpperCase().replace(/\s+/g, '');
             let compagniPossibili = calcolaCompagniPossibili(mioTurnoOggi);
+            
+            let mStr = String(userDataPrivate.mansione || "").toLowerCase();
+            let isMioMarinaio = mStr.includes('marinaio') || mStr.includes('timoniere');
 
             const utentiSnapshot = await getDocs(collection(db, "utenti"));
             const utentiMap = {};
@@ -457,24 +547,41 @@ export function avviaMotoreVariantiAdmin(db, auth, userDataPrivate) {
             const querySnapshot = await getDocs(collection(db, "calendario"));
             let turniCondivisi = [];
             
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
+            querySnapshot.forEach((calDoc) => {
+                const data = calDoc.data();
                 
                 if (data.deleted === true) return;
                 
-                const utenteData = utentiMap[doc.id] || {};
+                const utenteData = utentiMap[calDoc.id] || {};
                 
                 let nomeMostrato = utenteData.nome || data.nomePubblico || "Utente";
-                let cognomeMostrato = utenteData.cognome || data.cognomePubblico || `(${doc.id.substring(0,4)}) Sconosciuto`;
+                let cognomeMostrato = utenteData.cognome || data.cognomePubblico || `(${calDoc.id.substring(0,4)}) Sconosciuto`;
                 let matricolaMostrata = utenteData.matricola || data.matricolaPubblico || "N/D";
                 let omonimiaMostrata = utenteData.progressivo || data.omonimiaPubblico || "";
                 
-                let turnoManuale = data.variazioni && data.variazioni[dataScelta] ? data.variazioni[dataScelta] : null;
-                let turnoOriginaleBase = calcolaTurnoBase(dataScelta, data);
+                let turnoManuale = data.variazioni && data.variazioni[dataScelta] ? String(data.variazioni[dataScelta]) : null;
+                let turnoOriginaleBase = String(calcolaTurnoBase(dataScelta, data) || "N/D");
+                
+                turnoOriginaleBase = convertiTurnoPerMansione(turnoOriginaleBase, utenteData.mansione);
+                
                 let isModificato = turnoManuale !== null;
                 let turnoDaMostrare = isModificato ? turnoManuale : turnoOriginaleBase;
                 
-                let isMate = (doc.id !== currentUser.uid) && compagniPossibili.includes(turnoDaMostrare.toUpperCase().replace(/\s+/g, ''));
+                let stringaSicuraTurno = String(turnoDaMostrare || "").toUpperCase().replace(/\s+/g, '');
+                
+                let mTheir = String(utenteData.mansione || "").toLowerCase();
+                let isTheirMarinaio = mTheir.includes('marinaio') || mTheir.includes('timoniere');
+                
+                let isMate = false;
+                if (calDoc.id !== currentUser.uid) {
+                    if (compagniPossibili.includes(stringaSicuraTurno)) {
+                        isMate = true; 
+                    } else if (stringaSicuraTurno === mioTurnoClean && (isMioMarinaio !== isTheirMarinaio)) {
+                        if (!["NPL", "RI", "RIPOSO", "AL"].includes(stringaSicuraTurno)) {
+                            isMate = true;
+                        }
+                    }
+                }
                 
                 let turnoSchermato = formattazioneSiglaAdmin(turnoDaMostrare);
                 let originaleSchermato = isModificato ? formattazioneSiglaAdmin(turnoOriginaleBase) : "";
