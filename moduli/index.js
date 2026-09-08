@@ -2,6 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 import { getAuth, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, deleteUser } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 import { avviaMotoreAuth } from './auth.js';
 
@@ -997,6 +999,40 @@ window.spostaApp = (index, dir) => {
 };
 
 window.salvaRiordinoGitHub = async () => { if(await window.pushToGitHub(window.DYNAMIC_APPS)) window.chiudiModal('modal-reorder-app'); };
+
+// ============================================================================
+// GESTIONE SICUREZZA ACCOUNT
+// ============================================================================
+window.eliminaAccount = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const conferma = confirm("ATTENZIONE: Questa azione è IRREVERSIBILE. Tutti i tuoi dati e il tuo account verranno eliminati definitivamente. Sei sicuro di voler procedere?");
+    if (!conferma) return;
+
+    const confermaDefinitiva = confirm("Sei veramente sicuro? Cliccando OK il tuo account verrà distrutto in modo permanente.");
+    if (!confermaDefinitiva) return;
+
+    try {
+        // 1. Elimina il profilo da Firestore
+        await deleteDoc(doc(db, "utenti", user.uid));
+        
+        // 2. Elimina l'utente da Firebase Authentication
+        await deleteUser(user);
+        
+        alert("Account eliminato con successo. Arrivederci.");
+        window.location.reload();
+    } catch (error) {
+        console.error("Errore durante l'eliminazione dell'account:", error);
+        // Firebase richiede un login recente per operazioni sensibili come l'eliminazione dell'account
+        if (error.code === 'auth/requires-recent-login') {
+            alert("Per motivi di sicurezza, devi effettuare nuovamente l'accesso prima di poter eliminare il tuo account. Effettua il logout, accedi di nuovo e riprova.");
+        } else {
+            alert("Si è verificato un errore durante l'eliminazione dell'account: " + error.message);
+        }
+    }
+};
+
 
 // ============================================================================
 // AUTH E START
