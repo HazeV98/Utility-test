@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, GoogleAuthProvider, deleteUser } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, deleteUser, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
@@ -1030,6 +1030,27 @@ window.eliminaAccount = async () => {
         }
     }
 };
+
+window.resetPasswordUtenteAutenticato = async () => {
+    const user = auth.currentUser;
+    
+    if (!user || !user.email) {
+        alert("Errore: Impossibile trovare un'email associata a questo account.");
+        return;
+    }
+
+    const conferma = confirm(`Vuoi ricevere un'email all'indirizzo ${user.email} per reimpostare la tua password?`);
+    if (!conferma) return;
+
+    try {
+        await sendPasswordResetEmail(auth, user.email);
+        alert(`Email inviata con successo a ${user.email}. Controlla la tua casella di posta (anche nella cartella Spam) e segui il link per cambiare password.`);
+    } catch (error) {
+        console.error("Errore durante l'invio dell'email di reset:", error);
+        alert("Si è verificato un errore durante l'invio dell'email: " + error.message);
+    }
+};
+
 
 
 // ============================================================================
