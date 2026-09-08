@@ -149,7 +149,7 @@ export function avviaMotoreVarianti(db, auth, userDataPrivate) {
         imgElem.addEventListener('dblclick', function(e) { eseguiZoomToggle(e); });
     }
 
-    // --- HELPER MATEMATICI ---
+    // --- HELPER MATEMATICI & CONVERSIONI ---
     function dateToLocalISO(d) { 
         return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0'); 
     }
@@ -164,6 +164,29 @@ export function avviaMotoreVarianti(db, auth, userDataPrivate) {
         if(!dataStr) return new Date(); 
         let p = dataStr.split('-'); 
         return new Date(p[0], p[1] - 1, p[2], 12, 0, 0); 
+    }
+    
+    // Converte il codice turno in base alla mansione specificata
+    function convertiTurnoPerMansione(turno, mansione) {
+        if (!turno || !mansione) return turno;
+        let t = String(turno).toUpperCase();
+        let m = String(mansione).toLowerCase();
+
+        let isMarinaio = m.includes('marinaio') || m.includes('timoniere');
+
+        if (isMarinaio) {
+            let matchP = t.match(/^([1-9])[CP](\d{2})$/);
+            if (matchP) return `${matchP[1]}B${matchP[2]}`;
+        } else {
+            // Se non è marinaio/timoniere, il resto viene gestito come pilota
+            let matchB = t.match(/^([1-9])B(\d{2})$/);
+            if (matchB) {
+                let l = matchB[1]; let f = matchB[2];
+                let letPilota = (l === '1' || l === '2') ? 'C' : 'P';
+                return `${l}${letPilota}${f}`;
+            }
+        }
+        return t;
     }
 
     function isGiornoRiposoBase(curr, cfg) { 
@@ -386,11 +409,11 @@ export function avviaMotoreVarianti(db, auth, userDataPrivate) {
 
         try {
             await initCaches(); 
-            const calRef = doc(db, "calendario", currentUser.uid);
-            const calSnap = await getDoc(calRef);
+            const userRef = doc(db, "utenti", currentUser.uid);
+            const userSnap = await getDoc(userRef);
             
-            if (calSnap.exists()) {
-                const data = calSnap.data();
+            if (userSnap.exists()) {
+                const data = userSnap.data();
                 
                 if (data.bannatoVarianti) {
                     mostraVista('view-var-banned');
@@ -402,7 +425,7 @@ export function avviaMotoreVarianti(db, auth, userDataPrivate) {
                     if (document.getElementById('btn-var-menu')) document.getElementById('btn-var-menu').style.display = 'block';
                     mostraVista('view-var-main');
                     const dataInput = document.getElementById('data-ricerca-varianti');
-                    if (!dataInput.value) dataInput.value = dateToLocalISO(new Date()); // FIX applicato qui
+                    if (!dataInput.value) dataInput.value = dateToLocalISO(new Date()); 
                     window.cercaVariantiGiorno();
                 } else {
                     if (document.getElementById('btn-var-menu')) document.getElementById('btn-var-menu').style.display = 'none';
@@ -420,13 +443,9 @@ export function avviaMotoreVarianti(db, auth, userDataPrivate) {
     window.attivaCondivisioneVarianti = async function() {
         mostraVista('view-var-loading');
         try {
-            const calRef = doc(db, "calendario", currentUser.uid);
-            await updateDoc(calRef, {
-                condivisioneVarianti: true,
-                nomePubblico: userDataPrivate.nome || "",
-                cognomePubblico: userDataPrivate.cognome || "",
-                omonimiaPubblico: userDataPrivate.progressivo || "",
-                matricolaPubblico: userDataPrivate.matricola || ""
+            const userRef = doc(db, "utenti", currentUser.uid);
+            await updateDoc(userRef, {
+                condivisioneVarianti: true
             });
             caricaStatoVarianti(); 
         } catch (e) { 
@@ -445,12 +464,12 @@ export function avviaMotoreVarianti(db, auth, userDataPrivate) {
         if (document.getElementById('btn-var-menu')) document.getElementById('btn-var-menu').style.display = 'none';
         
         try {
-            const calRef = doc(db, "calendario", currentUser.uid);
-            const calSnap = await getDoc(calRef);
+            const userRef = doc(db, "utenti", currentUser.uid);
+            const userSnap = await getDoc(userRef);
             
             let revoche = 0;
-            if (calSnap.exists() && calSnap.data().revocheCondivisione) {
-                revoche = calSnap.data().revocheCondivisione;
+            if (userSnap.exists() && userSnap.data().revocheCondivisione) {
+                revoche = userSnap.data().revocheCondivisione;
             }
             
             revoche++;
@@ -463,7 +482,7 @@ export function avviaMotoreVarianti(db, auth, userDataPrivate) {
                 payload.bannatoVarianti = true;
             }
             
-            await updateDoc(calRef, payload);
+            await updateDoc(userRef, payload);
             caricaStatoVarianti();
             
         } catch (error) {
@@ -477,42 +496,87 @@ export function avviaMotoreVarianti(db, auth, userDataPrivate) {
         const dataScelta = document.getElementById('data-ricerca-varianti').value;
         const listDiv = document.getElementById('varianti-list');
         listDiv.innerHTML = "<div style='text-align:center; margin-top:20px;'><i class='fa-solid fa-spinner fa-spin' style='color:var(--primary); font-size:24px;'></i></div>";
-        document.getElementById('search-varianti').value = ""; // Resetta la ricerca testuale
+        document.getElementById('search-varianti').value = ""; 
         
         try {
             let state = JSON.parse(localStorage.getItem('myTurniApp')) || {};
-            let mioTurnoOggi = state.variazioni && state.variazioni[dataScelta] ? state.variazioni[dataScelta] : calcolaTurnoBase(dataScelta, state);
-            let compagniPossibili = calcolaCompagniPossibili(mioTurnoOggi);
-
-            const q = query(collection(db, "calendario"), where("condivisioneVarianti", "==", true));
-            const querySnapshot = await getDocs(q);
-            let turniCondivisi = [];
             
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                if (data.cognomePubblico) { 
-                    
-                    let turnoManuale = data.variazioni && data.variazioni[dataScelta] ? String(data.variazioni[dataScelta]) : null;
-                    let turnoOriginaleBase = String(calcolaTurnoBase(dataScelta, data) || "N/D");
-                    let isModificato = turnoManuale !== null;
-                    let turnoDaMostrare = isModificato ? turnoManuale : turnoOriginaleBase;
-                    
-                    let stringaSicuraTurno = String(turnoDaMostrare || "").toUpperCase().replace(/\s+/g, '');
-                    let isMate = (doc.id !== currentUser.uid) && compagniPossibili.includes(stringaSicuraTurno);
-                    let turnoSchermato = applicaFiltroPrivacy(turnoDaMostrare);
-                    let originaleSchermato = isModificato ? applicaFiltroPrivacy(turnoOriginaleBase) : "";
+            let mioTurnoBase = calcolaTurnoBase(dataScelta, state);
+            let mioTurnoConvertito = convertiTurnoPerMansione(mioTurnoBase, userDataPrivate.mansione);
+            let mioTurnoOggi = state.variazioni && state.variazioni[dataScelta] ? state.variazioni[dataScelta] : mioTurnoConvertito;
+            
+            let mioTurnoClean = String(mioTurnoOggi).toUpperCase().replace(/\s+/g, '');
+            let compagniPossibili = calcolaCompagniPossibili(mioTurnoOggi);
+            
+            let isMioMarinaio = false;
+            let mStr = String(userDataPrivate.mansione || "").toLowerCase();
+            if (mStr.includes('marinaio') || mStr.includes('timoniere')) {
+                isMioMarinaio = true;
+            }
 
-                    turniCondivisi.push({
-                        nome: data.nomePubblico,
-                        cognome: data.cognomePubblico,
-                        omonimia: data.omonimiaPubblico,
-                        matricola: data.matricolaPubblico,
-                        turnoStr: turnoSchermato,
-                        originaleStr: originaleSchermato,
-                        modificato: isModificato,
-                        isMate: isMate
-                    });
+            const q = query(collection(db, "utenti"), where("condivisioneVarianti", "==", true));
+            const querySnapshot = await getDocs(q);
+            
+            let turniCondivisi = [];
+            let promises = [];
+            
+            querySnapshot.forEach((userDoc) => {
+                const userData = userDoc.data();
+                if (userData.cognome) { 
+                    const calRef = doc(db, "calendario", userDoc.id);
+                    promises.push(getDoc(calRef).then(calSnap => {
+                        return { 
+                            id: userDoc.id, 
+                            userData: userData, 
+                            calData: calSnap.exists() ? calSnap.data() : {} 
+                        };
+                    }));
                 }
+            });
+
+            const risultati = await Promise.all(promises);
+
+            risultati.forEach((res) => {
+                const userData = res.userData;
+                const calData = res.calData;
+                
+                let turnoManuale = calData.variazioni && calData.variazioni[dataScelta] ? String(calData.variazioni[dataScelta]) : null;
+                let turnoOriginaleBase = String(calcolaTurnoBase(dataScelta, calData) || "N/D");
+                
+                turnoOriginaleBase = convertiTurnoPerMansione(turnoOriginaleBase, userData.mansione);
+                
+                let isModificato = turnoManuale !== null;
+                let turnoDaMostrare = isModificato ? turnoManuale : turnoOriginaleBase;
+                
+                let stringaSicuraTurno = String(turnoDaMostrare || "").toUpperCase().replace(/\s+/g, '');
+                
+                let mTheir = String(userData.mansione || "").toLowerCase();
+                let isTheirMarinaio = mTheir.includes('marinaio') || mTheir.includes('timoniere');
+                
+                let isMate = false;
+                if (res.id !== currentUser.uid) {
+                    if (compagniPossibili.includes(stringaSicuraTurno)) {
+                        isMate = true; 
+                    } else if (stringaSicuraTurno === mioTurnoClean && (isMioMarinaio !== isTheirMarinaio)) {
+                        if (!["NPL", "RI", "RIPOSO", "AL"].includes(stringaSicuraTurno)) {
+                            isMate = true;
+                        }
+                    }
+                }
+                
+                let turnoSchermato = applicaFiltroPrivacy(turnoDaMostrare);
+                let originaleSchermato = isModificato ? applicaFiltroPrivacy(turnoOriginaleBase) : "";
+
+                turniCondivisi.push({
+                    nome: userData.nome,
+                    cognome: userData.cognome,
+                    omonimia: userData.progressivo || "",
+                    matricola: userData.matricola || "",
+                    turnoStr: turnoSchermato,
+                    originaleStr: originaleSchermato,
+                    modificato: isModificato,
+                    isMate: isMate
+                });
             });
             
             turniCondivisi.sort((a, b) => {
