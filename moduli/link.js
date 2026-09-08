@@ -137,7 +137,6 @@ function renderizzaLink(filtroTestuale) {
 
         elementiFiltrati.forEach((l, index) => {
             
-            // NUOVO STILE MINIMALE ED ELEGANTE PER LA LISTA
             const row = document.createElement('div');
             row.style.display = "flex";
             row.style.alignItems = "center";
@@ -152,9 +151,8 @@ function renderizzaLink(filtroTestuale) {
             let urlClean = l.url;
             if (!urlClean.startsWith('http')) urlClean = 'https://' + urlClean;
             
-            let domain = "";
-            try { domain = new URL(urlClean).hostname; } catch(e) {}
-            let faviconHtml = domain ? `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" style="width:24px; height:24px; border-radius:6px; background:white;">` : `<i class="fa-solid fa-globe" style="font-size:20px; color:var(--text-muted);"></i>`;
+            // NUOVO MOTORE: API Favicon V2 (legge l'intero URL e fornisce fallback grafici)
+            let faviconHtml = `<img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(urlClean)}&size=64" style="width:24px; height:24px; border-radius:6px; background:white;">`;
 
             row.innerHTML = `
                 <div style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; background:var(--surface); border-radius:8px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color);">
@@ -164,7 +162,6 @@ function renderizzaLink(filtroTestuale) {
                 <i class="fa-solid fa-chevron-right" style="color:var(--text-muted); font-size:12px; opacity:0.5;"></i>
             `;
 
-            // CLICCANDO APRE LA SCHEDA INVECE DEL LINK DIRETTO
             row.onclick = () => window.apriSchedaLink(l.id, l.nome, categoriaObj.categoria, urlClean);
             
             elementsContainer.appendChild(row);
@@ -184,11 +181,9 @@ function renderizzaLink(filtroTestuale) {
 // ============================================================================
 
 window.apriSchedaLink = (id, nome, categoria, url) => {
-    let domain = "";
-    try { domain = new URL(url).hostname; } catch(e) {}
     
-    // Generiamo l'icona più grande per la scheda modale
-    let faviconHtml = domain ? `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=128" style="width:40px; height:40px; border-radius:8px;">` : `<i class="fa-solid fa-globe" style="font-size:32px; color:var(--primary);"></i>`;
+    // NUOVO MOTORE: Icona grande per la scheda modale
+    let faviconHtml = `<img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(url)}&size=128" style="width:40px; height:40px; border-radius:8px; background:white;">`;
 
     document.getElementById('scheda-link-icona').innerHTML = faviconHtml;
     document.getElementById('scheda-link-nome').textContent = nome;
@@ -372,3 +367,4 @@ window.eliminaLink = async () => {
         btn.disabled = false;
     }
 };
+0

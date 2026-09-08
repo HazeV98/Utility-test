@@ -216,7 +216,7 @@ export function avviaMotoreStatistiche(db, auth) {
     const eseguiSincronizzazione = async () => {
         if (auth.currentUser) {
             try {
-                const docRef = doc(db, "utenti", auth.currentUser.uid);
+                const docRef = doc(db, "calendario", auth.currentUser.uid);
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {

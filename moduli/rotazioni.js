@@ -1322,8 +1322,8 @@ export function avviaMotoreRotazioni(db, auth) {
                     <div style="font-weight:800; font-size:15px; color:var(--warning); cursor:pointer; display:flex; align-items:center;" onclick="window.apriDettaglioUtenteRot('${u.uid}')">${u.cognome||''} ${u.nome||''} ${u.progressivo||''} ${pallino}</div>
                     <div style="font-size:12px; color:var(--text-muted); margin-top:4px; font-weight:600;"><i class="fa-solid fa-id-badge"></i> Matr: ${u.matricola||''}</div>
                     <div style="display:flex; gap:10px; margin-top:16px;">
-                        <button class="rot-btn" style="background:var(--success); padding:10px; font-size:13px; margin:0; box-shadow:none;" onclick="window.gestisciRichiestaRot('${u.uid}', true, this)"><i class="fa-solid fa-check"></i> Consenti</button>
-                        <button class="rot-btn-outline" style="color:var(--danger); border-color:var(--danger); padding:10px; font-size:13px; margin:0;" onclick="window.gestisciRichiestaRot('${u.uid}', false, this)"><i class="fa-solid fa-xmark"></i> Rifiuta</button>
+                        <button class="rot-btn" style="background:var(--success); padding:10px; font-size:13px; margin:0; box-shadow:none;" onclick="window.gestisciRichiestaRot('${u.uid}', true, this)"><i class="fa-solid fa-check"></i>✅</button>
+                        <button class="rot-btn-outline" style="color:var(--danger); border-color:var(--danger); padding:10px; font-size:13px; margin:0;" onclick="window.gestisciRichiestaRot('${u.uid}', false, this)"><i class="fa-solid fa-xmark"></i>🚫</button>
                     </div>
                 </div>`;
             });

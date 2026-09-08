@@ -1,13 +1,16 @@
 [
     {
-        "id": "oggi",
-        "label": "Oggi",
-        "icon": "fa-solid fa-bullseye",
+        "id": "dashboard",
+        "label": "Dashboard",
+        "icon": "fa-solid fa-chart-bar",
         "defaultColor": "#28a745",
-        "href": "calendario.html?oggi=true",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "isModule": true,
+        "moduleId": "dashboard",
+        "moduleName": "dashboard",
+        "splitModule": false
     },
     {
         "id": "calendario",
@@ -57,6 +60,19 @@
         "moduleId": "turni",
         "moduleName": "turni",
         "splitModule": true
+    },
+    {
+        "id": "varianti",
+        "label": "Varianti",
+        "icon": "fa-solid fa-list-ul",
+        "defaultColor": "#a1a1a1",
+        "conditions": [
+            "tutti"
+        ],
+        "isModule": true,
+        "moduleId": "varianti",
+        "moduleName": "varianti",
+        "splitModule": false
     },
     {
         "id": "bachecaturni",
@@ -276,5 +292,18 @@
         "conditions": [
             "admin"
         ]
+    },
+    {
+        "id": "varianti_admin",
+        "label": "Varianti Admin",
+        "icon": "fa-solid fa-list-ul",
+        "defaultColor": "#dc3545",
+        "conditions": [
+            "admin"
+        ],
+        "isModule": true,
+        "moduleId": "varianti_admin",
+        "moduleName": "varianti_admin",
+        "splitModule": false
     }
 ]

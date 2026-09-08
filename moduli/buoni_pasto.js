@@ -419,7 +419,7 @@ export async function avviaMotoreBuoniPasto(db, auth) {
     window.syncBuoniToCloudBP = async () => {
         if (currentUser) {
             try {
-                const docRef = doc(db, "utenti", currentUser.uid);
+                const docRef = doc(db, "calendario", currentUser.uid);
                 let dataToSave = {};
                 
                 dataToSave[`buoni_pasto_totali_${pid}`] = buoniAttuali;
@@ -435,7 +435,7 @@ export async function avviaMotoreBuoniPasto(db, auth) {
     // Ascoltatore Dati Firebase
     if (currentUser) {
         if(unsubBuoni) unsubBuoni();
-        const docRef = doc(db, "utenti", currentUser.uid);
+        const docRef = doc(db, "calendario", currentUser.uid);
         unsubBuoni = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
                 let datiCloud = docSnap.data();

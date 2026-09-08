@@ -1,5 +1,5 @@
 const GH_OWNER = "HazeV98"; 
-const GH_REPO = "Utility-test";
+const GH_REPO = "Utility";
 
 const stiliEtichette = document.createElement('style');
 stiliEtichette.innerHTML = `

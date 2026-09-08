@@ -95,10 +95,14 @@ export function initUIRotazioneFerie() {
             <!-- Area scrollabile -->
             <div style="flex: 1; min-height: 0; overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; padding-bottom: 20px;">
                 
-                <div id="ferie-top-actions-bar" class="ferie-top-actions" style="display: none;">
-                    <button class="ferie-btn-top" style="background: var(--primary);" onclick="window.apriModaleCondivisioneFerie()"><i class="fa-solid fa-pen-to-square"></i> I Tuoi Dati</button>
-                    <button class="ferie-btn-top" style="background: var(--danger);" onclick="window.revocaCondivisioneFerie()"><i class="fa-solid fa-user-slash"></i> Annulla Condivisione</button>
+                <div id="ferie-top-actions-bar" style="display: none; flex-direction: column; gap: 12px; margin-bottom: 20px; width: 100%; flex-shrink: 0;">
+                    <div class="ferie-top-actions" style="margin-bottom: 0;">
+                        <button class="ferie-btn-top" style="background: var(--primary);" onclick="window.apriModaleCondivisioneFerie()"><i class="fa-solid fa-pen-to-square"></i> I Tuoi Dati</button>
+                        <button class="ferie-btn-top" style="background: var(--danger);" onclick="window.revocaCondivisioneFerie()"><i class="fa-solid fa-user-slash"></i> Annulla Condivisione</button>
+                    </div>
+                    <button class="ferie-btn-action" style="margin-top: 0; background-color: var(--success);" onclick="window.mostraMieFerie()"><i class="fa-solid fa-calendar-days"></i> Le mie ferie</button>
                 </div>
+
 
                 <div id="ferie-view-no-auth" class="ferie-view-container">
                     <div class="ferie-card" style="text-align: center;">
@@ -294,6 +298,19 @@ export function initUIRotazioneFerie() {
                 </div>
             </div>
         </div>
+
+                <!-- MODALE SECONDARIA: LE MIE FERIE -->
+        <div id="modal-mie-ferie" class="modal-overlay" style="z-index: 7500; display: none;" onclick="window.chiudiSuSfondo(event, 'modal-mie-ferie')">
+            <div class="modal-content" style="max-width: 500px; height: 85vh; display: flex; flex-direction: column; padding: 20px; position: relative;">
+                <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-mie-ferie')"></i>
+                
+                <h3 style="text-align: center; margin-top: 0; margin-bottom: 20px; color: var(--text-main); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; flex-shrink: 0;"><i class="fa-solid fa-calendar-days" style="color: var(--success);"></i> Prospetto Ferie</h3>
+
+                <div id="lista-mie-ferie-container" style="flex: 1; min-height: 0; overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px;">
+                </div>
+            </div>
+        </div>
+
     `;
     document.body.appendChild(container);
 }

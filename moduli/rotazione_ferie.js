@@ -223,6 +223,54 @@ export function avviaMotoreRotazioneFerie(db, auth) {
         }
     };
 
+        window.mostraMieFerie = () => {
+        if (!myFerieData) return;
+        const container = document.getElementById('lista-mie-ferie-container');
+        let currYear = new Date().getFullYear();
+        let html = '';
+        
+        // Calcolo lunghezza massima del ciclo (minimo comune multiplo o max iters) per evitare loop infiniti
+        const lenE = jsonFerie.estive.length || 1;
+        const lenI = jsonFerie.invernali.length || 1;
+        const maxIters = lenE * lenI;
+        
+        // Funzione per ricavare la ferie originale della rotazione (ignorando scambi correnti)
+        const getBase = (type, ar) => {
+            const arr = type === 'est' ? jsonFerie.estive : jsonFerie.invernali;
+            const baseP = type === 'est' ? myFerieData.periodo_estivo : myFerieData.periodo_invernale;
+            const idx = arr.findIndex(o => o.n === baseP);
+            if (idx === -1) return "N/D";
+            return arr[(((idx + (ar - myFerieData.anno_base)) % arr.length) + arr.length) % arr.length].n;
+        };
+
+        const baseStartE = getBase('est', currYear);
+        const baseStartI = getBase('inv', currYear);
+
+        for (let i = 0; i <= maxIters; i++) {
+            let y = currYear + i;
+            let e = calc_ferie(myFerieData, 'est', y);
+            let inv = calc_ferie(myFerieData, 'inv', y);
+            
+            html += `
+                <div class="ferie-card" style="padding:15px; margin-bottom:0; display:flex; flex-direction:column; gap:8px;">
+                    <div style="font-weight:800; color:var(--text-main); font-size:16px;">Anno ${y} ${i === 0 ? '<span style="color:var(--success); font-size:12px; margin-left:8px;">(Corrente)</span>' : ''}</div>
+                    <div>
+                        <span class="badge-estivo"><i class="fa-solid fa-sun"></i> ${e}</span>
+                        <span class="badge-invernale"><i class="fa-solid fa-snowflake"></i> ${inv}</span>
+                    </div>
+                </div>`;
+            
+            // Condizione di uscita: il ciclo calcolato per l'anno base corrente ricomincia
+            if (i > 0 && getBase('est', y) === baseStartE && getBase('inv', y) === baseStartI) {
+                break;
+            }
+        }
+        
+        container.innerHTML = html;
+        window.apriModal('modal-mie-ferie');
+    };
+
+
 
     // ==========================================
     // FUNZIONI GLOBALI (RICERCA E TABELLE)
