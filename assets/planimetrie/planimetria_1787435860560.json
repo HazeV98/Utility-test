@@ -1,5 +1,11 @@
 {
-  "livelli": [],
+  "livelli": [
+    {
+      "nome": "Tipo 1",
+      "imgUrl": "assets/planimetrie/planimetria_1787435860560_L1788916773366.png",
+      "pins": []
+    }
+  ],
   "schedeNave": [
     "sch_1787592024172",
     "sch_1787603175363",
