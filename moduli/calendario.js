@@ -120,6 +120,70 @@ function chiudiMultiEdit() {
     document.getElementById('multiEditModal').style.display = 'none';
 }
 
+// --- HELPER CONVERSIONE MANSIONE (MUTUATO DA DASHBOARD) ---
+function convertiTurnoPerMansione(turno, mansione) {
+    if (!turno || !mansione) return turno;
+    let t = String(turno).toUpperCase();
+    let m = String(mansione).toLowerCase();
+
+    let isMarinaio = m.includes('marinaio') || m.includes('timoniere');
+
+    if (isMarinaio) {
+        let matchP = t.match(/^([1-9])[CP](\d{2})$/);
+        if (matchP) return `${matchP[1]}B${matchP[2]}`;
+    } else {
+        let matchB = t.match(/^([1-9])B(\d{2})$/);
+        if (matchB) {
+            let l = matchB[1]; let f = matchB[2];
+            let letPilota = (l === '1' || l === '2') ? 'C' : 'P';
+            return `${l}${letPilota}${f}`;
+        }
+    }
+    return t;
+}
+
+function getMansioneAttiva() {
+    if (state && state.mansione) {
+        return state.mansione;
+    }
+    if (state && state.profiloAttivoId && state.profiliSalvati && state.profiliSalvati[state.profiloAttivoId] && state.profiliSalvati[state.profiloAttivoId].mansione) {
+        return state.profiliSalvati[state.profiloAttivoId].mansione;
+    }
+    try {
+        const cached = JSON.parse(localStorage.getItem('userDataCache_haze') || '{}');
+        if (cached && cached.mansione) return cached.mansione;
+    } catch(e) {}
+    if (window.userProfileData && window.userProfileData.mansione) {
+        return window.userProfileData.mansione;
+    }
+    return "";
+}
+
+function apriMansioneModal() {
+    chiudiMenuDestro();
+    const curMan = getMansioneAttiva();
+    const sel = document.getElementById('selectMansioneProfilo');
+    if (sel) sel.value = curMan || "";
+    document.getElementById('mansioneModal').style.display = 'block';
+}
+
+function chiudiMansioneModal() {
+    document.getElementById('mansioneModal').style.display = 'none';
+}
+
+function chiudiMansioneSeSfondo(event) {
+    if (event.target.id === 'mansioneModal') chiudiMansioneModal();
+}
+
+function salvaMansione() {
+    const sel = document.getElementById('selectMansioneProfilo');
+    if (sel) {
+        state.mansione = sel.value;
+    }
+    chiudiMansioneModal();
+    salvaERicarica();
+}
+
 // --- GESTIONE FERIE PROGRAMMATE ---
 function apriFerieModal() {
     chiudiMenuDestro();
@@ -676,7 +740,7 @@ function initProfili() {
             salvaStatoInProfilo("default", "I Miei Turni");
         } else {
             state.profiliSalvati["default"] = { 
-                nome: "I Miei Turni", variazioni: {}, note: {}, colori: {}, ferie: {}, 
+                nome: "I Miei Turni", mansione: state.mansione || getMansioneAttiva() || "", variazioni: {}, note: {}, colori: {}, ferie: {}, 
                 version: state.version || "0", setupStep: 0, setupSkipped: false 
             };
         }
@@ -687,6 +751,7 @@ function initProfili() {
 function salvaStatoInProfilo(id, nome) {
     let datiProfilo = {
         nome: nome,
+        mansione: state.mansione || "",
         depositoAttivo: state.depositoAttivo,
         riposoStart: state.riposoStart,
         rotazioneStart: state.rotazioneStart,
@@ -720,6 +785,7 @@ function cambiaProfilo(idSelezionato) {
     let nuovoProfilo = state.profiliSalvati[idSelezionato];
     state.profiloAttivoId = idSelezionato;
     
+    state.mansione = nuovoProfilo.mansione || "";
     state.depositoAttivo = nuovoProfilo.depositoAttivo;
     state.riposoStart = nuovoProfilo.riposoStart;
     state.rotazioneStart = nuovoProfilo.rotazioneStart;
@@ -755,12 +821,13 @@ function avviaNuovoProfilo() {
     salvaStatoInProfilo(state.profiloAttivoId, nomeAttuale);
     
     state.profiliSalvati[nuovoId] = { 
-        nome: nome.trim(), variazioni: {}, note: {}, colori: {}, ferie: {},
+        nome: nome.trim(), mansione: "", variazioni: {}, note: {}, colori: {}, ferie: {},
         nebbia: {}, straordinario: {}, sospesoRiposo: {}, buonoPasto: {}, permessoSP: {},
         setupStep: 0, setupSkipped: false, version: "0" 
     };
     state.profiloAttivoId = nuovoId;
     
+    state.mansione = "";
     state.depositoAttivo = null;
     state.riposoStart = null;
     state.rotazioneStart = null;
@@ -778,7 +845,7 @@ function avviaNuovoProfilo() {
     state.permessoSP = {};
     state.setupStep = 0;
     state.setupSkipped = false;
-    state.version = "0";
+    state.version = "0"; 
     
     chiudiMenuDestro();
     salvaERicarica();
@@ -854,10 +921,11 @@ function renderizzaProfiliUI() {
         let icona = isAttivo ? '<i class="fa-solid fa-circle-dot"></i>' : '<i class="fa-regular fa-circle"></i>';
         let border = isAttivo ? '2px solid var(--turno)' : '1px solid var(--border-color)';
         
+        let mansioneBadge = p.mansione ? ` <span style="font-size: 12px; opacity: 0.85; font-weight: normal;">(${p.mansione})</span>` : "";
         html += `
         <div style="border: ${border}; border-radius: 12px; overflow: hidden; margin-bottom: 10px; background: ${bg}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
             <button class="btn btn-reset" style="background: transparent; color: ${color}; border: none; border-radius: 0; text-align: left; margin: 0; padding: 12px 15px; width: 100%; font-weight: bold; font-size: 16px; display: block;" onclick="cambiaProfilo('${id}')">
-                ${icona} ${p.nome}
+                ${icona} ${p.nome}${mansioneBadge}
             </button>
             <div style="display: flex; border-top: 1px solid rgba(0,0,0,0.05); background: ${isAttivo ? 'rgba(255,255,255,0.1)' : 'transparent'};">
                 <button class="btn btn-reset" style="background: transparent; color: ${isAttivo ? 'white' : 'var(--text-muted)'}; border: none; border-radius: 0; border-right: 1px solid rgba(0,0,0,0.05); margin: 0; padding: 8px; flex: 1; font-size: 13px;" onclick="rinominaProfilo('${id}')"><i class="fa-solid fa-pen"></i> Rinomina</button>
@@ -1248,9 +1316,17 @@ async function inizializzaApp() {
             document.getElementById('btnConfRot').style.color = '#fff';
         });
     }
+    const selManMain = document.getElementById('mansioneSelectMain');
+    if (selManMain) {
+        selManMain.value = getMansioneAttiva() || "";
+    }
 }
 
 function confermaRotazione() {
+    const selMan = document.getElementById('mansioneSelectMain')?.value;
+    if (selMan) {
+        state.mansione = selMan;
+    }
     if (!state.depositoAttivo) { 
         state.depositoAttivo = document.getElementById('depotSelectMain').value; 
         state.setupStep = 1; 
@@ -1497,9 +1573,15 @@ async function gestisciInterazione(date) {
         let isRiposo = (codiceBase === 'RI' || codiceBase === 'RIPOSO' || codiceBase === 'AL');
         
         if (!isRiposo && codiceBase !== 'DISP' && codiceBase !== 'NESSUN TURNO') {
-            if (chiaveTrovata !== codiceBase && dbCorrente[chiaveTrovata]) { 
-                currentImagePath = `turni_${dataAttiva}/${chiaveTrovata}.jpg`; 
-                imgBaseFallback = `turni_${dataAttiva}/${codiceBase}.jpg`; 
+            let suffix = "";
+            if (chiaveTrovata && chiaveTrovata.includes('_')) {
+                suffix = "_" + chiaveTrovata.split('_').slice(1).join('_');
+            }
+            let codiceConSuffisso = codiceBase + suffix;
+
+            if (chiaveTrovata && chiaveTrovata !== codiceBase) { 
+                currentImagePath = `turni_${dataAttiva}/${codiceConSuffisso}.jpg`; 
+                imgBaseFallback = `turni_${dataAttiva}/${chiaveTrovata}.jpg`; 
             } else { 
                 currentImagePath = `turni_${dataAttiva}/${codiceBase}.jpg`; 
                 imgBaseFallback = ""; 
@@ -2072,6 +2154,10 @@ function calcolaTurni(vistaStartObj = null, vistaEndObj = null) {
                     }
                 }
             }
+
+            if (t && t !== "DISP") {
+                t = convertiTurnoPerMansione(t, getMansioneAttiva());
+            }
             
             if (t !== "") { 
                 let ev = { title: t + titleAddon, start: dStr, allDay: true, myOrder: 2 }; 
@@ -2167,19 +2253,24 @@ function getOptionsTurni(includeDisp = false) {
     
     let htmlDisp = "", htmlTurni = "", dispAggiunto = false;
     let htmlRiposo = `<option value="RIPOSO" style="font-weight:bold; color:var(--riposo);">RIPOSO</option>`;
+    const manAttiva = getMansioneAttiva();
     
-    rot[state.depositoAttivo].map((n, i) => ({ n: n.toUpperCase(), i: i }))
-        .sort((a, b) => a.n.localeCompare(b.n, undefined, {numeric: true}))
-        .forEach(item => { 
-            if (item.n === "DISP") { 
-                if (!dispAggiunto) { 
-                    htmlDisp = `<option value="${item.i}">DISP</option>`; 
-                    dispAggiunto = true; 
-                } 
-            } else { 
-                htmlTurni += `<option value="${item.i}">${item.n}</option>`; 
+    rot[state.depositoAttivo].map((n, i) => {
+        let nUpper = n.toUpperCase();
+        let nVisibile = nUpper === "DISP" ? "DISP" : convertiTurnoPerMansione(nUpper, manAttiva);
+        return { n: nUpper, label: nVisibile, i: i };
+    })
+    .sort((a, b) => a.label.localeCompare(b.label, undefined, {numeric: true}))
+    .forEach(item => { 
+        if (item.n === "DISP") { 
+            if (!dispAggiunto) { 
+                htmlDisp = `<option value="${item.i}">DISP</option>`; 
+                dispAggiunto = true; 
             } 
-        });
+        } else { 
+            htmlTurni += `<option value="${item.i}">${item.label}</option>`; 
+        } 
+    });
         
     if (includeDisp && state.depositoAttivo.startsWith('tc_') && !dispAggiunto) { 
         htmlDisp = `<option value="DISP">DISP</option>`; 
@@ -2465,6 +2556,10 @@ window.importaDatiDaFile = importaDatiDaFile;
 window.apriIcsModal = apriIcsModal;
 window.chiudiIcsModal = chiudiIcsModal;
 window.esportaICS = esportaICS;
+window.apriMansioneModal = apriMansioneModal;
+window.chiudiMansioneModal = chiudiMansioneModal;
+window.chiudiMansioneSeSfondo = chiudiMansioneSeSfondo;
+window.salvaMansione = salvaMansione;
 
 // --- INIZIALIZZAZIONE GESTITA DA FIREBASE ---
 onAuthStateChanged(auth, async (user) => {
@@ -2479,6 +2574,23 @@ onAuthStateChanged(auth, async (user) => {
         try {
             const calendarioRef = doc(db, "calendario", user.uid);
             const profiloRef = doc(db, "utenti", user.uid);
+
+            try {
+                const profiloSnap = await getDoc(profiloRef);
+                if (profiloSnap.exists()) {
+                    window.userProfileData = profiloSnap.data();
+                    try {
+                        const cached = JSON.parse(localStorage.getItem('userDataCache_haze') || '{}');
+                        localStorage.setItem('userDataCache_haze', JSON.stringify({ ...cached, ...window.userProfileData }));
+                    } catch(e) {}
+                    if (!state.mansione && window.userProfileData.mansione) {
+                        state.mansione = window.userProfileData.mansione;
+                        salvaLocal();
+                        if (calendar) calendar.refetchEvents();
+                    }
+                }
+            } catch(e) { console.error("Errore lettura profilo utente:", e); }
+
             const calendarioSnap = await getDoc(calendarioRef);
             let cloudData = null;
 
@@ -2493,7 +2605,7 @@ onAuthStateChanged(auth, async (user) => {
                         "depositoAttivo", "riposoStart", "rotazioneStart", "turnoIndex", "tcPattern",
                         "history", "futureConfig", "baseDataFutura", "variazioni", "note", "colori",
                         "ferie", "nebbia", "straordinario", "sospesoRiposo", "buonoPasto", "permessoSP",
-                        "setupStep", "setupSkipped", "version", "profiliSalvati", "coloriRotazione"
+                        "setupStep", "setupSkipped", "version", "profiliSalvati", "coloriRotazione", "mansione"
                     ];
                     const datiCalendario = { migrazioneCompletata: true, lastUpdate: new Date().getTime() };
                     let datiMigrati = false;
