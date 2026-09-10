@@ -65,9 +65,28 @@ export function initUIVarianti() {
                         <input type="date" id="data-ricerca-varianti" class="input-field" style="margin-bottom: 0; flex: 1;" onchange="window.cercaVariantiGiorno()">
                     </div>
                     
-                    <div style="position: relative; width: 100%; margin-bottom: 15px;">
-                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 13px; color: var(--text-muted);"></i>
-                        <input type="text" id="search-varianti" class="input-field" style="padding-left: 45px; margin-bottom: 0;" placeholder="Cerca nome o turno..." oninput="window.filtraVarianti()">
+                    <div style="display: flex; gap: 10px; position: relative; width: 100%; margin-bottom: 15px;">
+                        <div style="position: relative; flex: 1;">
+                            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 13px; color: var(--text-muted);"></i>
+                            <input type="text" id="search-varianti" class="input-field" style="padding-left: 45px; margin-bottom: 0; width: 100%; box-sizing: border-box;" placeholder="Cerca nome o turno..." oninput="window.filtraVarianti()">
+                        </div>
+                        <div style="position: relative;">
+                            <button style="height: 100%; padding: 0 15px; border-radius: 8px; background: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); cursor: pointer;" onclick="document.getElementById('var-filter-menu').style.display = document.getElementById('var-filter-menu').style.display === 'block' ? 'none' : 'block'">
+                                <i class="fa-solid fa-filter"></i>
+                            </button>
+                            
+                            <div id="var-filter-menu" style="display: none; position: absolute; right: 0; top: 110%; background: var(--surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 100; min-width: 150px; padding: 10px;">
+                                <div style="font-size: 12px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px;">Ordina per:</div>
+                                <div style="padding: 8px; cursor: pointer; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;" onclick="window.impostaOrdinamentoVarianti('turni')">
+                                    <span>Turni</span>
+                                    <i id="check-sort-turni" class="fa-solid fa-check" style="color: var(--primary);"></i>
+                                </div>
+                                <div style="padding: 8px; cursor: pointer; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;" onclick="window.impostaOrdinamentoVarianti('nomi')">
+                                    <span>Nomi</span>
+                                    <i id="check-sort-nomi" class="fa-solid fa-check" style="color: var(--primary); display: none;"></i>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div id="varianti-list" style="width: 100%;"></div>
@@ -101,6 +120,10 @@ export function avviaMotoreVarianti(db, auth, userDataPrivate) {
     let globalRotCache = null;
     let globalDbCache = null;
     const DATA_INIZIO_NUOVI_TURNI = "2026-06-01"; 
+    
+    // Variabili per ordinamento e cache
+    window.ordineVariantiAttuale = 'turni';
+    window.variantiCondiviseCache = [];
 
     // Variabili per visualizzatore immagini
     let pzVariante = null;
@@ -402,6 +425,35 @@ export function avviaMotoreVarianti(db, auth, userDataPrivate) {
         return isSensibile ? "NPL" : t;
     }
 
+    // Funzione per impostare e gestire l'ordinamento
+    window.impostaOrdinamentoVarianti = function(tipo) {
+        window.ordineVariantiAttuale = tipo;
+        document.getElementById('var-filter-menu').style.display = 'none';
+        document.getElementById('check-sort-turni').style.display = tipo === 'turni' ? 'block' : 'none';
+        document.getElementById('check-sort-nomi').style.display = tipo === 'nomi' ? 'block' : 'none';
+        if (window.variantiCondiviseCache && window.variantiCondiviseCache.length > 0) {
+            window.ordinaEDisegnaVarianti();
+        }
+    };
+
+    window.ordinaEDisegnaVarianti = function() {
+        let array = window.variantiCondiviseCache;
+        array.sort((a, b) => {
+            if (a.isMate && !b.isMate) return -1;
+            if (!a.isMate && b.isMate) return 1;
+            
+            if (window.ordineVariantiAttuale === 'nomi') {
+                let cmpCognome = a.cognome.localeCompare(b.cognome);
+                if (cmpCognome !== 0) return cmpCognome;
+                return a.nome.localeCompare(b.nome);
+            } else {
+                return a.turnoStr.localeCompare(b.turnoStr, undefined, {numeric: true});
+            }
+        });
+        disegnaVarianti(array);
+        window.filtraVarianti(); 
+    };
+
     async function caricaStatoVarianti() {
         mostraVista('view-var-loading');
         let state = JSON.parse(localStorage.getItem('myTurniApp')) || {};
@@ -579,13 +631,9 @@ export function avviaMotoreVarianti(db, auth, userDataPrivate) {
                 });
             });
             
-            turniCondivisi.sort((a, b) => {
-                if (a.isMate && !b.isMate) return -1;
-                if (!a.isMate && b.isMate) return 1;
-                return a.turnoStr.localeCompare(b.turnoStr, undefined, {numeric: true});
-            });
+            window.variantiCondiviseCache = turniCondivisi;
+            window.ordinaEDisegnaVarianti();
             
-            disegnaVarianti(turniCondivisi);
         } catch (error) { 
             console.error(error);
             listDiv.innerHTML = "<div style='color:var(--danger); text-align:center;'>Errore di caricamento.</div>"; 

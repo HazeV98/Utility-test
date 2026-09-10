@@ -21,7 +21,6 @@ export function initUIVariantiAdmin() {
     <div id="modal-varianti-admin-main" class="modal-overlay" onclick="if(event.target.id === 'modal-varianti-admin-main') this.style.display='none'">
         <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px; position: relative;">
             
-            <i id="btn-migra-consensi" class="fa-solid fa-database" style="position: absolute; right: 100px; top: 20px; font-size: 24px; cursor: pointer; color: var(--success);" onclick="window.migraConsensiAdmin()" title="Migra Dati Consenso su Utenti"></i>
             <i class="fa-solid fa-users-slash" style="position: absolute; right: 60px; top: 20px; font-size: 24px; cursor: pointer; color: var(--warning);" onclick="window.apriListaRevocheAdmin()" title="Gestione Revoche e Ban"></i>
             <i class="fa-solid fa-xmark" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="document.getElementById('modal-varianti-admin-main').style.display='none'"></i>
             
@@ -41,9 +40,28 @@ export function initUIVariantiAdmin() {
                         <input type="date" id="data-ricerca-varianti-admin" class="input-field" style="margin-bottom: 0; flex: 1;" onchange="window.cercaVariantiGiornoAdmin()">
                     </div>
                     
-                    <div style="position: relative; width: 100%; margin-bottom: 15px;">
-                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 13px; color: var(--text-muted);"></i>
-                        <input type="text" id="search-varianti-admin" class="input-field" style="padding-left: 45px; margin-bottom: 0;" placeholder="Cerca nome o turno..." oninput="window.filtraVariantiAdmin()">
+                    <div style="display: flex; gap: 10px; position: relative; width: 100%; margin-bottom: 15px;">
+                        <div style="position: relative; flex: 1;">
+                            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 13px; color: var(--text-muted);"></i>
+                            <input type="text" id="search-varianti-admin" class="input-field" style="padding-left: 45px; margin-bottom: 0; width: 100%; box-sizing: border-box;" placeholder="Cerca nome o turno..." oninput="window.filtraVariantiAdmin()">
+                        </div>
+                        <div style="position: relative;">
+                            <button style="height: 100%; padding: 0 15px; border-radius: 8px; background: var(--surface); color: var(--text-main); border: 1px solid var(--border-color); cursor: pointer;" onclick="document.getElementById('var-filter-menu-admin').style.display = document.getElementById('var-filter-menu-admin').style.display === 'block' ? 'none' : 'block'">
+                                <i class="fa-solid fa-filter"></i>
+                            </button>
+                            
+                            <div id="var-filter-menu-admin" style="display: none; position: absolute; right: 0; top: 110%; background: var(--surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 100; min-width: 150px; padding: 10px;">
+                                <div style="font-size: 12px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px;">Ordina per:</div>
+                                <div style="padding: 8px; cursor: pointer; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;" onclick="window.impostaOrdinamentoVariantiAdmin('turni')">
+                                    <span>Turni</span>
+                                    <i id="check-sort-turni-admin" class="fa-solid fa-check" style="color: var(--danger);"></i>
+                                </div>
+                                <div style="padding: 8px; cursor: pointer; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;" onclick="window.impostaOrdinamentoVariantiAdmin('nomi')">
+                                    <span>Nomi</span>
+                                    <i id="check-sort-nomi-admin" class="fa-solid fa-check" style="color: var(--danger); display: none;"></i>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div id="varianti-list-admin" style="width: 100%;"></div>
@@ -108,6 +126,10 @@ export function avviaMotoreVariantiAdmin(db, auth, userDataPrivate) {
     let globalRotCacheAdmin = null;
     let globalDbCacheAdmin = null;
     const DATA_INIZIO_NUOVI_TURNI = "2026-06-01"; 
+    
+    // Variabili per ordinamento e cache
+    window.ordineVariantiAdminAttuale = 'turni';
+    window.variantiCondiviseAdminCache = [];
 
     let pzVarianteAdmin = null;
     let currentImagePathVarAdmin = "";
@@ -365,6 +387,35 @@ export function avviaMotoreVariantiAdmin(db, auth, userDataPrivate) {
         return turnoStr ? turnoStr.toUpperCase().trim() : "";
     }
 
+    // Funzione per impostare e gestire l'ordinamento admin
+    window.impostaOrdinamentoVariantiAdmin = function(tipo) {
+        window.ordineVariantiAdminAttuale = tipo;
+        document.getElementById('var-filter-menu-admin').style.display = 'none';
+        document.getElementById('check-sort-turni-admin').style.display = tipo === 'turni' ? 'block' : 'none';
+        document.getElementById('check-sort-nomi-admin').style.display = tipo === 'nomi' ? 'block' : 'none';
+        if (window.variantiCondiviseAdminCache && window.variantiCondiviseAdminCache.length > 0) {
+            window.ordinaEDisegnaVariantiAdmin();
+        }
+    };
+
+    window.ordinaEDisegnaVariantiAdmin = function() {
+        let array = window.variantiCondiviseAdminCache;
+        array.sort((a, b) => {
+            if (a.isMate && !b.isMate) return -1;
+            if (!a.isMate && b.isMate) return 1;
+            
+            if (window.ordineVariantiAdminAttuale === 'nomi') {
+                let cmpCognome = a.cognome.localeCompare(b.cognome);
+                if (cmpCognome !== 0) return cmpCognome;
+                return a.nome.localeCompare(b.nome);
+            } else {
+                return a.turnoStr.localeCompare(b.turnoStr, undefined, {numeric: true});
+            }
+        });
+        disegnaVariantiAdmin(array);
+        window.filtraVariantiAdmin(); 
+    };
+
     async function caricaStatoVariantiAdmin() {
         mostraVistaAdmin('view-var-admin-loading');
         try {
@@ -382,47 +433,6 @@ export function avviaMotoreVariantiAdmin(db, auth, userDataPrivate) {
             console.error("Errore caricamento admin", error); 
         }
     }
-
-    // --- NUOVA FUNZIONE DI MIGRAZIONE ---
-    window.migraConsensiAdmin = async function() {
-        if (!confirm("Vuoi avviare la migrazione dei dati di consenso (Varianti) dalla raccolta 'calendario' alla raccolta 'utenti'?\n\nL'operazione è sicura e non eliminerà i turni degli utenti.")) return;
-        
-        const btn = document.getElementById('btn-migra-consensi');
-        if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-        
-        try {
-            const calSnap = await getDocs(collection(db, "calendario"));
-            let count = 0;
-            let promises = [];
-            
-            calSnap.forEach(calDoc => {
-                const data = calDoc.data();
-                let updates = {};
-                let hasUpdates = false;
-                
-                // Rileva eventuali dati di consenso lasciati nella collezione calendario
-                if (data.condivisioneVarianti !== undefined) { updates.condivisioneVarianti = data.condivisioneVarianti; hasUpdates = true; }
-                if (data.revocheCondivisione !== undefined) { updates.revocheCondivisione = data.revocheCondivisione; hasUpdates = true; }
-                if (data.bannatoVarianti !== undefined) { updates.bannatoVarianti = data.bannatoVarianti; hasUpdates = true; }
-                
-                if (hasUpdates) {
-                    const userRef = doc(db, "utenti", calDoc.id);
-                    promises.push(updateDoc(userRef, updates).then(() => count++).catch(e => {
-                        console.warn("Documento utente non trovato per la migrazione: ", calDoc.id);
-                    }));
-                }
-            });
-            
-            await Promise.all(promises);
-            alert(`Migrazione completata con successo! Sono stati aggiornati ${count} profili.`);
-            
-        } catch (error) {
-            console.error("Errore durante la migrazione:", error);
-            alert("Errore durante la migrazione dei dati.");
-        } finally {
-            if(btn) btn.innerHTML = '<i class="fa-solid fa-database"></i>';
-        }
-    };
 
     // GESTIONE REVOCHE E BAN
     window.apriListaRevocheAdmin = async function() {
@@ -450,7 +460,7 @@ export function avviaMotoreVariantiAdmin(db, auth, userDataPrivate) {
                     revocati.push({
                         uid: uid,
                         nome: (utenteData && utenteData.nome) || (calData && calData.nomePubblico) || "Utente",
-                        cognome: (utenteData && utenteData.cognome) || (calData && calData.cognomePubblico) || "Sconosciuto",
+                        cognome: (utenteData && utenteData.cognome) || (calData && calData.nomePubblico) || "Sconosciuto",
                         matricola: (utenteData && utenteData.matricola) || (calData && calData.matricolaPubblico) || "N/D",
                         revoche: revoche,
                         bannato: bannato
@@ -598,13 +608,9 @@ export function avviaMotoreVariantiAdmin(db, auth, userDataPrivate) {
                 });
             });
             
-            turniCondivisi.sort((a, b) => {
-                if (a.isMate && !b.isMate) return -1;
-                if (!a.isMate && b.isMate) return 1;
-                return a.turnoStr.localeCompare(b.turnoStr, undefined, {numeric: true});
-            });
-            
-            disegnaVariantiAdmin(turniCondivisi);
+            window.variantiCondiviseAdminCache = turniCondivisi;
+            window.ordinaEDisegnaVariantiAdmin();
+
         } catch (error) { 
             console.error(error);
             listDiv.innerHTML = "<div style='color:var(--danger); text-align:center;'>Errore di caricamento.</div>"; 

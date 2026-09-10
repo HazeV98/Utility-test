@@ -1,20 +1,13 @@
 const GH_OWNER = "HazeV98"; 
-const GH_REPO = "Utility-test";
+const GH_REPO = "Utility";
 
 // Stili base e Dark Mode
 const stiliPlan = document.createElement('style');
 stiliPlan.innerHTML = `
     .plan-glass-panel {
-        background: rgba(255, 255, 255, 0.85) !important;
+        background: var(--surface) !important;
         backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.6) !important;
-    }
-    :root[data-theme="dark"] .plan-glass-panel, 
-    @media (prefers-color-scheme: dark) { 
-        :root:not([data-theme="light"]) .plan-glass-panel {
-            background: rgba(26, 29, 36, 0.85) !important;
-            border-color: rgba(255, 255, 255, 0.1) !important;
-        }
+        border: 1px solid var(--border-color) !important;
     }
 
     /* Inversione Colori Planimetria Standard (Immagine base) in Dark Mode */
@@ -60,6 +53,7 @@ let invShaAttuale = null;
 
 let idPlanAttivo = null;
 let isEditMode = false;
+let hasUnsavedChanges = false; // Aggiunto per tracciare i salvataggi in sospeso
 let globalIsAdminCollab = false;
 let livelloCorrenteIdx = 0;
 let statoDropPin = null; 
@@ -69,6 +63,7 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
     const token = localStorage.getItem('gh_admin_token');
     globalIsAdminCollab = isAdminOrCollab || (token ? true : false);
     isEditMode = false;
+    hasUnsavedChanges = false; // Reset all'avvio
     statoDropPin = null;
 
     const container = document.getElementById(containerId);
@@ -134,7 +129,7 @@ export async function inizializzaPlanimetria(containerId, planId, databaseIgnora
     if (globalIsAdminCollab) document.getElementById('fab-edit-plan').style.display = 'flex';
 
     if (mappaPlan) mappaPlan.remove(); 
-    mappaPlan = L.map('plan-map-container', { crs: L.CRS.Simple, minZoom: -4, zoomControl: false, zoomSnap: 0 });
+    mappaPlan = L.map('plan-map-container', { crs: L.CRS.Simple, minZoom: -4, zoomControl: false, zoomSnap: 0, attributionControl: false });
     L.control.zoom({ position: 'bottomleft' }).addTo(mappaPlan); // Spostato bottomleft per non dare fastidio
     markersLayer = L.layerGroup().addTo(mappaPlan);
 
@@ -292,7 +287,7 @@ async function migrazioneVecchiDati(token) {
 
     if (globalIsAdminCollab && token) {
         if (salvaGlo) await salvaInventarioGlobaleSuGitHub();
-        if (salvaLoc) await salvaPlanimetriaSuGitHub();
+        if (salvaLoc) await salvaPlanimetriaSuGitHub(false, true); // Forziamo al caricamento
     }
 }
 
@@ -415,7 +410,15 @@ async function salvaInventarioGlobaleSuGitHub() {
     } catch(e) {}
 }
 
-async function salvaPlanimetriaSuGitHub(mostraCaricamento = false) {
+async function salvaPlanimetriaSuGitHub(mostraCaricamento = false, forzaSalvataggio = false) {
+    // Gestione salvataggio locale temporaneo in Edit Mode
+    if (isEditMode && !forzaSalvataggio) {
+        hasUnsavedChanges = true;
+        aggiornaLegenda();
+        disegnaLivelloCorrente();
+        return; // Esce senza chiamare le API di GitHub
+    }
+
     const token = localStorage.getItem('gh_admin_token');
     if (!token) return alert("Manca il token PAT Admin!");
     
@@ -433,6 +436,7 @@ async function salvaPlanimetriaSuGitHub(mostraCaricamento = false) {
         if (!res.ok) throw new Error("Errore salvataggio planimetria");
         
         fileShaAttuale = (await res.json()).content.sha; 
+        hasUnsavedChanges = false; // Modifiche locali salvate con successo
         aggiornaLegenda(); 
         disegnaLivelloCorrente();
     } catch(e) { console.error("Errore salvataggio", e); } 
@@ -449,19 +453,22 @@ function salvaDimensionePin(idPin, newSize) {
     }
 }
 
-function toggleEditMode() {
-    isEditMode = !isEditMode;
+async function toggleEditMode() {
     const btn = document.getElementById('fab-edit-plan');
     const icon = document.getElementById('icon-edit-plan');
     const fabDb = document.getElementById('fab-db-schede');
     const fabAdd = document.getElementById('fab-add-pin');
     
     if (isEditMode) {
-        btn.style.background = 'var(--success)'; 
-        icon.className = "fa-solid fa-check";
-        fabDb.style.display = 'flex';
-        fabAdd.style.display = 'flex';
-    } else {
+        // Disattivazione Edit Mode: salvo su GitHub se ci sono modifiche in sospeso
+        if (hasUnsavedChanges) {
+            icon.className = "fa-solid fa-spinner fa-spin";
+            btn.disabled = true;
+            await salvaPlanimetriaSuGitHub(false, true); // forza il salvataggio remoto
+            btn.disabled = false;
+        }
+
+        isEditMode = false;
         btn.style.background = 'var(--primary)'; 
         icon.className = "fa-solid fa-pen";
         fabDb.style.display = 'none';
@@ -470,6 +477,14 @@ function toggleEditMode() {
         statoDropPin = null;
         document.getElementById('plan-drop-indicator').style.display = 'none';
         document.getElementById('plan-map-container').style.cursor = 'grab';
+    } else {
+        // Attivazione Edit Mode
+        isEditMode = true;
+        hasUnsavedChanges = false;
+        btn.style.background = 'var(--success)'; 
+        icon.className = "fa-solid fa-check";
+        fabDb.style.display = 'flex';
+        fabAdd.style.display = 'flex';
     }
     disegnaLivelloCorrente(); 
 }
@@ -882,7 +897,7 @@ function apriEditorScheda(id) {
 
         <div style="display:flex; justify-content:space-between; margin-bottom: 20px;">
             <button onclick="document.getElementById('upload-media-plan').click()" style="background:var(--primary); color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-photo-film"></i> Immagine/Video</button>
-            <button onclick="document.getElementById('upload-pdf-plan').click()" style="background:var(--danger); color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+            <button onclick="document.getElementById('upload-pdf-plan').click()" style="background:var(--danger); color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-file-pdf"></i></button>
             
             <input type="file" id="upload-media-plan" accept="image/*, video/*" style="display:none;" onchange="window.Plan.gestisciUploadMediaPlan(event, 'media', '${id}')">
             <input type="file" id="upload-pdf-plan" accept="application/pdf" style="display:none;" onchange="window.Plan.gestisciUploadMediaPlan(event, 'pdf', '${id}')">

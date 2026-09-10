@@ -1,0 +1,30 @@
+{
+  "20": {},
+  "MC": {},
+  "PO": {
+    "PO55_MAR-SAB": [
+      {
+        "partenza_luogo": "LIDO CASINO'",
+        "partenza_ora": "17:00",
+        "arrivo_luogo": "LIDO CASINO'",
+        "arrivo_ora": "0:04"
+      }
+    ],
+    "PO56_MAR-SAB": [
+      {
+        "partenza_luogo": "LIDO CASINO'",
+        "partenza_ora": "19:00",
+        "arrivo_luogo": "LIDO CASINO'",
+        "arrivo_ora": "2:04"
+      }
+    ],
+    "PO57_MAR-SAB": [
+      {
+        "partenza_luogo": "LIDO CASINO'",
+        "partenza_ora": "20:00",
+        "arrivo_luogo": "LIDO CASINO'",
+        "arrivo_ora": "3:04"
+      }
+    ]
+  }
+}
