@@ -775,6 +775,14 @@
             <button class="btn-modal" style="background: transparent; color: var(--text-muted); border: 2px solid var(--border-color);" onclick="window.chiudiModal('modal-dettaglio-utente')">Chiudi</button>
         </div>
     </div>
+    
+    <div id="modal-folder-view" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-folder-view')">
+        <div class="modal-content" style="max-width: 500px; padding: 24px; text-align: center;">
+            <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 24px; top: 24px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-folder-view')"></i>
+            <h2 id="folder-modal-title" style="margin-top: 0; margin-bottom: 24px; font-size: 24px; color: var(--primary);">Raccolta</h2>
+            <div id="folder-app-container" class="app-grid" style="width: 100%; gap: 24px 0;"></div>
+        </div>
+    </div>
 
     <!-- SCRIPT CHE GESTISCE TUTTA LA LOGICA E I MODULI -->
     <script type="module" src="./moduli/index.js"></script>
