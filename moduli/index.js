@@ -500,6 +500,8 @@ window.LayoutEngine = {
         const container = document.getElementById('app-container');
         container.innerHTML = ''; 
         
+        let foldersMap = {};
+
         window.DYNAMIC_APPS.forEach((app, index) => {
             const cond = app.conditions || [app.condition].filter(Boolean);
             const isVisibleByCond = () => {
@@ -513,20 +515,55 @@ window.LayoutEngine = {
 
             if(!isVisibleByCond() && !globalIsAdmin) return;
             
-            const finalColor = app.defaultColor || "#0066cc";
-            
-            const btn = document.createElement('div');
-            btn.className = 'app-btn';
-            btn.dataset.id = app.id;
-            btn.style.animationDelay = `${index * 0.04}s`;
-            btn.style.cursor = 'pointer';
-            
-            btn.innerHTML = `
-                <div class="app-icon" style="background-color: ${finalColor};"><i class="${app.icon || 'fa-solid fa-link'}"></i></div>
-                <div class="app-label">${app.label.replace(/\n/g, '<br>')}</div>
-            `;
-            
-            container.appendChild(btn);
+            if (app.folder) {
+                if (!foldersMap[app.folder]) {
+                    foldersMap[app.folder] = { count: 0, element: null };
+                    
+                    const btn = document.createElement('div');
+                    btn.className = 'app-btn';
+                    btn.dataset.folder = app.folder;
+                    btn.style.animationDelay = `${index * 0.04}s`;
+                    btn.style.cursor = 'pointer';
+                    btn.onclick = () => window.apriCartella(app.folder);
+                    
+                    // Contenitore cartella con CSS Grid 2x2 esatto
+                    btn.innerHTML = `
+                        <div class="app-icon folder-grid" style="background-color: var(--surface-hover); border: 2px solid var(--border-color); display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 4px; padding: 8px; box-sizing: border-box; align-items: center; justify-items: center;">
+                        </div>
+                        <div class="app-label">${app.folder}</div>
+                    `;
+                    
+                    foldersMap[app.folder].element = btn;
+                    container.appendChild(btn);
+                }
+                
+                // Aggiunge solo le prime 4 icone per l'anteprima esterna
+                if (foldersMap[app.folder].count < 4) {
+                    const grid = foldersMap[app.folder].element.querySelector('.folder-grid');
+                    const finalColor = app.defaultColor || "#0066cc";
+                    grid.insertAdjacentHTML('beforeend', `
+                        <div style="background-color: ${finalColor}; border-radius: 5px; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; width: 100%; height: 100%; box-shadow: var(--shadow-sm);">
+                            <i class="${app.icon || 'fa-solid fa-link'}"></i>
+                        </div>
+                    `);
+                    foldersMap[app.folder].count++;
+                }
+            } else {
+                const finalColor = app.defaultColor || "#0066cc";
+                
+                const btn = document.createElement('div');
+                btn.className = 'app-btn';
+                btn.dataset.id = app.id;
+                btn.style.animationDelay = `${index * 0.04}s`;
+                btn.style.cursor = 'pointer';
+                
+                btn.innerHTML = `
+                    <div class="app-icon" style="background-color: ${finalColor};"><i class="${app.icon || 'fa-solid fa-link'}"></i></div>
+                    <div class="app-label">${app.label.replace(/\n/g, '<br>')}</div>
+                `;
+                
+                container.appendChild(btn);
+            }
         });
 
         setTimeout(() => {
@@ -834,6 +871,19 @@ window.injectAdminConfigTools = () => {
                     <div id="reorder-list" style="max-height:60vh; overflow-y:auto; margin-bottom:20px;"></div>
                     <button class="btn-modal" style="background:var(--success); color:white;" onclick="window.salvaRiordinoGitHub()"><i class="fa-solid fa-cloud-arrow-up"></i> Salva Layout su GitHub</button>
                 </div>
+            </div>
+            
+            <div id="modal-sposta-cartella" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-sposta-cartella')">
+                <div class="modal-content">
+                    <h2 style="margin-top: 0; color: var(--primary);">Sposta in Raccolta</h2>
+                    <input type="hidden" id="sposta-app-id">
+                    <label style="font-size:12px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:8px;">Seleziona posizione:</label>
+                    <select id="sposta-folder-select" class="input-field" style="margin-bottom:10px;" onchange="if(this.value==='new') document.getElementById('sposta-new-folder').style.display='block'; else document.getElementById('sposta-new-folder').style.display='none';">
+                    </select>
+                    <input type="text" id="sposta-new-folder" class="input-field" placeholder="Nome nuova raccolta" style="display:none; margin-bottom:10px;">
+                    
+                    <button class="btn-modal" style="background:var(--success); color:white;" onclick="window.salvaSpostamentoCartella()"><i class="fa-solid fa-check"></i> Conferma Spostamento</button>
+                </div>
             </div>`);
         }
     }
@@ -965,8 +1015,10 @@ window.salvaAppConfig = async () => {
     let currentApps = [...window.DYNAMIC_APPS];
     if(originalId) {
         const idx = currentApps.findIndex(a => a.id === originalId);
-        if(idx !== -1) currentApps[idx] = appObj;
-        else currentApps.push(appObj);
+        if(idx !== -1) {
+            if (currentApps[idx].folder) appObj.folder = currentApps[idx].folder;
+            currentApps[idx] = appObj;
+        } else currentApps.push(appObj);
     } else {
         currentApps.push(appObj);
     }
@@ -978,8 +1030,13 @@ window.apriModalReorderApp = () => {
     const cont = document.getElementById('reorder-list');
     cont.innerHTML = window.DYNAMIC_APPS.map((a, i) => `
         <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--surface-hover); border-radius:8px; margin-bottom:5px;">
-            <span><i class="${a.icon}" style="color:${a.defaultColor}; margin-right:10px;"></i> ${a.label}</span>
+            <span style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+                <i class="${a.icon}" style="color:${a.defaultColor};"></i> 
+                ${a.label}
+                ${a.folder ? `<span style="font-size:10px; background:var(--primary); color:white; padding:2px 6px; border-radius:10px;"><i class="fa-solid fa-folder"></i> ${a.folder}</span>` : ''}
+            </span>
             <div style="display:flex; gap:5px;">
+                <button class="btn-modal" style="background:#17a2b8; color:white; padding:5px 10px; font-size:12px; margin:0; width:auto;" onclick="window.apriSpostaInCartella('${a.id}')" title="Gestisci Raccolta"><i class="fa-solid fa-folder-open"></i></button>
                 <button onclick="window.spostaApp(${i}, -1)" style="padding:5px 10px; border-radius:4px; background:var(--surface); border:1px solid gray;">▲</button>
                 <button onclick="window.spostaApp(${i}, 1)" style="padding:5px 10px; border-radius:4px; background:var(--surface); border:1px solid gray;">▼</button>
             </div>
@@ -1119,4 +1176,79 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
- 
+// ============================================================================
+// GESTIONE RACCOLTE (CARTELLE)
+// ============================================================================
+window.apriSpostaInCartella = (appId) => {
+    const app = window.DYNAMIC_APPS.find(a => a.id === appId);
+    if(!app) return;
+    document.getElementById('sposta-app-id').value = appId;
+    
+    const folders = [...new Set(window.DYNAMIC_APPS.map(a => a.folder).filter(Boolean))];
+    const select = document.getElementById('sposta-folder-select');
+    select.innerHTML = '<option value="">Main (Pagina Principale)</option>';
+    folders.forEach(f => {
+        select.insertAdjacentHTML('beforeend', `<option value="${f}">${f}</option>`);
+    });
+    select.insertAdjacentHTML('beforeend', '<option value="new">+ Nuova Raccolta al momento...</option>');
+    
+    select.value = (app.folder && folders.includes(app.folder)) ? app.folder : "";
+    document.getElementById('sposta-new-folder').style.display = 'none';
+    document.getElementById('sposta-new-folder').value = '';
+    
+    window.apriModal('modal-sposta-cartella');
+};
+
+window.salvaSpostamentoCartella = async () => {
+    const appId = document.getElementById('sposta-app-id').value;
+    let folder = document.getElementById('sposta-folder-select').value;
+    
+    if (folder === 'new') {
+        folder = document.getElementById('sposta-new-folder').value.trim();
+        if (!folder) return alert("Inserisci il nome della nuova raccolta.");
+    }
+    
+    const appIndex = window.DYNAMIC_APPS.findIndex(a => a.id === appId);
+    if (appIndex > -1) {
+        if (folder === "") delete window.DYNAMIC_APPS[appIndex].folder;
+        else window.DYNAMIC_APPS[appIndex].folder = folder;
+        
+        if(await window.pushToGitHub(window.DYNAMIC_APPS)) {
+            window.chiudiModal('modal-sposta-cartella');
+            window.apriModalReorderApp();
+            window.LayoutEngine.render();
+        }
+    }
+};
+
+
+window.apriCartella = (folderName) => {
+    document.getElementById('folder-modal-title').innerText = folderName;
+    const container = document.getElementById('folder-app-container');
+    container.innerHTML = '';
+
+    const apps = window.DYNAMIC_APPS.filter(a => a.folder === folderName);
+    apps.forEach((app, index) => {
+        const cond = app.conditions || [app.condition].filter(Boolean);
+        const isVisible = (globalIsAdmin) || (!cond || cond.length === 0) || 
+                          (cond.includes('vip') && (globalIsVip || globalIsCollab)) || 
+                          (cond.includes('collab') && globalIsCollab) || 
+                          (cond.includes('tutti'));
+
+        if(!isVisible && !globalIsAdmin) return;
+
+        const finalColor = app.defaultColor || "#0066cc";
+        const btn = document.createElement('div');
+        btn.className = 'app-btn';
+        btn.dataset.id = app.id;
+        btn.style.animationDelay = `${index * 0.04}s`;
+        btn.style.cursor = 'pointer';
+        btn.innerHTML = `
+            <div class="app-icon" style="background-color: ${finalColor};"><i class="${app.icon || 'fa-solid fa-link'}"></i></div>
+            <div class="app-label" style="font-size: 13px;">${app.label.replace(/\n/g, '<br>')}</div>
+        `;
+        btn.onclick = () => { window.chiudiModal('modal-folder-view'); window.eseguiAzioneApp(app.id); };
+        container.appendChild(btn);
+    });
+    window.apriModal('modal-folder-view');
+};
