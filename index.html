@@ -20,6 +20,22 @@
     </script>
 
     <script data-goatcounter="https://hazev.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+                .then(registration => {
+                    console.log('[Service Worker] Registrato con successo.');
+                    // Controlla in background se c'è una versione aggiornata di sw.js sul server
+                    registration.update();
+                })
+                .catch(error => {
+                    console.error('[Service Worker] Errore di registrazione:', error);
+                });
+        });
+    }
+</script>
+
     <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.0/dist/panzoom.min.js"></script>
     
     <link rel="manifest" href="manifest.json">
