@@ -731,6 +731,36 @@
         <input type="file" id="fileInput" style="display:none" accept=".json" onchange="importaDatiDaFile(event)">
         <button class="btn" style="background: var(--turno);" onclick="esportaDatiSuFile()">Scarica Backup (Esporta)</button>
         <button class="btn" style="background: var(--riposo);" onclick="document.getElementById('fileInput').click()">Carica Backup (Importa)</button>
+
+        <div style="background: var(--bg); padding: 15px; border-radius: 16px; margin-top: 15px; text-align: left; border: 1px solid var(--border-color);">
+
+            <label style="display: flex; align-items: center; font-size: 15px; color: var(--text-muted); font-weight: bold; cursor: pointer;">
+                <input type="checkbox" id="backupAutoToggle" style="width: 22px; height: 22px; margin-right: 10px; accent-color: #2dce89;" onchange="toggleBackupAutomatico(this.checked)">
+                <i class="fa-solid fa-clock-rotate-left fa-fw" style="margin-right: 5px;"></i> Backup Automatico Giornaliero
+            </label>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 6px 0 0 32px;">Sincronizzato su tutti i tuoi dispositivi.</p>
+
+            <div id="backupAutoOpzioni" style="display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-color);">
+
+                <label style="display: flex; align-items: center; font-size: 14px; color: var(--text-muted); margin-bottom: 10px; cursor: pointer;">
+                    <input type="checkbox" id="backupAutoLocaleToggle" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #5e72e4;" onchange="toggleBackupAutoLocale(this.checked)">
+                    Salva file sul dispositivo
+                </label>
+
+                <label style="display: flex; align-items: center; font-size: 14px; color: var(--text-muted); cursor: pointer;">
+                    <input type="checkbox" id="backupAutoTelegramToggle" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #0088cc;" onchange="toggleBackupAutoTelegram(this.checked)">
+                    <i class="fa-brands fa-telegram fa-fw" style="margin-right: 5px;"></i> Invia a Telegram
+                </label>
+
+                <div id="backupTelegramCredenziali" style="display: none; margin-top: 12px;">
+                    <input type="text" id="backupTelegramToken" placeholder="Token del bot Telegram" onblur="salvaCredenzialiTelegram()" style="width: 100%; padding: 12px; margin: 0 0 8px 0; border: 1px solid var(--border-color); border-radius: 10px; font-size: 14px; box-sizing: border-box;">
+                    <input type="text" id="backupTelegramChatId" placeholder="Chat ID" onblur="salvaCredenzialiTelegram()" style="width: 100%; padding: 12px; margin: 0; border: 1px solid var(--border-color); border-radius: 10px; font-size: 14px; box-sizing: border-box;">
+                    <button class="btn" style="background: #0088cc; margin-top: 10px;" onclick="testBackupTelegram()">Invia Backup di Prova</button>
+                    <p style="font-size: 12px; color: var(--text-muted); margin: 8px 0 0 0;">Token e Chat ID restano solo su questo dispositivo: vanno inseriti separatamente su ognuno.</p>
+                </div>
+            </div>
+        </div>
+
         <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiBackup()">Chiudi</button>
     </div>
 </div>
