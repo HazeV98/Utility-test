@@ -17,6 +17,14 @@ stiliEtichette.innerHTML = `
     .zoom-16 .etichetta-canale { font-size: 12px; }
     .zoom-17-plus .etichetta-canale { font-size: 14px; }
 
+    :root[data-theme="dark"] .etichetta-canale,
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) .etichetta-canale {
+            color: #fff !important;
+            text-shadow: 1.5px 1.5px 0 #000, -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000 !important;
+        }
+    }
+
     :root[data-theme="dark"] .layer-standard,
     @media (prefers-color-scheme: dark) {
         :root:not([data-theme="light"]) .layer-standard {
@@ -28,6 +36,7 @@ stiliEtichette.innerHTML = `
         background: rgba(255, 255, 255, 0.85) !important;
         backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.6) !important;
+        color: var(--text-main) !important;
     }
     :root[data-theme="dark"] .mappa-glass-panel, 
     @media (prefers-color-scheme: dark) { 
@@ -94,13 +103,13 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
 
         <!-- Pulsanti Fluttuanti (FAB) (spostati a 95px per evitare l'header) -->
         <div style="position: absolute; top: calc(95px + env(safe-area-inset-top)); right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 15px;">
-            <button class="icon-btn fab-btn mappa-glass-panel" title="Filtri e Legenda" onclick="window.Mappa.toggleLegend()" style="width: 45px; height: 45px; border-radius: 50%; color: var(--primary); box-shadow: var(--shadow-md);">
+            <button class="icon-btn fab-btn mappa-glass-panel" title="Filtri e Legenda" onclick="window.Mappa.toggleLegend()" style="width: 45px; height: 45px; border-radius: 50%; box-shadow: var(--shadow-md); display: flex; justify-content: center; align-items: center; cursor: pointer; border: none;">
                 <i class="fa-solid fa-filter"></i>
             </button>
-            <button class="icon-btn fab-btn mappa-glass-panel" title="Cambia Sfondo" onclick="window.Mappa.toggleSfondo()" style="width: 45px; height: 45px; border-radius: 50%; color: var(--text-main); box-shadow: var(--shadow-md);">
+            <button class="icon-btn fab-btn mappa-glass-panel" title="Cambia Sfondo" onclick="window.Mappa.toggleSfondo()" style="width: 45px; height: 45px; border-radius: 50%; box-shadow: var(--shadow-md); display: flex; justify-content: center; align-items: center; cursor: pointer; border: none;">
                 <i class="fa-solid fa-layer-group"></i>
             </button>
-            <button id="fab-edit-mappa" class="icon-btn fab-btn" title="Modifica Dati" onclick="window.Mappa.toggleEdit()" style="display: none; width: 45px; height: 45px; border-radius: 50%; background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(0,102,204,0.4); border: none;">
+            <button id="fab-edit-mappa" class="icon-btn fab-btn" title="Modifica Dati" onclick="window.Mappa.toggleEdit()" style="display: none; width: 45px; height: 45px; border-radius: 50%; background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(0,102,204,0.4); border: none; justify-content: center; align-items: center; cursor: pointer;">
                 <i class="fa-solid fa-pen" id="icon-edit-mappa"></i>
             </button>
         </div>
@@ -116,7 +125,7 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
 
     if (mappaAttiva) mappaAttiva.remove(); 
 
-    mappaAttiva = L.map('leaflet-map-container', { zoomControl: false }).setView([45.435, 12.325], 13);
+    mappaAttiva = L.map('leaflet-map-container', { zoomControl: false, attributionControl: false }).setView([45.435, 12.325], 13);
     
     L.control.zoom({ position: 'bottomleft' }).addTo(mappaAttiva);
     
@@ -124,11 +133,11 @@ export async function inizializzaMappaCanali(containerId, databaseFirebaseIgnora
     mappaAttiva.on('moveend', gestisciEtichetteVisibili);
 
     layerStandard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors', maxZoom: 19, className: 'layer-standard'
+        maxZoom: 19, className: 'layer-standard'
     });
     
     layerSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri', maxZoom: 17
+        maxZoom: 17
     });
 
     layerStandard.addTo(mappaAttiva);

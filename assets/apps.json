@@ -91,7 +91,7 @@
         "id": "barcadvisor",
         "label": "BarcAdvisor",
         "icon": "fa-solid fa-sailboat",
-        "defaultColor": "#ff9800",
+        "defaultColor": "#0066cc",
         "conditions": [
             "tutti"
         ],
@@ -127,6 +127,19 @@
         "splitModule": true
     },
     {
+        "id": "annunci",
+        "label": "Bacheca annunci",
+        "icon": "fa-regular fa-clipboard",
+        "defaultColor": "#28a745",
+        "conditions": [
+            "tutti"
+        ],
+        "isModule": true,
+        "moduleId": "annunci",
+        "moduleName": "bacheca",
+        "splitModule": false
+    },
+    {
         "id": "orari",
         "label": "Orari Navigazione",
         "icon": "fa-regular fa-clock",
@@ -137,7 +150,30 @@
         "isModule": true,
         "moduleId": "orari",
         "moduleName": "orari",
-        "splitModule": true
+        "splitModule": true,
+        "folder": "Orari"
+    },
+    {
+        "id": "busurb",
+        "label": "Orari bus urbani",
+        "icon": "fa-solid fa-bus-simple",
+        "defaultColor": "#28a745",
+        "conditions": [
+            "tutti"
+        ],
+        "href": "https://avm.avmspa.it/it/content/linee-urbane-0",
+        "folder": "Orari"
+    },
+    {
+        "id": "busextrurb",
+        "label": "Orari Bus Extraurbani",
+        "icon": "fa-solid fa-bus-simple",
+        "defaultColor": "#fd7e14",
+        "conditions": [
+            "tutti"
+        ],
+        "href": "https://avm.avmspa.it/it/content/linee-extraurbane-0",
+        "folder": "Orari"
     },
     {
         "id": "chebateo",
@@ -147,13 +183,25 @@
         "href": "https://m.chebateo.it/",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "folder": "Orari"
+    },
+    {
+        "id": "arrivaveneto",
+        "label": "Orari Arriva Veneto",
+        "icon": "fa-solid fa-bus-simple",
+        "defaultColor": "#6f42c1",
+        "conditions": [
+            "tutti"
+        ],
+        "href": "https://www.arrivaveneto.it/orari-e-percorsi/",
+        "folder": "Orari"
     },
     {
         "id": "documenti",
         "label": "Documenti",
         "icon": "fa-solid fa-file-lines",
-        "defaultColor": "#6c757d",
+        "defaultColor": "#6f42c1",
         "conditions": [
             "tutti"
         ],
@@ -171,6 +219,19 @@
             "admin"
         ],
         "href": "vademecum.html"
+    },
+    {
+        "id": "gps",
+        "label": "Tachimetro",
+        "icon": "fa-solid fa-location-arrow",
+        "defaultColor": "#0066cc",
+        "conditions": [
+            "tutti"
+        ],
+        "isModule": true,
+        "moduleId": "gps",
+        "moduleName": "gps",
+        "splitModule": false
     },
     {
         "id": "link",
@@ -215,7 +276,7 @@
         "id": "promemoria",
         "label": "Promemoria",
         "icon": "fa-solid fa-stopwatch",
-        "defaultColor": "#0dcaf0",
+        "defaultColor": "#ffc107",
         "conditions": [
             "tutti"
         ],
@@ -228,7 +289,7 @@
         "id": "dds",
         "label": "Archivio DDS",
         "icon": "fa-solid fa-box-archive",
-        "defaultColor": "#5856d6",
+        "defaultColor": "#6f42c1",
         "conditions": [
             "tutti"
         ],
@@ -254,11 +315,11 @@
         "id": "spriss",
         "label": "Spriss",
         "icon": "fa-solid fa-martini-glass",
-        "defaultColor": "#dc3545",
-        "href": "https://spriss.avmspa.it/",
+        "defaultColor": "#fd7e14",
         "conditions": [
             "tutti"
-        ]
+        ],
+        "href": "https://spriss.avmspa.it/"
     },
     {
         "id": "bateolive",
@@ -274,24 +335,26 @@
         "id": "admin",
         "label": "Admin",
         "icon": "fa-solid fa-lock",
-        "defaultColor": "#ff3b30",
+        "defaultColor": "#dc3545",
         "conditions": [
             "admin"
         ],
         "isModule": true,
         "moduleId": "admin",
         "moduleName": "admin",
-        "splitModule": true
+        "splitModule": true,
+        "folder": "Admin"
     },
     {
         "id": "accessi",
-        "label": "Accessi",
+        "label": "Gestione utenti",
         "icon": "fa-solid fa-users-gear",
-        "defaultColor": "#1c1c1e",
-        "onclick": "window.apriGestioneAccessi()",
+        "defaultColor": "#dc3545",
         "conditions": [
             "admin"
-        ]
+        ],
+        "onclick": "window.apriGestioneAccessi()",
+        "folder": "Admin"
     },
     {
         "id": "varianti_admin",
@@ -304,6 +367,7 @@
         "isModule": true,
         "moduleId": "varianti_admin",
         "moduleName": "varianti_admin",
-        "splitModule": false
+        "splitModule": false,
+        "folder": "Admin"
     }
 ]

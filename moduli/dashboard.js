@@ -48,7 +48,7 @@ export function initUIDashboard() {
             <i class="fa-solid fa-xmark" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted);" onclick="document.getElementById('modal-dashboard-main').style.display='none'"></i>
             
             <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
-                <i class="fa-solid fa-gauge-high"></i> Dashboard
+                <i class="fa-solid fa-chart-bar"></i> Dashboard
             </h3>
 
             <div class="dash-header">
@@ -577,7 +577,7 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
     }
 
 
-    async function aggiornaMeteo(dStr) {
+        async function aggiornaMeteo(dStr) {
         const alertDiv = document.getElementById('dash-alert-pioggia');
         const dailyContainer = document.getElementById('dash-daily-weather-container');
         const weatherContainer = document.getElementById('dash-weather-container');
@@ -619,16 +619,35 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
                 `;
             }
 
+            // Calcolo la presenza di pioggia SOLO per le ore successive all'attuale (se la data è oggi)
+            let isToday = (dStr === dateToLocalISO(new Date()));
+            let currentHour = new Date().getHours();
+            
             let ciSaraPioggia = false;
-            let htmlOrario = "";
+            let maxFutureProb = 0;
 
+            for (let i = 0; i <= 23; i++) {
+                let isFutureOrPresentHour = !isToday || (i >= currentHour);
+                if (isFutureOrPresentHour) {
+                    let wCode = data.hourly.weathercode[i];
+                    let precProb = data.hourly.precipitation_probability[i];
+                    
+                    if ((wCode >= 51 && wCode <= 67) || (wCode >= 80 && wCode <= 82) || wCode >= 95) {
+                        ciSaraPioggia = true;
+                    }
+                    if (precProb > maxFutureProb) {
+                        maxFutureProb = precProb;
+                    }
+                }
+            }
+
+            // Costruisco la grafica per le card orarie (inalterato)
+            let htmlOrario = "";
             for (let i = 5; i <= 23; i += 2) {
                 let temp = Math.round(data.hourly.temperature_2m[i]);
                 let precProb = data.hourly.precipitation_probability[i];
                 let wCode = data.hourly.weathercode[i];
                 let timeStr = `${i.toString().padStart(2, '0')}:00`;
-
-                if ((wCode >= 51 && wCode <= 67) || (wCode >= 80 && wCode <= 82) || wCode >= 95) ciSaraPioggia = true;
 
                 let icona = '☀️';
                 if (wCode >= 1 && wCode <= 3) icona = '⛅';
@@ -649,13 +668,16 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
             }
 
             weatherContainer.innerHTML = htmlOrario;
-            if (ciSaraPioggia || Math.max(...data.hourly.precipitation_probability) > 40) {
+            
+            // Mostra l'alert solo se ci sarà pioggia da ora in poi o se la probabilità massima futura supera 40%
+            if (ciSaraPioggia || maxFutureProb > 40) {
                 alertDiv.style.display = 'flex';
             }
         } catch (e) {
             weatherContainer.innerHTML = '<div style="color:var(--danger); font-size:13px; text-align:center;">Errore caricamento meteo.</div>';
         }
     }
+
 
     // --- LOGICA VISUALIZZATORE ---
     function apriImmagineDashboard(turno, dateStr) {

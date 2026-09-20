@@ -496,13 +496,14 @@ window.LayoutEngine = {
             document.getElementById('set-theme').value = this.prefs.theme || 'system';
         }
     },
-    render: function() {
+        render: function() {
         const container = document.getElementById('app-container');
         container.innerHTML = ''; 
         
         let foldersMap = {};
+        let visualIndex = 0; // <-- NUOVO CONTATORE AGGIUNTO QUI
 
-        window.DYNAMIC_APPS.forEach((app, index) => {
+        window.DYNAMIC_APPS.forEach((app) => { // <-- Tolto l'index dal ciclo
             const cond = app.conditions || [app.condition].filter(Boolean);
             const isVisibleByCond = () => {
                 if(globalIsAdmin) return true;
@@ -522,7 +523,10 @@ window.LayoutEngine = {
                     const btn = document.createElement('div');
                     btn.className = 'app-btn';
                     btn.dataset.folder = app.folder;
-                    btn.style.animationDelay = `${index * 0.04}s`;
+                    // Usa visualIndex invece di index
+                    btn.style.animationDelay = `${visualIndex * 0.04}s`; 
+                    visualIndex++; // <-- Incrementa solo quando disegni la cartella
+                    
                     btn.style.cursor = 'pointer';
                     btn.onclick = () => window.apriCartella(app.folder);
                     
@@ -554,7 +558,10 @@ window.LayoutEngine = {
                 const btn = document.createElement('div');
                 btn.className = 'app-btn';
                 btn.dataset.id = app.id;
-                btn.style.animationDelay = `${index * 0.04}s`;
+                // Usa visualIndex invece di index
+                btn.style.animationDelay = `${visualIndex * 0.04}s`;
+                visualIndex++; // <-- Incrementa quando disegni un'app normale
+                
                 btn.style.cursor = 'pointer';
                 
                 btn.innerHTML = `
@@ -570,6 +577,7 @@ window.LayoutEngine = {
             if(window.controllaBacheca) window.controllaBacheca();
         }, 200);
     },
+
     salvaPreferenzeGlobali: function() {
         this.prefs.c1 = document.getElementById('set-col1').value; 
         this.prefs.c2 = document.getElementById('set-col2').value; 

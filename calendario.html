@@ -290,7 +290,7 @@
         [data-theme="dark"] .disclaimer-banner { color: #ffd861; }
 
         /* --- STILI MODALI --- */
-        #welcomeModal, #stepModal, #editModal, #altroModal, #resetModal, #backupModal, #imageModal, #jumpModal, #icsModal, #multiEditModal, #cambioBibbiaModal, #pdfTipo2Modal, #coloriRotazioneModal, #ferieModal, #pdfSyncModal, #mansioneModal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        #welcomeModal, #stepModal, #editModal, #altroModal, #resetModal, #backupModal, #backupTelegramInfoModal, #imageModal, #jumpModal, #icsModal, #multiEditModal, #cambioBibbiaModal, #pdfTipo2Modal, #coloriRotazioneModal, #ferieModal, #pdfSyncModal, #mansioneModal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
         .modal-content { background: var(--surface); color: var(--text); margin: 15% auto; padding: 25px; width: 85%; max-width: 400px; border-radius: 28px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); text-align: center; max-height: 80vh; overflow-y: auto; border: 1px solid var(--border-color); }
 
         select, input[type="text"], input[type="date"], input[type="number"] { width: 100%; box-sizing: border-box; margin: 15px 0; padding: 15px; border: 2px solid var(--border-color); border-radius: 14px; font-size: 16px; background: var(--bg); color: var(--text); -webkit-appearance: none; font-family: 'Inter', sans-serif; font-weight: 500; transition: border-color 0.2s; }
@@ -727,7 +727,6 @@
 <div id="backupModal">
     <div class="modal-content">
         <h3 style="color: var(--turno); margin-top: 0;"><i class="fa-solid fa-floppy-disk"></i> Backup Dati</h3>
-        <p class="instruction-text" style="font-size: 14px;">Gestisci i tuoi dati tramite file per non perdere i tuoi turni.</p>
         <input type="file" id="fileInput" style="display:none" accept=".json" onchange="importaDatiDaFile(event)">
         <button class="btn" style="background: var(--turno);" onclick="esportaDatiSuFile()">Scarica Backup (Esporta)</button>
         <button class="btn" style="background: var(--riposo);" onclick="document.getElementById('fileInput').click()">Carica Backup (Importa)</button>
@@ -747,9 +746,22 @@
                     Salva file sul dispositivo
                 </label>
 
-                <label style="display: flex; align-items: center; font-size: 14px; color: var(--text-muted); cursor: pointer;">
-                    <input type="checkbox" id="backupAutoTelegramToggle" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #0088cc;" onchange="toggleBackupAutoTelegram(this.checked)">
-                    <i class="fa-brands fa-telegram fa-fw" style="margin-right: 5px;"></i> Invia a Telegram
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <label style="display: flex; align-items: center; font-size: 14px; color: var(--text-muted); cursor: pointer;">
+                        <input type="checkbox" id="backupAutoTelegramToggle" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #0088cc;" onchange="toggleBackupAutoTelegram(this.checked)">
+                        <i class="fa-brands fa-telegram fa-fw" style="margin-right: 5px;"></i> Invia a Telegram
+                    </label>
+                    <button type="button" aria-label="Guida configurazione Telegram" title="Come configurare Telegram" onclick="apriBackupTelegramInfo()" style="border: 0; background: transparent; color: #0088cc; font-size: 18px; cursor: pointer; padding: 4px 6px;">
+                        <i class="fa-solid fa-circle-info"></i>
+                    </button>
+                </div>
+
+                <label style="display: block; font-size: 14px; color: var(--text-muted); margin-bottom: 10px;">
+                    Frequenza backup
+                    <select id="backupAutoFrequenza" onchange="cambiaFrequenzaBackupAuto(this.value)" style="margin: 6px 0 0 0; padding: 10px; font-size: 14px;">
+                        <option value="giornaliero">Una volta al giorno</option>
+                        <option value="ogni_modifica">Ad ogni modifica</option>
+                    </select>
                 </label>
 
                 <div id="backupTelegramCredenziali" style="display: none; margin-top: 12px;">
@@ -762,6 +774,24 @@
         </div>
 
         <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiBackup()">Chiudi</button>
+    </div>
+</div>
+
+<div id="backupTelegramInfoModal" onclick="if(event.target.id === 'backupTelegramInfoModal') chiudiBackupTelegramInfo()">
+    <div class="modal-content" style="text-align: left;">
+        <h3 style="color: #0088cc; margin-top: 0; text-align: center;"><i class="fa-brands fa-telegram"></i> Configurare i backup Telegram</h3>
+        <p class="instruction-text" style="font-size: 14px;">Per ricevere automaticamente i file di backup serve un bot Telegram e una chat di destinazione.</p>
+        <ol style="padding-left: 22px; color: var(--text); font-size: 14px; line-height: 1.6;">
+            <li>Apri Telegram e cerca <b>@BotFather</b>.</li>
+            <li>Invia <b>/newbot</b>, scegli il nome visualizzato e poi un username che termini con <b>bot</b>.</li>
+            <li>BotFather risponderà con il <b>token API</b>. Incollalo nel campo Token del bot.</li>
+            <li>Apri la chat del nuovo bot e inviagli almeno un messaggio, ad esempio <b>/start</b>.</li>
+            <li>Cerca su telegram <b>@userinfobot </b>premi <b>Avvia</b> copia il numero nel campo <b>ID </b>e incollalo qui nel campo ID</li>
+            <li>Nel risultato cerca <b>chat</b> e copia il valore numerico di <b>id</b> nel campo Chat ID.</li>
+            <li>Attiva l'opzione Telegram e usa <b>Invia Backup di Prova</b> per verificare la configurazione.</li>
+        </ol>
+        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">Il token consente di controllare il bot: non condividerlo. Le credenziali vengono salvate solo nel browser del dispositivo corrente.</p>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 10px;" onclick="chiudiBackupTelegramInfo()">Chiudi</button>
     </div>
 </div>
 
