@@ -81,6 +81,12 @@ export function initUIRotazioni() {
         .rot-btn-outline { background-color: transparent; border: 2px solid var(--border-color); color: var(--text-muted); padding: 14px; font-size: 15px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; flex-shrink: 0;}
         .rot-btn-outline:active { background-color: var(--surface-hover); transform: scale(0.98); }
 
+        /* Bottoni icona compatti (accetta/rifiuta richieste) */
+        .rot-btn-icon { background: var(--success); color: #fff; border: none; width: 36px; height: 36px; min-width: 36px; padding: 0; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+        .rot-btn-icon:active:not(:disabled) { transform: scale(0.92); }
+        .rot-btn-icon:disabled { opacity: 0.6; cursor: not-allowed; }
+        .rot-btn-icon-danger { background: transparent; color: var(--danger); border: 2px solid var(--danger); box-shadow: none; }
+
         #rot-error-msg, .rot-error-msg { color: var(--danger); font-size: 14px; margin-top: 10px; min-height: 20px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;}
 
         /* --- CARDS MENSILI --- */

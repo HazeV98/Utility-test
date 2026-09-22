@@ -18,16 +18,34 @@ export function avviaMotoreRotazioni(db, auth) {
 
     const paroleDaSaltare = ["GENNAIO", "FEBBRAIO", "MARZO", "APRILE", "MAGGIO", "GIUGNO", "LUGLIO", "AGOSTO", "SETTEMBRE", "OTTOBRE", "NOVEMBRE", "DICEMBRE", "MESE", "AGENTI"];
 
+    // Titolo atteso del gruppo dentro il json mensile (rotazioni/rotazioni_<mese>_<anno>.json) per ciascuna chiave di rotazione.
+    // ATTENZIONE: se in futuro il json usa un nome diverso per un gruppo, aggiornare qui, altrimenti verrà creato un gruppo duplicato "auto-generato".
+    const ROTAZIONI_TITOLI_JSON = {
+        "rot_fnove": "Fondamente nove", "spez_fnove": "Spezzati F.Nove", "tc_spez_fnove": "T.C. Spezzati F.Nove",
+        "rot_proma": "P.Roma", "spez_proma": "Spezzati P.Roma", "ris_proma": "Riserva P.Roma",
+        "rot_szaccaria": "S.Zaccaria", "spez_szaccaria": "Spezzati S.Zaccaria", "tc_spez_szaccaria": "T.C. Spezzati S.Zaccaria",
+        "rot_lido": "Lido", "spez_lido": "Spezzati Lido", "tc_spez_lido": "T.C. Spezzati Lido",
+        "rot_linea12": "Linea 12", "rot_linea13": "Linea 13", "rot_linea14": "Linea 14 M/N",
+        "rot_linea14_mb": "Linea 14 M/B", "rot_17sn": "Linea 17 S. Nicolò", "tc_rot_17sn": "T.C. Linea 17 S. Nicolò",
+        "rot_17tr": "Linea 17 Tronchetto", "tc_rot_17tr": "T.C. Linea 17 Tronchetto"
+    };
+
+    // Stessa data soglia usata dal modulo varianti per il calcolo dei turni storici/attuali
+    const DATA_INIZIO_NUOVI_TURNI_ROT = "2026-06-01";
+
     // Globals per UI
     window.globalNomiRotazioni = [];
     window.utentiMap = {}; 
     window.currentUtentePdf = null; 
+    window.rotazioniAutoGenerateRot = new Set(); // titoli dei gruppi ricostruiti dal calendario (assenti dal json mensile)
 
     // Stato Interno
     let databaseTurni = []; 
     let activePredictors = []; 
     let globalShiftData = {};
     let globalImgDir = "";
+    let globalRotPatternCache = {}; // cache dei file rotazioni_YYYY-MM-DD.json (pattern posizionali, come in varianti.js)
+    let globalRotPatternCacheLoaded = false;
     let pzInstance = null;
     let currentImagePath = "";
 
@@ -194,8 +212,212 @@ export function avviaMotoreRotazioni(db, auth) {
                     .then(jData => { globalShiftData = { ...globalShiftData, ...jData }; })
                     .catch(e => console.error("Errore info turni"));
             }
+
+            // File pattern posizionali delle rotazioni (rotazioni_YYYY-MM-DD.json in root), usati per ricalcolare i turni dal calendario personale
+            let rotPatternFiles = rootFiles.filter(f => f.match(/^rotazioni_\d{4}-\d{2}-\d{2}\.json$/));
+            const rotPatternPromises = rotPatternFiles.map(f => {
+                const dateMatch = f.match(/\d{4}-\d{2}-\d{2}/);
+                if (!dateMatch) return Promise.resolve();
+                return fetch(f + `?t=${new Date().getTime()}`)
+                    .then(r => r.json())
+                    .then(d => { globalRotPatternCache[dateMatch[0]] = d; })
+                    .catch(() => {});
+            });
+            await Promise.all(rotPatternPromises);
+            globalRotPatternCacheLoaded = true;
         } catch (e) { console.error("Errore mappa"); }
     };
+
+    // ==========================================
+    // MOTORE DI CALCOLO TURNI DAL CALENDARIO PERSONALE (porting da varianti.js)
+    // Usato per ricostruire una rotazione mancante nel json mensile, leggendo il
+    // calendario di chi ha aderito al modulo rotazioni con quella rotazione.
+    // ==========================================
+    function stringToNumUTC(s) {
+        if (!s) return 0;
+        let p = s.split('-');
+        return Math.floor(Date.UTC(p[0], p[1] - 1, p[2]) / 86400000);
+    }
+
+    function creaDataSicuraRot(dataStr) {
+        if (!dataStr) return new Date();
+        let p = dataStr.split('-');
+        return new Date(p[0], p[1] - 1, p[2], 12, 0, 0);
+    }
+
+    function isGiornoRiposoBaseRot(curr, cfg) {
+        if (!cfg.riposoStart) return false;
+        let ref = stringToNumUTC(cfg.riposoStart);
+        if (cfg.depositoAttivo === 'disp_det') return (((curr - ref) % 6 + 6) % 6 === 0);
+        let pos = ((curr - ref + 6) % 15 + 15) % 15;
+        return (pos === 6 || pos === 13 || pos === 14);
+    }
+
+    // Converte il codice turno in base alla mansione (marinaio/timoniere vs pilota), identico a varianti.js
+    function convertiTurnoPerMansioneRot(turno, mansione) {
+        if (!turno || !mansione) return turno;
+        let t = String(turno).toUpperCase();
+        let m = String(mansione).toLowerCase();
+        let isMarinaio = m.includes('marinaio') || m.includes('timoniere');
+
+        if (isMarinaio) {
+            let matchP = t.match(/^([1-9])[CP](\d{2})$/);
+            if (matchP) return `${matchP[1]}B${matchP[2]}`;
+        } else {
+            let matchB = t.match(/^([1-9])B(\d{2})$/);
+            if (matchB) {
+                let l = matchB[1]; let f = matchB[2];
+                let letPilota = (l === '1' || l === '2') ? 'C' : 'P';
+                return `${l}${letPilota}${f}`;
+            }
+        }
+        return t;
+    }
+
+    // Ricostruisce il turno "teorico" (calcolato) per una data, identico alla logica di varianti.js,
+    // ma basato sulla cache locale globalRotPatternCache. Non tiene conto di variazioni/cambi manuali.
+    function calcolaTurnoBaseRot(dStr, cfgData) {
+        if (!cfgData || !cfgData.depositoAttivo || !cfgData.riposoStart) return null;
+        let curr = stringToNumUTC(dStr);
+        let isPastUpdate = (cfgData.history && curr < stringToNumUTC(DATA_INIZIO_NUOVI_TURNI_ROT));
+        let cfgBase = isPastUpdate ? cfgData.history : cfgData;
+
+        if (isGiornoRiposoBaseRot(curr, cfgBase)) {
+            let titoloRiposo = 'RI';
+            if (cfgBase.riposoStart && cfgBase.depositoAttivo !== 'disp_det') {
+                let ref = stringToNumUTC(cfgBase.riposoStart);
+                let pos = ((curr - ref + 6) % 15 + 15) % 15;
+                if (pos === 13) titoloRiposo = 'AL';
+            }
+            return titoloRiposo;
+        }
+
+        if (cfgBase.depositoAttivo.startsWith('disp_')) return "Disp";
+
+        if (cfgBase.rotazioneStart) {
+            let activeCfg = (cfgData.futureConfig && curr >= stringToNumUTC(cfgData.futureConfig.dataInizio))
+                ? { start: cfgData.futureConfig.dataInizio, idx: cfgData.futureConfig.turnoIndex, tcPattern: cfgData.futureConfig.tcPattern }
+                : { start: cfgBase.rotazioneStart, idx: cfgBase.turnoIndex, tcPattern: cfgBase.tcPattern };
+
+            let refRot = stringToNumUTC(activeCfg.start), w = 0;
+            if (curr >= refRot) { for (let j = refRot; j < curr; j++) { if (!isGiornoRiposoBaseRot(j, cfgBase)) w++; } }
+            else { for (let j = refRot; j > curr; j--) { if (!isGiornoRiposoBaseRot(j, cfgBase)) w--; } }
+
+            let refRip = stringToNumUTC(cfgBase.riposoStart);
+            let startPos = ((refRot - refRip + 6) % 15 + 15) % 15;
+            let offset = [1, 3, 5, 8, 10, 12].includes(startPos) ? 1 : 0;
+
+            let rotList = [];
+            if (globalRotPatternCache) {
+                const dateChiavi = Object.keys(globalRotPatternCache).sort();
+                let rotCorrente = dateChiavi.length > 0 ? globalRotPatternCache[dateChiavi[0]] : null;
+                for (let i = dateChiavi.length - 1; i >= 0; i--) {
+                    if (curr >= stringToNumUTC(dateChiavi[i])) { rotCorrente = globalRotPatternCache[dateChiavi[i]]; break; }
+                }
+                if (rotCorrente && rotCorrente[cfgBase.depositoAttivo]) {
+                    rotList = rotCorrente[cfgBase.depositoAttivo];
+                }
+            }
+
+            if (rotList.length > 0) {
+                if (cfgBase.depositoAttivo.startsWith('tc_')) {
+                    let currPos = ((curr - refRip + 6) % 15 + 15) % 15;
+                    let isBlock2 = (currPos >= 7 && currPos <= 12);
+                    let k = isBlock2 ? (currPos - 7) : currPos;
+                    let patternDopoSingolo = activeCfg.tcPattern || cfgBase.tcPattern || 'doppio';
+                    let isAlternato = (patternDopoSingolo === 'disp') ? isBlock2 : !isBlock2;
+                    let idx = Math.floor(k / 2);
+                    if (idx >= rotList.length) idx = rotList.length - 1;
+                    let t = rotList[idx].toUpperCase();
+                    if (isAlternato) {
+                        let dispOnEven = (cfgBase.depositoAttivo === 'tc_spez_lido');
+                        if (dispOnEven && k % 2 === 0) t = "Disp";
+                        if (!dispOnEven && k % 2 !== 0) t = "Disp";
+                    }
+                    return t;
+                } else {
+                    let expandedRotList = [];
+                    let originalToExpanded = [];
+                    for (let j = 0; j < rotList.length; j++) {
+                        originalToExpanded[j] = expandedRotList.length;
+                        let currentTurn = rotList[j].toUpperCase();
+                        if (currentTurn.includes('+')) {
+                            let parts = currentTurn.split('+');
+                            expandedRotList.push(parts[0].trim());
+                            if (parts.length > 1) { expandedRotList.push(parts[1].trim()); }
+                        } else {
+                            expandedRotList.push(currentTurn);
+                            expandedRotList.push(currentTurn);
+                        }
+                    }
+                    let L_exp = expandedRotList.length;
+                    let baseExpIdx = originalToExpanded[activeCfg.idx];
+                    let blockStartIdx = baseExpIdx - (baseExpIdx % 2);
+                    let idxExp = (blockStartIdx + w + offset) % L_exp;
+                    if (idxExp < 0) idxExp += L_exp;
+                    return expandedRotList[idxExp];
+                }
+            }
+        }
+        return null;
+    }
+
+    function normalizzaTitoloRot(s) {
+        return (s || '').toString().trim().toUpperCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[.\s]+/g, ' ').trim();
+    }
+
+    // Costruisce, per le rotazioni non-disp assenti dal json mensile, i turni di tutti gli
+    // utenti abilitati al modulo rotazioni con quella rotazione, leggendo il loro calendario
+    // (solo turni calcolati, ignorando i cambi/variazioni manuali).
+    async function costruisciRotazioniMancantiRot(jsonData, allU, y, m) {
+        if (!y || !m) return [];
+        const titoliEsistenti = Object.keys(jsonData).map(normalizzaTitoloRot);
+        const giorniMese = new Date(y, m, 0).getDate();
+        const gruppiCreati = [];
+
+        for (let key in ROTAZIONI_MAP) {
+            if (key.startsWith('disp_')) continue; // gestite a parte
+            const titolo = ROTAZIONI_TITOLI_JSON[key] || ROTAZIONI_MAP[key];
+            if (titoliEsistenti.includes(normalizzaTitoloRot(titolo))) continue; // già presente nel json
+
+            const utentiRotazione = allU.filter(u => u.rotazione_richiesta === key && u.uid);
+            if (utentiRotazione.length === 0) continue; // nessun utente con questa rotazione, niente da creare
+
+            const risultati = await Promise.all(utentiRotazione.map(async u => {
+                try {
+                    const [calSnap, uSnap] = await Promise.all([
+                        getDoc(doc(db, "calendario", u.uid)),
+                        getDoc(doc(db, "utenti", u.uid))
+                    ]);
+                    if (!calSnap.exists()) return null;
+                    const cfgData = calSnap.data();
+                    const mansione = uSnap.exists() ? (uSnap.data().mansione || '') : '';
+
+                    const turni = {};
+                    for (let i = 1; i <= giorniMese; i++) {
+                        const dStr = `${y}-${String(m).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                        let base = calcolaTurnoBaseRot(dStr, cfgData);
+                        if (base === null) { turni[i.toString()] = "N/D"; continue; }
+                        turni[i.toString()] = convertiTurnoPerMansioneRot(base, mansione);
+                    }
+                    const nomeLabel = `${u.cognome || ''} ${u.nome || ''} ${u.progressivo || ''}`.replace(/\s+/g, ' ').trim();
+                    return { nome: nomeLabel || 'Sconosciuto', turni };
+                } catch (e) { console.error("Errore calcolo turni per rotazione mancante", e); return null; }
+            }));
+
+            const validi = risultati.filter(r => r !== null);
+            if (validi.length === 0) continue;
+
+            validi.sort((a, b) => a.nome.localeCompare(b.nome));
+            let finalObj = {};
+            validi.forEach(v => finalObj[v.nome] = v.turni);
+            jsonData[titolo] = finalObj;
+            gruppiCreati.push(titolo);
+        }
+        return gruppiCreati;
+    }
 
     function stringToNum(s) { 
         if(!s) return 0; 
@@ -221,12 +443,13 @@ export function avviaMotoreRotazioni(db, auth) {
         permSnap.forEach(d => {
             let pData = d.data();
             let uData = utentiBase[d.id] || {};
-            arr.push({ ...uData, ...pData });
+            arr.push({ ...uData, ...pData, uid: d.id });
         });
         return arr;
     };
 
     window.caricaRotazioniMain = async () => {
+        window.rotazioniAutoGenerateRot = new Set();
         const area = document.getElementById('rot-rotazioni-list');
         area.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);"><i class="fa-solid fa-circle-notch fa-spin" style="font-size: 32px; color: var(--primary);"></i><br><br>Scansione documenti in corso...</div>`;
 
@@ -338,6 +561,12 @@ export function avviaMotoreRotazioni(db, auth) {
                                         jsonData[tabName] = finalObj;
                                     }
                                 }
+
+                                // Rotazioni non presenti nel json mensile: le ricostruiamo dal calendario
+                                // personale di chi ha aderito al modulo rotazioni con quella rotazione.
+                                if (!globalRotPatternCacheLoaded) { await window.caricaDatiTurniSilenziosoRot(); }
+                                let gruppiAutoGenerati = await costruisciRotazioniMancantiRot(jsonData, allU, y, m);
+                                gruppiAutoGenerati.forEach(t => window.rotazioniAutoGenerateRot.add(t));
                             }
                         }
 
@@ -355,7 +584,10 @@ export function avviaMotoreRotazioni(db, auth) {
 
                             let rotTitle = document.createElement('h4');
                             rotTitle.className = "rot-title-box";
-                            rotTitle.innerHTML = `<i class="fa-solid fa-folder-tree" style="color: var(--text-muted); font-size: 14px;"></i> ${rotName}`;
+                            let badgeAuto = window.rotazioniAutoGenerateRot.has(rotName)
+                                ? ` <i class="fa-solid fa-arrows-rotate" style="color: var(--info); font-size: 12px;" title="Ricostruita automaticamente dai calendari personali (nessun documento caricato per questa rotazione)"></i>`
+                                : '';
+                            rotTitle.innerHTML = `<i class="fa-solid fa-folder-tree" style="color: var(--text-muted); font-size: 14px;"></i> ${rotName}${badgeAuto}`;
                             rotContainer.appendChild(rotTitle);
 
                             let btnTab = document.createElement('button');
@@ -1321,9 +1553,9 @@ export function avviaMotoreRotazioni(db, auth) {
                 html += `<div style="background:var(--warning-light); border:1px dashed var(--warning-border); padding:16px; margin-bottom:12px; border-radius:12px;">
                     <div style="font-weight:800; font-size:15px; color:var(--warning); cursor:pointer; display:flex; align-items:center;" onclick="window.apriDettaglioUtenteRot('${u.uid}')">${u.cognome||''} ${u.nome||''} ${u.progressivo||''} ${pallino}</div>
                     <div style="font-size:12px; color:var(--text-muted); margin-top:4px; font-weight:600;"><i class="fa-solid fa-id-badge"></i> Matr: ${u.matricola||''}</div>
-                    <div style="display:flex; gap:10px; margin-top:16px;">
-                        <button class="rot-btn" style="background:var(--success); padding:10px; font-size:13px; margin:0; box-shadow:none;" onclick="window.gestisciRichiestaRot('${u.uid}', true, this)"><i class="fa-solid fa-check"></i>✅</button>
-                        <button class="rot-btn-outline" style="color:var(--danger); border-color:var(--danger); padding:10px; font-size:13px; margin:0;" onclick="window.gestisciRichiestaRot('${u.uid}', false, this)"><i class="fa-solid fa-xmark"></i>🚫</button>
+                    <div style="display:flex; gap:8px; margin-top:16px; justify-content:flex-end;">
+                        <button class="rot-btn-icon" title="Accetta" onclick="window.gestisciRichiestaRot('${u.uid}', true, this)"><i class="fa-solid fa-check"></i></button>
+                        <button class="rot-btn-icon rot-btn-icon-danger" title="Rifiuta" onclick="window.gestisciRichiestaRot('${u.uid}', false, this)"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                 </div>`;
             });
