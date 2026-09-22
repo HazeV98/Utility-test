@@ -410,9 +410,23 @@ export function avviaMotoreRotazioni(db, auth) {
             const validi = risultati.filter(r => r !== null);
             if (validi.length === 0) continue;
 
-            validi.sort((a, b) => a.nome.localeCompare(b.nome));
+            // Accoppiamento in un unico "armo": utenti con la sequenza di turni del mese identica
+            // (stesso mezzo/incarico condiviso) vengono uniti in un'unica riga "Cognome Nome - Cognome Nome".
+            const gruppiPerFirma = {};
+            validi.forEach(v => {
+                const firma = JSON.stringify(v.turni);
+                if (!gruppiPerFirma[firma]) gruppiPerFirma[firma] = { nomi: [], turni: v.turni };
+                gruppiPerFirma[firma].nomi.push(v.nome);
+            });
+
+            let righe = Object.values(gruppiPerFirma).map(g => ({
+                nome: g.nomi.sort((a, b) => a.localeCompare(b)).join(" - "),
+                turni: g.turni
+            }));
+            righe.sort((a, b) => a.nome.localeCompare(b.nome));
+
             let finalObj = {};
-            validi.forEach(v => finalObj[v.nome] = v.turni);
+            righe.forEach(r => finalObj[r.nome] = r.turni);
             jsonData[titolo] = finalObj;
             gruppiCreati.push(titolo);
         }
@@ -552,6 +566,15 @@ export function avviaMotoreRotazioni(db, auth) {
                                 });
 
                                 const mapNomiRotDisp = { "disp_5_1": "Disponibili 5-1", "disp_6_2_6_1": "Disponibili 6-2-6-1" };
+
+                                // Rotazioni non presenti nel json mensile: le ricostruiamo dal calendario
+                                // personale di chi ha aderito al modulo rotazioni con quella rotazione.
+                                // Vanno inserite PRIMA dei gruppi "Disponibili" per rispettare l'ordine richiesto:
+                                // [rotazioni da documento] -> [rotazioni auto-generate] -> [disponibili]
+                                if (!globalRotPatternCacheLoaded) { await window.caricaDatiTurniSilenziosoRot(); }
+                                let gruppiAutoGenerati = await costruisciRotazioniMancantiRot(jsonData, allU, y, m);
+                                gruppiAutoGenerati.forEach(t => window.rotazioniAutoGenerateRot.add(t));
+
                                 for (let rotKey in dispGroups) {
                                     for (let manKey in dispGroups[rotKey]) {
                                         dispGroups[rotKey][manKey].sort((a, b) => a.sortKey - b.sortKey);
@@ -561,12 +584,6 @@ export function avviaMotoreRotazioni(db, auth) {
                                         jsonData[tabName] = finalObj;
                                     }
                                 }
-
-                                // Rotazioni non presenti nel json mensile: le ricostruiamo dal calendario
-                                // personale di chi ha aderito al modulo rotazioni con quella rotazione.
-                                if (!globalRotPatternCacheLoaded) { await window.caricaDatiTurniSilenziosoRot(); }
-                                let gruppiAutoGenerati = await costruisciRotazioniMancantiRot(jsonData, allU, y, m);
-                                gruppiAutoGenerati.forEach(t => window.rotazioniAutoGenerateRot.add(t));
                             }
                         }
 
@@ -660,17 +677,19 @@ export function avviaMotoreRotazioni(db, auth) {
         title.innerHTML = `<i class="fa-solid fa-table" style="color:var(--text-muted); font-size:18px;"></i> ${rotName}`;
         
         let html = `<div class="rot-table-responsive"><table class="rot-rotazioni-table">`;
-        html += `<thead><tr><th>Colleghi</th>`;
+        html += `<thead><tr><th>N.</th><th>Colleghi</th>`;
         for(let i=1; i<=31; i++) html += `<th>${i}</th>`;
         html += `</tr></thead><tbody>`;
 
         const dipendenti = data[rotName];
+        let numeroArmo = 0;
         for (let nome in dipendenti) {
             let nomeUpper = nome.toUpperCase();
             if (paroleDaSaltare.some(parola => nomeUpper.includes(parola)) || nome.trim() === "") continue;
 
+            numeroArmo++;
             let nomeFormattato = nome.split(" - ").join("<br>");
-            html += `<tr><td>${nomeFormattato}</td>`;
+            html += `<tr><td class="rot-cell-num">${numeroArmo}</td><td>${nomeFormattato}</td>`;
             
             for(let i=1; i<=31; i++) {
                 let turno = dipendenti[nome][i.toString()] || "";

@@ -119,9 +119,12 @@ export function initUIRotazioni() {
         .rot-rotazioni-table th, .rot-rotazioni-table td { border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); padding: 12px 10px; white-space: nowrap; color: var(--text-main); }
         
         .rot-rotazioni-table th { background-color: var(--primary); color: white; position: sticky; top: 0; z-index: 2; font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;}
-        .rot-rotazioni-table td:first-child, .rot-rotazioni-table th:first-child { position: sticky; left: 0; min-width: 120px; max-width: 160px; white-space: normal; line-height: 1.4; }
-        .rot-rotazioni-table td:first-child { background-color: var(--surface-hover); font-weight: 700; text-align: left; border-right: 2px solid var(--border-color); color: var(--primary); font-size: 12px; z-index: 3; }
-        .rot-rotazioni-table th:first-child { z-index: 4; border-right: 2px solid var(--primary-hover); }
+        .rot-rotazioni-table td:first-child, .rot-rotazioni-table th:first-child { position: sticky; left: 0; width: 36px; min-width: 36px; max-width: 36px; z-index: 3; }
+        .rot-rotazioni-table td:first-child { background-color: var(--surface-hover); font-weight: 700; text-align: center; color: var(--text-muted); font-size: 12px; }
+        .rot-rotazioni-table th:first-child { z-index: 5; }
+        .rot-rotazioni-table td:nth-child(2), .rot-rotazioni-table th:nth-child(2) { position: sticky; left: 36px; min-width: 120px; max-width: 160px; white-space: normal; line-height: 1.4; }
+        .rot-rotazioni-table td:nth-child(2) { background-color: var(--surface-hover); font-weight: 700; text-align: left; border-right: 2px solid var(--border-color); color: var(--primary); font-size: 12px; z-index: 3; }
+        .rot-rotazioni-table th:nth-child(2) { z-index: 4; border-right: 2px solid var(--primary-hover); }
 
         .cell-al { background-color: var(--bg-al); color: var(--text-al); font-weight: 700; border: 1px solid var(--border-al);}
         .cell-ri { background-color: var(--bg-ri); color: var(--text-ri); border: 1px solid var(--border-ri);}
