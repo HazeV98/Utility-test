@@ -394,21 +394,24 @@ export function avviaMotoreRotazioni(db, auth) {
                     if (!calSnap.exists()) return null;
                     const cfgData = calSnap.data();
                     const mansione = uSnap.exists() ? (uSnap.data().mansione || '') : '';
+                    const isMarinaio = /marinaio|timoniere/i.test(mansione);
 
-                    const turni = {};
+                    const turniBase = {};   // codice grezzo, non convertito per mansione -> usato per l'accoppiamento armo
+                    const turniDisplay = {}; // codice convertito secondo la propria mansione -> usato per la visualizzazione
                     let haAlmenoUnGiornoValido = false;
                     for (let i = 1; i <= giorniMese; i++) {
                         const dStr = `${y}-${String(m).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
                         let base = calcolaTurnoBaseRot(dStr, cfgData);
-                        if (base === null) { turni[i.toString()] = "N/D"; continue; }
-                        turni[i.toString()] = convertiTurnoPerMansioneRot(base, mansione);
+                        if (base === null) { turniBase[i.toString()] = "N/D"; turniDisplay[i.toString()] = "N/D"; continue; }
+                        turniBase[i.toString()] = base;
+                        turniDisplay[i.toString()] = convertiTurnoPerMansioneRot(base, mansione);
                         haAlmenoUnGiornoValido = true;
                     }
                     // Calendario presente ma non configurato (o config incompatibile): niente da mostrare, nascondiamo l'utente
                     if (!haAlmenoUnGiornoValido) return null;
 
                     const nomeLabel = `${u.cognome || ''} ${u.nome || ''} ${u.progressivo || ''}`.replace(/\s+/g, ' ').trim();
-                    return { nome: nomeLabel || 'Sconosciuto', turni };
+                    return { nome: nomeLabel || 'Sconosciuto', turniBase, turniDisplay, isMarinaio };
                 } catch (e) { console.error("Errore calcolo turni per rotazione mancante", e); return null; }
             }));
 
@@ -417,9 +420,12 @@ export function avviaMotoreRotazioni(db, auth) {
 
             // Accoppiamento in un unico "armo": utenti con la stessa sequenza di turni del mese
             // (stesso mezzo/incarico condiviso) vengono uniti in un'unica riga "Cognome Nome - Cognome Nome".
-            // Il confronto ignora i giorni "N/D" di uno dei due membri (calendario non ancora
-            // configurato per quel giorno/periodo), così una lacuna isolata non impedisce l'accoppiamento;
-            // il turno di quel giorno viene poi completato con il valore del collega abbinato.
+            // Il confronto usa il codice BASE (non convertito per mansione): un pilota e un marinaio sullo
+            // stesso mezzo hanno lo stesso codice base ma vengono mostrati con lettere diverse (P/C vs B),
+            // quindi confrontare i codici già convertiti impedirebbe l'accoppiamento.
+            // Ignora inoltre i giorni "N/D" di uno dei due membri (calendario non ancora configurato per
+            // quel giorno/periodo), così una lacuna isolata non impedisce l'accoppiamento; il turno di
+            // quel giorno viene poi completato con il valore del collega abbinato.
             function turniCompatibili(t1, t2) {
                 let sovrapposizioneTrovata = false;
                 for (let day in t1) {
@@ -437,7 +443,7 @@ export function avviaMotoreRotazioni(db, auth) {
 
             for (let i = 0; i < validi.length; i++) {
                 for (let j = i + 1; j < validi.length; j++) {
-                    if (turniCompatibili(validi[i].turni, validi[j].turni)) union(i, j);
+                    if (turniCompatibili(validi[i].turniBase, validi[j].turniBase)) union(i, j);
                 }
             }
 
@@ -446,18 +452,20 @@ export function avviaMotoreRotazioni(db, auth) {
                 const radice = find(i);
                 if (!gruppiPerFirma[radice]) gruppiPerFirma[radice] = { nomi: [], membri: [] };
                 gruppiPerFirma[radice].nomi.push(v.nome);
-                gruppiPerFirma[radice].membri.push(v.turni);
+                gruppiPerFirma[radice].membri.push(v);
             });
 
             let righe = Object.values(gruppiPerFirma).map(g => {
                 const nomi = g.nomi.slice().sort((a, b) => a.localeCompare(b));
-                // Turni uniti: per ogni giorno prende il primo valore valido tra i membri dell'armo,
-                // così un "N/D" isolato di un collega viene completato con il dato del compagno abbinato.
+                // Turni uniti: per ogni giorno preferisce il codice mostrato da un membro non-marinaio
+                // (convenzione del documento ufficiale, es. "4P04"), altrimenti usa il primo valore valido disponibile.
                 const turniUniti = {};
-                for (let day in g.membri[0]) {
+                const membriPilota = g.membri.filter(mm => !mm.isMarinaio);
+                const ordinePreferenza = [...membriPilota, ...g.membri];
+                for (let day in g.membri[0].turniDisplay) {
                     let valore = "N/D";
-                    for (const t of g.membri) {
-                        if (t[day] !== "N/D") { valore = t[day]; break; }
+                    for (const mm of ordinePreferenza) {
+                        if (mm.turniDisplay[day] !== "N/D") { valore = mm.turniDisplay[day]; break; }
                     }
                     turniUniti[day] = valore;
                 }
