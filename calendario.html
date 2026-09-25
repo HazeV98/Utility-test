@@ -290,7 +290,7 @@
         [data-theme="dark"] .disclaimer-banner { color: #ffd861; }
 
         /* --- STILI MODALI --- */
-        #welcomeModal, #stepModal, #editModal, #altroModal, #resetModal, #backupModal, #backupTelegramInfoModal, #imageModal, #jumpModal, #icsModal, #multiEditModal, #cambioBibbiaModal, #pdfTipo2Modal, #coloriRotazioneModal, #ferieModal, #pdfSyncModal, #mansioneModal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        #welcomeModal, #stepModal, #editModal, #altroModal, #resetModal, #backupModal, #backupTelegramInfoModal, #imageModal, #jumpModal, #icsModal, #multiEditModal, #cambioBibbiaModal, #pdfTipo2Modal, #coloriRotazioneModal, #ferieModal, #pdfSyncModal, #mansioneModal, #condivisioneModal, #nuovaCondivisioneModal, #richiesteCondivisioneModal, #calendarioCollegaModal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
         .modal-content { background: var(--surface); color: var(--text); margin: 15% auto; padding: 25px; width: 85%; max-width: 400px; border-radius: 28px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); text-align: center; max-height: 80vh; overflow-y: auto; border: 1px solid var(--border-color); }
 
         select, input[type="text"], input[type="date"], input[type="number"] { width: 100%; box-sizing: border-box; margin: 15px 0; padding: 15px; border: 2px solid var(--border-color); border-radius: 14px; font-size: 16px; background: var(--bg); color: var(--text); -webkit-appearance: none; font-family: 'Inter', sans-serif; font-weight: 500; transition: border-color 0.2s; }
@@ -414,10 +414,10 @@
     <div style="padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto;">
         
         <div style="background: var(--bg); padding: 15px; border-radius: 16px; margin-bottom: 5px; border: 1px solid var(--border-color);">
-            <h4 style="margin: 0 0 12px 0; color: var(--text); font-size: 15px;"><i class="fa-solid fa-users"></i> Profili (Bibbie)</h4>
-            <div id="lista-profili-dinamica" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
-            <button class="btn btn-reset" style="background: var(--primary); color: white; margin:0; width:100%; font-weight: bold;" onclick="avviaNuovoProfilo()">
-                <i class="fa-solid fa-plus"></i> Aggiungi Profilo
+            <h4 style="margin: 0 0 12px 0; color: var(--text); font-size: 15px;"><i class="fa-solid fa-share-nodes"></i> Condivisione Turni</h4>
+            <button class="btn btn-reset" style="background: var(--primary); color: white; margin:0; width:100%; font-weight: bold; position: relative;" onclick="apriCondivisioneModal()">
+                <i class="fa-solid fa-users"></i> Gestisci Condivisioni
+                <span id="badgeCondivisioniMenu" style="display:none; position:absolute; top:-6px; right:-6px; background:#f5365c; color:white; border-radius:50%; font-size:11px; width:20px; height:20px; align-items:center; justify-content:center; border:2px solid var(--bg);"></span>
             </button>
         </div>
         <button class="btn btn-reset" style="background: #2dce89; margin:0; width:100%;" onclick="apriMultiEdit()"><i class="fa-solid fa-pen-to-square"></i> Modifica Multipla</button>
@@ -447,8 +447,9 @@
         <i class="fa-solid fa-house"></i>
     </a>
     <div style="flex-grow: 1;"></div>
-    <button class="topbar-btn" onclick="apriMenuDestro()" aria-label="Menu Azioni">
+    <button class="topbar-btn" onclick="apriMenuDestro()" aria-label="Menu Azioni" style="position: relative;">
         <i class="fa-solid fa-ellipsis-vertical"></i>
+        <span id="badgeMenuAzioni" style="display:none; position:absolute; top:-2px; right:-2px; background:#f5365c; color:white; border-radius:50%; font-size:11px; width:18px; height:18px; align-items:center; justify-content:center; border:2px solid var(--surface); pointer-events:none;"></span>
     </button>
 </div>
 
@@ -485,6 +486,65 @@
         
         <button class="btn" style="background: #fd7e14; margin-top: 15px;" onclick="salvaMansione()">Salva Mansione</button>
         <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 10px;" onclick="chiudiMansioneModal()">Chiudi</button>
+    </div>
+</div>
+
+<div id="condivisioneModal">
+    <div class="modal-content" style="max-height: 85vh; display: flex; flex-direction: column;">
+        <h3 style="color: var(--primary); margin-top: 0;"><i class="fa-solid fa-share-nodes"></i> Condivisione Turni</h3>
+        <p class="instruction-text" style="font-size: 14px;">Condividi i tuoi turni con un collega. La condivisione diventa attiva solo quando entrambi si accettano a vicenda.</p>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button class="btn" style="background: #2dce89; margin: 0; flex: 1;" onclick="apriNuovaCondivisioneModal()"><i class="fa-solid fa-plus"></i> Nuova condivisione</button>
+            <button class="btn" style="background: #fd7e14; margin: 0; flex: 1; position: relative;" onclick="apriRichiesteCondivisioneModal()">
+                <i class="fa-solid fa-inbox"></i> Richieste
+                <span id="badgeRichieste" style="display:none; position:absolute; top:-6px; right:-6px; background:#f5365c; color:white; border-radius:50%; font-size:11px; width:20px; height:20px; align-items:center; justify-content:center;"></span>
+            </button>
+        </div>
+
+        <label style="font-size: 13px; color: var(--text-muted); text-align: left; display: block; font-weight: bold;">Colleghi condivisi:</label>
+        <div id="listaCondivisioniAttive" style="text-align: left; overflow-y: auto; flex: 1; margin-top: 10px;">
+            <p style="color: var(--text-muted); font-size: 13px;">Caricamento...</p>
+        </div>
+
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiCondivisioneModal()">Chiudi</button>
+    </div>
+</div>
+
+<div id="nuovaCondivisioneModal">
+    <div class="modal-content">
+        <h3 style="color: #2dce89; margin-top: 0;"><i class="fa-solid fa-plus"></i> Nuova Condivisione</h3>
+        <p class="instruction-text" style="font-size: 14px;">Inserisci la matricola del collega a cui inviare la richiesta di condivisione.</p>
+        <input type="text" id="inputMatricolaCondivisione" placeholder="Matricola collega" oninput="this.value = this.value.toUpperCase();" onkeydown="if(event.key === 'Enter') inviaRichiestaCondivisione();">
+        <button class="btn" style="background: #2dce89; margin-top: 10px;" onclick="inviaRichiestaCondivisione()">Invia Richiesta</button>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 10px;" onclick="chiudiNuovaCondivisioneModal()">Annulla</button>
+    </div>
+</div>
+
+<div id="richiesteCondivisioneModal">
+    <div class="modal-content" style="max-height: 85vh; display: flex; flex-direction: column;">
+        <h3 style="color: #fd7e14; margin-top: 0;"><i class="fa-solid fa-inbox"></i> Richieste di Condivisione</h3>
+
+        <label style="font-size: 13px; color: var(--text-muted); text-align: left; font-weight: bold;">Ricevute:</label>
+        <div id="listaRichiesteRicevute" style="text-align: left; overflow-y: auto; margin-bottom: 15px;">
+            <p style="color: var(--text-muted); font-size: 13px;">Caricamento...</p>
+        </div>
+
+        <label style="font-size: 13px; color: var(--text-muted); text-align: left; font-weight: bold;">Inviate (in attesa):</label>
+        <div id="listaRichiesteInviate" style="text-align: left; overflow-y: auto; flex: 1;">
+            <p style="color: var(--text-muted); font-size: 13px;">Caricamento...</p>
+        </div>
+
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiRichiesteCondivisioneModal()">Chiudi</button>
+    </div>
+</div>
+
+<div id="calendarioCollegaModal">
+    <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column; max-width: 700px;">
+        <h3 id="titoloCalendarioCollega" style="margin-top: 0; color: var(--primary);"><i class="fa-solid fa-eye"></i> Turni Collega</h3>
+        <p class="instruction-text" style="font-size: 12px;"><i class="fa-solid fa-lock"></i> Calendario in sola lettura</p>
+        <div id="calendarCollega" style="overflow-y: auto;"></div>
+        <button class="btn" style="background: var(--bg); color: var(--text-muted); margin-top: 15px;" onclick="chiudiCalendarioCollegaModal()">Chiudi</button>
     </div>
 </div>
 
@@ -864,6 +924,11 @@
                 <option value="tc_rot_17sn">T.C. Rotazione 17 S. Nicolò</option>
                 <option value="rot_17tr">Rotazione Linea 17 Tron.</option>
                 <option value="tc_rot_17tr">T.C. Rotazione Linea 17 Tronc.</option>
+                <option value="tfg_proma">T.F.G. P.Roma</option>
+                <option value="tfg_lido">T.F.G. Lido</option>
+                <option value="m115">M115</option>
+                <option value="m116">M116</option>
+                <option value="notti">Notti</option>
             </optgroup>
         </select>
         <div style="text-align: left; margin-top: 5px;">
