@@ -116,6 +116,7 @@ let variantiData = {};
 function apriMenuDestro() {
     document.getElementById('right-sidebar').classList.add('open');
     document.getElementById('sidebar-overlay').style.display = 'block';
+    caricaListaCondivisioniAttive();
 }
 
 function chiudiMenuDestro() {
@@ -365,7 +366,7 @@ async function aggiornaBadgeRichieste() {
 }
 
 async function caricaListaCondivisioniAttive() {
-    const cont = document.getElementById('listaCondivisioniAttive');
+    const cont = document.getElementById('listaCondivisioniSidebar');
     if (!cont) return;
 
     const miaMatricola = getMatricolaAttiva();
