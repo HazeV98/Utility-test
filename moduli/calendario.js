@@ -116,7 +116,7 @@ let variantiData = {};
 function apriMenuDestro() {
     document.getElementById('right-sidebar').classList.add('open');
     document.getElementById('sidebar-overlay').style.display = 'block';
-    caricaListaCondivisioniAttive();
+    aggiornaListeCondivisioniAttive();
 }
 
 function chiudiMenuDestro() {
@@ -185,7 +185,7 @@ function getMatricolaAttiva() {
 function apriCondivisioneModal() {
     chiudiMenuDestro();
     document.getElementById('condivisioneModal').style.display = 'block';
-    caricaListaCondivisioniAttive();
+    aggiornaListeCondivisioniAttive();
     aggiornaBadgeRichieste();
 }
 
@@ -222,7 +222,7 @@ async function inviaRichiestaCondivisione() {
         state.condivisioniRifiutate = (state.condivisioniRifiutate || []).filter(m => m !== matricola);
         salvaLocal();
         chiudiNuovaCondivisioneModal();
-        caricaListaCondivisioniAttive();
+        aggiornaListeCondivisioniAttive();
         alert('Richiesta di condivisione inviata.');
     } catch(e) {
         console.error("Errore ricerca utente per condivisione:", e);
@@ -309,7 +309,7 @@ function accettaRichiestaCondivisione(matricola) {
     state.condivisioniRifiutate = (state.condivisioniRifiutate || []).filter(m => m !== matricola);
     salvaLocal();
     apriRichiesteCondivisioneModal();
-    caricaListaCondivisioniAttive();
+    aggiornaListeCondivisioniAttive();
 }
 
 function rifiutaRichiestaCondivisione(matricola) {
@@ -323,7 +323,7 @@ function annullaRichiestaInviata(matricola) {
     state.condivisioni = state.condivisioni.filter(m => m !== matricola);
     salvaLocal();
     apriRichiesteCondivisioneModal();
-    caricaListaCondivisioniAttive();
+    aggiornaListeCondivisioniAttive();
 }
 
 async function aggiornaBadgeRichieste() {
@@ -365,26 +365,30 @@ async function aggiornaBadgeRichieste() {
     } catch(e) { impostaBadge(0); }
 }
 
-async function caricaListaCondivisioniAttive() {
-    const cont = document.getElementById('listaCondivisioniSidebar');
-    if (!cont) return;
+async function aggiornaListeCondivisioniAttive() {
+    const contSidebar = document.getElementById('listaCondivisioniSidebar');
+    const contGestione = document.getElementById('listaCondivisioniGestione');
+    if (!contSidebar && !contGestione) return;
 
     const miaMatricola = getMatricolaAttiva();
     if (!miaMatricola) {
-        cont.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Imposta prima la tua matricola nel profilo.</p>';
+        if (contSidebar) contSidebar.innerHTML = '';
+        if (contGestione) contGestione.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Imposta prima la tua matricola nel profilo.</p>';
         return;
     }
     if (!state.condivisioni || state.condivisioni.length === 0) {
-        cont.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Nessuna condivisione attiva. Usa "Nuova condivisione" per iniziare.</p>';
+        if (contSidebar) contSidebar.innerHTML = '';
+        if (contGestione) contGestione.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Nessuna condivisione attiva. Usa "Nuova condivisione" per iniziare.</p>';
         return;
     }
 
-    cont.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Caricamento...</p>';
+    if (contGestione) contGestione.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Caricamento...</p>';
 
     try {
         const q = query(collection(db, "calendario"), where("condivisioni", "array-contains", miaMatricola));
         const snap = await getDocs(q);
-        let html = "";
+        let htmlSidebar = "";
+        let htmlGestione = "";
 
         for (const docSnap of snap.docs) {
             const uidAltro = docSnap.id;
@@ -396,19 +400,21 @@ async function caricaListaCondivisioniAttive() {
             if (!matricolaAltro || !state.condivisioni.includes(matricolaAltro)) continue;
 
             const nomeCompleto = `${p.cognome || ''} ${p.nome || ''}`.trim() || 'Utente sconosciuto';
-            html += `<div style="border:1px solid var(--border-color); border-radius:12px; margin-bottom:8px; overflow:hidden; background:var(--surface);">
-                <div class="btn btn-reset" style="background:transparent; color:var(--text); text-align:left; display:flex; flex-direction:column; align-items:flex-start; margin:0; padding:12px; cursor:pointer; border:none; border-radius:0;" onclick="apriCalendarioCollega('${uidAltro}')">
-                    <span style="font-weight:bold; font-size:14px;"><i class="fa-solid fa-user"></i> ${nomeCompleto}${p.progressivo ? ' (' + p.progressivo + ')' : ''}</span>
-                    <span style="font-size:12px; color:var(--text-muted); margin-top:2px;"><i class="fa-regular fa-id-badge"></i> ${matricolaAltro}</span>
-                </div>
-                <button class="btn btn-reset" style="background:transparent; color:#f5365c; border:none; border-top:1px solid var(--border-color); border-radius:0; margin:0; padding:8px; width:100%; font-size:13px;" onclick="revocaCondivisione('${matricolaAltro}')"><i class="fa-solid fa-user-slash"></i> Revoca condivisione</button>
+
+            htmlSidebar += `<button class="btn btn-reset" style="background:var(--surface); border:1px solid var(--border-color); color:var(--text); margin:0; padding:10px; font-size:13px; font-weight:bold; text-align:left;" onclick="apriCalendarioCollega('${uidAltro}')"><i class="fa-solid fa-user"></i> ${nomeCompleto}${p.progressivo ? ' (' + p.progressivo + ')' : ''}</button>`;
+
+            htmlGestione += `<div style="border:1px solid var(--border-color); border-radius:12px; margin-bottom:8px; padding:12px; text-align:left; background:var(--bg);">
+                <div style="font-weight:bold; font-size:14px;"><i class="fa-solid fa-user"></i> ${nomeCompleto}${p.progressivo ? ' (' + p.progressivo + ')' : ''}</div>
+                <div style="font-size:12px; color:var(--text-muted); margin:4px 0 8px 0;"><i class="fa-regular fa-id-badge"></i> ${matricolaAltro}</div>
+                <button class="btn btn-reset" style="background:#f5365c; color:white; margin:0; width:100%; padding:8px; font-size:13px;" onclick="revocaCondivisione('${matricolaAltro}')"><i class="fa-solid fa-user-slash"></i> Annulla condivisione</button>
             </div>`;
         }
 
-        cont.innerHTML = html || '<p style="color:var(--text-muted); font-size:13px;">Nessuna condivisione attiva al momento.</p>';
+        if (contSidebar) contSidebar.innerHTML = htmlSidebar;
+        if (contGestione) contGestione.innerHTML = htmlGestione || '<p style="color:var(--text-muted); font-size:13px;">Nessuna condivisione attiva al momento.</p>';
     } catch(e) {
         console.error("Errore caricamento lista condivisioni:", e);
-        cont.innerHTML = '<p style="color:#f5365c; font-size:13px;">Errore nel caricamento.</p>';
+        if (contGestione) contGestione.innerHTML = '<p style="color:#f5365c; font-size:13px;">Errore nel caricamento.</p>';
     }
 }
 
@@ -416,7 +422,7 @@ function revocaCondivisione(matricola) {
     if (!confirm(`Vuoi revocare la condivisione dei turni con la matricola ${matricola}? Il collega non vedrà più i tuoi turni e tu non vedrai più i suoi.`)) return;
     state.condivisioni = state.condivisioni.filter(m => m !== matricola);
     salvaLocal();
-    caricaListaCondivisioniAttive();
+    aggiornaListeCondivisioniAttive();
     aggiornaBadgeRichieste();
 }
 
@@ -438,8 +444,8 @@ async function apriCalendarioCollega(uid) {
 
         const p = profSnap.exists() ? profSnap.data() : {};
         const nomeCompleto = `${p.cognome || ''} ${p.nome || ''}`.trim() || 'Collega';
-        document.getElementById('titoloCalendarioCollega').innerHTML =
-            `<i class="fa-solid fa-eye"></i> ${nomeCompleto}${p.progressivo ? ' (' + p.progressivo + ')' : ''} <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">— matricola ${p.matricola || '-'}</span>`;
+        document.getElementById('titoloCalendarioCollega').textContent =
+            `${nomeCompleto}${p.progressivo ? ' (' + p.progressivo + ')' : ''}`;
 
         document.getElementById('calendarioCollegaModal').style.display = 'block';
 
@@ -453,6 +459,7 @@ async function apriCalendarioCollega(uid) {
                 buttonText: { today: 'Oggi' },
                 headerToolbar: { left: 'prev,next', center: 'title', right: 'today' },
                 eventContent: function(arg) { return { html: arg.event.title }; },
+                eventClick: (info) => apriDettaglioGiornoCollega(info.event.startStr),
                 events: function(info, successCallback) {
                     const backupState = state;
                     state = stateCollega;
@@ -471,6 +478,78 @@ async function apriCalendarioCollega(uid) {
         console.error("Errore apertura calendario collega:", e);
         alert('Non è stato possibile leggere i turni di questo collega. Controlla che la condivisione sia reciproca.');
     }
+}
+
+async function apriDettaglioGiornoCollega(date) {
+    const backupState = state;
+    state = stateCollega;
+    try {
+        let dateObj = creaDataSicura(date);
+        let endDateObj = new Date(dateObj);
+        endDateObj.setDate(endDateObj.getDate() + 1);
+
+        let turniCalc = calcolaTurni(dateObj, endDateObj);
+        let turnoCorrenteObj = turniCalc.find(e => e.start === date && !e.title.includes('FERIE') && e.title !== 'FEP');
+        let nomeTurnoCompleto = turnoCorrenteObj ? turnoCorrenteObj.title : "Nessun turno";
+        let nomeTurnoPulito = nomeTurnoCompleto.replace(/<i[^>]*><\/i>/g, '').replace(/\(Sospeso\)/g, '').trim();
+        let codiceBase = nomeTurnoPulito.toUpperCase();
+
+        const dateChiavi = Object.keys(state.dbCache || {}).sort();
+        let dbCorrente = {};
+        let dataAttiva = dateChiavi[0] || "2026-03-02";
+        const dSelezionata = stringToNum(date);
+        for (let i = dateChiavi.length - 1; i >= 0; i--) {
+            if (dSelezionata >= stringToNum(dateChiavi[i])) {
+                dbCorrente = state.dbCache[dateChiavi[i]];
+                dataAttiva = dateChiavi[i];
+                break;
+            }
+        }
+
+        let chiaveTrovata = trovaChiaveEsatta(dbCorrente, codiceBase, date);
+        let dettagli = dbCorrente[chiaveTrovata];
+
+        let htmlInfo = dettagli
+            ? `<b>Inizio:</b> ${dettagli.inizio} (${dettagli.luogoInizio})<br><b>Fine:</b> ${dettagli.fine} (${dettagli.luogoFine})`
+            : `Nessun orario disponibile per questo turno.`;
+
+        document.getElementById('modalDateCollega').innerText = formattaData(date);
+        document.getElementById('infoTurniAreaCollega').innerHTML = htmlInfo;
+
+        const btnImmagine = document.getElementById('btnVisualizzaTurnoCollega');
+        let isRiposo = (codiceBase === 'RI' || codiceBase === 'RIPOSO' || codiceBase === 'AL');
+
+        if (!isRiposo && codiceBase && codiceBase !== 'DISP' && codiceBase !== 'NESSUN TURNO') {
+            let suffix = "";
+            if (chiaveTrovata && chiaveTrovata.includes('_')) {
+                suffix = "_" + chiaveTrovata.split('_').slice(1).join('_');
+            }
+            let codiceConSuffisso = codiceBase + suffix;
+
+            if (chiaveTrovata && chiaveTrovata !== codiceBase) {
+                currentImagePath = `turni_${dataAttiva}/${codiceConSuffisso}.jpg`;
+                imgBaseFallback = `turni_${dataAttiva}/${chiaveTrovata}.jpg`;
+            } else {
+                currentImagePath = `turni_${dataAttiva}/${codiceBase}.jpg`;
+                imgBaseFallback = "";
+            }
+            btnImmagine.style.display = 'block';
+        } else {
+            currentImagePath = "";
+            imgBaseFallback = "";
+            btnImmagine.style.display = 'none';
+        }
+    } catch(e) {
+        console.error("Errore dettaglio turno collega:", e);
+    } finally {
+        state = backupState;
+    }
+
+    document.getElementById('dettaglioTurnoCollegaModal').style.display = 'block';
+}
+
+function chiudiDettaglioTurnoCollegaModal() {
+    document.getElementById('dettaglioTurnoCollegaModal').style.display = 'none';
 }
 
 function chiudiCalendarioCollegaModal() {
@@ -3067,6 +3146,8 @@ window.annullaRichiestaInviata = annullaRichiestaInviata;
 window.revocaCondivisione = revocaCondivisione;
 window.apriCalendarioCollega = apriCalendarioCollega;
 window.chiudiCalendarioCollegaModal = chiudiCalendarioCollegaModal;
+window.apriDettaglioGiornoCollega = apriDettaglioGiornoCollega;
+window.chiudiDettaglioTurnoCollegaModal = chiudiDettaglioTurnoCollegaModal;
 
 // --- INIZIALIZZAZIONE GESTITA DA FIREBASE ---
 onAuthStateChanged(auth, async (user) => {
