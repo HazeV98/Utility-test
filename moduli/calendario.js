@@ -39,9 +39,9 @@ window.syncToCloud = async (dati) => {
 // --- VARIABILI GLOBALI ---
 let ROT_FERIE_INV = [];
 let ROT_FERIE_EST = [];
-const VERSIONE_TURNI = "1.0.3"; 
+const VERSIONE_TURNI = "1.0.4"; 
 let VERSIONE_FERIE = "1.0.0"; 
-const DATA_INIZIO_NUOVI_TURNI = "2026-06-01"; 
+const DATA_INIZIO_NUOVI_TURNI = "2026-10-01"; 
 const AVVISO_VARIANTI = true;
 
 const RESET_DOPO_AGGIORNAMENTO = {
@@ -54,8 +54,8 @@ const RESET_DOPO_AGGIORNAMENTO = {
         spez_szaccaria: false,
         rot_lido: false,
         spez_lido: false,
-        rot_linea14: true,
-        rot_linea14_mb: true,
+        rot_linea14: false,
+        rot_linea14_mb: false,
         rot_linea13: false,
         rot_17sn: false,
         rot_17tr: false,
