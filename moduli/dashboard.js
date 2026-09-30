@@ -7,7 +7,7 @@ export function initUIDashboard() {
     if (document.getElementById('modal-dashboard-main')) return;
     
     const uiHTML = `
-    <style>
+        <style>
         .dash-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
         .dash-date { text-align: center; flex: 1; }
         .dash-date-dayname { font-weight: 800; color: var(--primary); font-size: 18px; text-transform: uppercase; }
@@ -20,14 +20,14 @@ export function initUIDashboard() {
         /* Nuovi Stili Card Turno */
         .dash-turno-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .dash-turno-value { font-size: 36px; font-weight: 900; color: var(--primary); margin: 0; line-height: 1; }
-        .btn-img-turno { background: #eef2f7; color: var(--primary); border: none; width: 42px; height: 42px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+        .btn-img-turno { background: rgba(128, 128, 128, 0.1); color: var(--primary); border: none; width: 42px; height: 42px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
         .btn-img-turno:hover { background: var(--primary); color: white; }
         
-        /* Stili riepilogo e timeline importati da turni_test */
-        .turno-locations { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; text-align: center; }
+        /* Stili riepilogo e timeline adattati alla dark mode */
+        .turno-locations { display: flex; justify-content: space-between; align-items: center; background: rgba(128, 128, 128, 0.05); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; margin-bottom: 10px; text-align: center; }
         .location-time { font-size: 20px; font-weight: 800; color: var(--text-main); }
         .location-name { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-top: 4px; }
-        .location-arrow { color: #cbd5e1; font-size: 20px; }
+        .location-arrow { color: var(--text-muted); font-size: 20px; opacity: 0.5; }
         .turno-duration { font-size: 14px; font-weight: 600; color: var(--text-muted); text-align: center; margin-bottom: 10px; }
         
         .dash-turno-expand-btn { text-align: center; color: var(--text-muted); cursor: pointer; padding: 10px 0 0 0; margin-top: 10px; border-top: 1px solid var(--border-color); font-size: 20px; transition: transform 0.3s; }
@@ -35,17 +35,17 @@ export function initUIDashboard() {
         
         .timeline { position: relative; padding-left: 20px; text-align: left; margin-top: 15px; }
         .timeline::before { content: ''; position: absolute; left: 0; top: 10px; bottom: 10px; width: 2px; background: var(--border-color); }
-        .timeline-parte-header { font-size: 14px; font-weight: 800; color: var(--primary); margin: 20px 0 15px 0; text-transform: uppercase; background: #eef2f7; display: inline-block; padding: 5px 12px; border-radius: 6px; }
+        .timeline-parte-header { font-size: 14px; font-weight: 800; color: var(--primary); margin: 20px 0 15px 0; text-transform: uppercase; background: rgba(128, 128, 128, 0.1); display: inline-block; padding: 5px 12px; border-radius: 6px; }
         
-        .activity-card { background: var(--card-bg, #ffffff); border-radius: 10px; padding: 15px; margin-bottom: 15px; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid var(--border-color); transition: all 0.3s ease; }
+        .activity-card { background: transparent; border-radius: 10px; padding: 15px; margin-bottom: 15px; position: relative; border: 1px solid var(--border-color); transition: all 0.3s ease; }
         .activity-card::before { content: ''; position: absolute; left: -25px; top: 20px; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); border: 3px solid var(--surface); }
         .activity-card.cliccabile { cursor: pointer; }
-        .activity-card.cliccabile:active { background: #f1f5f9; }
+        .activity-card.cliccabile:active { background: rgba(128, 128, 128, 0.05); }
         
         /* Stati del tempo */
         .act-past { opacity: 0.5; filter: grayscale(80%); }
-        .act-current { border-left: 4px solid var(--primary); box-shadow: 0 4px 15px rgba(0, 82, 155, 0.15); border-color: #b3d4f0; }
-        .act-current::before { background: #ff4757; border-color: #ffeaa7; animation: pulse 1.5s infinite; }
+        .act-current { border-left: 4px solid var(--primary); box-shadow: 0 4px 15px rgba(0, 82, 155, 0.15); background: rgba(0, 82, 155, 0.03); }
+        .act-current::before { background: #ff4757; border-color: var(--surface); animation: pulse 1.5s infinite; }
         
         @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4); }
@@ -55,46 +55,52 @@ export function initUIDashboard() {
 
         .act-header { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
         .act-time { font-weight: 800; font-size: 15px; color: var(--text-main); }
-        .act-duration { font-size: 12px; color: var(--text-muted); background: #f1f5f9; padding: 3px 8px; border-radius: 12px; }
+        .act-duration { font-size: 12px; color: var(--text-muted); background: rgba(128, 128, 128, 0.15); padding: 3px 8px; border-radius: 12px; }
         .act-route { font-size: 14px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
         .act-type { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
         .type-linea { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; border: 2px solid; font-size: 12px; padding: 0; }
-        .type-vuoto { background: #e2e8f0; color: #475569; }
-        .type-pausa { background: #fef3c7; color: #d97706; }
-        .type-altro { background: #f1f5f9; color: #64748b; }
-        .type-rebecchino { background: #ede9fe; color: #6d28d9; border: 2px solid #8b5cf6; }
+        
+        /* Badge con trasparenze alfa per matchare entrambi i temi */
+        .type-vuoto { background: rgba(71, 85, 105, 0.15); color: var(--text-muted); }
+        .type-pausa { background: rgba(217, 119, 6, 0.15); color: #d97706; }
+        .type-altro { background: rgba(100, 116, 139, 0.15); color: var(--text-muted); }
+        .type-rebecchino { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border: 1px solid #8b5cf6; }
+        
         .act-notes { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-color); font-size: 12px; color: #d97706; font-weight: 600; }
         .act-handoff { font-size: 12px; color: var(--primary); font-weight: 600; }
         .act-fermate-hint { font-size: 12px; color: var(--primary); font-weight: 600; margin-top: 8px; }
 
-        .turno-part-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #f8fafc; padding: 12px 15px; border-radius: 8px; margin-bottom: 7px; text-align: left; }
+        .turno-part-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(128, 128, 128, 0.05); padding: 12px 15px; border-radius: 8px; margin-bottom: 7px; text-align: left; border: 1px solid var(--border-color); }
         .turno-part-label { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; min-width: 55px; }
         .turno-part-location { text-align: center; flex: 1; }
-        .turno-part-time { font-size: 18px; font-weight: 800; }
+        .turno-part-time { font-size: 18px; font-weight: 800; color: var(--text-main); }
         .turno-part-place { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-top: 3px; }
 
-        /* Stili Modal Corse (Turni_test) */
-        .corsa-overlay { position: fixed; inset: 0; z-index: 10000; background: rgba(15, 23, 42, 0.55); display: none; align-items: flex-end; justify-content: center; }
+        /* Stili Modal Corse */
+        .corsa-overlay { position: fixed; inset: 0; z-index: 10000; background: rgba(0, 0, 0, 0.7); display: none; align-items: flex-end; justify-content: center; }
         .corsa-overlay.aperto { display: flex; }
-        .corsa-modal { background: var(--surface, #ffffff); width: 100%; max-width: 560px; max-height: 88vh; border-radius: 18px 18px 0 0; display: flex; flex-direction: column; box-shadow: 0 -8px 30px rgba(0,0,0,0.25); position: relative; text-align: left; }
+        .corsa-modal { background: var(--surface); width: 100%; max-width: 560px; max-height: 88vh; border-radius: 18px 18px 0 0; display: flex; flex-direction: column; box-shadow: 0 -8px 30px rgba(0,0,0,0.5); position: relative; text-align: left; }
         @media (min-width: 600px) { .corsa-overlay { align-items: center; } .corsa-modal { border-radius: 18px; max-height: 80vh; } }
         .corsa-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 18px 12px; border-bottom: 1px solid var(--border-color); }
-        .corsa-titolo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-weight: 700; font-size: 16px; }
+        .corsa-titolo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-weight: 700; font-size: 16px; color: var(--text-main); }
         .corsa-sotto { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-weight: 400; }
-        .corsa-chiudi { border: none; background: #eef2f6; color: var(--text-main); width: 34px; height: 34px; border-radius: 50%; font-size: 16px; cursor: pointer; flex: none; }
+        .corsa-chiudi { border: none; background: rgba(128, 128, 128, 0.1); color: var(--text-main); width: 34px; height: 34px; border-radius: 50%; font-size: 16px; cursor: pointer; flex: none; }
         .corsa-corpo { overflow-y: auto; padding: 14px 18px 22px; position: relative; }
         .corsa-stato { text-align: center; color: var(--text-muted); padding: 30px 10px; font-size: 14px; }
         .corsa-stato.errore { color: #b42318; }
+        
+        /* Modifiche linee e nodi modale corse */
         .fermata { display: flex; align-items: center; gap: 12px; padding: 9px 0; position: relative; }
-        .fermata::before { content: ''; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; background: #dbe3ea; }
+        .fermata::before { content: ''; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; background: var(--border-color); }
         .fermata:first-child::before { top: 50%; }
         .fermata:last-child::before { bottom: 50%; }
-        .fermata-punto { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #b8c4d0; flex: none; position: relative; z-index: 1; }
+        .fermata-punto { width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2px solid var(--text-muted); flex: none; position: relative; z-index: 1; }
         .fermata.nel-turno .fermata-punto { background: var(--primary); border-color: var(--primary); }
         .fermata-nome { flex: 1; font-size: 14px; color: var(--text-muted); }
         .fermata.nel-turno .fermata-nome { color: var(--text-main); font-weight: 600; }
         .fermata-ora { font-variant-numeric: tabular-nums; font-size: 14px; color: var(--text-muted); text-align: right; }
         .fermata.nel-turno .fermata-ora { color: var(--text-main); font-weight: 700; }
+        
         .fermata-ora small { display: block; font-size: 11px; font-weight: 400; color: var(--text-muted); }
         .giorno-dopo { font-size: 10px; color: #b42318; font-weight: 700; margin-left: 3px; }
         .fermata-estremo { font-size: 11px; color: var(--primary); font-weight: 700; text-transform: uppercase; }
