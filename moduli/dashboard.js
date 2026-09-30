@@ -16,8 +16,90 @@ export function initUIDashboard() {
         
         .dash-card { background: var(--surface); padding: 20px; border-radius: var(--radius-md); margin-bottom: 15px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); text-align: center; }
         .dash-turno-title { font-size: 14px; color: var(--text-muted); margin-bottom: 5px; font-weight: bold; }
-        .dash-turno-value { font-size: 36px; font-weight: 900; color: var(--primary); margin-bottom: 15px; }
         
+        /* Nuovi Stili Card Turno */
+        .dash-turno-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .dash-turno-value { font-size: 36px; font-weight: 900; color: var(--primary); margin: 0; line-height: 1; }
+        .btn-img-turno { background: #eef2f7; color: var(--primary); border: none; width: 42px; height: 42px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+        .btn-img-turno:hover { background: var(--primary); color: white; }
+        
+        /* Stili riepilogo e timeline importati da turni_test */
+        .turno-locations { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; text-align: center; }
+        .location-time { font-size: 20px; font-weight: 800; color: var(--text-main); }
+        .location-name { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-top: 4px; }
+        .location-arrow { color: #cbd5e1; font-size: 20px; }
+        .turno-duration { font-size: 14px; font-weight: 600; color: var(--text-muted); text-align: center; margin-bottom: 10px; }
+        
+        .dash-turno-expand-btn { text-align: center; color: var(--text-muted); cursor: pointer; padding: 10px 0 0 0; margin-top: 10px; border-top: 1px solid var(--border-color); font-size: 20px; transition: transform 0.3s; }
+        .dash-turno-expand-btn.expanded i { transform: rotate(180deg); transition: transform 0.3s; }
+        
+        .timeline { position: relative; padding-left: 20px; text-align: left; margin-top: 15px; }
+        .timeline::before { content: ''; position: absolute; left: 0; top: 10px; bottom: 10px; width: 2px; background: var(--border-color); }
+        .timeline-parte-header { font-size: 14px; font-weight: 800; color: var(--primary); margin: 20px 0 15px 0; text-transform: uppercase; background: #eef2f7; display: inline-block; padding: 5px 12px; border-radius: 6px; }
+        
+        .activity-card { background: var(--card-bg, #ffffff); border-radius: 10px; padding: 15px; margin-bottom: 15px; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid var(--border-color); transition: all 0.3s ease; }
+        .activity-card::before { content: ''; position: absolute; left: -25px; top: 20px; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); border: 3px solid var(--surface); }
+        .activity-card.cliccabile { cursor: pointer; }
+        .activity-card.cliccabile:active { background: #f1f5f9; }
+        
+        /* Stati del tempo */
+        .act-past { opacity: 0.5; filter: grayscale(80%); }
+        .act-current { border-left: 4px solid var(--primary); box-shadow: 0 4px 15px rgba(0, 82, 155, 0.15); border-color: #b3d4f0; }
+        .act-current::before { background: #ff4757; border-color: #ffeaa7; animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(255, 71, 87, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+        }
+
+        .act-header { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
+        .act-time { font-weight: 800; font-size: 15px; color: var(--text-main); }
+        .act-duration { font-size: 12px; color: var(--text-muted); background: #f1f5f9; padding: 3px 8px; border-radius: 12px; }
+        .act-route { font-size: 14px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .act-type { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        .type-linea { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; border: 2px solid; font-size: 12px; padding: 0; }
+        .type-vuoto { background: #e2e8f0; color: #475569; }
+        .type-pausa { background: #fef3c7; color: #d97706; }
+        .type-altro { background: #f1f5f9; color: #64748b; }
+        .type-rebecchino { background: #ede9fe; color: #6d28d9; border: 2px solid #8b5cf6; }
+        .act-notes { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-color); font-size: 12px; color: #d97706; font-weight: 600; }
+        .act-handoff { font-size: 12px; color: var(--primary); font-weight: 600; }
+        .act-fermate-hint { font-size: 12px; color: var(--primary); font-weight: 600; margin-top: 8px; }
+
+        .turno-part-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #f8fafc; padding: 12px 15px; border-radius: 8px; margin-bottom: 7px; text-align: left; }
+        .turno-part-label { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; min-width: 55px; }
+        .turno-part-location { text-align: center; flex: 1; }
+        .turno-part-time { font-size: 18px; font-weight: 800; }
+        .turno-part-place { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-top: 3px; }
+
+        /* Stili Modal Corse (Turni_test) */
+        .corsa-overlay { position: fixed; inset: 0; z-index: 10000; background: rgba(15, 23, 42, 0.55); display: none; align-items: flex-end; justify-content: center; }
+        .corsa-overlay.aperto { display: flex; }
+        .corsa-modal { background: var(--surface, #ffffff); width: 100%; max-width: 560px; max-height: 88vh; border-radius: 18px 18px 0 0; display: flex; flex-direction: column; box-shadow: 0 -8px 30px rgba(0,0,0,0.25); position: relative; text-align: left; }
+        @media (min-width: 600px) { .corsa-overlay { align-items: center; } .corsa-modal { border-radius: 18px; max-height: 80vh; } }
+        .corsa-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 18px 12px; border-bottom: 1px solid var(--border-color); }
+        .corsa-titolo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-weight: 700; font-size: 16px; }
+        .corsa-sotto { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-weight: 400; }
+        .corsa-chiudi { border: none; background: #eef2f6; color: var(--text-main); width: 34px; height: 34px; border-radius: 50%; font-size: 16px; cursor: pointer; flex: none; }
+        .corsa-corpo { overflow-y: auto; padding: 14px 18px 22px; position: relative; }
+        .corsa-stato { text-align: center; color: var(--text-muted); padding: 30px 10px; font-size: 14px; }
+        .corsa-stato.errore { color: #b42318; }
+        .fermata { display: flex; align-items: center; gap: 12px; padding: 9px 0; position: relative; }
+        .fermata::before { content: ''; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; background: #dbe3ea; }
+        .fermata:first-child::before { top: 50%; }
+        .fermata:last-child::before { bottom: 50%; }
+        .fermata-punto { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #b8c4d0; flex: none; position: relative; z-index: 1; }
+        .fermata.nel-turno .fermata-punto { background: var(--primary); border-color: var(--primary); }
+        .fermata-nome { flex: 1; font-size: 14px; color: var(--text-muted); }
+        .fermata.nel-turno .fermata-nome { color: var(--text-main); font-weight: 600; }
+        .fermata-ora { font-variant-numeric: tabular-nums; font-size: 14px; color: var(--text-muted); text-align: right; }
+        .fermata.nel-turno .fermata-ora { color: var(--text-main); font-weight: 700; }
+        .fermata-ora small { display: block; font-size: 11px; font-weight: 400; color: var(--text-muted); }
+        .giorno-dopo { font-size: 10px; color: #b42318; font-weight: 700; margin-left: 3px; }
+        .fermata-estremo { font-size: 11px; color: var(--primary); font-weight: 700; text-transform: uppercase; }
+        .corsa-legenda { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+
         .dash-alert { display: none; padding: 15px; border-radius: var(--radius-sm); margin-bottom: 15px; text-align: left; align-items: center; gap: 12px; font-weight: bold; font-size: 14px; line-height: 1.4; }
         .dash-alert-danger { background: rgba(220, 53, 69, 0.1); border-left: 5px solid var(--danger); color: var(--danger); }
         .dash-alert-warning { background: rgba(255, 193, 7, 0.1); border-left: 5px solid #ffc107; color: #856404; }
@@ -67,14 +149,31 @@ export function initUIDashboard() {
                     <span id="dash-varianti-text"></span>
                 </div>
 
-                <div class="dash-card">
+                <!-- CARD TURNO AGGIORNATA -->
+                <div class="dash-card" id="dash-card-turno-oggi">
                     <div class="dash-turno-title">TURNO DI OGGI</div>
-                    <div id="dash-turno-val" class="dash-turno-value">
+                    
+                    <div id="dash-turno-loading" style="display: none; padding: 20px 0;">
                         <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: var(--primary);"></i>
                     </div>
-                    <button id="dash-btn-vedi-turno" class="btn-action" style="width: 100%; display: none;"><i class="fa-solid fa-image"></i> Vedi Turno</button>
-                    <div id="dash-avviso-vedi-turno" style="display: none; background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; padding: 10px; border-radius: var(--radius-sm); color: #856404; font-size: 13px; font-weight: bold;">
-                        <i class="fa-solid fa-circle-exclamation"></i> Variante in corso: vedi il turno corretto nella sezione turni.
+
+                    <div id="dash-turno-content">
+                        <div class="dash-turno-header-row">
+                            <div id="dash-turno-val" class="dash-turno-value">--</div>
+                            <button id="dash-btn-img-turno" class="btn-img-turno" style="display: none;"><i class="fa-solid fa-image"></i></button>
+                        </div>
+                        
+                        <div id="dash-avviso-vedi-turno" style="display: none; background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; padding: 10px; border-radius: var(--radius-sm); color: #856404; font-size: 13px; font-weight: bold; text-align: left; margin-bottom: 15px;">
+                            <i class="fa-solid fa-circle-exclamation"></i> Variante in corso: vedi il turno corretto nella sezione turni.
+                        </div>
+
+                        <div id="dash-turno-riepilogo"></div>
+                        
+                        <div id="dash-turno-expand-btn" class="dash-turno-expand-btn" style="display: none;">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </div>
+                        
+                        <div id="dash-timeline-container" class="timeline" style="display: none;"></div>
                     </div>
                 </div>
 
@@ -88,7 +187,6 @@ export function initUIDashboard() {
                     <div id="dash-mate-name" style="font-weight: bold; font-size: 17px; color: var(--text-main);">--</div>
                 </div>
 
-                <!-- Container Promemoria (sopra il meteo) -->
                 <div id="dash-promemoria-container" style="display: none; width: 100%;"></div>
 
                 <div class="dash-card" style="text-align: left;">
@@ -109,8 +207,36 @@ export function initUIDashboard() {
             <img id="img-dashboard-turno" style="max-width: 100%; max-height: 100vh; object-fit: contain; transition: transform 0.2s;" src="">
         </div>
     </div>
+
+    <!-- Modale Corse (API) -->
+    <div class="corsa-overlay" id="corsa-overlay-dash" onclick="if (event.target === this) window.chiudiCorsaDash()">
+        <div class="corsa-modal" role="dialog" aria-modal="true" aria-labelledby="corsa-titolo-dash">
+            <div class="corsa-head">
+                <div>
+                    <div class="corsa-titolo" id="corsa-titolo-dash"></div>
+                    <div class="corsa-sotto" id="corsa-sotto-dash"></div>
+                </div>
+                <button class="corsa-chiudi" onclick="window.chiudiCorsaDash()" aria-label="Chiudi"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="corsa-corpo" id="corsa-corpo-dash"></div>
+        </div>
+    </div>
     `;
     document.body.insertAdjacentHTML('beforeend', uiHTML);
+
+    // Event listener per il tasto espandi timeline
+    const expandBtn = document.getElementById('dash-turno-expand-btn');
+    if (expandBtn) {
+        expandBtn.addEventListener('click', function() {
+            const timeline = document.getElementById('dash-timeline-container');
+            this.classList.toggle('expanded');
+            if (this.classList.contains('expanded')) {
+                timeline.style.display = 'block';
+            } else {
+                timeline.style.display = 'none';
+            }
+        });
+    }
 }
 
 // ==========================================
@@ -126,6 +252,26 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
     let pzDashboard = null;
     let currentImagePathDash = "";
     let imgBaseFallbackDash = "";
+
+    // Variabili per visualizzatore timeline API
+    const API_URL = 'https://api.bateolive.stream';
+    let attivitaCorrentiDash = [];
+    const cacheCorseDash = new Map();
+    let richiestaCorsaDash = 0;
+    
+    const ACTV_COLORS = {
+        '1': { bg: '#ffffff', text: '#000000', border: '#000000' },
+        '2': { bg: '#e3001b', text: '#ffffff', border: '#e3001b' },
+        '2/': { bg: '#e3001b', text: '#ffffff', border: '#e3001b' },
+        '3': { bg: '#ff8c00', text: '#000000', border: '#ff8c00' },
+        '4.1': { bg: '#bd429b', text: '#ffffff', border: '#bd429b' },
+        '4.2': { bg: '#bd429b', text: '#ffffff', border: '#bd429b' },
+        '5.1': { bg: '#60b9a6', text: '#000000', border: '#60b9a6' },
+        '5.2': { bg: '#60b9a6', text: '#000000', border: '#60b9a6' },
+        '6': { bg: '#0070bc', text: '#ffffff', border: '#0070bc' },
+        'N': { bg: '#1c355e', text: '#ffffff', border: '#1c355e' },
+        '11': { bg: '#f49ab4', text: '#000000', border: '#f49ab4' }
+    };
 
     const imgElem = document.getElementById('img-dashboard-turno');
     if (typeof Panzoom !== 'undefined' && !pzDashboard) {
@@ -151,33 +297,20 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
         imgElem.addEventListener('dblclick', eseguiZoomToggle);
     }
 
-    function dateToLocalISO(d) { 
-        return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0'); 
-    }
-
-    function stringToNum(s) { 
-        if(!s) return 0; 
-        let p = s.split('-'); 
-        return Math.floor(Date.UTC(p[0], p[1]-1, p[2]) / 86400000); 
-    }
-
-    function creaDataSicura(dataStr) { 
-        if(!dataStr) return new Date(); 
-        let p = dataStr.split('-'); 
-        return new Date(p[0], p[1] - 1, p[2], 12, 0, 0); 
-    }
-
-    function capitalizzaIniziali(str) {
-        if (!str) return "";
-        return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-    }
+    // HELPER FUNZIONI
+    function dateToLocalISO(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0'); }
+    function stringToNum(s) { if(!s) return 0; let p = s.split('-'); return Math.floor(Date.UTC(p[0], p[1]-1, p[2]) / 86400000); }
+    function creaDataSicura(dataStr) { if(!dataStr) return new Date(); let p = dataStr.split('-'); return new Date(p[0], p[1] - 1, p[2], 12, 0, 0); }
+    function capitalizzaIniziali(str) { if (!str) return ""; return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()); }
+    function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+    function dataIt(iso) { return iso.split('-').reverse().join('/'); }
+    function getLineStyle(linea) { const c = ACTV_COLORS[linea] || { bg: '#ffffff', text: '#000000', border: '#333333' }; return `background-color: ${c.bg}; color: ${c.text}; border-color: ${c.border};`; }
 
     // --- HELPER CONVERSIONE MANSIONE ---
     function convertiTurnoPerMansione(turno, mansione) {
         if (!turno || !mansione) return turno;
         let t = String(turno).toUpperCase();
         let m = String(mansione).toLowerCase();
-
         let isMarinaio = m.includes('marinaio') || m.includes('timoniere');
 
         if (isMarinaio) {
@@ -192,6 +325,61 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
             }
         }
         return t;
+    }
+
+    function verificaSeMarinaio(codiceInput) {
+        if (!codiceInput) return false;
+        const cod = String(codiceInput).trim().toUpperCase();
+        if (/^[1-9]B\d{2}$/.test(cod)) return true;
+        const match = cod.match(/^([A-Z0-9]+?)(\d{2})$/);
+        if (match) {
+            const prefisso = match[1];
+            const num = parseInt(match[2], 10);
+            if (/^[1-9][CP]$/.test(prefisso)) return false;
+            if (prefisso === "PO") return true;
+            if (num >= 50) return true;
+        }
+        return false;
+    }
+
+    function formattaCodiceTurno(linea, numero, isMarinaio) {
+        if (!linea || numero === undefined || numero === null) return "";
+        const lineaBase = String(linea).trim().toUpperCase();
+        let num = parseInt(numero, 10);
+        if (isNaN(num)) return `${lineaBase}${numero}`;
+        const matchSingola = lineaBase.match(/^([1-9])(?:\.\d+)?$/);
+
+        if (matchSingola) {
+            const numLinea = matchSingola[1];
+            let lettera = isMarinaio ? "B" : ((numLinea === "1" || numLinea === "2") ? "C" : "P");
+            return `${numLinea}${lettera}${String(num).padStart(2, "0")}`;
+        } else {
+            if (isMarinaio && lineaBase !== "PO") { if (num < 50) num += 50; }
+            return `${lineaBase}${String(num).padStart(2, "0")}`;
+        }
+    }
+
+    function unisciRebecchini(corse) {
+        const ordinate = [...(corse || [])].sort((a, b) => a.ordine - b.ordine);
+        const risultato = [];
+        for (let i = 0; i < ordinate.length; i++) {
+            const corrente = ordinate[i];
+            const successiva = ordinate[i + 1];
+            const eRebecchino = successiva && String(corrente.a || "").trim().toUpperCase() === "MUSEO" &&
+                String(successiva.da || "").trim().toUpperCase() === "MUSEO" && String(corrente.arrivo || "") === String(successiva.partenza || "");
+
+            if (eRebecchino) {
+                risultato.push({
+                    ...corrente, a: successiva.a, arrivo: successiva.arrivo, arrivo_min: successiva.arrivo_min,
+                    durata_min: (corrente.durata_min || 0) + (successiva.durata_min || 0),
+                    tipo_attivita: "rebecchino", note: [...(corrente.note || []), ...(successiva.note || [])],
+                    consegna: successiva.consegna || corrente.consegna || null,
+                    rebecchino_prima_corsa: corrente, rebecchino_seconda_corsa: successiva 
+                });
+                i++;
+            } else { risultato.push(corrente); }
+        }
+        return risultato;
     }
 
     async function initCaches() {
@@ -375,7 +563,6 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
         return codiceBase; 
     }
 
-    // --- FUNZIONE PER RECUPERARE PROMEMORIA DEL GIORNO ---
     function caricaPromemoriaDashboard(dStr) {
         const container = document.getElementById('dash-promemoria-container');
         if (!container) return;
@@ -407,12 +594,300 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
                 }
             };
         };
-        request.onerror = function() {
-            console.error("Errore IndexedDB in dashboard promemoria");
-        };
+        request.onerror = function() { console.error("Errore IndexedDB in dashboard promemoria"); };
     }
 
-    // --- LOGICA UI PRINCIPALE ---
+    // --- CHIAMATA API E RENDERING TIMELINE ---
+    async function caricaDettagliTurnoDaApi(codice, dataGiorno, mansione) {
+        const loading = document.getElementById('dash-turno-loading');
+        const content = document.getElementById('dash-turno-content');
+        const riepilogo = document.getElementById('dash-turno-riepilogo');
+        const timelineCont = document.getElementById('dash-timeline-container');
+        const expandBtn = document.getElementById('dash-turno-expand-btn');
+        const btnImg = document.getElementById('dash-btn-img-turno');
+
+        loading.style.display = 'block';
+        content.style.display = 'none';
+        riepilogo.innerHTML = '';
+        timelineCont.innerHTML = '';
+        expandBtn.style.display = 'none';
+        expandBtn.classList.remove('expanded');
+
+        const fetchUrl = `${API_URL}/api/v1/turno?codice=${encodeURIComponent(codice)}&data=${encodeURIComponent(dataGiorno)}`; 
+
+        try {
+            const response = await fetch(fetchUrl);
+            if (!response.ok) throw new Error("Errore API");
+            const responseData = await response.json();
+            
+            document.getElementById('dash-turno-val').textContent = codice;
+            renderTurnoAPI(responseData.turno, codice, dataGiorno, mansione);
+            
+            loading.style.display = 'none';
+            content.style.display = 'block';
+            btnImg.style.display = 'flex';
+            expandBtn.style.display = 'block';
+
+        } catch (error) {
+            console.error("Fetch API Turno fallita, fallback solo immagine", error);
+            // Fallback: mostra solo il codice e il bottone immagine se l'API fallisce
+            loading.style.display = 'none';
+            content.style.display = 'block';
+            document.getElementById('dash-turno-val').textContent = codice;
+            btnImg.style.display = 'flex';
+        }
+    }
+
+    function renderTurnoAPI(turno, codiceCercato, dataGiorno, mansione) {
+        const isMarinaio = verificaSeMarinaio(codiceCercato);
+        const corseVisualizzate = unisciRebecchini(turno.corse_linea || []);
+        const tutteLeAttivita = [
+            ...corseVisualizzate,
+            ...(turno.altre_attivita || [])
+        ];
+
+        tutteLeAttivita.sort((a, b) => a.ordine - b.ordine);
+        attivitaCorrentiDash = tutteLeAttivita;
+
+        // 1. RIEPILOGO (Luoghi e Durata)
+        const parti = Array.isArray(turno.parti) && turno.parti.length > 0 ? turno.parti : [{ inizio: turno.inizio_turno, fine: turno.fine_turno }];
+        let partiHtml = "";
+        
+        if (parti.length === 1) {
+            const p = parti[0];
+            partiHtml = `
+                <div class="turno-locations">
+                    <div class="location-block">
+                        <div class="location-time">${p.inizio.ora}</div>
+                        <div class="location-name">${p.inizio.luogo}</div>
+                    </div>
+                    <div class="location-arrow"><i class="fa-solid fa-arrow-right-long"></i></div>
+                    <div class="location-block">
+                        <div class="location-time">${p.fine.ora}</div>
+                        <div class="location-name">${p.fine.luogo}</div>
+                    </div>
+                </div>
+            `;
+        } else {
+            partiHtml = `<div style="margin-bottom:10px;">` + parti.map((p, index) => `
+                <div class="turno-part-row">
+                    <div class="turno-part-label">Parte ${index + 1}</div>
+                    <div class="turno-part-location">
+                        <div class="turno-part-time">${p.inizio.ora}</div>
+                        <div class="turno-part-place">${p.inizio.luogo}</div>
+                    </div>
+                    <div class="turno-part-arrow"><i class="fa-solid fa-arrow-right-long"></i></div>
+                    <div class="turno-part-location">
+                        <div class="turno-part-time">${p.fine.ora}</div>
+                        <div class="turno-part-place">${p.fine.luogo}</div>
+                    </div>
+                </div>`).join("") + `</div>`;
+        }
+
+        document.getElementById('dash-turno-riepilogo').innerHTML = `
+            ${partiHtml}
+            <div class="turno-duration">Durata turno: ${turno.durata} h</div>
+        `;
+
+        // 2. TIMELINE E LOGICA TEMPO REALE
+        let htmlTimeline = "";
+        let currentParte = null;
+        
+        const now = new Date();
+        const isOggi = dataGiorno === dateToLocalISO(now);
+        let nowMin = now.getHours() * 60 + now.getMinutes();
+        let evidenzaTrovata = false;
+
+        tutteLeAttivita.forEach(act => {
+            const isRebecchino = act.tipo_attivita === "rebecchino";
+            const isCorsa = act.hasOwnProperty('linea');
+            
+            if (parti.length > 1 && act.parte && act.parte !== currentParte) {
+                currentParte = act.parte;
+                htmlTimeline += `<div class="timeline-parte-header">Parte ${currentParte}</div>`;
+            }
+
+            // Calcolo classe di stato (passato, corrente/futuro)
+            let statusClass = "";
+            if (isOggi && act.partenza && act.arrivo) {
+                let [hP, mP] = act.partenza.split(':').map(Number);
+                let [hA, mA] = act.arrivo.split(':').map(Number);
+                let startMin = hP * 60 + mP;
+                let endMin = hA * 60 + mA;
+                if (endMin < startMin) endMin += 24 * 60; // Giorno successivo
+                
+                let nowMinCalc = nowMin;
+                if (now.getHours() < 4 && startMin > 18 * 60) nowMinCalc += 24 * 60;
+
+                if (nowMinCalc > endMin) {
+                    statusClass = "act-past";
+                } else if (!evidenzaTrovata) {
+                    statusClass = "act-current";
+                    evidenzaTrovata = true;
+                }
+            }
+
+            let topLabelHtml = "";
+            let bottomLabelHtml = "";
+
+            if (isCorsa) {
+                const styleInline = getLineStyle(act.linea);
+                topLabelHtml = `<span class="act-type type-linea" style="${styleInline}">${act.linea}</span>`;
+            }
+
+            if (isRebecchino) {
+                bottomLabelHtml = `<span class="act-type type-rebecchino">Rebecchino</span>`;
+            } else if (!isCorsa) {
+                let typeClass = "type-altro";
+                let typeLabel = act.tipo || "Attività";
+                if (act.categoria === "spostamento_a_vuoto" || (act.tipo && act.tipo.includes("TRASFERIMENTO"))) { typeClass = "type-vuoto"; typeLabel = act.tipo; } 
+                else if (act.categoria === "altra_attivita" && act.tipo && act.tipo.includes("PASTO")) { typeClass = "type-pausa"; typeLabel = act.tipo; }
+                bottomLabelHtml = `<span class="act-type ${typeClass}">${typeLabel}</span>`;
+            }
+
+            let noteHtml = '';
+            if (act.note && act.note.length > 0) {
+                const testiNote = act.note.map(n => n.testo).join(" - ");
+                noteHtml = `<div class="act-notes"><i class="fa-solid fa-triangle-exclamation"></i> ${testiNote}</div>`;
+            }
+
+            let handoffHtml = '';
+            if (act.imbarca) {
+                const codImbarca = formattaCodiceTurno(act.imbarca.linea, act.imbarca.turno, isMarinaio);
+                handoffHtml += `<div><i class="fa-solid fa-arrow-right-to-bracket"></i> Consegnata da: ${codImbarca}</div>`;
+            }
+            if (act.consegna) {
+                const codConsegna = formattaCodiceTurno(act.consegna.linea, act.consegna.turno, isMarinaio);
+                handoffHtml += `<div><i class="fa-solid fa-arrow-right-from-bracket"></i> Consegna a: ${codConsegna}</div>`;
+            }
+
+            const apri = isCorsa ? ` cliccabile" onclick="window.apriCorsaDash(${act.ordine}, '${dataGiorno}')" role="button" tabindex="0"` : '"';
+
+            htmlTimeline += `
+                <div class="activity-card ${statusClass}${apri}>
+                    <div class="act-header">
+                        <span class="act-time">${act.partenza} - ${act.arrivo}</span>
+                        <span class="act-duration">${act.durata_min} min</span>
+                    </div>
+                    <div class="act-route">
+                        ${topLabelHtml}
+                        <span>${act.da || ''} <i class="fa-solid fa-caret-right" style="color:#cbd5e1; margin:0 5px;"></i> ${act.a || ''}</span>
+                    </div>
+                    ${noteHtml}
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: ${(handoffHtml || bottomLabelHtml) ? '10px' : '0'};">
+                        <div class="act-handoff">${handoffHtml}</div>
+                        <div>${bottomLabelHtml}</div>
+                    </div>
+                    ${isCorsa ? '<div class="act-fermate-hint"><i class="fa-solid fa-list-ul"></i> Fermate e orari</div>' : ''}
+                </div>
+            `;
+        });
+
+        document.getElementById('dash-timeline-container').innerHTML = htmlTimeline;
+        
+        // Se c'è un elemento in evidenza, assicura che il contenitore timeline sia visibile se è oggi, altrimenti lascialo chiuso
+        if (isOggi) {
+            document.getElementById('dash-turno-expand-btn').classList.add('expanded');
+            document.getElementById('dash-timeline-container').style.display = 'block';
+            
+            // Scroll alla current activity (delay per permettere il rendering del DOM)
+            setTimeout(() => {
+                const currentEl = document.querySelector('.act-current');
+                if (currentEl) {
+                    currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 300);
+        }
+    }
+
+    // --- FUNZIONI MODAL CORSA DASHBOARD ---
+    async function fetchCorsaSingolaDash(act, dataCorrente) {
+        const params = new URLSearchParams({
+            linea: act.linea, data: dataCorrente,
+            partenza_min: act.partenza_min, arrivo_min: act.arrivo_min, da: act.da, a: act.a
+        });
+        const url = `${API_URL}/api/v1/corsa?${params}`;
+        let dati = cacheCorseDash.get(url);
+        if (!dati) {
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error("Errore recupero fermate.");
+            dati = await resp.json();
+            cacheCorseDash.set(url, dati);
+        }
+        return dati;
+    }
+
+    window.apriCorsaDash = async function(ordine, dataCorrente) {
+        const act = attivitaCorrentiDash.find(a => a.ordine === ordine);
+        if (!act || !act.linea) return;
+        const mio = ++richiestaCorsaDash;
+
+        const stile = getLineStyle(act.linea);
+        let titoloHtml = `<span class="act-type type-linea" style="${stile}">${esc(act.linea)}</span>`;
+        if (act.tipo_attivita === "rebecchino") titoloHtml += `<span class="act-type type-rebecchino" style="margin-left: 6px;">Rebecchino</span>`;
+        titoloHtml += `<span style="margin-left: 8px;">${esc(act.da)} <i class="fa-solid fa-caret-right" style="color:#cbd5e1; margin:0 5px;"></i> ${esc(act.a)}</span>`;
+        
+        document.getElementById('corsa-titolo-dash').innerHTML = titoloHtml;
+        document.getElementById('corsa-sotto-dash').textContent = `${act.partenza} - ${act.arrivo} · ${dataIt(dataCorrente)}`;
+        
+        const corpo = document.getElementById('corsa-corpo-dash');
+        corpo.innerHTML = '<div class="corsa-stato"><i class="fa-solid fa-spinner fa-spin"></i> Carico le fermate…</div>';
+        document.getElementById('corsa-overlay-dash').classList.add('aperto');
+
+        try {
+            let dati;
+            if (act.tipo_attivita === "rebecchino" && act.rebecchino_prima_corsa && act.rebecchino_seconda_corsa) {
+                let dati1 = await fetchCorsaSingolaDash(act.rebecchino_prima_corsa, dataCorrente);
+                if (mio !== richiestaCorsaDash) return;
+                let dati2 = await fetchCorsaSingolaDash(act.rebecchino_seconda_corsa, dataCorrente);
+                if (mio !== richiestaCorsaDash) return;
+
+                let f1 = dati1.fermate.slice(0, dati1.tratta.a + 1);
+                let f2 = dati2.fermate.slice(dati2.tratta.da + 1);
+
+                dati = { ...dati1, fermate: f1.concat(f2), tratta: { da: dati1.tratta.da, a: (f1.length - 1) + (dati2.tratta.a - dati2.tratta.da) } };
+            } else {
+                dati = await fetchCorsaSingolaDash(act, dataCorrente);
+                if (mio !== richiestaCorsaDash) return;
+            }
+
+            const { fermate, tratta, corsa } = dati;
+            document.getElementById('corsa-sotto-dash').textContent = `${act.partenza} - ${act.arrivo} · ${dataIt(dataCorrente)} ${corsa && corsa.direzione ? '· verso ' + corsa.direzione : ''}`;
+            
+            const righe = fermate.map((f, i) => {
+                const nel = i >= tratta.da && i <= tratta.a;
+                const ultima = i === fermate.length - 1;
+                const ora = ultima ? f.arrivo : f.partenza;
+                const sosta = !ultima && f.arrivo !== f.partenza ? `<small>arr. ${f.arrivo}</small>` : '';
+                const estremo = i === tratta.da ? 'Inizio' : (i === tratta.a ? 'Fine' : '');
+                const idInizio = i === tratta.da ? ' id="fermata-inizio-dash"' : '';
+
+                return `<div class="fermata${nel ? ' nel-turno' : ''}"${idInizio}>
+                    <span class="fermata-punto"></span>
+                    <span class="fermata-nome">${esc(f.nome)}${estremo ? ` <span class="fermata-estremo">· ${estremo}</span>` : ''}</span>
+                    <span class="fermata-ora">${ora}${f.oltre_mezzanotte ? '<span class="giorno-dopo">+1</span>' : ''}${sosta}</span>
+                </div>`;
+            }).join('');
+            
+            corpo.innerHTML = righe + `<div class="corsa-legenda">${tratta.da > 0 || tratta.a < fermate.length - 1 ? 'In blu il tratto della tua corsa; le altre fermate sono del resto del percorso.' : 'Tutte le fermate della corsa.'}</div>`;
+            
+            setTimeout(() => {
+                const startFermata = document.getElementById('fermata-inizio-dash');
+                if (startFermata && corpo) { corpo.scrollTo({ top: startFermata.offsetTop - 14, behavior: 'smooth' }); }
+            }, 50);
+
+        } catch (e) {
+            if (mio !== richiestaCorsaDash) return;
+            corpo.innerHTML = `<div class="corsa-stato errore"><i class="fa-solid fa-circle-exclamation"></i> ${esc(e.message)}</div>`;
+        }
+    };
+
+    window.chiudiCorsaDash = function() {
+        richiestaCorsaDash++;
+        document.getElementById('corsa-overlay-dash').classList.remove('aperto');
+    };
+
+    // --- LOGICA UI PRINCIPALE DASHBOARD ---
     window.cambiaDataDashboard = function(giorni) {
         dataCorrente.setDate(dataCorrente.getDate() + giorni);
         aggiornaVistaDashboard();
@@ -431,8 +906,6 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
         let mioTurnoBase = calcolaTurnoBase(dStr, state);
         let mioTurnoConvertito = convertiTurnoPerMansione(mioTurnoBase, userDataPrivate?.mansione);
         let mioTurnoOggi = state.variazioni && state.variazioni[dStr] ? state.variazioni[dStr] : mioTurnoConvertito;
-        
-        document.getElementById('dash-turno-val').textContent = mioTurnoOggi || "N/D";
         
         const alertVar = document.getElementById('dash-alert-varianti');
         const alertVarText = document.getElementById('dash-varianti-text');
@@ -454,21 +927,35 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
             alertVar.style.display = 'flex';
         }
         
-        const btnVedi = document.getElementById('dash-btn-vedi-turno');
+        const btnVedi = document.getElementById('dash-btn-img-turno');
         const avvisoVedi = document.getElementById('dash-avviso-vedi-turno');
+        const loading = document.getElementById('dash-turno-loading');
+        const content = document.getElementById('dash-turno-content');
         let isRiposo = (!mioTurnoOggi || ["RIPOSO", "RI", "DISP", "NPL", "AL", "FER", "FEP", "FES", "PRT", "KINF", "KMAL", "KNOP", "AVIS"].includes(mioTurnoOggi.toUpperCase().trim()));
 
+        // Reset visuale
+        document.getElementById('dash-turno-riepilogo').innerHTML = '';
+        document.getElementById('dash-timeline-container').innerHTML = '';
+        document.getElementById('dash-turno-expand-btn').style.display = 'none';
+
         if (isRiposo) {
+            loading.style.display = 'none';
+            content.style.display = 'block';
+            document.getElementById('dash-turno-val').textContent = mioTurnoOggi || "N/D";
             btnVedi.style.display = "none";
             avvisoVedi.style.display = "none";
         } else {
             if (haVarianti) {
+                loading.style.display = 'none';
+                content.style.display = 'block';
+                document.getElementById('dash-turno-val').textContent = mioTurnoOggi;
                 btnVedi.style.display = "none";
                 avvisoVedi.style.display = "block";
             } else {
-                btnVedi.style.display = "block";
                 avvisoVedi.style.display = "none";
                 btnVedi.onclick = () => { apriImmagineDashboard(mioTurnoOggi, dStr); };
+                // Chiamo API per riempire i dettagli (Timeline, luoghi, durata)
+                caricaDettagliTurnoDaApi(mioTurnoOggi, dStr, userDataPrivate?.mansione);
             }
         }
 
@@ -477,7 +964,7 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
         aggiornaMeteo(dStr);
     }
 
-        async function cercaCompagno(dStr, mioTurno) {
+    async function cercaCompagno(dStr, mioTurno) {
         const container = document.getElementById('dash-mate-container');
         container.style.display = 'none';
         if (!auth.currentUser || !mioTurno) return;
@@ -486,7 +973,6 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
             const userRef = doc(db, "utenti", auth.currentUser.uid);
             const userSnap = await getDoc(userRef);
             
-            // 1. Verifica se l'utente attuale ha dato il consenso alla rubrica
             const miaRubricaRef = doc(db, "rubrica", auth.currentUser.uid);
             const miaRubricaSnap = await getDoc(miaRubricaRef);
             const isCurrentUserInRubrica = miaRubricaSnap.exists();
@@ -518,7 +1004,6 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
 
                 const risultati = await Promise.all(promises);
 
-                // Modificato con for...of per supportare 'await' durante il loop
                 for (let res of risultati) {
                     let turnoOriginaleBase = String(calcolaTurnoBase(dStr, res.calData) || "N/D");
                     turnoOriginaleBase = convertiTurnoPerMansione(turnoOriginaleBase, res.userData.mansione);
@@ -547,7 +1032,6 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
                         
                         let mateHtml = `<span>${cognomeCap} ${nomeCap}${matricola}</span>`;
 
-                        // 2. Se l'utente attuale è in rubrica, controlla anche il compagno
                         if (isCurrentUserInRubrica) {
                             const mateRubricaRef = doc(db, "rubrica", res.id);
                             const mateRubricaSnap = await getDoc(mateRubricaRef);
@@ -568,7 +1052,6 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
                 }
 
                 if (compagniTrovati.length > 0) {
-                    // Utilizziamo innerHTML per iniettare correttamente i tag HTML delle icone
                     document.getElementById('dash-mate-name').innerHTML = compagniTrovati.join("<br><br>");
                     container.style.display = 'block';
                 }
@@ -577,7 +1060,7 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
     }
 
 
-        async function aggiornaMeteo(dStr) {
+    async function aggiornaMeteo(dStr) {
         const alertDiv = document.getElementById('dash-alert-pioggia');
         const dailyContainer = document.getElementById('dash-daily-weather-container');
         const weatherContainer = document.getElementById('dash-weather-container');
@@ -619,7 +1102,6 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
                 `;
             }
 
-            // Calcolo la presenza di pioggia SOLO per le ore successive all'attuale (se la data è oggi)
             let isToday = (dStr === dateToLocalISO(new Date()));
             let currentHour = new Date().getHours();
             
@@ -641,7 +1123,6 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
                 }
             }
 
-            // Costruisco la grafica per le card orarie (inalterato)
             let htmlOrario = "";
             for (let i = 5; i <= 23; i += 2) {
                 let temp = Math.round(data.hourly.temperature_2m[i]);
@@ -653,7 +1134,7 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
                 if (wCode >= 1 && wCode <= 3) icona = '⛅';
                 if (wCode >= 45 && wCode <= 48) icona = '🌫️';
                 if (wCode >= 51 && wCode <= 67) icona = '🌧️';
-                if (wCode >= 71 && wCode <= 77) icona = '❄️';
+                if (wCode >= 71 && wCode <= 77) icona = '❄️️';
                 if (wCode >= 80 && wCode <= 82) icona = '🌦️';
                 if (wCode >= 95) icona = '⛈️';
 
@@ -669,7 +1150,6 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
 
             weatherContainer.innerHTML = htmlOrario;
             
-            // Mostra l'alert solo se ci sarà pioggia da ora in poi o se la probabilità massima futura supera 40%
             if (ciSaraPioggia || maxFutureProb > 40) {
                 alertDiv.style.display = 'flex';
             }
@@ -678,8 +1158,7 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
         }
     }
 
-
-    // --- LOGICA VISUALIZZATORE ---
+    // --- LOGICA VISUALIZZATORE IMMAGINE ---
     function apriImmagineDashboard(turno, dateStr) {
         let dSelezionata = stringToNum(dateStr);
         let dateChiavi = Object.keys(globalDbCache || {}).sort();
