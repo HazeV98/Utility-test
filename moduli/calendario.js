@@ -1,6 +1,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteField, deleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+import {
+    DATA_INIZIO_NUOVI_TURNI, dateToLocalISO, stringToNum, creaDataSicura, convertiTurnoPerMansione,
+    isGiornoRiposoBase, trovaChiaveEsatta, cachePerData, calcolaTurnoBase, ferieDelGiorno, caricaDatiTurni
+} from "./turni-core.js"; // logica turni condivisa con dashboard e gps: va importato sempre con questo stesso percorso
 
 const firebaseConfig = {
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4",
@@ -41,7 +45,6 @@ let ROT_FERIE_INV = [];
 let ROT_FERIE_EST = [];
 const VERSIONE_TURNI = "1.0.4"; 
 let VERSIONE_FERIE = "1.0.0"; 
-const DATA_INIZIO_NUOVI_TURNI = "2026-10-01"; 
 const AVVISO_VARIANTI = true;
 
 const RESET_DOPO_AGGIORNAMENTO = {
@@ -134,26 +137,6 @@ function chiudiMultiEdit() {
 }
 
 // --- HELPER CONVERSIONE MANSIONE (MUTUATO DA DASHBOARD) ---
-function convertiTurnoPerMansione(turno, mansione) {
-    if (!turno || !mansione) return turno;
-    let t = String(turno).toUpperCase();
-    let m = String(mansione).toLowerCase();
-
-    let isMarinaio = m.includes('marinaio') || m.includes('timoniere');
-
-    if (isMarinaio) {
-        let matchP = t.match(/^([1-9])[CP](\d{2})$/);
-        if (matchP) return `${matchP[1]}B${matchP[2]}`;
-    } else {
-        let matchB = t.match(/^([1-9])B(\d{2})$/);
-        if (matchB) {
-            let l = matchB[1]; let f = matchB[2];
-            let letPilota = (l === '1' || l === '2') ? 'C' : 'P';
-            return `${l}${letPilota}${f}`;
-        }
-    }
-    return t;
-}
 
 function getMansioneAttiva() {
     if (state && state.mansione) {
@@ -687,44 +670,9 @@ function resetFerie() {
     }
 }
 
-function isDateInRange(dStr, startStr, endStr, year) {
-    let d = new Date(year, parseInt(dStr.split('-')[1])-1, parseInt(dStr.split('-')[2]));
-    let s = new Date(year, parseInt(startStr.split('-')[0])-1, parseInt(startStr.split('-')[1]));
-    let e = new Date(year, parseInt(endStr.split('-')[0])-1, parseInt(endStr.split('-')[1]));
-    return d >= s && d <= e;
-}
 
 function getFerieGiorno(dStr) {
-    if(!state.ferie || !state.ferie.baseAnno) return null;
-    let year = parseInt(dStr.split('-')[0]);
-    let r = [];
-
-    let iEst = state.ferie.baseEstiva;
-    if (iEst !== -1 && iEst !== null && iEst !== undefined && ROT_FERIE_EST.length > 0) {
-        let idxEst = (iEst + (year - state.ferie.baseAnno)) % ROT_FERIE_EST.length;
-        if(idxEst < 0) idxEst += ROT_FERIE_EST.length; 
-        
-        if(state.ferie.scambi && state.ferie.scambi[year] && state.ferie.scambi[year].estiva !== undefined) {
-            idxEst = state.ferie.scambi[year].estiva;
-        }
-        let pEst = ROT_FERIE_EST[idxEst];
-        if(pEst && isDateInRange(dStr, pEst.s, pEst.e, year)) r.push("FEP");
-    }
-
-    let iInv = state.ferie.baseInvernale;
-    if (iInv !== -1 && iInv !== null && iInv !== undefined && ROT_FERIE_INV.length > 0) {
-        let idxInv = (iInv + (year - state.ferie.baseAnno)) % ROT_FERIE_INV.length;
-        if(idxInv < 0) idxInv += ROT_FERIE_INV.length;
-        
-        if(state.ferie.scambi && state.ferie.scambi[year] && state.ferie.scambi[year].invernale !== undefined) {
-            idxInv = state.ferie.scambi[year].invernale;
-        }
-        let pInv = ROT_FERIE_INV[idxInv];
-        if(pInv && isDateInRange(dStr, pInv.s, pInv.e, year)) r.push("FEP");
-    }
-
-    let uniqueR = [...new Set(r)];
-    return uniqueR.length > 0 ? uniqueR.join(" + ") : null;
+    return ferieDelGiorno(state, dStr, { inv: ROT_FERIE_INV, est: ROT_FERIE_EST });
 }
 
 async function elaboraPdfBibbia(event) {
@@ -1335,11 +1283,6 @@ function renderizzaProfiliUI() {
     container.innerHTML = html;
 }
 
-function stringToNum(s) { 
-    if(!s) return 0; 
-    let p = s.split('-'); 
-    return Math.floor(Date.UTC(p[0], p[1]-1, p[2]) / 86400000); 
-}
 
 function formattaData(d) { 
     let dataObj = new Date(d); 
@@ -1404,122 +1347,12 @@ function salvaERicarica(timestampManuale = null) {
     }
 }
 
-function estraiDataDaNome(nome) { 
-    const match = nome.match(/\d{4}-\d{2}-\d{2}/); 
-    return match ? match[0] : null; 
-}
-
-function dateToLocalISO(d) { 
-    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0'); 
-}
-
-function creaDataSicura(dataStr) { 
-    if(!dataStr) return new Date(); 
-    let p = dataStr.split('-'); 
-    return new Date(p[0], p[1] - 1, p[2], 12, 0, 0); 
-}
-
-function trovaChiaveEsatta(db, codiceBase, dateStr) {
-    if (!db || !codiceBase) return codiceBase;
-    
-    let codiciDaCercare = [codiceBase];
-    
-    let matchB = codiceBase.match(/^([1-9])B(\d{2})$/);
-    if (matchB) {
-        let linea = matchB[1];
-        let finale = matchB[2];
-        let letteraPilota = (linea === '1' || linea === '2') ? 'C' : 'P';
-        
-        let regex = new RegExp(`^${linea}[A-Z]${finale}$`);
-        let trovati = Object.keys(db).filter(k => regex.test(k));
-        if (trovati.length > 0) {
-            codiciDaCercare.push(...trovati);
-        } else {
-            codiciDaCercare.push(`${linea}${letteraPilota}${finale}`);
-        }
-    } else {
-        let match50 = codiceBase.match(/^([A-Z0-9]+?)(\d{2})$/);
-        if (match50) {
-            let pref = match50[1];
-            let num = parseInt(match50[2], 10);
-            if (num >= 50) {
-                let numPilota = String(num - 50).padStart(2, '0');
-                codiciDaCercare.push(pref + numPilota);
-            }
-        }
-    }
-
-    let giornoIdx = creaDataSicura(dateStr).getDay(); 
-    let targetDay = giornoIdx === 0 ? 7 : giornoIdx; 
-    const dayMap = { "LUN": 1, "MAR": 2, "MER": 3, "GIO": 4, "VEN": 5, "SAB": 6, "DOM": 7 };
-
-    for (let codCercato of codiciDaCercare) {
-        let keys = Object.keys(db).filter(k => k === codCercato || k.startsWith(codCercato + "_"));
-        
-        let exactMatch = null;
-        let genericMatch = null;
-
-        for (let k of keys) {
-            if (k === codCercato) {
-                genericMatch = k;
-                continue;
-            }
-            
-            let suffix = k.substring(codCercato.length + 1); 
-            
-            if (suffix.includes("-")) {
-                let parts = suffix.split("-");
-                if (parts.length === 2 && dayMap[parts[0]] && dayMap[parts[1]]) {
-                    let start = dayMap[parts[0]];
-                    let end = dayMap[parts[1]];
-                    
-                    if (start <= end) { 
-                        if (targetDay >= start && targetDay <= end) exactMatch = k;
-                    } else { 
-                        if (targetDay >= start || targetDay <= end) exactMatch = k;
-                    }
-                }
-            } else {
-                if (dayMap[suffix] && dayMap[suffix] === targetDay) {
-                    exactMatch = k;
-                }
-            }
-        }
-        if (exactMatch) return exactMatch;
-        if (genericMatch) return genericMatch;
-    }
-    
-    return codiceBase; 
-}
-
 function getRotazionePerData(dateStr) {
-    const dSelezionata = stringToNum(dateStr);
-    const dateChiavi = Object.keys(state.rotCache || {}).sort();
-    if (dateChiavi.length === 0) return null;
-    
-    let rotCorrente = state.rotCache[dateChiavi[0]]; 
-    for (let i = dateChiavi.length - 1; i >= 0; i--) { 
-        if (dSelezionata >= stringToNum(dateChiavi[i])) { 
-            rotCorrente = state.rotCache[dateChiavi[i]]; 
-            break; 
-        } 
-    }
-    return rotCorrente;
+    return cachePerData(state.rotCache, dateStr);
 }
 
 function getDispPerData(dateStr) {
-    const dSelezionata = stringToNum(dateStr);
-    const dateChiavi = Object.keys(state.dispCache || {}).sort();
-    if (dateChiavi.length === 0) return null;
-    
-    let dispCorrente = state.dispCache[dateChiavi[0]]; 
-    for (let i = dateChiavi.length - 1; i >= 0; i--) { 
-        if (dSelezionata >= stringToNum(dateChiavi[i])) { 
-            dispCorrente = state.dispCache[dateChiavi[i]]; 
-            break; 
-        } 
-    }
-    return dispCorrente;
+    return cachePerData(state.dispCache, dateStr);
 }
 
 function trovaDataCambioProssimo(dataRifStr) {
@@ -1563,52 +1396,17 @@ function scaricaPDF() {
 
 async function caricaDatiEsterniDinamici() {
     try {
-        const nocache = "?v=" + new Date().getTime();
-        const resMappa = await fetch("mappa_file.json" + nocache);
-        if (!resMappa.ok) throw new Error("Mappa file non trovata");
-        const mappa = await resMappa.json();
-        const albero = mappa.albero || [];
+        // un solo scaricamento condiviso con dashboard e gps (vedi turni-core.js)
+        const dati = await caricaDatiTurni();
 
-        if (albero.includes("rotazione_ferie.json")) {
-            try {
-                const resFerie = await fetch("rotazione_ferie.json" + nocache);
-                if (resFerie.ok) {
-                    const datiFerie = await resFerie.json();
-                    if (datiFerie.versione) VERSIONE_FERIE = datiFerie.versione;
-                    ROT_FERIE_INV = datiFerie.invernali || [];
-                    ROT_FERIE_EST = datiFerie.estive || [];
-                }
-            } catch (e) { console.error("Errore ferie", e); }
-        }
+        if (dati.ferie.versione) VERSIONE_FERIE = dati.ferie.versione;
+        ROT_FERIE_INV = dati.ferie.inv;
+        ROT_FERIE_EST = dati.ferie.est;
+        if (AVVISO_VARIANTI) variantiData = dati.varianti;
 
-        if (AVVISO_VARIANTI && albero.includes("presenza_varianti.json")) {
-            try {
-                const resVar = await fetch("presenza_varianti.json" + nocache);
-                if (resVar.ok) variantiData = await resVar.json();
-            } catch (e) { console.error("Errore varianti", e); }
-        }
-
-        state.dbCache = {};
-        state.rotCache = {};
-        state.dispCache = {};
-
-        for (let file of albero) {
-            const dataInizio = estraiDataDaNome(file);
-            if (!dataInizio) continue;
-
-            try {
-                if (file.startsWith("info_turni_")) {
-                    const res = await fetch(file + nocache);
-                    if (res.ok) state.dbCache[dataInizio] = await res.json();
-                } else if (file.startsWith("rotazioni_")) {
-                    const res = await fetch(file + nocache);
-                    if (res.ok) state.rotCache[dataInizio] = await res.json();
-                } else if (file.startsWith("turni_disp_")) {
-                    const res = await fetch(file + nocache);
-                    if (res.ok) state.dispCache[dataInizio] = await res.json();
-                }
-            } catch(e) { console.error("Errore caricamento " + file, e); }
-        }
+        state.dbCache = dati.db;
+        state.rotCache = dati.rot;
+        state.dispCache = dati.disp;
     } catch (e) { console.error("Errore caricamento dinamico", e); }
 }
 
@@ -2283,13 +2081,6 @@ function avviaRiconfigurazioneAggiornamento() {
     document.getElementById('stepModal').style.display = 'block';
 }
 
-function isGiornoRiposoBase(curr, cfg) { 
-    if (!cfg.riposoStart) return false; 
-    let ref = stringToNum(cfg.riposoStart); 
-    if (cfg.depositoAttivo === 'disp_det') return (((curr - ref) % 6 + 6) % 6 === 0); 
-    let pos = ((curr - ref + 6) % 15 + 15) % 15; 
-    return (pos === 6 || pos === 13 || pos === 14); 
-}
 
 function isGiornoRiposo(dStr) { 
     if (state.variazioni[dStr] === "RI" || state.variazioni[dStr] === "RIPOSO" || state.variazioni[dStr] === "AL") return true; 
@@ -2478,91 +2269,9 @@ function calcolaTurni(vistaStartObj = null, vistaEndObj = null) {
             evs.push(ev);
             
         } else if (curr < limitTurniNum) {
-            const currentRotRules = getRotazionePerData(dStr); 
-            let t = "";
-            
-            if (cfgBase.depositoAttivo.startsWith('disp_')) { 
-                t = "DISP"; 
-            } else if (cfgBase.rotazioneStart) {
-                let activeCfg = (state.futureConfig && curr >= stringToNum(state.futureConfig.dataInizio)) ? { start: state.futureConfig.dataInizio, idx: state.futureConfig.turnoIndex, tcPattern: state.futureConfig.tcPattern } : { start: cfgBase.rotazioneStart, idx: cfgBase.turnoIndex, tcPattern: cfgBase.tcPattern };
-                let refRot = stringToNum(activeCfg.start), w = 0; 
-                
-                if (curr >= refRot) { 
-                    for (let j = refRot; j < curr; j++) { 
-                        if (!isGiornoRiposoBase(j, cfgBase)) w++; 
-                    } 
-                } else { 
-                    for (let j = refRot; j > curr; j--) { 
-                        if (!isGiornoRiposoBase(j, cfgBase)) w--; 
-                    } 
-                }
-                
-                let refRip = stringToNum(cfgBase.riposoStart); 
-                let startPos = ((refRot - refRip + 6) % 15 + 15) % 15; 
-                let offset = [1, 3, 5, 8, 10, 12].includes(startPos) ? 1 : 0;
-                
-                const rotList = (currentRotRules && currentRotRules[cfgBase.depositoAttivo]) ? currentRotRules[cfgBase.depositoAttivo] : [];
-                
-                if (rotList.length > 0) {
-                    if (cfgBase.depositoAttivo.startsWith('tc_')) {
-                        let currPos = ((curr - refRip + 6) % 15 + 15) % 15; 
-                        let isBlock2 = (currPos >= 7 && currPos <= 12); 
-                        let k = isBlock2 ? (currPos - 7) : currPos; 
-                        let patternDopoSingolo = activeCfg.tcPattern || cfgBase.tcPattern || 'doppio'; 
-                        let isAlternato = (patternDopoSingolo === 'disp') ? isBlock2 : !isBlock2;
-                        let idx = Math.floor(k / 2); 
-                        
-                        if (idx >= rotList.length) idx = rotList.length - 1; 
-                        t = rotList[idx].toUpperCase();
-                        
-                        if (isAlternato) { 
-                            let dispOnEven = (cfgBase.depositoAttivo === 'tc_spez_lido'); 
-                            if (dispOnEven && k % 2 === 0) t = "DISP"; 
-                            if (!dispOnEven && k % 2 !== 0) t = "DISP"; 
-                        }
-                    } else {
-                        let expandedRotList = []; 
-                        let originalToExpanded = [];
-                        
-                        for (let j = 0; j < rotList.length; j++) { 
-                            originalToExpanded[j] = expandedRotList.length; 
-                            let currentTurn = rotList[j].toUpperCase(); 
-                            
-                            if (currentTurn.includes('+')) { 
-                                let parts = currentTurn.split('+'); 
-                                expandedRotList.push(parts[0].trim()); 
-                                if (parts.length > 1) { 
-                                    expandedRotList.push(parts[1].trim()); 
-                                } 
-                            } else { 
-                                expandedRotList.push(currentTurn); 
-                                expandedRotList.push(currentTurn); 
-                            } 
-                        }
-                        
-                        let L_exp = expandedRotList.length; 
-                        let baseExpIdx = originalToExpanded[activeCfg.idx]; 
-                        let blockStartIdx = baseExpIdx - (baseExpIdx % 2); 
-                        let idxExp = (blockStartIdx + w + offset) % L_exp; 
-                        
-                        if (idxExp < 0) idxExp += L_exp; 
-                        t = expandedRotList[idxExp];
-                    }
-                    
-                    let currentDispRules = getDispPerData(dStr); 
-                    if (currentDispRules) { 
-                        const mapG = ["DOMENICA", "LUNEDI", "MARTEDI", "MERCOLEDI", "GIOVEDI", "VENERDI", "SABATO"]; 
-                        let nomeG = mapG[dObj.getDay()]; 
-                        let rGiorno = currentDispRules[nomeG] || currentDispRules[nomeG.toLowerCase()] || currentDispRules[nomeG.charAt(0) + nomeG.slice(1).toLowerCase()] || currentDispRules[dObj.getDay().toString()]; 
-                        
-                        if (rGiorno && Array.isArray(rGiorno)) { 
-                            if (rGiorno.map(x => x.toUpperCase()).includes(t)) { 
-                                t = "DISP"; 
-                            } 
-                        } 
-                    }
-                }
-            }
+            // il calcolo vero e proprio sta in turni-core.js (uguale per calendario, dashboard e gps)
+            let t = calcolaTurnoBase(dStr, state, { rot: state.rotCache, disp: state.dispCache });
+            if (t === "N/D") t = "";
 
             if (t && t !== "DISP") {
                 t = convertiTurnoPerMansione(t, getMansioneAttiva());

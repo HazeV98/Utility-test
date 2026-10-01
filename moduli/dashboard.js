@@ -1,4 +1,8 @@
 import { doc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import {
+    API_URL, DATA_INIZIO_NUOVI_TURNI, TURNI_SENZA_CORSE, dateToLocalISO, stringToNum, creaDataSicura, esc, getLineStyle,
+    convertiTurnoPerMansione, trovaChiaveEsatta, unisciRebecchini, calcolaTurnoBase as calcolaTurnoCore, ferieDelGiorno, caricaDatiTurni
+} from "./turni-core.js"; // logica turni condivisa con calendario e gps: va importato sempre con questo stesso percorso
 
 // ==========================================
 // 1. INIEZIONE UI DASHBOARD
@@ -253,31 +257,17 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
     let globalRotCache = null;
     let globalDbCache = null;
     let globalVariantiCache = null;
-    const DATA_INIZIO_NUOVI_TURNI = "2026-06-01"; 
+    let datiTurni = null;
 
     let pzDashboard = null;
     let currentImagePathDash = "";
     let imgBaseFallbackDash = "";
 
     // Variabili per visualizzatore timeline API
-    const API_URL = 'https://api.bateolive.stream';
     let attivitaCorrentiDash = [];
     const cacheCorseDash = new Map();
     let richiestaCorsaDash = 0;
     
-    const ACTV_COLORS = {
-        '1': { bg: '#ffffff', text: '#000000', border: '#000000' },
-        '2': { bg: '#e3001b', text: '#ffffff', border: '#e3001b' },
-        '2/': { bg: '#e3001b', text: '#ffffff', border: '#e3001b' },
-        '3': { bg: '#ff8c00', text: '#000000', border: '#ff8c00' },
-        '4.1': { bg: '#bd429b', text: '#ffffff', border: '#bd429b' },
-        '4.2': { bg: '#bd429b', text: '#ffffff', border: '#bd429b' },
-        '5.1': { bg: '#60b9a6', text: '#000000', border: '#60b9a6' },
-        '5.2': { bg: '#60b9a6', text: '#000000', border: '#60b9a6' },
-        '6': { bg: '#0070bc', text: '#ffffff', border: '#0070bc' },
-        'N': { bg: '#1c355e', text: '#ffffff', border: '#1c355e' },
-        '11': { bg: '#f49ab4', text: '#000000', border: '#f49ab4' }
-    };
 
     const imgElem = document.getElementById('img-dashboard-turno');
     if (typeof Panzoom !== 'undefined' && !pzDashboard) {
@@ -304,34 +294,10 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
     }
 
     // HELPER FUNZIONI
-    function dateToLocalISO(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0'); }
-    function stringToNum(s) { if(!s) return 0; let p = s.split('-'); return Math.floor(Date.UTC(p[0], p[1]-1, p[2]) / 86400000); }
-    function creaDataSicura(dataStr) { if(!dataStr) return new Date(); let p = dataStr.split('-'); return new Date(p[0], p[1] - 1, p[2], 12, 0, 0); }
     function capitalizzaIniziali(str) { if (!str) return ""; return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()); }
-    function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
     function dataIt(iso) { return iso.split('-').reverse().join('/'); }
-    function getLineStyle(linea) { const c = ACTV_COLORS[linea] || { bg: '#ffffff', text: '#000000', border: '#333333' }; return `background-color: ${c.bg}; color: ${c.text}; border-color: ${c.border};`; }
 
     // --- HELPER CONVERSIONE MANSIONE ---
-    function convertiTurnoPerMansione(turno, mansione) {
-        if (!turno || !mansione) return turno;
-        let t = String(turno).toUpperCase();
-        let m = String(mansione).toLowerCase();
-        let isMarinaio = m.includes('marinaio') || m.includes('timoniere');
-
-        if (isMarinaio) {
-            let matchP = t.match(/^([1-9])[CP](\d{2})$/);
-            if (matchP) return `${matchP[1]}B${matchP[2]}`;
-        } else {
-            let matchB = t.match(/^([1-9])B(\d{2})$/);
-            if (matchB) {
-                let l = matchB[1]; let f = matchB[2];
-                let letPilota = (l === '1' || l === '2') ? 'C' : 'P';
-                return `${l}${letPilota}${f}`;
-            }
-        }
-        return t;
-    }
 
     function verificaSeMarinaio(codiceInput) {
         if (!codiceInput) return false;
@@ -365,140 +331,19 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
         }
     }
 
-    function unisciRebecchini(corse) {
-        const ordinate = [...(corse || [])].sort((a, b) => a.ordine - b.ordine);
-        const risultato = [];
-        for (let i = 0; i < ordinate.length; i++) {
-            const corrente = ordinate[i];
-            const successiva = ordinate[i + 1];
-            const eRebecchino = successiva && String(corrente.a || "").trim().toUpperCase() === "MUSEO" &&
-                String(successiva.da || "").trim().toUpperCase() === "MUSEO" && String(corrente.arrivo || "") === String(successiva.partenza || "");
-
-            if (eRebecchino) {
-                risultato.push({
-                    ...corrente, a: successiva.a, arrivo: successiva.arrivo, arrivo_min: successiva.arrivo_min,
-                    durata_min: (corrente.durata_min || 0) + (successiva.durata_min || 0),
-                    tipo_attivita: "rebecchino", note: [...(corrente.note || []), ...(successiva.note || [])],
-                    consegna: successiva.consegna || corrente.consegna || null,
-                    rebecchino_prima_corsa: corrente, rebecchino_seconda_corsa: successiva 
-                });
-                i++;
-            } else { risultato.push(corrente); }
-        }
-        return risultato;
-    }
 
     async function initCaches() {
-        if (globalRotCache && globalDbCache && globalVariantiCache) return;
-        globalRotCache = {}; globalDbCache = {}; globalVariantiCache = {};
+        if (datiTurni) return;
         try {
-            const resMap = await fetch("mappa_file.json?v=" + Date.now());
-            if (resMap.ok) {
-                const mappa = await resMap.json();
-                const fetchPromises = [];
-                for (let file of mappa.albero || []) {
-                    const dateMatch = file.match(/\d{4}-\d{2}-\d{2}/);
-                    if (file.startsWith("rotazioni_") && dateMatch) {
-                        fetchPromises.push(fetch(file + "?v=" + Date.now()).then(r => r.json()).then(d => globalRotCache[dateMatch[0]] = d).catch(()=>{}));
-                    } else if (file.startsWith("info_turni_") && dateMatch) {
-                        fetchPromises.push(fetch(file + "?v=" + Date.now()).then(r => r.json()).then(d => globalDbCache[dateMatch[0]] = d).catch(()=>{}));
-                    }
-                }
-                if (mappa.albero && mappa.albero.includes("presenza_varianti.json")) {
-                    fetchPromises.push(fetch("presenza_varianti.json?v=" + Date.now()).then(r => r.json()).then(d => globalVariantiCache = d).catch(()=>{}));
-                }
-                await Promise.all(fetchPromises);
-            }
+            // un solo scaricamento condiviso con calendario e gps (vedi turni-core.js)
+            datiTurni = await caricaDatiTurni();
+            globalRotCache = datiTurni.rot; globalDbCache = datiTurni.db; globalVariantiCache = datiTurni.varianti;
         } catch (e) { console.error("Errore cache", e); }
     }
 
-    function isGiornoRiposoBase(curr, cfg) { 
-        if (!cfg.riposoStart) return false; 
-        let ref = stringToNum(cfg.riposoStart); 
-        if (cfg.depositoAttivo === 'disp_det') return (((curr - ref) % 6 + 6) % 6 === 0); 
-        let pos = ((curr - ref + 6) % 15 + 15) % 15; 
-        return (pos === 6 || pos === 13 || pos === 14); 
-    }
 
     function calcolaTurnoBase(dStr, cfgData) {
-        if (!cfgData || !cfgData.depositoAttivo || !cfgData.riposoStart) return "N/D";
-        let curr = stringToNum(dStr);
-        let isPastUpdate = (cfgData.history && curr < stringToNum(DATA_INIZIO_NUOVI_TURNI)); 
-        let cfgBase = isPastUpdate ? cfgData.history : cfgData;
-        
-        if (isGiornoRiposoBase(curr, cfgBase)) {
-            let tituloRiposo = 'RI'; 
-            if (cfgBase.riposoStart && cfgBase.depositoAttivo !== 'disp_det') { 
-                let ref = stringToNum(cfgBase.riposoStart); 
-                let pos = ((curr - ref + 6) % 15 + 15) % 15; 
-                if (pos === 13) tituloRiposo = 'AL'; 
-            }
-            return tituloRiposo;
-        }
-
-        if (cfgBase.depositoAttivo.startsWith('disp_')) return "DISP";
-
-        if (cfgBase.rotazioneStart) {
-            let activeCfg = (cfgData.futureConfig && curr >= stringToNum(cfgData.futureConfig.dataInizio)) 
-                ? { start: cfgData.futureConfig.dataInizio, idx: cfgData.futureConfig.turnoIndex, tcPattern: cfgData.futureConfig.tcPattern } 
-                : { start: cfgBase.rotazioneStart, idx: cfgBase.turnoIndex, tcPattern: cfgBase.tcPattern };
-            
-            let refRot = stringToNum(activeCfg.start), w = 0; 
-            if (curr >= refRot) { for (let j = refRot; j < curr; j++) { if (!isGiornoRiposoBase(j, cfgBase)) w++; } } 
-            else { for (let j = refRot; j > curr; j--) { if (!isGiornoRiposoBase(j, cfgBase)) w--; } }
-            
-            let refRip = stringToNum(cfgBase.riposoStart); 
-            let startPos = ((refRot - refRip + 6) % 15 + 15) % 15; 
-            let offset = [1, 3, 5, 8, 10, 12].includes(startPos) ? 1 : 0;
-            
-            let rotList = [];
-            if (globalRotCache) {
-                const dateChiavi = Object.keys(globalRotCache).sort();
-                let rotCorrente = dateChiavi.length > 0 ? globalRotCache[dateChiavi[0]] : null; 
-                for (let i = dateChiavi.length - 1; i >= 0; i--) { 
-                    if (curr >= stringToNum(dateChiavi[i])) { rotCorrente = globalRotCache[dateChiavi[i]]; break; } 
-                }
-                if (rotCorrente && rotCorrente[cfgBase.depositoAttivo]) { rotList = rotCorrente[cfgBase.depositoAttivo]; }
-            }
-
-            if (rotList.length > 0) {
-                if (cfgBase.depositoAttivo.startsWith('tc_')) {
-                    let currPos = ((curr - refRip + 6) % 15 + 15) % 15; 
-                    let isBlock2 = (currPos >= 7 && currPos <= 12); 
-                    let k = isBlock2 ? (currPos - 7) : currPos; 
-                    let patternDopoSingolo = activeCfg.tcPattern || cfgBase.tcPattern || 'doppio'; 
-                    let isAlternato = (patternDopoSingolo === 'disp') ? isBlock2 : !isBlock2;
-                    let idx = Math.floor(k / 2); 
-                    if (idx >= rotList.length) idx = rotList.length - 1; 
-                    let t = rotList[idx].toUpperCase();
-                    if (isAlternato) { 
-                        let dispOnEven = (cfgBase.depositoAttivo === 'tc_spez_lido'); 
-                        if (dispOnEven && k % 2 === 0) t = "DISP"; 
-                        if (!dispOnEven && k % 2 !== 0) t = "DISP"; 
-                    }
-                    return t;
-                } else {
-                    let expandedRotList = []; 
-                    let originalToExpanded = [];
-                    for (let j = 0; j < rotList.length; j++) { 
-                        originalToExpanded[j] = expandedRotList.length; 
-                        let currentTurn = rotList[j].toUpperCase(); 
-                        if (currentTurn.includes('+')) { 
-                            let parts = currentTurn.split('+'); 
-                            expandedRotList.push(parts[0].trim()); 
-                            if (parts.length > 1) { expandedRotList.push(parts[1].trim()); } 
-                        } else { expandedRotList.push(currentTurn); expandedRotList.push(currentTurn); } 
-                    }
-                    let L_exp = expandedRotList.length; 
-                    let baseExpIdx = originalToExpanded[activeCfg.idx]; 
-                    let blockStartIdx = baseExpIdx - (baseExpIdx % 2); 
-                    let idxExp = (blockStartIdx + w + offset) % L_exp; 
-                    if (idxExp < 0) idxExp += L_exp; 
-                    return expandedRotList[idxExp];
-                }
-            }
-        }
-        return "N/D";
+        return calcolaTurnoCore(dStr, cfgData, { rot: globalRotCache, disp: datiTurni && datiTurni.disp });
     }
 
     function calcolaCompagniPossibili(mioTurnoStr) {
@@ -525,49 +370,6 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
         return mates;
     }
 
-    function trovaChiaveEsatta(dbLocal, codiceBase, dateStr) {
-        if (!dbLocal || !codiceBase) return codiceBase;
-        let codiciDaCercare = [codiceBase];
-        let matchB = codiceBase.match(/^([1-9])B(\d{2})$/);
-        if (matchB) {
-            let linea = matchB[1]; let finale = matchB[2];
-            let letteraPilota = (linea === '1' || linea === '2') ? 'C' : 'P';
-            let regex = new RegExp(`^${linea}[A-Z]${finale}$`);
-            let trovati = Object.keys(dbLocal).filter(k => regex.test(k));
-            if (trovati.length > 0) codiciDaCercare.push(...trovati);
-            else codiciDaCercare.push(`${linea}${letteraPilota}${finale}`);
-        } else {
-            let match50 = codiceBase.match(/^([A-Z0-9]+?)(\d{2})$/);
-            if (match50) {
-                let pref = match50[1]; let num = parseInt(match50[2], 10);
-                if (num >= 50) codiciDaCercare.push(pref + String(num - 50).padStart(2, '0'));
-            }
-        }
-
-        let giornoIdx = creaDataSicura(dateStr).getDay(); 
-        let targetDay = giornoIdx === 0 ? 7 : giornoIdx; 
-        const dayMap = { "LUN": 1, "MAR": 2, "MER": 3, "GIO": 4, "VEN": 5, "SAB": 6, "DOM": 7 };
-
-        for (let codCercato of codiciDaCercare) {
-            let keys = Object.keys(dbLocal).filter(k => k === codCercato || k.startsWith(codCercato + "_"));
-            let exactMatch = null; let genericMatch = null;
-            for (let k of keys) {
-                if (k === codCercato) { genericMatch = k; continue; }
-                let suffix = k.substring(codCercato.length + 1); 
-                if (suffix.includes("-")) {
-                    let parts = suffix.split("-");
-                    if (parts.length === 2 && dayMap[parts[0]] && dayMap[parts[1]]) {
-                        let start = dayMap[parts[0]]; let end = dayMap[parts[1]];
-                        if (start <= end) { if (targetDay >= start && targetDay <= end) exactMatch = k; } 
-                        else { if (targetDay >= start || targetDay <= end) exactMatch = k; }
-                    }
-                } else { if (dayMap[suffix] && dayMap[suffix] === targetDay) exactMatch = k; }
-            }
-            if (exactMatch) return exactMatch;
-            if (genericMatch) return genericMatch;
-        }
-        return codiceBase; 
-    }
 
     function caricaPromemoriaDashboard(dStr) {
         const container = document.getElementById('dash-promemoria-container');
@@ -698,34 +500,50 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
         // 2. TIMELINE E LOGICA TEMPO REALE
         let htmlTimeline = "";
         let currentParte = null;
-        
+
         const now = new Date();
-        const isOggi = dataGiorno === dateToLocalISO(now);
-        let nowMin = now.getHours() * 60 + now.getMinutes();
+        const [annoG, meseG, giornoG] = dataGiorno.split('-').map(Number);
+
         let evidenzaTrovata = false;
+        let previousRawStart = -1;
+        let dayOffsetDays = 0;
 
         tutteLeAttivita.forEach(act => {
             const isRebecchino = act.tipo_attivita === "rebecchino";
             const isCorsa = act.hasOwnProperty('linea');
-            
+
             if (parti.length > 1 && act.parte && act.parte !== currentParte) {
                 currentParte = act.parte;
                 htmlTimeline += `<div class="timeline-parte-header">Parte ${currentParte}</div>`;
             }
 
-            // Calcolo classe di stato (passato, corrente/futuro)
             let statusClass = "";
-            if (isOggi && act.partenza && act.arrivo) {
+
+            if (act.partenza && act.arrivo) {
                 let [hP, mP] = act.partenza.split(':').map(Number);
                 let [hA, mA] = act.arrivo.split(':').map(Number);
-                let startMin = hP * 60 + mP;
-                let endMin = hA * 60 + mA;
-                if (endMin < startMin) endMin += 24 * 60; // Giorno successivo
-                
-                let nowMinCalc = nowMin;
-                if (now.getHours() < 4 && startMin > 18 * 60) nowMinCalc += 24 * 60;
 
-                if (nowMinCalc > endMin) {
+                let rawStart = hP * 60 + mP;
+                let rawEnd = hA * 60 + mA;
+
+                // Se l'orario di inizio fa un salto all'indietro (es. da 23:30 a 00:15), scatta il giorno logico successivo
+                if (previousRawStart !== -1 && rawStart < previousRawStart - 12 * 60) {
+                    dayOffsetDays += 1;
+                }
+                previousRawStart = rawStart;
+
+                // Creazione oggetti Date assoluti per un confronto chirurgico
+                let actStartDate = new Date(annoG, meseG - 1, giornoG + dayOffsetDays, hP, mP);
+
+                let endDayOffset = dayOffsetDays;
+                // Se la singola attività scavalca la mezzanotte (es. 23:45 -> 00:30)
+                if (rawEnd < rawStart) {
+                    endDayOffset += 1;
+                }
+                let actEndDate = new Date(annoG, meseG - 1, giornoG + endDayOffset, hA, mA);
+
+                // Confronto diretto tra la fine dell'attività e l'orario attuale esatto
+                if (now > actEndDate) {
                     statusClass = "act-past";
                 } else if (!evidenzaTrovata) {
                     statusClass = "act-current";
@@ -746,7 +564,7 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
             } else if (!isCorsa) {
                 let typeClass = "type-altro";
                 let typeLabel = act.tipo || "Attività";
-                if (act.categoria === "spostamento_a_vuoto" || (act.tipo && act.tipo.includes("TRASFERIMENTO"))) { typeClass = "type-vuoto"; typeLabel = act.tipo; } 
+                if (act.categoria === "spostamento_a_vuoto" || (act.tipo && act.tipo.includes("TRASFERIMENTO"))) { typeClass = "type-vuoto"; typeLabel = act.tipo; }
                 else if (act.categoria === "altra_attivita" && act.tipo && act.tipo.includes("PASTO")) { typeClass = "type-pausa"; typeLabel = act.tipo; }
                 bottomLabelHtml = `<span class="act-type ${typeClass}">${typeLabel}</span>`;
             }
@@ -790,20 +608,6 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
         });
 
         document.getElementById('dash-timeline-container').innerHTML = htmlTimeline;
-        
-        // Se c'è un elemento in evidenza, assicura che il contenitore timeline sia visibile se è oggi, altrimenti lascialo chiuso
-        if (isOggi) {
-            document.getElementById('dash-turno-expand-btn').classList.add('expanded');
-            document.getElementById('dash-timeline-container').style.display = 'block';
-            
-            // Scroll alla current activity (delay per permettere il rendering del DOM)
-            setTimeout(() => {
-                const currentEl = document.querySelector('.act-current');
-                if (currentEl) {
-                    currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }, 300);
-        }
     }
 
     // --- FUNZIONI MODAL CORSA DASHBOARD ---
@@ -912,6 +716,12 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
         let mioTurnoBase = calcolaTurnoBase(dStr, state);
         let mioTurnoConvertito = convertiTurnoPerMansione(mioTurnoBase, userDataPrivate?.mansione);
         let mioTurnoOggi = state.variazioni && state.variazioni[dStr] ? state.variazioni[dStr] : mioTurnoConvertito;
+
+        // giorni di ferie previsti dalla rotazione ferie (come nel calendario): senza variazione manuale il turno diventa FEP
+        if (!(state.variazioni && state.variazioni[dStr]) && datiTurni && !["RI", "AL"].includes(String(mioTurnoOggi).toUpperCase())) {
+            const ferieGiorno = ferieDelGiorno(state, dStr, datiTurni.ferie);
+            if (ferieGiorno) mioTurnoOggi = ferieGiorno;
+        }
         
         const alertVar = document.getElementById('dash-alert-varianti');
         const alertVarText = document.getElementById('dash-varianti-text');
@@ -937,7 +747,7 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
         const avvisoVedi = document.getElementById('dash-avviso-vedi-turno');
         const loading = document.getElementById('dash-turno-loading');
         const content = document.getElementById('dash-turno-content');
-        let isRiposo = (!mioTurnoOggi || ["RIPOSO", "RI", "DISP", "NPL", "AL", "FER", "FEP", "FES", "PRT", "KINF", "KMAL", "KNOP", "AVIS"].includes(mioTurnoOggi.toUpperCase().trim()));
+        let isRiposo = (!mioTurnoOggi || TURNI_SENZA_CORSE.includes(mioTurnoOggi.toUpperCase().trim()));
 
         // Reset visuale
         document.getElementById('dash-turno-riepilogo').innerHTML = '';
@@ -1140,7 +950,7 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
                 if (wCode >= 1 && wCode <= 3) icona = '⛅';
                 if (wCode >= 45 && wCode <= 48) icona = '🌫️';
                 if (wCode >= 51 && wCode <= 67) icona = '🌧️';
-                if (wCode >= 71 && wCode <= 77) icona = '❄️️';
+                if (wCode >= 71 && wCode <= 77) icona = '❄';
                 if (wCode >= 80 && wCode <= 82) icona = '🌦️';
                 if (wCode >= 95) icona = '⛈️';
 
