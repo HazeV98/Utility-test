@@ -11,14 +11,15 @@
 //     window.apriModaleGPS();
 // ==========================================
 
-const API_URL = 'https://api.bateolive.stream';
-const DATA_INIZIO_NUOVI_TURNI = "2026-06-01";
+import {
+    API_URL, TURNI_SENZA_CORSE, dateToLocalISO, stringToNum, esc, getLineStyle,
+    turnoEffettivo, unisciRebecchini, ferieDelGiorno, haVarianti, caricaDatiTurni
+} from "./turni-core.js"; // logica turni condivisa con calendario e dashboard: va importato sempre con questo stesso percorso
 
 // Nei giorni con varianti di servizio gli orari dei turni possono non valere: come la dashboard,
 // in quei giorni non si carica il turno. Metti false per usare comunque gli orari del libro turni.
 const BLOCCA_SE_VARIANTI = true;
 
-const TURNI_SENZA_CORSE = ["RIPOSO", "RI", "DISP", "NPL", "AL", "FER", "FEP", "FES", "PRT", "KINF", "KMAL", "KNOP", "AVIS"];
 
 // --- parametri della navigazione
 const SOGLIA_FERMATA_M = 30;      // entro questa distanza dalla fermata il mezzo è "in fermata"
@@ -32,28 +33,11 @@ const PESO_CONTINUITA = 0.25;      // metri di "costo" per ogni metro di scostam
 const SOGLIA_MOVIMENTO_MS = 1.5;    // sopra questa velocità (m/s) il mezzo si considera in movimento
 const PRECARICA_MIN = 15;         // quanti minuti prima si caricano le fermate della corsa successiva
 
-const ACTV_COLORS = {
-    '1': { bg: '#ffffff', text: '#000000', border: '#000000' },
-    '2': { bg: '#e3001b', text: '#ffffff', border: '#e3001b' },
-    '2/': { bg: '#e3001b', text: '#ffffff', border: '#e3001b' },
-    '3': { bg: '#ff8c00', text: '#000000', border: '#ff8c00' },
-    '4.1': { bg: '#bd429b', text: '#ffffff', border: '#bd429b' },
-    '4.2': { bg: '#bd429b', text: '#ffffff', border: '#bd429b' },
-    '5.1': { bg: '#60b9a6', text: '#000000', border: '#60b9a6' },
-    '5.2': { bg: '#60b9a6', text: '#000000', border: '#60b9a6' },
-    '6': { bg: '#0070bc', text: '#ffffff', border: '#0070bc' },
-    'N': { bg: '#1c355e', text: '#ffffff', border: '#1c355e' },
-    '11': { bg: '#f49ab4', text: '#000000', border: '#f49ab4' }
-};
 
 // ==========================================
 // 1. FUNZIONI DI SUPPORTO (date, testo)
 // ==========================================
 const pad2 = (n) => String(n).padStart(2, '0');
-function dateToLocalISO(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
-function stringToNum(s) { if (!s) return 0; const p = s.split('-'); return Math.floor(Date.UTC(p[0], p[1] - 1, p[2]) / 86400000); }
-function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-function getLineStyle(linea) { const c = ACTV_COLORS[linea] || { bg: '#ffffff', text: '#000000', border: '#333333' }; return `background-color: ${c.bg}; color: ${c.text}; border-color: ${c.border};`; }
 
 // secondi dall'inizio di un giorno -> "HH:MM" (oltre le 24 riparte da 00:00)
 function hhmm(sec) {
@@ -415,7 +399,7 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
     let speedHistory = [];
     const SMOOTHING_WINDOW_MS = 2000;
 
-    let globalRotCache = null, globalVariantiCache = null, cachesPromise = null;
+    let datiTurni = null;                  // rotazioni, disponibilità, varianti, ferie (turni-core.js, scaricati una volta sola)
 
     const cacheFetch = new Map();          // url -> json
     let inCaricamento = false;
@@ -437,163 +421,14 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
     let listaAperta = false;
 
     // ---------------------------------------------------------------- turno del giorno (copiato dalla dashboard)
-    function isGiornoRiposoBase(curr, cfg) {
-        if (!cfg.riposoStart) return false;
-        let ref = stringToNum(cfg.riposoStart);
-        if (cfg.depositoAttivo === 'disp_det') return (((curr - ref) % 6 + 6) % 6 === 0);
-        let pos = ((curr - ref + 6) % 15 + 15) % 15;
-        return (pos === 6 || pos === 13 || pos === 14);
-    }
 
-    function calcolaTurnoBase(dStr, cfgData) {
-        if (!cfgData || !cfgData.depositoAttivo || !cfgData.riposoStart) return "N/D";
-        let curr = stringToNum(dStr);
-        let isPastUpdate = (cfgData.history && curr < stringToNum(DATA_INIZIO_NUOVI_TURNI));
-        let cfgBase = isPastUpdate ? cfgData.history : cfgData;
 
-        if (isGiornoRiposoBase(curr, cfgBase)) {
-            let tituloRiposo = 'RI';
-            if (cfgBase.riposoStart && cfgBase.depositoAttivo !== 'disp_det') {
-                let ref = stringToNum(cfgBase.riposoStart);
-                let pos = ((curr - ref + 6) % 15 + 15) % 15;
-                if (pos === 13) tituloRiposo = 'AL';
-            }
-            return tituloRiposo;
-        }
 
-        if (cfgBase.depositoAttivo.startsWith('disp_')) return "DISP";
 
-        if (cfgBase.rotazioneStart) {
-            let activeCfg = (cfgData.futureConfig && curr >= stringToNum(cfgData.futureConfig.dataInizio))
-                ? { start: cfgData.futureConfig.dataInizio, idx: cfgData.futureConfig.turnoIndex, tcPattern: cfgData.futureConfig.tcPattern }
-                : { start: cfgBase.rotazioneStart, idx: cfgBase.turnoIndex, tcPattern: cfgBase.tcPattern };
-
-            let refRot = stringToNum(activeCfg.start), w = 0;
-            if (curr >= refRot) { for (let j = refRot; j < curr; j++) { if (!isGiornoRiposoBase(j, cfgBase)) w++; } }
-            else { for (let j = refRot; j > curr; j--) { if (!isGiornoRiposoBase(j, cfgBase)) w--; } }
-
-            let refRip = stringToNum(cfgBase.riposoStart);
-            let startPos = ((refRot - refRip + 6) % 15 + 15) % 15;
-            let offset = [1, 3, 5, 8, 10, 12].includes(startPos) ? 1 : 0;
-
-            let rotList = [];
-            if (globalRotCache) {
-                const dateChiavi = Object.keys(globalRotCache).sort();
-                let rotCorrente = dateChiavi.length > 0 ? globalRotCache[dateChiavi[0]] : null;
-                for (let i = dateChiavi.length - 1; i >= 0; i--) {
-                    if (curr >= stringToNum(dateChiavi[i])) { rotCorrente = globalRotCache[dateChiavi[i]]; break; }
-                }
-                if (rotCorrente && rotCorrente[cfgBase.depositoAttivo]) { rotList = rotCorrente[cfgBase.depositoAttivo]; }
-            }
-
-            if (rotList.length > 0) {
-                if (cfgBase.depositoAttivo.startsWith('tc_')) {
-                    let currPos = ((curr - refRip + 6) % 15 + 15) % 15;
-                    let isBlock2 = (currPos >= 7 && currPos <= 12);
-                    let k = isBlock2 ? (currPos - 7) : currPos;
-                    let patternDopoSingolo = activeCfg.tcPattern || cfgBase.tcPattern || 'doppio';
-                    let isAlternato = (patternDopoSingolo === 'disp') ? isBlock2 : !isBlock2;
-                    let idx = Math.floor(k / 2);
-                    if (idx >= rotList.length) idx = rotList.length - 1;
-                    let t = rotList[idx].toUpperCase();
-                    if (isAlternato) {
-                        let dispOnEven = (cfgBase.depositoAttivo === 'tc_spez_lido');
-                        if (dispOnEven && k % 2 === 0) t = "DISP";
-                        if (!dispOnEven && k % 2 !== 0) t = "DISP";
-                    }
-                    return t;
-                } else {
-                    let expandedRotList = [];
-                    let originalToExpanded = [];
-                    for (let j = 0; j < rotList.length; j++) {
-                        originalToExpanded[j] = expandedRotList.length;
-                        let currentTurn = rotList[j].toUpperCase();
-                        if (currentTurn.includes('+')) {
-                            let parts = currentTurn.split('+');
-                            expandedRotList.push(parts[0].trim());
-                            if (parts.length > 1) { expandedRotList.push(parts[1].trim()); }
-                        } else { expandedRotList.push(currentTurn); expandedRotList.push(currentTurn); }
-                    }
-                    let L_exp = expandedRotList.length;
-                    let baseExpIdx = originalToExpanded[activeCfg.idx];
-                    let blockStartIdx = baseExpIdx - (baseExpIdx % 2);
-                    let idxExp = (blockStartIdx + w + offset) % L_exp;
-                    if (idxExp < 0) idxExp += L_exp;
-                    return expandedRotList[idxExp];
-                }
-            }
-        }
-        return "N/D";
-    }
-
-    function convertiTurnoPerMansione(turno, mansione) {
-        if (!turno || !mansione) return turno;
-        let t = String(turno).toUpperCase();
-        let m = String(mansione).toLowerCase();
-        let isMarinaio = m.includes('marinaio') || m.includes('timoniere');
-
-        if (isMarinaio) {
-            let matchP = t.match(/^([1-9])[CP](\d{2})$/);
-            if (matchP) return `${matchP[1]}B${matchP[2]}`;
-        } else {
-            let matchB = t.match(/^([1-9])B(\d{2})$/);
-            if (matchB) {
-                let l = matchB[1]; let f = matchB[2];
-                let letPilota = (l === '1' || l === '2') ? 'C' : 'P';
-                return `${l}${letPilota}${f}`;
-            }
-        }
-        return t;
-    }
-
-    function unisciRebecchini(corse) {
-        const ordinate = [...(corse || [])].sort((a, b) => a.ordine - b.ordine);
-        const risultato = [];
-        for (let i = 0; i < ordinate.length; i++) {
-            const corrente = ordinate[i];
-            const successiva = ordinate[i + 1];
-            const eRebecchino = successiva && String(corrente.a || "").trim().toUpperCase() === "MUSEO" &&
-                String(successiva.da || "").trim().toUpperCase() === "MUSEO" && String(corrente.arrivo || "") === String(successiva.partenza || "");
-
-            if (eRebecchino) {
-                risultato.push({
-                    ...corrente, a: successiva.a, arrivo: successiva.arrivo, arrivo_min: successiva.arrivo_min,
-                    durata_min: (corrente.durata_min || 0) + (successiva.durata_min || 0),
-                    tipo_attivita: "rebecchino", note: [...(corrente.note || []), ...(successiva.note || [])],
-                    consegna: successiva.consegna || corrente.consegna || null,
-                    rebecchino_prima_corsa: corrente, rebecchino_seconda_corsa: successiva
-                });
-                i++;
-            } else { risultato.push(corrente); }
-        }
-        return risultato;
-    }
-
-    function initCaches() {
-        if (cachesPromise) return cachesPromise;
-        cachesPromise = (async () => {
-            globalRotCache = {}; globalVariantiCache = null;
-            try {
-                const resMap = await fetch("mappa_file.json?v=" + Date.now());
-                if (!resMap.ok) throw new Error("mappa_file.json non disponibile");
-                const mappa = await resMap.json();
-                const fetchPromises = [];
-                for (let file of mappa.albero || []) {
-                    const dateMatch = file.match(/\d{4}-\d{2}-\d{2}/);
-                    if (file.startsWith("rotazioni_") && dateMatch) {
-                        fetchPromises.push(fetch(file + "?v=" + Date.now()).then(r => r.json()).then(d => globalRotCache[dateMatch[0]] = d).catch(() => { }));
-                    }
-                }
-                if (mappa.albero && mappa.albero.includes("presenza_varianti.json")) {
-                    fetchPromises.push(fetch("presenza_varianti.json?v=" + Date.now()).then(r => r.json()).then(d => globalVariantiCache = d).catch(() => { }));
-                }
-                await Promise.all(fetchPromises);
-            } catch (e) {
-                console.error("GPS: errore cache turni", e);
-                cachesPromise = null; // al prossimo tentativo si riprova
-            }
-        })();
-        return cachesPromise;
+    async function initCaches() {
+        if (datiTurni && !datiTurni.incompleto) return;
+        try { datiTurni = await caricaDatiTurni(); }
+        catch (e) { console.error("GPS: errore cache turni", e); }
     }
 
     async function fetchJson(url) {
@@ -609,14 +444,19 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
     async function turnoDelGiorno(dStr) {
         let state = {};
         try { state = JSON.parse(localStorage.getItem('myTurniApp')) || {}; } catch (e) { }
-        const base = calcolaTurnoBase(dStr, state);
-        const convertito = convertiTurnoPerMansione(base, userDataPrivate && userDataPrivate.mansione);
-        const codice = (state.variazioni && state.variazioni[dStr]) ? state.variazioni[dStr] : convertito;
+        const manuale = !!(state.variazioni && state.variazioni[dStr]);
+        let codice = turnoEffettivo(dStr, state, datiTurni, userDataPrivate && userDataPrivate.mansione);
+        // ferie previste dalla rotazione ferie (come nel calendario): senza variazione manuale il turno diventa FEP
+        if (!manuale && datiTurni && !["RI", "AL"].includes(String(codice).toUpperCase())) {
+            const ferie = ferieDelGiorno(state, dStr, datiTurni.ferie);
+            if (ferie) codice = ferie;
+        }
         const senzaCorse = !codice || TURNI_SENZA_CORSE.includes(String(codice).toUpperCase().trim());
         const esito = { data: dStr, codice: codice || "N/D", stato: 'ok', attivita: [], turno: null };
 
         if (senzaCorse) { esito.stato = 'riposo'; return esito; }
-        if (BLOCCA_SE_VARIANTI && globalVariantiCache && globalVariantiCache[dStr]) { esito.stato = 'varianti'; return esito; }
+        if (esito.codice === "N/D") { esito.stato = 'nd'; return esito; }
+        if (BLOCCA_SE_VARIANTI && haVarianti(datiTurni, dStr)) { esito.stato = 'varianti'; return esito; }
 
         try {
             const dati = await fetchJson(`${API_URL}/api/v1/turno?codice=${encodeURIComponent(codice)}&data=${encodeURIComponent(dStr)}`);
@@ -856,6 +696,7 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
         turnoVal.textContent = turnoCorrente.codice;
         if (turnoCorrente.stato === 'riposo') { mostraMessaggio(`Oggi non hai corse in programma (${esc(turnoCorrente.codice)}).`); disegnaRitardo(null); return; }
         if (turnoCorrente.stato === 'varianti') { mostraMessaggio('<i class="fa-solid fa-triangle-exclamation"></i> Variante in corso: per gli orari vedi il turno nella sezione turni.', true); disegnaRitardo(null); return; }
+        if (turnoCorrente.stato === 'nd') { mostraMessaggio('Turno non calcolabile: completa la configurazione nel calendario.', true); disegnaRitardo(null); return; }
         if (turnoCorrente.stato === 'errore') { mostraMessaggio('Turno non disponibile: controlla la connessione.', true); disegnaRitardo(null); return; }
 
         const adesso = new Date();
