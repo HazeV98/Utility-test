@@ -346,6 +346,15 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
         return calcolaTurnoCore(dStr, cfgData, { rot: globalRotCache, disp: datiTurni && datiTurni.disp });
     }
 
+    // Stessa logica di varianti.js: assenze -> NPL; NPL e DISP non danno mai match compagno
+    function turnoEscludeMatch(turnoStr) {
+        if (!turnoStr) return false;
+        const t = String(turnoStr).toUpperCase().trim();
+        const codiciSensibili = ["KMAL", "KNOP", "AVIS", "KINF", "FER", "FEP", "FES", "PRT", "FERIE"];
+        if (codiciSensibili.some(c => new RegExp(`\\b${c}\\b`).test(t))) return true;
+        return /\bNPL\b/.test(t) || /\bDISP\b/.test(t);
+    }
+
     function calcolaCompagniPossibili(mioTurnoStr) {
         let mates = [];
         if (!mioTurnoStr) return mates;
@@ -794,6 +803,7 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
             const isCurrentUserInRubrica = miaRubricaSnap.exists();
             
             if (userSnap.exists() && userSnap.data().condivisioneVarianti === true) {
+                if (turnoEscludeMatch(mioTurno)) return;
                 let mioTurnoClean = String(mioTurno).toUpperCase().replace(/\s+/g, '');
                 let compagniPossibili = calcolaCompagniPossibili(mioTurno);
                 
@@ -833,7 +843,9 @@ export function avviaMotoreDashboard(db, auth, userDataPrivate) {
                     let isTheirMarinaio = mTheir.includes('marinaio') || mTheir.includes('timoniere');
                     
                     let isMate = false;
-                    if (compagniPossibili.includes(stringaSicuraTurno)) {
+                    if (turnoEscludeMatch(stringaSicuraTurno)) {
+                        isMate = false;
+                    } else if (compagniPossibili.includes(stringaSicuraTurno)) {
                         isMate = true;
                     } else if (stringaSicuraTurno === mioTurnoClean && (isMioMarinaio !== isTheirMarinaio)) {
                         if (!["NPL", "RI", "RIPOSO", "AL"].includes(stringaSicuraTurno)) {

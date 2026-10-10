@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, deleteUser, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, deleteDoc, where, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
 import { avviaMotoreAuth } from './auth.js';
@@ -78,6 +78,7 @@ window.currentUserData = {};
 window.utentiMap = {};
 window.utentiArrayCache = [];
 window.DYNAMIC_APPS = [];
+window.ModuleBadges = {};
 
 window.caricaAppsConfig = async () => {
     try {
@@ -146,6 +147,18 @@ window.eseguiAzioneApp = async (appId) => {
     if (moduleName) {
         const fn = await ModuliLazyLoader.avviaMotore(moduleName, isSplit);
         if (fn) await fn(db, auth, window.currentUserData, globalIsAdmin);
+    }
+
+    // Riallinea il badge del modulo appena aperto: report.js/rotazioni.js
+    // segnano già come "letto" alla lettura, qui aggiorniamo solo l'icona.
+    if (appId === 'storie' && window.segnaStorieLette) window.segnaStorieLette();
+
+    if (appId === 'rotazioni' || appId === 'report' || appId === 'promemoria') {
+        setTimeout(() => {
+            if (appId === 'rotazioni' && window.controllaRichiesteSospese) window.controllaRichiesteSospese();
+            if (appId === 'report' && window.controllaSegnalazioni) window.controllaSegnalazioni();
+            if (appId === 'promemoria' && window.controllaPromemoria) window.controllaPromemoria();
+        }, 900);
     }
 
     const legacyModals = { 
@@ -252,9 +265,155 @@ window.addEventListener('bacheca-utility-letta', async () => {
     }
 });
 
-window.controllaRichiesteSospese = async () => {};
-window.controllaPromemoria = async () => {};
-window.controllaSegnalazioni = async () => {};
+// ============================================================================
+// GESTIONE BADGE NOTIFICHE MODULI (icona app / cartella)
+// L'id modulo (chiave in window.ModuleBadges) coincide sempre con l'appId,
+// che a sua volta coincide col nome file del modulo senza ".js".
+// ============================================================================
+
+// Applica i conteggi correnti (window.ModuleBadges) a TUTTI gli elementi badge
+// presenti nel DOM in questo momento (griglia principale + modale cartella).
+window.sincronizzaBadgeDOM = () => {
+    Object.keys(window.ModuleBadges).forEach(appId => {
+        const count = window.ModuleBadges[appId] || 0;
+        document.querySelectorAll(`[data-badge-appid="${appId}"]`).forEach(el => {
+            if (count > 0) { el.innerText = count > 99 ? '99+' : count; el.style.display = 'flex'; }
+            else { el.style.display = 'none'; }
+        });
+    });
+    window.ricalcolaBadgeCartelle();
+};
+
+// Somma i badge di tutte le app contenute in ciascuna cartella e aggiorna
+// il pallino aggregato mostrato sull'icona della cartella.
+window.ricalcolaBadgeCartelle = () => {
+    const folderTotals = {};
+    (window.DYNAMIC_APPS || []).forEach(app => {
+        if (!app.folder) return;
+        const c = window.ModuleBadges[app.id] || 0;
+        folderTotals[app.folder] = (folderTotals[app.folder] || 0) + c;
+    });
+    document.querySelectorAll('[data-badge-folder]').forEach(el => {
+        const folderName = el.dataset.badgeFolder;
+        const total = folderTotals[folderName] || 0;
+        if (total > 0) { el.innerText = total > 99 ? '99+' : total; el.style.display = 'flex'; }
+        else { el.style.display = 'none'; }
+    });
+};
+
+// Aggiorna il conteggio di un singolo modulo e ripropaga la modifica nel DOM.
+window.aggiornaBadgeUI = (appId, count) => {
+    window.ModuleBadges[appId] = count || 0;
+    window.sincronizzaBadgeDOM();
+};
+
+// --- ROTAZIONI: notifica solo per l'admin, nuove richieste in attesa ---
+window.controllaRichiesteSospese = async () => {
+    if (!auth.currentUser || !globalIsAdmin) { window.aggiornaBadgeUI('rotazioni', 0); return; }
+    try {
+        const q = query(collection(db, "permessi_rotazioni"), where("stato_richiesta", "==", "pending"));
+        const snap = await getDocs(q);
+        window.aggiornaBadgeUI('rotazioni', snap.size);
+    } catch(e) { console.error("Errore badge rotazioni:", e); }
+};
+
+// --- REPORT: nuove domande (per l'admin) o nuove risposte (per l'utente) ---
+// Sfrutta i flag già gestiti da report.js (letta_da_admin / letta_da_utente),
+// che vengono azzerati automaticamente all'apertura della relativa chat.
+window.controllaSegnalazioni = async () => {
+    if (!auth.currentUser) { window.aggiornaBadgeUI('report', 0); return; }
+    try {
+        const colRef = collection(db, "segnalazioni");
+        let q;
+        if (globalIsAdmin) {
+            q = query(colRef, where("letta_da_admin", "==", false));
+        } else {
+            q = query(colRef, where("mittente_uid", "==", auth.currentUser.uid), where("letta_da_utente", "==", false));
+        }
+        const snap = await getDocs(q);
+        window.aggiornaBadgeUI('report', snap.size);
+    } catch(e) { console.error("Errore badge report:", e); }
+};
+
+// --- PROMEMORIA: numero di promemoria attualmente impostati (non scaduti) ---
+window.controllaPromemoria = async () => {
+    try {
+        const req = indexedDB.open("UtilityDB", 3);
+        req.onsuccess = (event) => {
+            const localDb = event.target.result;
+            if (!localDb.objectStoreNames.contains("archivio_dds")) { window.aggiornaBadgeUI('promemoria', 0); return; }
+            const tx = localDb.transaction("archivio_dds", "readonly");
+            tx.objectStore("archivio_dds").getAll().onsuccess = (e) => {
+                const oggiStr = new Date().toISOString().split('T')[0];
+                const attivi = (e.target.result || []).filter(d =>
+                    d.isPromemoria && (!d.dateValidita || !d.dateValidita.length || d.dateValidita[d.dateValidita.length - 1] >= oggiStr)
+                );
+                window.aggiornaBadgeUI('promemoria', attivi.length);
+            };
+        };
+        req.onerror = () => { window.aggiornaBadgeUI('promemoria', 0); };
+    } catch(e) { console.error("Errore badge promemoria:", e); }
+};
+
+// --- STORIE: storie di altri utenti e commenti ai propri post o a quelli seguiti ---
+window.controllaStorie = async () => {
+    if (!auth.currentUser) { window.aggiornaBadgeUI('storie', 0); return; }
+    try {
+        const fbAccess = parseInt(window.currentUserData?.ultimo_accesso_storie || 0);
+        const localAccess = parseInt(localStorage.getItem('ultimo_accesso_storie') || 0);
+        const ultimoAccesso = Math.max(fbAccess, localAccess);
+        let count = 0;
+
+        // 1. Nuove storie pubblicate da altri
+        const qStorie = query(collection(db, "storie"), where("timestamp", ">", Timestamp.fromMillis(ultimoAccesso)));
+        const snapStorie = await getDocs(qStorie);
+        snapStorie.forEach(d => { if (d.data().autoreId !== auth.currentUser.uid) count++; });
+
+        // 2. Nuovi commenti ai TUOI post
+        // Rimuoviamo il where() sulla data e filtriamo in JS per non richiedere indici composti
+        const qComPropri = query(collection(db, "storie"), where("autoreId", "==", auth.currentUser.uid));
+        const snapComPropri = await getDocs(qComPropri);
+        snapComPropri.forEach(d => { 
+            const data = d.data();
+            if (data.lastCommentTimestamp && data.lastCommentTimestamp.toMillis() > ultimoAccesso) {
+                if (data.lastCommentAuthor !== auth.currentUser.uid) count++;
+            }
+        });
+
+        // 3. Nuovi commenti ai post a cui hai messo la campanellina
+        const qComSeguiti = query(collection(db, "storie"), where("followers", "array-contains", auth.currentUser.uid));
+        const snapComSeguiti = await getDocs(qComSeguiti);
+        snapComSeguiti.forEach(d => { 
+            const data = d.data();
+            if (data.lastCommentTimestamp && data.lastCommentTimestamp.toMillis() > ultimoAccesso) {
+                if (data.autoreId !== auth.currentUser.uid && data.lastCommentAuthor !== auth.currentUser.uid) count++; 
+            }
+        });
+
+        window.aggiornaBadgeUI('storie', count);
+    } catch(e) { console.error("Errore badge storie:", e); }
+};
+
+
+// Segna tutte le storie come lette (chiamata all'apertura del modulo e quando arrivano storie a modulo aperto).
+window.segnaStorieLette = async () => {
+    const now = Date.now();
+    localStorage.setItem('ultimo_accesso_storie', now);
+    if (window.currentUserData) window.currentUserData.ultimo_accesso_storie = now;
+    window.aggiornaBadgeUI('storie', 0);
+    if (auth.currentUser) {
+        try { await setDoc(doc(db, "utenti", auth.currentUser.uid), { ultimo_accesso_storie: now }, { merge: true }); }
+        catch(e) { console.error("Errore salvataggio ultimo accesso storie:", e); }
+    }
+};
+
+// Esegue un refresh di tutti i badge dei moduli monitorati.
+window.aggiornaTuttiIBadge = () => {
+    window.controllaRichiesteSospese();
+    window.controllaSegnalazioni();
+    window.controllaPromemoria();
+    window.controllaStorie();
+};
 
 // ============================================================================
 // GESTIONE NOTIFICHE NATIVE / WEB PUSH
@@ -505,8 +664,12 @@ window.LayoutEngine = {
 
         window.DYNAMIC_APPS.forEach((app) => { // <-- Tolto l'index dal ciclo
             const cond = app.conditions || [app.condition].filter(Boolean);
+            const excl = app.excludeConditions || [];
             const isVisibleByCond = () => {
+                if(excl.includes('admin') && globalIsAdmin) return false;
                 if(globalIsAdmin) return true;
+                if(excl.includes('vip') && globalIsVip) return false;
+                if(excl.includes('collab') && globalIsCollab) return false;
                 if(!cond || cond.length === 0) return true; 
                 if(cond.includes('vip') && (globalIsVip || globalIsCollab)) return true;
                 if(cond.includes('collab') && globalIsCollab) return true;
@@ -514,7 +677,7 @@ window.LayoutEngine = {
                 return false;
             };
 
-            if(!isVisibleByCond() && !globalIsAdmin) return;
+            if(!isVisibleByCond()) return;
             
             if (app.folder) {
                 if (!foldersMap[app.folder]) {
@@ -532,7 +695,8 @@ window.LayoutEngine = {
                     
                     // Contenitore cartella con CSS Grid 2x2 esatto
                     btn.innerHTML = `
-                        <div class="app-icon folder-grid" style="background-color: var(--surface-hover); border: 2px solid var(--border-color); display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 4px; padding: 8px; box-sizing: border-box; align-items: center; justify-items: center;">
+                        <div class="app-icon folder-grid" style="background-color: var(--surface-hover); border: 2px solid var(--border-color); display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 4px; padding: 8px; box-sizing: border-box; align-items: center; justify-items: center; position: relative;">
+                            <div class="app-notif-badge" data-badge-folder="${app.folder}" style="display:none; position:absolute; top:-4px; right:-4px; background:#e53935; color:#fff; font-size:10px; font-weight:800; min-width:18px; height:18px; line-height:18px; padding:0 4px; border-radius:9px; text-align:center; z-index:2; box-shadow:0 0 0 2px var(--surface);"></div>
                         </div>
                         <div class="app-label">${app.folder}</div>
                     `;
@@ -565,7 +729,10 @@ window.LayoutEngine = {
                 btn.style.cursor = 'pointer';
                 
                 btn.innerHTML = `
-                    <div class="app-icon" style="background-color: ${finalColor};"><i class="${app.icon || 'fa-solid fa-link'}"></i></div>
+                    <div class="app-icon" style="background-color: ${finalColor}; position: relative;">
+                        <i class="${app.icon || 'fa-solid fa-link'}"></i>
+                        <div class="app-notif-badge" data-badge-appid="${app.id}" style="display:none; position:absolute; top:-4px; right:-4px; background:#e53935; color:#fff; font-size:10px; font-weight:800; min-width:18px; height:18px; line-height:18px; padding:0 4px; border-radius:9px; text-align:center; box-shadow:0 0 0 2px var(--surface);"></div>
+                    </div>
                     <div class="app-label">${app.label.replace(/\n/g, '<br>')}</div>
                 `;
                 
@@ -573,8 +740,11 @@ window.LayoutEngine = {
             }
         });
 
+        window.sincronizzaBadgeDOM();
+
         setTimeout(() => {
             if(window.controllaBacheca) window.controllaBacheca();
+            if(window.aggiornaTuttiIBadge) window.aggiornaTuttiIBadge();
         }, 200);
     },
 
@@ -861,6 +1031,13 @@ window.injectAdminConfigTools = () => {
                         <label style="display:block; font-size:13px;"><input type="checkbox" class="chk-cond" value="tutti"> Tutti (Pubblica)</label>
                     </div>
 
+                    <div style="background:var(--surface-hover); padding:10px; border-radius:8px; margin-bottom:15px;">
+                        <label style="font-size:12px; font-weight:700; display:block; margin-bottom:5px;">Nascondi comunque a (es. per evitare doppioni tra versione lite e completa):</label>
+                        <label style="display:block; font-size:13px; margin-bottom:4px;"><input type="checkbox" class="chk-excl" value="vip"> Nascondi ai VIP</label>
+                        <label style="display:block; font-size:13px; margin-bottom:4px;"><input type="checkbox" class="chk-excl" value="collab"> Nascondi ai Collaboratori</label>
+                        <label style="display:block; font-size:13px;"><input type="checkbox" class="chk-excl" value="admin"> Nascondi agli Admin</label>
+                    </div>
+
 
                     <button class="btn-modal" style="background:var(--success); color:white;" onclick="window.salvaAppConfig()"><i class="fa-solid fa-cloud-arrow-up"></i> Salva su GitHub</button>
                 </div>
@@ -945,6 +1122,7 @@ window.apriModalAddApp = () => {
     document.getElementById('add-link-val').value = "";
     document.getElementById('add-split').checked = false;
     document.querySelectorAll('.chk-cond').forEach(c => c.checked = false);
+    document.querySelectorAll('.chk-excl').forEach(c => c.checked = false);
     document.getElementById('add-module-opts').style.display = 'none';
     window.apriModal('modal-add-app');
 };
@@ -969,6 +1147,9 @@ window.apriModalEditApp = (appId) => {
     
     const conds = app.conditions || [app.condition].filter(Boolean);
     document.querySelectorAll('.chk-cond').forEach(c => { c.checked = conds.includes(c.value); });
+    
+    const excls = app.excludeConditions || [];
+    document.querySelectorAll('.chk-excl').forEach(c => { c.checked = excls.includes(c.value); });
     
     window.chiudiModal('modal-edit-list');
     window.apriModal('modal-add-app');
@@ -1000,13 +1181,15 @@ window.salvaAppConfig = async () => {
     if(!id) return alert("Inserisci un ID univoco.");
     
     const checkedConds = Array.from(document.querySelectorAll('.chk-cond:checked')).map(c => c.value);
+    const checkedExcl = Array.from(document.querySelectorAll('.chk-excl:checked')).map(c => c.value);
     
     let appObj = {
         id: id,
         label: document.getElementById('add-label').value,
         icon: document.getElementById('add-icon').value,
         defaultColor: document.getElementById('add-color').value,
-        conditions: checkedConds
+        conditions: checkedConds,
+        excludeConditions: checkedExcl
     };
     
     const type = document.getElementById('add-type').value;
@@ -1117,6 +1300,79 @@ window.resetPasswordUtenteAutenticato = async () => {
 };
 
 
+
+// ============================================================================
+// SCHERMO SEMPRE ACCESO (Wake Lock) - GPS, BateoLive, BateoLive Lite
+// Si attiva da solo quando uno dei 3 modali è visibile e si rilascia alla chiusura,
+// qualunque sia il pulsante usato per chiuderlo (nessuna modifica ai moduli).
+// ============================================================================
+const WakeLockModuli = {
+    modaliIds: ['modal-gps-main', 'modal-bateolive-main', 'modal-navigatore-main'],
+    sentinel: null,
+    inRichiesta: false,
+    osservati: new Set(),
+
+    inUso() {
+        return this.modaliIds.some(id => {
+            const el = document.getElementById(id);
+            return !!el && getComputedStyle(el).display !== 'none';
+        });
+    },
+
+    async sync() {
+        if (!('wakeLock' in navigator)) return;
+
+        if (this.inUso()) {
+            if (this.sentinel || this.inRichiesta || document.visibilityState !== 'visible') return;
+            this.inRichiesta = true;
+            try {
+                const lock = await navigator.wakeLock.request('screen');
+                lock.addEventListener('release', () => { if (this.sentinel === lock) this.sentinel = null; });
+                this.sentinel = lock;
+                // il modale potrebbe essere stato chiuso mentre aspettavamo
+                if (!this.inUso()) await this.rilascia();
+            } catch (e) {
+                console.warn('Wake Lock non disponibile:', e);
+            } finally {
+                this.inRichiesta = false;
+            }
+        } else {
+            await this.rilascia();
+        }
+    },
+
+    async rilascia() {
+        const lock = this.sentinel;
+        this.sentinel = null;
+        if (lock) { try { await lock.release(); } catch (e) {} }
+    },
+
+    osserva() {
+        this.modaliIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el || this.osservati.has(id)) return;
+            this.osservati.add(id);
+            new MutationObserver(() => this.sync()).observe(el, { attributes: true, attributeFilter: ['style'] });
+        });
+        this.sync();
+    },
+
+    init() {
+        // i modali vengono creati al primo avvio del modulo (lazy-load): li agganciamo appena compaiono nel body
+        this.osserva();
+        const bodyObs = new MutationObserver(() => {
+            this.osserva();
+            if (this.osservati.size === this.modaliIds.length) bodyObs.disconnect();
+        });
+        bodyObs.observe(document.body, { childList: true });
+
+        // il browser rilascia il lock quando la pagina va in background: lo richiediamo al ritorno
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') this.sync();
+        });
+    }
+};
+WakeLockModuli.init();
 
 // ============================================================================
 // AUTH E START
@@ -1238,12 +1494,18 @@ window.apriCartella = (folderName) => {
     const apps = window.DYNAMIC_APPS.filter(a => a.folder === folderName);
     apps.forEach((app, index) => {
         const cond = app.conditions || [app.condition].filter(Boolean);
-        const isVisible = (globalIsAdmin) || (!cond || cond.length === 0) || 
+        const excl = app.excludeConditions || [];
+        const isExcluded = (excl.includes('admin') && globalIsAdmin) ||
+                          (!globalIsAdmin && (
+                          (excl.includes('vip') && globalIsVip) ||
+                          (excl.includes('collab') && globalIsCollab)));
+        const isVisible = !isExcluded && (
+                          (globalIsAdmin) || (!cond || cond.length === 0) || 
                           (cond.includes('vip') && (globalIsVip || globalIsCollab)) || 
                           (cond.includes('collab') && globalIsCollab) || 
-                          (cond.includes('tutti'));
+                          (cond.includes('tutti')));
 
-        if(!isVisible && !globalIsAdmin) return;
+        if(!isVisible) return;
 
         const finalColor = app.defaultColor || "#0066cc";
         const btn = document.createElement('div');
@@ -1252,11 +1514,15 @@ window.apriCartella = (folderName) => {
         btn.style.animationDelay = `${index * 0.04}s`;
         btn.style.cursor = 'pointer';
         btn.innerHTML = `
-            <div class="app-icon" style="background-color: ${finalColor};"><i class="${app.icon || 'fa-solid fa-link'}"></i></div>
+            <div class="app-icon" style="background-color: ${finalColor}; position: relative;">
+                <i class="${app.icon || 'fa-solid fa-link'}"></i>
+                <div class="app-notif-badge" data-badge-appid="${app.id}" style="display:none; position:absolute; top:-4px; right:-4px; background:#e53935; color:#fff; font-size:10px; font-weight:800; min-width:18px; height:18px; line-height:18px; padding:0 4px; border-radius:9px; text-align:center; box-shadow:0 0 0 2px var(--surface);"></div>
+            </div>
             <div class="app-label" style="font-size: 13px;">${app.label.replace(/\n/g, '<br>')}</div>
         `;
         btn.onclick = () => { window.chiudiModal('modal-folder-view'); window.eseguiAzioneApp(app.id); };
         container.appendChild(btn);
     });
     window.apriModal('modal-folder-view');
+    window.sincronizzaBadgeDOM();
 };

@@ -352,6 +352,7 @@ window.eseguiCalcoloBP = function() {
         document.getElementById('bp-btn-attiva-dopo-calcolo').style.display = 'block';
     } else {
         impostaSaldoDaInput(buoniAttuali);
+        if (typeof window.syncBuoniToCloudBP === 'function') window.syncBuoniToCloudBP();
     }
 };
 
@@ -405,16 +406,6 @@ export async function avviaMotoreBuoniPasto(db, auth) {
     integrazioneAttiva = localStorage.getItem(`buoni_integrazione_attiva_${pid}`) === 'true';
     quickVals = JSON.parse(localStorage.getItem(`buoni_quick_vals_${pid}`)) || [2, 5, 10];
 
-    // Impostazione UI e Caricamento
-    await caricaFerie(); 
-    inizializzaTondini();
-    if (integrazioneAttiva) {
-        sincronizzaBuoni(false);
-    } else {
-        const countDisplay = document.getElementById('bp-buoni-count');
-        if(countDisplay) countDisplay.innerText = buoniAttuali;
-    }
-
     // Funzione globale di Sincronizzazione verso Firebase
     window.syncBuoniToCloudBP = async () => {
         if (currentUser) {
@@ -432,6 +423,16 @@ export async function avviaMotoreBuoniPasto(db, auth) {
         }
     };
 
+    // Impostazione UI e Caricamento
+    await caricaFerie(); 
+    inizializzaTondini();
+    if (integrazioneAttiva) {
+        sincronizzaBuoni(false);
+    } else {
+        const countDisplay = document.getElementById('bp-buoni-count');
+        if(countDisplay) countDisplay.innerText = buoniAttuali;
+    }
+
     // Ascoltatore Dati Firebase
     if (currentUser) {
         if(unsubBuoni) unsubBuoni();
@@ -446,7 +447,9 @@ export async function avviaMotoreBuoniPasto(db, auth) {
 
                 // 1. Sincronizzazione Base Calendario
                 if (cloudTime > localTime) {
-                    Object.assign(stateApp, datiCloud);
+                    const restoCloud = { ...datiCloud };
+                    Object.keys(restoCloud).forEach(k => { if (k.startsWith('buoni_')) delete restoCloud[k]; });
+                    Object.assign(stateApp, restoCloud);
                     pid = stateApp.profiloAttivoId || 'default';
                     
                     if (stateApp.profiliSalvati && stateApp.profiliSalvati[pid]) {

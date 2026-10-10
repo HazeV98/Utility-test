@@ -417,12 +417,18 @@ export function avviaMotoreVarianti(db, auth, userDataPrivate) {
     function applicaFiltroPrivacy(turnoStr) {
         if (!turnoStr) return "";
         let t = String(turnoStr).toUpperCase().trim();
-        const codiciSensibili = ["KMAL", "KNOP", "AVIS", "KINF", "FER", "FEP", "FES", "PRT"];
+        const codiciSensibili = ["KMAL", "KNOP", "AVIS", "KINF", "FER", "FEP", "FES", "PRT", "FERIE"];
         let isSensibile = codiciSensibili.some(codice => {
             let regex = new RegExp(`\\b${codice}\\b`);
             return regex.test(t);
         });
         return isSensibile ? "NPL" : t;
+    }
+
+    // Turni che non devono mai dare match compagno: quelli mostrati come NPL (assenze) e DISP
+    function turnoEscludeMatch(turnoStr) {
+        const t = applicaFiltroPrivacy(turnoStr);
+        return t === "NPL" || /\bDISP\b/.test(t);
     }
 
     // Funzione per impostare e gestire l'ordinamento
@@ -606,7 +612,7 @@ export function avviaMotoreVarianti(db, auth, userDataPrivate) {
                 let isTheirMarinaio = mTheir.includes('marinaio') || mTheir.includes('timoniere');
                 
                 let isMate = false;
-                if (res.id !== currentUser.uid) {
+                if (res.id !== currentUser.uid && !turnoEscludeMatch(mioTurnoOggi) && !turnoEscludeMatch(stringaSicuraTurno)) {
                     if (compagniPossibili.includes(stringaSicuraTurno)) {
                         isMate = true; 
                     } else if (stringaSicuraTurno === mioTurnoClean && (isMioMarinaio !== isTheirMarinaio)) {

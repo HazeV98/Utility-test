@@ -35,7 +35,10 @@ window.syncToCloud = async (dati) => {
     if (window.utenteLoggato && window.statoCloudPronto) {
         try {
             dati.migrazioneCompletata = true;
-            await setDoc(doc(db, "calendario", window.utenteLoggato), dati);
+            // I campi buoni_* sono gestiti da buoni_pasto.js: non vanno mai riscritti da qui
+            const payload = {};
+            Object.keys(dati).forEach(k => { if (!k.startsWith('buoni_')) payload[k] = dati[k]; });
+            await setDoc(doc(db, "calendario", window.utenteLoggato), payload, { mergeFields: Object.keys(payload) });
         } catch(e) { console.error("Errore salvataggio Cloud:", e); }
     }
 };

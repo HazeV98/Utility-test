@@ -127,16 +127,34 @@
         "splitModule": true
     },
     {
-        "id": "annunci",
-        "label": "Bacheca annunci",
-        "icon": "fa-regular fa-clipboard",
-        "defaultColor": "#28a745",
+        "id": "bateolivelite",
+        "label": "BateoLive",
+        "icon": "fa-solid fa-map-location-dot",
+        "defaultColor": "#0066cc",
         "conditions": [
             "tutti"
         ],
+        "excludeConditions": [
+            "vip",
+            "admin"
+        ],
         "isModule": true,
-        "moduleId": "annunci",
-        "moduleName": "bacheca",
+        "moduleId": "bateolivelite",
+        "moduleName": "bateolivelite",
+        "splitModule": false
+    },
+    {
+        "id": "bateolive",
+        "label": "BateoLive",
+        "icon": "fa-solid fa-map-location-dot",
+        "defaultColor": "#0066cc",
+        "conditions": [
+            "vip"
+        ],
+        "excludeConditions": [],
+        "isModule": true,
+        "moduleId": "bateolive",
+        "moduleName": "bateolive",
         "splitModule": false
     },
     {
@@ -211,27 +229,46 @@
         "splitModule": true
     },
     {
-        "id": "vademecum",
-        "label": "Vademecum",
+        "id": "storie",
+        "label": "Storie dal TPL",
         "icon": "fa-solid fa-book",
-        "defaultColor": "#8e8e93",
+        "defaultColor": "#fd7e14",
         "conditions": [
-            "admin"
+            "tutti"
         ],
-        "href": "vademecum.html"
+        "excludeConditions": [],
+        "isModule": true,
+        "moduleId": "storie",
+        "moduleName": "storie",
+        "splitModule": false
     },
     {
         "id": "gps",
-        "label": "Tachimetro",
-        "icon": "fa-solid fa-location-arrow",
+        "label": "Gps",
+        "icon": "fa-solid fa-route",
         "defaultColor": "#0066cc",
         "conditions": [
             "tutti"
         ],
+        "excludeConditions": [],
         "isModule": true,
         "moduleId": "gps",
         "moduleName": "gps",
         "splitModule": false
+    },
+    {
+        "id": "annunci",
+        "label": "Bacheca annunci",
+        "icon": "fa-regular fa-clipboard",
+        "defaultColor": "#28a745",
+        "conditions": [
+            "tutti"
+        ],
+        "isModule": true,
+        "moduleId": "annunci",
+        "moduleName": "bacheca",
+        "splitModule": false,
+        "folder": "Altre funzioni"
     },
     {
         "id": "link",
@@ -244,7 +281,36 @@
         "isModule": true,
         "moduleId": "link",
         "moduleName": "link",
-        "splitModule": true
+        "splitModule": true,
+        "folder": "Altre funzioni"
+    },
+    {
+        "id": "dds",
+        "label": "Archivio DDS",
+        "icon": "fa-solid fa-box-archive",
+        "defaultColor": "#6f42c1",
+        "conditions": [
+            "tutti"
+        ],
+        "isModule": true,
+        "moduleId": "dds",
+        "moduleName": "dds",
+        "splitModule": true,
+        "folder": "Altre funzioni"
+    },
+    {
+        "id": "promemoria",
+        "label": "Promemoria",
+        "icon": "fa-solid fa-stopwatch",
+        "defaultColor": "#ffc107",
+        "conditions": [
+            "tutti"
+        ],
+        "isModule": true,
+        "moduleId": "promemoria",
+        "moduleName": "promemoria",
+        "splitModule": true,
+        "folder": "Altre funzioni"
     },
     {
         "id": "contatti",
@@ -273,32 +339,6 @@
         "splitModule": true
     },
     {
-        "id": "promemoria",
-        "label": "Promemoria",
-        "icon": "fa-solid fa-stopwatch",
-        "defaultColor": "#ffc107",
-        "conditions": [
-            "tutti"
-        ],
-        "isModule": true,
-        "moduleId": "promemoria",
-        "moduleName": "promemoria",
-        "splitModule": true
-    },
-    {
-        "id": "dds",
-        "label": "Archivio DDS",
-        "icon": "fa-solid fa-box-archive",
-        "defaultColor": "#6f42c1",
-        "conditions": [
-            "tutti"
-        ],
-        "isModule": true,
-        "moduleId": "dds",
-        "moduleName": "dds",
-        "splitModule": true
-    },
-    {
         "id": "report",
         "label": "Assistenza App",
         "icon": "fa-solid fa-headset",
@@ -320,16 +360,6 @@
             "tutti"
         ],
         "href": "https://spriss.avmspa.it/"
-    },
-    {
-        "id": "bateolive",
-        "label": "BateoLive",
-        "icon": "fa-solid fa-map-location-dot",
-        "defaultColor": "#0066cc",
-        "conditions": [
-            "vip"
-        ],
-        "href": "https://bateolive.tailec23c3.ts.net/"
     },
     {
         "id": "admin",

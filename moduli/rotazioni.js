@@ -13,7 +13,10 @@ export function avviaMotoreRotazioni(db, auth) {
         "rot_lido": "Rotazione Lido", "spez_lido": "Spezzati Lido", "tc_spez_lido": "T.C. Spezzati Lido",
         "rot_linea12": "Rotazione Linea 12", "rot_linea13": "Rotazione Linea 13", "rot_linea14": "Rotazione Linea 14 M/N",
         "rot_linea14_mb": "Rotazione Linea 14 M/B", "rot_17sn": "Rotazione Linea 17 S. Nicolò", "tc_rot_17sn": "T.C. Rotazione 17 S. Nicolò",
-        "rot_17tr": "Rotazione Linea 17 Tron.", "tc_rot_17tr": "T.C. Rotazione Linea 17 Tronc."
+        "rot_17tr": "Rotazione Linea 17 Tron.", "tc_rot_17tr": "T.C. Rotazione Linea 17 Tronc.",
+        "tfg_proma": "TFG P.Roma", "tfg_lido": "TFG Lido",
+        "m115": "M115", "m116": "M116",
+        "notti": "Notti"
     };
 
     const paroleDaSaltare = ["GENNAIO", "FEBBRAIO", "MARZO", "APRILE", "MAGGIO", "GIUGNO", "LUGLIO", "AGOSTO", "SETTEMBRE", "OTTOBRE", "NOVEMBRE", "DICEMBRE", "MESE", "AGENTI"];
@@ -27,7 +30,10 @@ export function avviaMotoreRotazioni(db, auth) {
         "rot_lido": "Lido", "spez_lido": "Spezzati Lido", "tc_spez_lido": "T.C. Spezzati Lido",
         "rot_linea12": "Linea 12", "rot_linea13": "Linea 13", "rot_linea14": "Linea 14 M/N",
         "rot_linea14_mb": "Linea 14 M/B", "rot_17sn": "Linea 17 S. Nicolò", "tc_rot_17sn": "T.C. Linea 17 S. Nicolò",
-        "rot_17tr": "Linea 17 Tronchetto", "tc_rot_17tr": "T.C. Linea 17 Tronchetto"
+        "rot_17tr": "Linea 17 Tronchetto", "tc_rot_17tr": "T.C. Linea 17 Tronchetto",
+        "tfg_proma": "TFG P.Roma", "tfg_lido": "TFG Lido",
+        "m115": "M115", "m116": "M116",
+        "notti": "Notti"
     };
 
     // Stessa data soglia usata dal modulo varianti per il calcolo dei turni storici/attuali
@@ -95,6 +101,22 @@ export function avviaMotoreRotazioni(db, auth) {
     };
 
     // ==========================================
+    // ANIMAZIONE DI CARICAMENTO (contenuta nello spazio del modulo dove
+    // compaiono poi le rotazioni, NON a schermo intero)
+    // ==========================================
+    function mostraCaricamentoRotazioni(testo = "Preparazione rotazioni in corso...") {
+        const area = document.getElementById('rot-rotazioni-list');
+        if (area) {
+            area.innerHTML = `<div style="text-align:center; padding:60px 20px; color:var(--text-muted);"><i class="fa-solid fa-circle-notch fa-spin" style="font-size:34px; color:var(--primary);"></i><br><br>${testo}</div>`;
+        }
+    }
+
+    function nascondiCaricamentoRotazioni() {
+        // Non serve fare nulla: il contenuto vero (renderizzato da caricaRotazioniMain,
+        // oppure le sezioni auth/pending) sostituisce già il messaggio di caricamento.
+    }
+
+    // ==========================================
     // INIT STATO E ROTAZIONI (SPA UPGRADE)
     // ==========================================
     window.initRotazioniState = async () => {
@@ -111,62 +133,71 @@ export function avviaMotoreRotazioni(db, auth) {
         if(pendSect) pendSect.style.display = 'none';
         if(contSect) contSect.style.display = 'none';
 
-        if (user) {
-            currentUserId = user.uid; 
-            isAdmin = (user.uid === ADMIN_UID);
-            
-            // Lettura parallela da utenti e permessi_rotazioni
-            const docRef = doc(db, "utenti", user.uid); 
-            const permRef = doc(db, "permessi_rotazioni", user.uid);
-            
-            const [docSnap, permSnap] = await Promise.all([getDoc(docRef), getDoc(permRef)]);
-            
-            const uData = docSnap.exists() ? docSnap.data() : {};
-            const pData = permSnap.exists() ? permSnap.data() : {};
-            
-            // Merge in memoria per compatibilità con il resto dell'interfaccia
-            currentUserDoc = { ...uData, ...pData }; 
-            isCollab = (uData.ruolo === 'collaborator');
-            
-            // BYPASS ADMIN O UTENTE APPROVATO
-            if (isAdmin || pData.abilitato_rotazioni === true || pData.stato_richiesta === 'approved') {
-                if (isAdmin) currentUserDoc.abilitato_rotazioni = true; 
+        try {
+            if (user) {
+                currentUserId = user.uid; 
+                isAdmin = (user.uid === ADMIN_UID);
                 
-                // Se ha accesso, nascondiamo tutto il blocco auth e mostriamo i contenuti
-                if(authSect) authSect.style.display = 'none'; 
-                if(contSect) contSect.style.display = 'flex';
+                // Lettura parallela da utenti e permessi_rotazioni
+                const docRef = doc(db, "utenti", user.uid); 
+                const permRef = doc(db, "permessi_rotazioni", user.uid);
                 
-                let btnMieiDati = document.getElementById('rot-btn-miei-dati');
-                if (btnMieiDati) btnMieiDati.style.display = 'flex';
+                const [docSnap, permSnap] = await Promise.all([getDoc(docRef), getDoc(permRef)]);
                 
-                let btnGestAccessi = document.getElementById('rot-btn-gestione-accessi');
-                if (isAdmin || isCollab) {
-                    if (btnGestAccessi) btnGestAccessi.style.display = 'flex';
-                    window.aggiornaBadgeRichiesteRotazioni();
+                const uData = docSnap.exists() ? docSnap.data() : {};
+                const pData = permSnap.exists() ? permSnap.data() : {};
+                
+                // Merge in memoria per compatibilità con il resto dell'interfaccia
+                currentUserDoc = { ...uData, ...pData }; 
+                isCollab = (uData.ruolo === 'collaborator');
+                
+                // BYPASS ADMIN O UTENTE APPROVATO
+                if (isAdmin || pData.abilitato_rotazioni === true || pData.stato_richiesta === 'approved') {
+                    if (isAdmin) currentUserDoc.abilitato_rotazioni = true; 
+                    
+                    // Se ha accesso, nascondiamo tutto il blocco auth e mostriamo i contenuti
+                    if(authSect) authSect.style.display = 'none'; 
+                    if(contSect) contSect.style.display = 'flex';
+                    mostraCaricamentoRotazioni();
+                    
+                    let btnMieiDati = document.getElementById('rot-btn-miei-dati');
+                    if (btnMieiDati) btnMieiDati.style.display = 'flex';
+                    
+                    let btnGestAccessi = document.getElementById('rot-btn-gestione-accessi');
+                    if (isAdmin || isCollab) {
+                        if (btnGestAccessi) btnGestAccessi.style.display = 'flex';
+                        window.aggiornaBadgeRichiesteRotazioni();
+                    }
+                    
+                    window.initPanzoomRotazioni(); 
+                    await Promise.all([
+                        window.caricaDatiTurniSilenziosoRot(),
+                        window.caricaRotazioniMain()
+                    ]);
+                    
+                } else if (pData.stato_richiesta === 'pending') {
+                    // In attesa di approvazione: mostra contenitore auth e messaggio
+                    if(authSect) authSect.style.display = 'block';
+                    if(pendSect) pendSect.style.display = 'block';
+                } else {
+                    // Nessun accesso: mostra contenitore auth e modulo di richiesta
+                    if(authSect) authSect.style.display = 'block';
+                    if(reqSect) reqSect.style.display = 'block';
+                    
+                    if(document.getElementById('rot-req-nome')) document.getElementById('rot-req-nome').value = uData.nome || '';
+                    if(document.getElementById('rot-req-cognome')) document.getElementById('rot-req-cognome').value = uData.cognome || '';
+                    if(document.getElementById('rot-req-matricola')) document.getElementById('rot-req-matricola').value = uData.matricola || '';
+                    if(document.getElementById('rot-req-omonimia')) document.getElementById('rot-req-omonimia').value = uData.progressivo || '';
                 }
-                
-                window.initPanzoomRotazioni(); 
-                window.caricaDatiTurniSilenziosoRot(); 
-                window.caricaRotazioniMain();
-                
-            } else if (pData.stato_richiesta === 'pending') {
-                // In attesa di approvazione: mostra contenitore auth e messaggio
+            } else { 
+                // Non loggato: mostra avviso
                 if(authSect) authSect.style.display = 'block';
-                if(pendSect) pendSect.style.display = 'block';
-            } else {
-                // Nessun accesso: mostra contenitore auth e modulo di richiesta
-                if(authSect) authSect.style.display = 'block';
-                if(reqSect) reqSect.style.display = 'block';
-                
-                if(document.getElementById('rot-req-nome')) document.getElementById('rot-req-nome').value = uData.nome || '';
-                if(document.getElementById('rot-req-cognome')) document.getElementById('rot-req-cognome').value = uData.cognome || '';
-                if(document.getElementById('rot-req-matricola')) document.getElementById('rot-req-matricola').value = uData.matricola || '';
-                if(document.getElementById('rot-req-omonimia')) document.getElementById('rot-req-omonimia').value = uData.progressivo || '';
+                if(warnLog) warnLog.style.display = 'block'; 
             }
-        } else { 
-            // Non loggato: mostra avviso
-            if(authSect) authSect.style.display = 'block';
-            if(warnLog) warnLog.style.display = 'block'; 
+        } catch(e) {
+            console.error("Errore durante l'inizializzazione delle rotazioni:", e);
+        } finally {
+            nascondiCaricamentoRotazioni();
         }
     };
 
@@ -1471,6 +1502,9 @@ export function avviaMotoreRotazioni(db, auth) {
                 bMod.style.display = 'none';
             }
         } catch(e) { console.error("Errore conteggio richieste", e); }
+
+        // Riallinea il badge notifica sull'icona del modulo (index.js) — solo admin
+        if (window.controllaRichiesteSospese) window.controllaRichiesteSospese();
     };
 
     window.apriGestioneAccessiModalRot = async () => {

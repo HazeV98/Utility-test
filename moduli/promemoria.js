@@ -186,6 +186,8 @@ export function avviaMotorePromemoria(db, auth) {
                 return true;
             });
 
+            if (window.aggiornaBadgeUI) window.aggiornaBadgeUI('promemoria', ddsArray.length);
+
             if (ddsArray.length === 0) { 
                 listContainer.innerHTML = '<div class="prom-empty-state"><i class="fa-regular fa-bell-slash" style="font-size:32px; color:var(--border-color); display:block; margin-bottom:10px;"></i> Nessun Promemoria attivo.</div>'; 
                 return; 

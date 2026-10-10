@@ -1,5 +1,5 @@
 const GH_OWNER = "HazeV98"; 
-const GH_REPO = "Utility-test";
+const GH_REPO = "Utility";
 
 let schedaAttivaId = null;
 let isEditMode = false;

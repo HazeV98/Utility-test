@@ -3,12 +3,126 @@
     {
       "nome": "Tipo 1",
       "imgUrl": "assets/planimetrie/planimetria_1787435860560_L1788921017718.jpg",
-      "pins": []
+      "pins": [
+        {
+          "id": "pin_1791462159614",
+          "lat": 720.249810938223,
+          "lng": 229.24123483464865,
+          "tipo": "singolo",
+          "nomeContenitore": null,
+          "elementi": [
+            {
+              "schedaId": "sch_1787592024172",
+              "qta": 1
+            }
+          ],
+          "size": 10,
+          "iconaContenitore": "fa-solid fa-box-open",
+          "immagineContenitore": null
+        },
+        {
+          "id": "pin_1791462226199",
+          "lat": 717.4751825008864,
+          "lng": 378.20735351612933,
+          "tipo": "singolo",
+          "nomeContenitore": null,
+          "elementi": [
+            {
+              "schedaId": "sch_1787603175363",
+              "qta": 1
+            }
+          ],
+          "size": 10,
+          "iconaContenitore": "fa-solid fa-box-open",
+          "immagineContenitore": null
+        },
+        {
+          "id": "pin_1791462243934",
+          "lat": 566.4532565844054,
+          "lng": 219.5959650021754,
+          "tipo": "singolo",
+          "nomeContenitore": null,
+          "elementi": [
+            {
+              "schedaId": "sch_1787603718098",
+              "qta": 1
+            }
+          ],
+          "size": 10,
+          "iconaContenitore": "fa-solid fa-box-open",
+          "immagineContenitore": null
+        },
+        {
+          "id": "pin_1791462253339",
+          "lat": 639.4667292812703,
+          "lng": 228.69452621113965,
+          "tipo": "singolo",
+          "nomeContenitore": null,
+          "elementi": [
+            {
+              "schedaId": "sch_1787604086080",
+              "qta": 1
+            }
+          ],
+          "size": 10,
+          "iconaContenitore": "fa-solid fa-box-open",
+          "immagineContenitore": null
+        },
+        {
+          "id": "pin_1791462265233",
+          "lat": 566.8213324743829,
+          "lng": 377.54741273573114,
+          "tipo": "singolo",
+          "nomeContenitore": null,
+          "elementi": [
+            {
+              "schedaId": "sch_1787609002378",
+              "qta": 1
+            }
+          ],
+          "size": 10,
+          "iconaContenitore": "fa-solid fa-box-open",
+          "immagineContenitore": null
+        },
+        {
+          "id": "pin_1791462275682",
+          "lat": 642.7652698207356,
+          "lng": 372.4522500141033,
+          "tipo": "singolo",
+          "nomeContenitore": null,
+          "elementi": [
+            {
+              "schedaId": "sch_1787609072649",
+              "qta": 1
+            }
+          ],
+          "size": 10,
+          "iconaContenitore": "fa-solid fa-box-open",
+          "immagineContenitore": null
+        }
+      ]
     },
     {
       "nome": "Tipo 2",
       "imgUrl": "assets/planimetrie/planimetria_1787435860560_L1788921217280.png",
-      "pins": []
+      "pins": [
+        {
+          "id": "pin_1791462343826",
+          "lat": 758.9128110661469,
+          "lng": 1300.5403912417253,
+          "tipo": "singolo",
+          "nomeContenitore": null,
+          "elementi": [
+            {
+              "schedaId": "sch_1787592024172",
+              "qta": 1
+            }
+          ],
+          "size": 20,
+          "iconaContenitore": "fa-solid fa-box-open",
+          "immagineContenitore": null
+        }
+      ]
     }
   ],
   "schedeNave": [

@@ -132,6 +132,9 @@ function ascoltaSegnalazioni() {
         // ORDINAMENTO IN TEMPO REALE (CHAT PIÙ RECENTE IN ALTO)
         ticketList.sort((a, b) => b.data.timestamp_ultimo_messaggio - a.data.timestamp_ultimo_messaggio);
 
+        // Riallinea il badge notifica sull'icona del modulo (index.js)
+        if (window.controllaSegnalazioni) window.controllaSegnalazioni();
+
         // STAMPIAMO I TICKET SULLO SCHERMO
         ticketList.forEach(ticket => {
             segnalazioniLocali[ticket.id] = ticket.data; 

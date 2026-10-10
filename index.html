@@ -179,8 +179,8 @@
         .app-grid .app-btn:active .app-icon { transform: scale(0.88) translateY(4px); box-shadow: 0 1px 3px rgba(0,0,0,0.2), inset 0 6px 12px rgba(0,0,0,0.3); filter: brightness(0.9); transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
         .app-grid .app-btn:active .app-label { transform: scale(0.95); opacity: 0.7; transition: all 0.15s; }
         
-        .app-grid .app-icon { width: 62px; height: 62px; margin: 0 auto 10px auto; border-radius: 18px; color: white; font-size: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 24px -6px rgba(0,0,0,0.3), 0 4px 8px -2px rgba(0,0,0,0.15), inset 0 -6px 12px rgba(0,0,0,0.25); border: 1px solid rgba(0,0,0,0.05); transition: var(--transition); overflow: hidden; position: relative; }
-        .app-grid .app-icon::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.4); opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 2; }
+        .app-grid .app-icon { width: 62px; height: 62px; margin: 0 auto 10px auto; border-radius: 18px; color: white; font-size: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 24px -6px rgba(0,0,0,0.3), 0 4px 8px -2px rgba(0,0,0,0.15), inset 0 -6px 12px rgba(0,0,0,0.25); border: 1px solid rgba(0,0,0,0.05); transition: var(--transition); overflow: visible; position: relative; }
+        .app-grid .app-icon::before { content: ""; position: absolute; border-radius: inherit; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.4); opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 2; }
         .app-grid .app-btn:active .app-icon::before { opacity: 1; transition: 0s; }
         .app-grid .app-icon::after { display: none; }
         .app-grid .app-label { font-size: var(--label-size); color: var(--text-main); font-weight: 600; text-align: center; line-height: 1.2; text-shadow: none; width: 100%; word-wrap: break-word; transition: var(--transition); }
@@ -190,7 +190,7 @@
         .app-list .app-btn:active { transform: scale(0.97); background: rgba(255,255,255,0.6); }
         .app-list .app-btn::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.05); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .app-list .app-btn:active::after { opacity: 1; transition: 0s; }
-        .app-list .app-icon { width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 6px 12px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1), inset 0 -4px 6px rgba(0,0,0,0.2); border: 1px solid rgba(0,0,0,0.04); overflow: hidden; }
+        .app-list .app-icon { width: 46px; height: 46px; margin: 0 16px 0 0; border-radius: 14px; color: white; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 6px 12px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1), inset 0 -4px 6px rgba(0,0,0,0.2); border: 1px solid rgba(0,0,0,0.04); overflow: visible; }
         .app-list .app-label { font-size: calc(var(--label-size) + 2px); color: #1a1a1a; font-weight: 700; margin: 0; text-shadow: none; flex: 1; text-align: left; }
 
         .transparent-icons .app-icon { background-color: transparent !important; box-shadow: none !important; border: none !important; color: var(--text-main) !important; }
@@ -238,6 +238,7 @@
         input[type="color"] { width: 44px; height: 44px; border: none; border-radius: 10px; cursor: pointer; padding: 0; background: transparent; }
         input[type="range"] { width: 100%; margin: 10px 0; accent-color: var(--primary); }
 
+        .app-icon .app-notif-badge { z-index: 5; pointer-events: none; align-items: center !important; justify-content: center !important; box-sizing: border-box !important; min-width: 22px !important; height: 22px !important; padding: 0 6px !important; border-radius: 11px !important; font-size: 13px !important; line-height: 1 !important; top: -6px !important; right: -6px !important; text-align: center; font-variant-numeric: tabular-nums; }
         .badge-notif { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; min-width: 22px; height: 22px; padding: 0 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(217,48,37,0.4); border: 2px solid var(--surface); z-index: 20; pointer-events: none; }
 
         .banner-alert { padding: 14px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 20px; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; cursor: pointer; box-shadow: var(--shadow-md); display:flex; align-items:center; justify-content:center; gap:10px; transition: var(--transition); animation: slideInUpBouncy 0.5s ease both, breathe 3s infinite ease-in-out 0.5s;}
