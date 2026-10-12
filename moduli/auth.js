@@ -55,20 +55,50 @@ export function avviaMotoreAuth(auth, db, provider) {
                 return; 
             }
             
-            try { 
-                const res = await createUserWithEmailAndPassword(auth, email, pwd); 
-                await setDoc(doc(db, "utenti", res.user.uid), { 
-                    nome, 
-                    cognome, 
-                    matricola, 
-                    progressivo: document.getElementById('regProg').value.trim(), 
-                    email: email 
-                }, { merge: true }); 
-                window.chiudiModal('authModal'); 
-            } catch (e) { 
-                err.innerHTML = "<i class='fa-solid fa-circle-exclamation'></i> Errore durante la registrazione."; 
+            if (!/^\d{4}$/.test(matricola)) { 
+                err.innerHTML = "<i class='fa-solid fa-circle-exclamation'></i> La matricola deve essere composta da 4 cifre."; 
                 err.style.display = 'block'; 
+                return; 
             }
+            
+            const profilo = { 
+                nome, 
+                cognome, 
+                matricola, 
+                progressivo: document.getElementById('regProg').value.trim(), 
+                email: email 
+            };
+            
+            // Finché il profilo non è scritto, index.js non deve considerarlo incompleto
+            window.profiloInRegistrazione = profilo;
+            
+            let res;
+            try { 
+                res = await createUserWithEmailAndPassword(auth, email, pwd); 
+            } catch (e) { 
+                window.profiloInRegistrazione = null;
+                err.innerHTML = "<i class='fa-solid fa-circle-exclamation'></i> " + (
+                    e.code === 'auth/email-already-in-use' ? "Email già registrata." :
+                    e.code === 'auth/weak-password' ? "Password troppo debole (minimo 6 caratteri)." :
+                    e.code === 'auth/invalid-email' ? "Indirizzo email non valido." :
+                    "Errore durante la registrazione.");
+                err.style.display = 'block'; 
+                return;
+            }
+            
+            try { 
+                await setDoc(doc(db, "utenti", res.user.uid), profilo, { merge: true }); 
+                window.currentUserData = { ...window.currentUserData, ...profilo };
+                try { localStorage.setItem(`userDataCache_haze_${res.user.uid}`, JSON.stringify(window.currentUserData)); } catch (e2) {}
+                window.profiloInRegistrazione = null;
+            } catch (e) { 
+                // Account creato ma profilo non salvato: si chiedono subito i dati (già precompilati)
+                window.profiloInRegistrazione = null;
+                window.chiudiModal('authModal');
+                if (window.apriDatiObbligatori) window.apriDatiObbligatori(profilo);
+                return;
+            }
+            window.chiudiModal('authModal');
         }
     };
 
@@ -95,13 +125,19 @@ export function avviaMotoreAuth(auth, db, provider) {
         const m = document.getElementById('obbl-matricola').value.trim();
         
         if (!n || !c || !m) { alert("Mancano dati obbligatori!"); return; }
+        if (!/^\d{4}$/.test(m)) { alert("La matricola deve essere composta da 4 cifre."); return; }
         
-        await setDoc(doc(db, "utenti", auth.currentUser.uid), { 
-            nome: n, 
-            cognome: c, 
-            matricola: m, 
-            progressivo: document.getElementById('obbl-prog').value.trim() 
-        }, { merge: true }); 
+        try {
+            await setDoc(doc(db, "utenti", auth.currentUser.uid), { 
+                nome: n, 
+                cognome: c, 
+                matricola: m, 
+                progressivo: document.getElementById('obbl-prog').value.trim() 
+            }, { merge: true }); 
+        } catch (e) {
+            alert("Impossibile salvare i dati. Controlla la connessione e riprova.");
+            return;
+        }
         
         location.reload(); 
     };
@@ -121,8 +157,19 @@ export function avviaMotoreAuth(auth, db, provider) {
             alert("Errore: Impossibile salvare. Nome, Cognome e Matricola non possono essere vuoti."); 
             return; 
         }
+        if (!/^\d{4}$/.test(p.matricola)) { alert("La matricola deve essere composta da 4 cifre."); return; }
         
-        await setDoc(doc(db, "utenti", auth.currentUser.uid), p, { merge: true }); 
+        try {
+            await setDoc(doc(db, "utenti", auth.currentUser.uid), p, { merge: true }); 
+        } catch (e) {
+            alert("Impossibile salvare. Controlla la connessione e riprova.");
+            return;
+        }
+        
+        // Aggiorna subito i dati in sessione e la cache locale
+        window.currentUserData = { ...window.currentUserData, ...p };
+        try { localStorage.setItem(`userDataCache_haze_${auth.currentUser.uid}`, JSON.stringify(window.currentUserData)); } catch (e) {}
+        
         alert("Salvato con successo!"); 
         window.chiudiModal('profileModal');
     };

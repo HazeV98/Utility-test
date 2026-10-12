@@ -636,7 +636,7 @@
 
             <div style="display: flex; gap: 12px;">
                 <div style="flex: 1;" class="float-wrapper">
-                    <input type="text" id="profileMatricola" class="input-field" placeholder=" ">
+                    <input type="text" id="profileMatricola" class="input-field" placeholder=" " inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off">
                     <label>Matricola</label>
                 </div>
                 <div style="flex: 1;" class="float-wrapper">
@@ -701,7 +701,7 @@
                     <label>Cognome *</label>
                 </div>
                 <div class="float-wrapper">
-                    <input type="text" id="regMatricola" class="input-field" placeholder=" ">
+                    <input type="text" id="regMatricola" class="input-field" placeholder=" " inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off">
                     <label>Matricola *</label>
                 </div>
                 <div class="float-wrapper">
@@ -744,7 +744,7 @@
                 <label>Cognome *</label>
             </div>
             <div class="float-wrapper">
-                <input type="text" id="obbl-matricola" placeholder=" " class="input-field">
+                <input type="text" id="obbl-matricola" placeholder=" " class="input-field" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off">
                 <label>Matricola *</label>
             </div>
             <div class="float-wrapper">
@@ -773,6 +773,7 @@
                 <select id="sort-utenti-app" style="padding: 12px; font-size: 13px; margin: 0; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; background: var(--surface); color:var(--text-main); cursor:pointer; outline:none;" onchange="window.renderGestioneAccessi()">
                     <option value="recente">Recenti prima</option>
                     <option value="alfabetico">Alfabetico</option>
+                    <option value="incompleti">Profilo incompleto</option>
                 </select>
             </div>
             

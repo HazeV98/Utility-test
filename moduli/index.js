@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, deleteUser, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, orderBy, deleteDoc, where, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, getDocFromServer, collection, getDocs, query, orderBy, deleteDoc, where, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
 import { avviaMotoreAuth } from './auth.js';
@@ -826,6 +826,11 @@ window.renderGestioneAccessi = () => {
     
     let dataCopy = [...window.utentiArrayCache];
 
+    const nIncompleti = dataCopy.filter(u => !profiloCompleto(u)).length;
+    const optInc = document.querySelector('#sort-utenti-app option[value="incompleti"]');
+    if (optInc) optInc.textContent = `Profilo incompleto (${nIncompleti})`;
+    if (sortMode === 'incompleti') dataCopy = dataCopy.filter(u => !profiloCompleto(u));
+
     const sortAlpha = (a, b) => {
         let cognomeA = (a.cognome || '').trim().toUpperCase(); let cognomeB = (b.cognome || '').trim().toUpperCase();
         if (cognomeA < cognomeB) return -1; if (cognomeA > cognomeB) return 1;
@@ -853,8 +858,9 @@ window.renderGestioneAccessi = () => {
         if(u.ruolo === 'collaborator') roleBadge = " <span style='background:#6f42c1;color:white;padding:2px 5px;border-radius:4px;font-size:10px;margin-left:5px;'>COLLAB</span>";
         if(u.ruolo === 'vip') roleBadge = " <span style='background:gold;color:black;padding:2px 5px;border-radius:4px;font-size:10px;margin-left:5px;'>VIP</span>";
 
+        const incBadge = profiloCompleto(u) ? '' : " <span style='background:var(--danger);color:white;padding:2px 5px;border-radius:4px;font-size:10px;margin-left:5px;'>INCOMPLETO</span>";
         const dot = isOggi ? `<span style="display:inline-block; width:8px; height:8px; background:var(--success); border-radius:50%; margin-left:8px; box-shadow: 0 0 5px rgba(15,157,88,0.5);"></span>` : '';
-        const clickableName = `<span style="font-weight:700; font-size:14px; cursor:pointer; color:var(--primary); text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" onclick="window.apriDettaglioUtente('${u.uid}')">${fullName}${roleBadge}</span>`;
+        const clickableName = `<span style="font-weight:700; font-size:14px; cursor:pointer; color:var(--primary); text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" onclick="window.apriDettaglioUtente('${u.uid}')">${fullName}${roleBadge}${incBadge}</span>`;
         const searchData = `${u.cognome || ''} ${u.nome || ''} ${u.matricola || ''}`.toUpperCase();
         
         let accessDisplay = 'Mai';
@@ -1260,11 +1266,20 @@ window.eliminaAccount = async () => {
     if (!confermaDefinitiva) return;
 
     try {
-        // 1. Elimina il profilo da Firestore
-        await deleteDoc(doc(db, "utenti", user.uid));
+        // 1. Elimina il profilo da Firestore (con copia di sicurezza)
+        const refUtente = doc(db, "utenti", user.uid);
+        let backupProfilo = null;
+        try { backupProfilo = (await getDoc(refUtente)).data() || null; } catch (e) {}
+        await deleteDoc(refUtente);
         
         // 2. Elimina l'utente da Firebase Authentication
-        await deleteUser(user);
+        try { await deleteUser(user); }
+        catch (e) {
+            // Se l'eliminazione dell'account fallisce (es. login non recente) il profilo viene ripristinato,
+            // altrimenti resterebbe un account senza dati
+            if (backupProfilo) { try { await setDoc(refUtente, backupProfilo); } catch (e2) {} }
+            throw e;
+        }
         
         alert("Account eliminato con successo. Arrivederci.");
         window.location.reload();
@@ -1375,6 +1390,42 @@ const WakeLockModuli = {
 WakeLockModuli.init();
 
 // ============================================================================
+// CONTROLLO PROFILO OBBLIGATORIO (Nome, Cognome, Matricola)
+// ============================================================================
+// La matricola è un numero di 4 cifre (si conserva come testo, per non perdere gli zeri iniziali).
+// Regola: la finestra dei dati obbligatori compare SOLO se la lettura dal server
+// è riuscita E mancano davvero dei campi. Se il server non è raggiungibile
+// (rete debole, PWA appena risvegliata, offline) non si chiede nulla.
+const profiloCompleto = (d) => !!(d && String(d.nome || '').trim() && String(d.cognome || '').trim() && /^\d{4}$/.test(String(d.matricola ?? '').trim()));
+window.profiloCompleto = profiloCompleto;
+
+async function caricaProfiloDalServer(uid) {
+    for (let i = 1; i <= 3; i++) {
+        try { return await getDocFromServer(doc(db, "utenti", uid)); }
+        catch (e) { await new Promise(r => setTimeout(r, 1000 * i)); }
+    }
+    return null; // irraggiungibile ≠ profilo incompleto
+}
+
+window.apriDatiObbligatori = (dati = {}) => {
+    const set = (id, v) => { const el = document.getElementById(id); if (el && !el.value) el.value = v || ''; };
+    set('obbl-nome', dati.nome); set('obbl-cognome', dati.cognome);
+    set('obbl-matricola', dati.matricola); set('obbl-prog', dati.progressivo);
+    window.apriModal('modal-dati-obbligatori');
+};
+
+// Restituisce i dati letti dal server, oppure null se non raggiungibile.
+// Apre la finestra obbligatoria solo se il profilo è davvero incompleto.
+window.verificaProfilo = async (user) => {
+    const snap = await caricaProfiloDalServer(user.uid);
+    if (!snap) return null;
+    const dati = snap.exists() ? snap.data() : {};
+    // Durante la registrazione il profilo viene scritto subito dopo la creazione dell'account
+    if (!window.profiloInRegistrazione && !profiloCompleto(dati)) window.apriDatiObbligatori(dati);
+    return dati;
+};
+
+// ============================================================================
 // AUTH E START
 // ============================================================================
 onAuthStateChanged(auth, async (user) => {
@@ -1385,7 +1436,9 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('btnOpenLogin').style.display = 'none'; 
         document.getElementById('btnOpenProfile').style.display = 'flex';
 
-        let cachedData = {}; try { cachedData = JSON.parse(localStorage.getItem('userDataCache_haze')) || {}; } catch(e) {}
+        const cacheKey = `userDataCache_haze_${user.uid}`;
+        try { localStorage.removeItem('userDataCache_haze'); } catch(e) {} // vecchia cache condivisa tra account
+        let cachedData = {}; try { cachedData = JSON.parse(localStorage.getItem(cacheKey)) || {}; } catch(e) {}
         
         globalIsAdmin = (user.uid === ADMIN_UID); 
         globalIsCollab = cachedData.ruolo === 'collaborator';
@@ -1409,8 +1462,8 @@ onAuthStateChanged(auth, async (user) => {
         window.LayoutEngine.init();
 
         try {
-            const docSnap = await getDoc(doc(db, "utenti", user.uid)); 
-            let safeData = { ...cachedData, ...(docSnap.exists() ? docSnap.data() : {}) };
+            const dati = await window.verificaProfilo(user); // null se il server non è raggiungibile
+            let safeData = { ...cachedData, ...(dati || {}), ...(window.profiloInRegistrazione || {}) };
             window.currentUserData = safeData; 
             globalIsCollab = safeData.ruolo === 'collaborator';
             globalIsVip = safeData.ruolo === 'vip';
@@ -1423,17 +1476,18 @@ onAuthStateChanged(auth, async (user) => {
                 if (vBadge) vBadge.style.display = 'none';
             }
 
-            localStorage.setItem('userDataCache_haze', JSON.stringify(safeData));
+            localStorage.setItem(cacheKey, JSON.stringify(safeData));
 
             const oggiLog = new Date();
             const formatterDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' });
             const oggiLogStr = formatterDate.format(oggiLog);
 
-            if (safeData.last_app_access !== oggiLogStr || !safeData.email) {
-                setDoc(doc(db, "utenti", user.uid), { last_app_access: oggiLogStr, last_access_full: oggiLog.toISOString(), email: user.email }, { merge: true });
+            const profiloOk = !window.profiloInRegistrazione && profiloCompleto(safeData);
+            if (profiloOk && (safeData.last_app_access !== oggiLogStr || !safeData.email)) {
+                setDoc(doc(db, "utenti", user.uid), { last_app_access: oggiLogStr, last_access_full: oggiLog.toISOString(), email: user.email }, { merge: true }).catch(() => {});
             }
 
-            if (window.inizializzaNotificheSeNativa) window.inizializzaNotificheSeNativa(safeData);
+            if (profiloOk && window.inizializzaNotificheSeNativa) window.inizializzaNotificheSeNativa(safeData);
         } catch(e) {}
     } else { 
         vLoad.style.display = 'none'; window.LayoutEngine.init(); vGuest.style.display = 'flex'; vApp.style.display = 'none';
