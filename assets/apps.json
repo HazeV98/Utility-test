@@ -56,10 +56,11 @@
         "conditions": [
             "tutti"
         ],
+        "excludeConditions": [],
         "isModule": true,
         "moduleId": "turni",
         "moduleName": "turni",
-        "splitModule": true
+        "splitModule": false
     },
     {
         "id": "varianti",

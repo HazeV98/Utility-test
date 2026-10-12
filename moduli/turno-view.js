@@ -27,7 +27,7 @@ const e = v => esc(String(v ?? ''));
 const CSS = `
 .tv-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; }
 .tv-overlay.aperto { display: flex; }
-#tv-turno-overlay { z-index: 9000; }
+#tv-turno-overlay { z-index: var(--tv-z-turno, 9000); }
 #tv-img-overlay { z-index: 9999; background: rgba(0,0,0,0.9); }
 #tv-corsa-overlay { z-index: 10000; align-items: flex-end; }
 @media (min-width: 600px) { #tv-corsa-overlay { align-items: center; } }
@@ -37,23 +37,23 @@ const CSS = `
 .tv-sheet-title { margin: 0; font-size: 16px; font-weight: 800; color: var(--primary); }
 .tv-sheet-sub { font-size: 13px; color: var(--text-muted); text-transform: capitalize; margin-top: 2px; }
 .tv-sheet-body { flex: 1; overflow-y: auto; padding: 16px 18px 22px; }
-.tv-close { border: none; background: rgba(128,128,128,0.1); color: var(--text-main); width: 34px; height: 34px; border-radius: 50%; font-size: 16px; cursor: pointer; flex: none; }
+.tv-close { border: none; background: rgba(128,128,128,0.1); color: var(--text-main, var(--text)); width: 34px; height: 34px; border-radius: 50%; font-size: 16px; cursor: pointer; flex: none; }
 
 .tv-head-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 .tv-val { font-size: 36px; font-weight: 900; color: var(--primary); margin: 0; line-height: 1; }
 .tv-btn-img { background: rgba(128,128,128,0.1); color: var(--primary); border: none; width: 42px; height: 42px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
 .tv-btn-img:hover { background: var(--primary); color: white; }
-.tv-avviso { background: rgba(255,193,7,0.1); border: 1px solid #ffc107; padding: 10px; border-radius: var(--radius-sm); color: #856404; font-size: 13px; font-weight: bold; text-align: left; margin-bottom: 15px; }
+.tv-avviso { background: rgba(255,193,7,0.1); border: 1px solid #ffc107; padding: 10px; border-radius: var(--radius-sm, 12px); color: #856404; font-size: 13px; font-weight: bold; text-align: left; margin-bottom: 15px; }
 
 .tv-locations { display: flex; justify-content: space-between; align-items: center; background: rgba(128,128,128,0.05); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; margin-bottom: 10px; text-align: center; }
-.tv-loc-time { font-size: 20px; font-weight: 800; color: var(--text-main); }
+.tv-loc-time { font-size: 20px; font-weight: 800; color: var(--text-main, var(--text)); }
 .tv-loc-name { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-top: 4px; }
 .tv-loc-arrow { color: var(--text-muted); font-size: 20px; opacity: 0.5; }
 .tv-duration { font-size: 14px; font-weight: 600; color: var(--text-muted); text-align: center; margin-bottom: 10px; }
 .tv-part-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(128,128,128,0.05); padding: 12px 15px; border-radius: 8px; margin-bottom: 7px; text-align: left; border: 1px solid var(--border-color); }
 .tv-part-label { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; min-width: 55px; }
 .tv-part-loc { text-align: center; flex: 1; }
-.tv-part-time { font-size: 18px; font-weight: 800; color: var(--text-main); }
+.tv-part-time { font-size: 18px; font-weight: 800; color: var(--text-main, var(--text)); }
 .tv-part-place { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-top: 3px; }
 
 .tv-expand { text-align: center; color: var(--text-muted); cursor: pointer; padding: 10px 0 0 0; margin-top: 10px; border-top: 1px solid var(--border-color); font-size: 20px; }
@@ -72,7 +72,7 @@ const CSS = `
 .tv-current::before { background: #ff4757; border-color: var(--surface); animation: tv-pulse 1.5s infinite; }
 @keyframes tv-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,71,87,0.4); } 70% { box-shadow: 0 0 0 8px rgba(255,71,87,0); } 100% { box-shadow: 0 0 0 0 rgba(255,71,87,0); } }
 .tv-act-header { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
-.tv-act-time { font-weight: 800; font-size: 15px; color: var(--text-main); }
+.tv-act-time { font-weight: 800; font-size: 15px; color: var(--text-main, var(--text)); }
 .tv-act-duration { font-size: 12px; color: var(--text-muted); background: rgba(128,128,128,0.15); padding: 3px 8px; border-radius: 12px; }
 .tv-act-route { font-size: 14px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
 .tv-type { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
@@ -88,7 +88,7 @@ const CSS = `
 .tv-corsa-modal { background: var(--surface); width: 100%; max-width: 560px; max-height: 88vh; border-radius: 18px 18px 0 0; display: flex; flex-direction: column; box-shadow: 0 -8px 30px rgba(0,0,0,0.5); text-align: left; }
 @media (min-width: 600px) { .tv-corsa-modal { border-radius: 18px; max-height: 80vh; } }
 .tv-corsa-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 18px 12px; border-bottom: 1px solid var(--border-color); }
-.tv-corsa-titolo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-weight: 700; font-size: 16px; color: var(--text-main); }
+.tv-corsa-titolo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-weight: 700; font-size: 16px; color: var(--text-main, var(--text)); }
 .tv-corsa-sotto { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-weight: 400; }
 .tv-corsa-corpo { overflow-y: auto; padding: 14px 18px 22px; position: relative; }
 .tv-corsa-stato { text-align: center; color: var(--text-muted); padding: 30px 10px; font-size: 14px; }
@@ -100,9 +100,9 @@ const CSS = `
 .tv-fermata-punto { width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2px solid var(--text-muted); flex: none; position: relative; z-index: 1; }
 .tv-fermata.nel-turno .tv-fermata-punto { background: var(--primary); border-color: var(--primary); }
 .tv-fermata-nome { flex: 1; font-size: 14px; color: var(--text-muted); }
-.tv-fermata.nel-turno .tv-fermata-nome { color: var(--text-main); font-weight: 600; }
+.tv-fermata.nel-turno .tv-fermata-nome { color: var(--text-main, var(--text)); font-weight: 600; }
 .tv-fermata-ora { font-variant-numeric: tabular-nums; font-size: 14px; color: var(--text-muted); text-align: right; }
-.tv-fermata.nel-turno .tv-fermata-ora { color: var(--text-main); font-weight: 700; }
+.tv-fermata.nel-turno .tv-fermata-ora { color: var(--text-main, var(--text)); font-weight: 700; }
 .tv-fermata-ora small { display: block; font-size: 11px; font-weight: 400; color: var(--text-muted); }
 .tv-giorno-dopo { font-size: 10px; color: #b42318; font-weight: 700; margin-left: 3px; }
 .tv-fermata-estremo { font-size: 11px; color: var(--primary); font-weight: 700; text-transform: uppercase; }
@@ -392,9 +392,9 @@ export function creaVistaTurno(container, { espansa = false } = {}) {
 
     let attivita = [];
     let richiesta = 0;
-    let ctx = { codice: '', data: '' };
+    let ctx = { codice: '', data: '', apriImmagine: null };
 
-    el.btnImg.addEventListener('click', () => apriImmagineTurno(ctx.codice, ctx.data));
+    el.btnImg.addEventListener('click', () => ctx.apriImmagine ? ctx.apriImmagine() : apriImmagineTurno(ctx.codice, ctx.data));
     el.expand.addEventListener('click', () => {
         const aperta = el.expand.classList.toggle('expanded');
         el.timeline.style.display = aperta ? 'block' : 'none';
@@ -413,6 +413,10 @@ export function creaVistaTurno(container, { espansa = false } = {}) {
         const card = ev.target.closest('.tv-act.cliccabile');
         if (card) { ev.preventDefault(); apriDaCard(card); }
     });
+
+    const TESTO_VARIANTE = '<i class="fa-solid fa-circle-exclamation"></i> Variante in corso: vedi il turno corretto nella sezione turni.';
+    const TESTO_OFFLINE = '<i class="fa-solid fa-triangle-exclamation"></i> Dettagli del turno non disponibili al momento: puoi aprire l\'immagine con il pulsante in alto.';
+    function mostraAvviso(html) { el.avviso.innerHTML = html; el.avviso.style.display = 'block'; }
 
     function mostraCaricamento(on) {
         el.loading.style.display = on ? 'block' : 'none';
@@ -529,11 +533,13 @@ export function creaVistaTurno(container, { espansa = false } = {}) {
      * @param {string}  opts.codice    codice turno (es. "4P03")
      * @param {string}  opts.data      data ISO "YYYY-MM-DD"
      * @param {boolean} opts.variante  true = giorno con varianti: niente dettagli né immagine, solo avviso
+     * @param {Function} opts.apriImmagine  opzionale: funzione chiamata dal pulsante immagine al posto di quella
+     *                                      predefinita (es. il visualizzatore del modulo Turni)
      */
-    async function carica({ codice, data, variante = false }) {
+    async function carica({ codice, data, variante = false, apriImmagine = null }) {
         const mio = ++richiesta;
         const cod = String(codice || '').trim();
-        ctx = { codice: cod, data };
+        ctx = { codice: cod, data, apriImmagine };
         attivita = [];
 
         el.riepilogo.innerHTML = '';
@@ -547,7 +553,7 @@ export function creaVistaTurno(container, { espansa = false } = {}) {
 
         // riposo / turni senza corse: solo il codice
         if (!cod || TURNI_SENZA_CORSE.includes(cod.toUpperCase())) { mostraCaricamento(false); return; }
-        if (variante) { el.avviso.style.display = 'block'; mostraCaricamento(false); return; }
+        if (variante) { mostraAvviso(TESTO_VARIANTE); mostraCaricamento(false); return; }
 
         mostraCaricamento(true);
         try {
@@ -561,6 +567,7 @@ export function creaVistaTurno(container, { espansa = false } = {}) {
             if (mio !== richiesta) return;
             // fallback: codice + pulsante immagine anche se l'API fallisce
             console.error("Fetch API turno fallita, fallback solo immagine", err);
+            mostraAvviso(TESTO_OFFLINE);
         }
         mostraCaricamento(false);
         el.btnImg.style.display = 'flex';
@@ -572,7 +579,7 @@ export function creaVistaTurno(container, { espansa = false } = {}) {
 // ==========================================
 // 6. FINESTRA DEL TURNO (punto d'ingresso per gli altri moduli)
 // ==========================================
-export function apriTurno({ codice, data, variante = false }) {
+export function apriTurno({ codice, data, variante = false, apriImmagine = null }) {
     ensureUI();
     if (!vistaModale) vistaModale = creaVistaTurno(document.getElementById('tv-turno-body'), { espansa: true });
 
@@ -582,7 +589,7 @@ export function apriTurno({ codice, data, variante = false }) {
 
     document.getElementById('tv-turno-body').scrollTop = 0;
     document.getElementById('tv-turno-overlay').classList.add('aperto');
-    return vistaModale.carica({ codice, data, variante });
+    return vistaModale.carica({ codice, data, variante, apriImmagine });
 }
 
 export function chiudiTurno() { if (document.getElementById('tv-root')) chiudi('turno'); }

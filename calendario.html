@@ -281,6 +281,8 @@
         .bg-turno { background-color: var(--turno) !important; color: #fff !important; }
         .bg-modificato { background-color: #f5365c !important; color: #fff !important; }
         .bg-ferie { background-color: #20c997 !important; color: white !important; font-size: 0.75em !important; padding: 4px 2px !important; margin-bottom: 4px !important; }
+        .bg-ferie-custom { font-size: 0.75em !important; padding: 4px 2px !important; margin-bottom: 4px !important; }
+        #ferieModal .color-circle { width: 30px; height: 30px; margin: 4px; }
 
         .disclaimer-banner {
             margin: 15px; padding: 15px; background-color: rgba(255, 193, 7, 0.15);
@@ -297,6 +299,14 @@
         select:focus, input:focus { border-color: var(--primary); outline: none; }
         .btn { padding: 16px; border: none; border-radius: 16px; color: white; cursor: pointer; width: 100%; margin-top: 10px; font-weight: 700; font-size: 15px; font-family: 'Inter', sans-serif; transition: transform 0.1s, opacity 0.2s; }
         .btn:active { transform: scale(0.97); }
+        /* Pulsanti tondi del turno: immagine e dettagli */
+        .azioni-turno { display: flex; justify-content: center; gap: 18px; margin-bottom: 15px; }
+        .btn-tondo { width: 56px; height: 56px; border-radius: 50%; border: none; color: white; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.1s, opacity 0.2s; }
+        .btn-tondo:active { transform: scale(0.93); }
+        /* la finestra dettagli turno (turno-view.js) deve stare sopra le modali del calendario (z-index 9999) */
+        :root { --tv-z-turno: 9999; }
+        /* lente di ricerca del calendario: glifo Font Awesome (f002 = magnifying-glass) al posto dell'emoji */
+        .fc .fc-btnSalto-button { font-family: "Font Awesome 6 Free"; font-weight: 900; }
         .btn-reset { padding: 12px 15px; width: auto; font-size: 14px; }
         .instruction-text { font-size: 15px; line-height: 1.6; color: var(--text-muted); margin-bottom: 10px; }
         
@@ -552,7 +562,10 @@
     <div class="modal-content">
         <h3 id="modalDateCollega" style="margin-top:0;">Data</h3>
         <div id="infoTurniAreaCollega" style="font-size:0.9em; margin-bottom:15px; padding:12px; background:var(--bg); border: 1px solid var(--border-color); border-radius:14px; text-align:left; color:var(--text-muted);"></div>
-        <button id="btnVisualizzaTurnoCollega" class="btn" style="background: #2dce89; margin-bottom: 15px; display: none;" onclick="apriImmagineTurno()"><i class="fa-regular fa-image"></i> Mostra Immagine Turno</button>
+        <div id="azioniTurnoCollega" class="azioni-turno" style="display: none;">
+            <button id="btnImmagineTurnoCollega" class="btn-tondo" style="background: #2dce89;" onclick="apriImmagineTurno()" title="Mostra immagine turno" aria-label="Mostra immagine turno"><i class="fa-regular fa-image"></i></button>
+            <button id="btnDettaglioTurnoCollega" class="btn-tondo" style="background: var(--primary);" onclick="apriDettaglioTurnoView()" title="Dettagli turno" aria-label="Dettagli turno"><i class="fa-solid fa-list-ul"></i></button>
+        </div>
         <button class="btn" style="background: var(--bg); color: var(--text-muted);" onclick="chiudiDettaglioTurnoCollegaModal()">Chiudi</button>
     </div>
 </div>
@@ -599,6 +612,21 @@
                 <select id="ferieInvernaliScambio">
                     <option value="-1">Mantieni Automatico</option>
                 </select>
+            </div>
+        </div>
+
+        <div style="text-align: left; margin-bottom: 15px;">
+            <label style="font-weight: bold; font-size: 14px; color: var(--text-muted); display: block; margin-bottom: 5px;">Colore riga sul calendario:</label>
+            <div id="ferieColoreContainer" style="display: flex; justify-content: flex-start; flex-wrap: wrap;">
+                <div class="color-circle" style="background: #20c997;" data-color="" title="Predefinito" onclick="selezionaColoreFerie('', this)"></div>
+                <div class="color-circle color-yellow" data-color="#f1c40f" onclick="selezionaColoreFerie('#f1c40f', this)"></div>
+                <div class="color-circle color-orange" data-color="#fd7e14" onclick="selezionaColoreFerie('#fd7e14', this)"></div>
+                <div class="color-circle color-red" data-color="#f5365c" onclick="selezionaColoreFerie('#f5365c', this)"></div>
+                <div class="color-circle color-pink" data-color="#e83e8c" onclick="selezionaColoreFerie('#e83e8c', this)"></div>
+                <div class="color-circle color-purple" data-color="#8965e0" onclick="selezionaColoreFerie('#8965e0', this)"></div>
+                <div class="color-circle color-blue" data-color="#5e72e4" onclick="selezionaColoreFerie('#5e72e4', this)"></div>
+                <div class="color-circle color-teal" data-color="#11cdef" onclick="selezionaColoreFerie('#11cdef', this)"></div>
+                <div class="color-circle color-green" data-color="#2dce89" onclick="selezionaColoreFerie('#2dce89', this)"></div>
             </div>
         </div>
 
@@ -980,7 +1008,10 @@
         
         <div id="infoTurniArea" style="font-size:0.9em; margin-bottom:15px; padding:12px; background:var(--bg); border: 1px solid var(--border-color); border-radius:14px; text-align:left; color:var(--text-muted); display:none;"></div>
         
-        <button id="btnVisualizzaTurno" class="btn" style="background: #2dce89; margin-bottom: 15px; display: none;" onclick="apriImmagineTurno()"><i class="fa-regular fa-image"></i> Mostra Immagine Turno</button>
+        <div id="azioniTurno" class="azioni-turno" style="display: none;">
+            <button id="btnImmagineTurno" class="btn-tondo" style="background: #2dce89;" onclick="apriImmagineTurno()" title="Mostra immagine turno" aria-label="Mostra immagine turno"><i class="fa-regular fa-image"></i></button>
+            <button id="btnDettaglioTurno" class="btn-tondo" style="background: var(--primary);" onclick="apriDettaglioTurnoView()" title="Dettagli turno" aria-label="Dettagli turno"><i class="fa-solid fa-list-ul"></i></button>
+        </div>
         
         <input type="text" id="singleTurnoSelect" placeholder="Inserisci il turno" oninput="this.value = this.value.toUpperCase(); abilitaSalvataggio();" onkeydown="if(event.key === 'Enter') salvaCambioSingolo();">
         

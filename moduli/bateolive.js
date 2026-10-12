@@ -221,7 +221,7 @@ export function initUIBateoLive() {
         .bv-fab { font-size: 18px; }
         .bv-fab.active { background: var(--bv-primary); border-color: var(--bv-primary); color: #fff; }
         .bv-fab:hover { transform: scale(1.05); }
-        .bv-fab-container { position: absolute; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); left: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 15px; pointer-events: none; }
+        .bv-fab-container { position: absolute; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); left: 20px; z-index: 1000; display: flex; flex-direction: column; flex-wrap: wrap; justify-content: flex-end; max-height: calc(100% - 165px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); gap: 15px; pointer-events: none; }
         /* Colonna tasti richiudibile: a cascata dal basso quando si apre, dall'alto quando si chiude */
         .bv-fab-container .bv-fab { pointer-events: auto; opacity: 1; transform: none; transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.15), opacity 0.22s ease, background 0.2s, color 0.2s; }
         .bv-fab-container.chiuso .bv-fab { opacity: 0; transform: translateY(26px) scale(0.5); pointer-events: none; transition: transform 0.22s ease-in, opacity 0.18s ease, background 0.2s, color 0.2s; }
@@ -234,7 +234,7 @@ export function initUIBateoLive() {
         .bv-error-banner.active { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         /* ---------- HUD bussola ---------- */
-        .bv-hud-compass { position: absolute; top: calc(15px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); width: 250px; height: 60px; background: var(--bv-glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid var(--bv-border); box-shadow: var(--bv-shadow); overflow: hidden; z-index: 1000; align-items: center; justify-content: center; display: none; }
+        .bv-hud-compass { display: none !important; position: absolute; top: calc(15px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); width: 250px; height: 60px; background: var(--bv-glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid var(--bv-border); box-shadow: var(--bv-shadow); overflow: hidden; z-index: 1000; align-items: center; justify-content: center; display: none; }
         .bv-compass-tape { position: absolute; top: 10px; left: 0; height: 100%; display: flex; transition: transform 0.15s linear; }
         .bv-compass-mark { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; width: 60px; flex-shrink: 0; }
         .bv-tick { width: 2px; height: 8px; background: var(--bv-muted); opacity: 0.7; margin-bottom: 4px; border-radius: 2px; }
@@ -250,52 +250,57 @@ export function initUIBateoLive() {
         .bv-speed-unit { font-size: 16px; font-weight: bold; color: var(--bv-muted); }
 
         .bv-hud-speed [hidden] { display: none !important; }
-        .bv-hud-speed.nav-on { width: min(290px, calc(100vw - 110px)); box-sizing: border-box; padding: 8px 12px 10px; }
+        .bv-hud-speed.nav-on { left: 0; right: 0; bottom: 0; width: auto; box-sizing: border-box; padding: 14px 18px calc(16px + env(safe-area-inset-bottom, 0px)); border-radius: 22px 22px 0 0; border-width: 1px 0 0 0; }
+        #modal-bateolive-main.hud-nav .bv-fab-menu { bottom: calc(var(--bv-hud-h, 0px) + 14px); }
+        #modal-bateolive-main.hud-nav .bv-fab-container { bottom: calc(var(--bv-hud-h, 0px) + 74px); max-height: calc(100% - var(--bv-hud-h, 0px) - 149px - env(safe-area-inset-top, 0px)); }
+        .bv-clock { display: none; margin-top: 6px; text-align: center; font-size: 17px; font-weight: 800; color: var(--bv-muted); font-variant-numeric: tabular-nums; letter-spacing: 0.5px; line-height: 1; }
+        .bv-hud-speed.nav-on .bv-clock { display: block; text-align: left; font-size: 24px; color: var(--bv-text); margin-top: 8px; }
         .bv-hud-speed.nav-on .bv-speed-wrapper { justify-content: flex-start; }
-        .bv-hud-speed.nav-on .bv-speed-val { font-size: 36px; }
-        .bv-nav-extra { display: none; flex-direction: column; gap: 6px; margin-bottom: 6px; }
+        .bv-nav-turno-slot { display: none; align-self: center; }
+        .bv-hud-speed.nav-on .bv-nav-turno-slot { display: flex; }
+        .bv-hud-speed.nav-on .bv-speed-val { font-size: 46px; }
+        .bv-nav-extra { display: none; flex-direction: column; gap: 8px; margin-bottom: 8px; }
         .bv-hud-speed.nav-on .bv-nav-extra { display: flex; }
-        .bv-nav-delay { display: none; margin-left: auto; font-size: 30px; font-weight: 900; line-height: 0.9; font-variant-numeric: tabular-nums; padding-left: 10px; border-left: 1px solid var(--bv-border); }
+        .bv-nav-delay { display: none; margin-left: auto; font-size: 38px; font-weight: 900; line-height: 0.9; font-variant-numeric: tabular-nums; padding-left: 10px; border-left: 1px solid var(--bv-border); }
         .bv-hud-speed.nav-on .bv-nav-delay { display: inline-block; }
         .bv-nav-delay.tardi { color: var(--bv-bad-t); }
         .bv-nav-delay.presto { color: var(--bv-warn-t); }
         .bv-nav-delay.puntuale { color: var(--bv-ok-t); }
         .bv-nav-delay.spento { color: var(--bv-muted); opacity: 0.7; }
-        .bv-nav-lista { display: none; position: relative; max-height: 34vh; overflow-y: auto; border-bottom: 1px solid var(--bv-border); padding-bottom: 4px; }
+        .bv-nav-lista { display: none; position: relative; max-height: 40vh; overflow-y: auto; border-bottom: 1px solid var(--bv-border); padding-bottom: 4px; }
         .bv-nav-lista.aperta { display: block; }
-        .bv-nav-toggle { width: 100%; border: none; background: transparent; color: var(--bv-primary); font-size: 15px; line-height: 1; padding: 2px 0; cursor: pointer; }
+        .bv-nav-toggle { width: 100%; border: none; background: transparent; color: var(--bv-primary); font-size: 18px; line-height: 1; padding: 4px 0; cursor: pointer; }
         .bv-nav-toggle i { transition: transform 0.25s; }
         .bv-nav-toggle.aperto i { transform: rotate(180deg); }
         .bv-nav-next { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .bv-nav-next-txt { flex: 1; min-width: 0; }
-        .bv-nav-next-label { font-size: 11px; font-weight: 600; color: var(--bv-muted); }
-        .bv-nav-next-nome { font-size: 15px; font-weight: 800; color: var(--bv-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .bv-nav-next-ora { flex: none; font-size: 20px; font-weight: 900; color: var(--bv-primary); font-variant-numeric: tabular-nums; }
+        .bv-nav-next-label { font-size: 14px; font-weight: 600; color: var(--bv-muted); }
+        .bv-nav-next-nome { font-size: 20px; font-weight: 800; color: var(--bv-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bv-nav-next-ora { flex: none; font-size: 26px; font-weight: 900; color: var(--bv-primary); font-variant-numeric: tabular-nums; }
         .bv-nav-act-row { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
-        .bv-nav-turno { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 36px; height: 26px; padding: 0 4px; box-sizing: border-box; border-radius: 6px; background: var(--bv-primary); color: #fff; font-size: 12px; font-weight: 800; line-height: 1; }
-        .bv-nav-turno small { font-size: 8px; font-weight: 700; letter-spacing: 0.3px; opacity: 0.85; }
-        .bv-nav-linea { flex: none; min-width: 26px; height: 26px; padding: 0 4px; box-sizing: border-box; border-radius: 13px; border: 2px solid; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
-        .bv-nav-id { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .bv-nav-turno { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 46px; height: 34px; padding: 0 5px; box-sizing: border-box; border-radius: 8px; background: var(--bv-primary); color: #fff; font-size: 15px; font-weight: 800; line-height: 1; }
+        .bv-nav-turno small { font-size: 10px; font-weight: 700; letter-spacing: 0.3px; opacity: 0.85; }
+        .bv-nav-linea { flex: none; min-width: 34px; height: 34px; padding: 0 5px; box-sizing: border-box; border-radius: 17px; border: 2px solid; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; }
         .bv-nav-blocco { flex: 1; min-width: 0; }
-        .bv-nav-ora { font-size: 16px; font-weight: 800; color: var(--bv-text); line-height: 1.1; font-variant-numeric: tabular-nums; }
-        .bv-nav-luogo { font-size: 11px; font-weight: 600; color: var(--bv-muted); line-height: 1.15; margin-top: 1px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
-        .bv-nav-freccia { flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 3px; color: var(--bv-muted); font-size: 13px; }
-        .bv-nav-reb { font-size: 8px; font-weight: 800; color: #8b5cf6; }
-        .bv-nav-tag { font-size: 11px; font-weight: 600; color: var(--bv-muted); margin-bottom: 3px; }
-        .bv-nav-dest { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; color: var(--bv-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .bv-nav-msg { white-space: normal; font-size: 12px; font-weight: 600; color: var(--bv-muted); }
-        .bv-nav-pre { flex: none; font-size: 12px; font-weight: 800; color: var(--bv-primary); }
-        .bv-nav-pill { flex: none; font-size: 10px; font-weight: 800; padding: 3px 6px; border-radius: 6px; background: var(--bv-fill-2); color: var(--bv-muted); }
+        .bv-nav-ora { font-size: 21px; font-weight: 800; color: var(--bv-text); line-height: 1.1; font-variant-numeric: tabular-nums; }
+        .bv-nav-luogo { font-size: 14px; font-weight: 600; color: var(--bv-muted); line-height: 1.2; margin-top: 1px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+        .bv-nav-freccia { flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 5px; color: var(--bv-muted); font-size: 16px; }
+        .bv-nav-reb { font-size: 10px; font-weight: 800; color: #8b5cf6; }
+        .bv-nav-tag { font-size: 14px; font-weight: 600; color: var(--bv-muted); margin-bottom: 3px; }
+        .bv-nav-dest { flex: 1; min-width: 0; font-size: 17px; font-weight: 700; color: var(--bv-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bv-nav-msg { white-space: normal; font-size: 15px; font-weight: 600; color: var(--bv-muted); }
+        .bv-nav-pre { flex: none; font-size: 15px; font-weight: 800; color: var(--bv-primary); }
+        .bv-nav-pill { flex: none; font-size: 13px; font-weight: 800; padding: 4px 8px; border-radius: 6px; background: var(--bv-fill-2); color: var(--bv-muted); }
         .bv-nav-warn { color: var(--bv-warn-t); }
-        .bv-nav-fermata { display: flex; align-items: center; gap: 8px; padding: 5px 4px; margin: 0 -4px; font-size: 13px; color: var(--bv-text); }
+        .bv-nav-fermata { display: flex; align-items: center; gap: 8px; padding: 7px 4px; margin: 0 -4px; font-size: 17px; color: var(--bv-text); }
         .bv-nav-fermata.passata { opacity: 0.45; }
         .bv-nav-fermata.prossima { font-weight: 800; background: var(--bv-tint); border-radius: 6px; }
-        .bv-nav-punto { flex: none; width: 8px; height: 8px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--bv-primary); background: var(--bv-surface); }
+        .bv-nav-punto { flex: none; width: 10px; height: 10px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--bv-primary); background: var(--bv-surface); }
         .bv-nav-fnome { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .bv-nav-fora { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; }
         .bv-nav-fora.fine { color: var(--bv-primary); }
 
-        .bv-hud-status { position: absolute; top: calc(85px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 1500; background: rgba(0,0,0,0.6); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .bv-hud-status { position: absolute; top: calc(15px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 1500; background: rgba(0,0,0,0.6); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
 
         /* ---------- Pannello dettagli (unità e fermate) ---------- */
         #bv-drawer { position: absolute; top: calc(15px + env(safe-area-inset-top, 0px)); right: 15px; width: 360px; max-height: calc(100% - 30px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); background: var(--bv-surface); border: 1px solid var(--bv-border); border-radius: 18px; box-shadow: 0 10px 34px rgba(0,0,0,0.3); z-index: 1000; display: flex; flex-direction: column; overflow: hidden; opacity: 0; visibility: hidden; transform: translateX(24px); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease, visibility 0s linear 0.3s; }
@@ -379,6 +384,13 @@ export function initUIBateoLive() {
         .bv-dep-msg { margin-left: auto; font-size: 11px; font-weight: 600; }
         .bv-dep-time { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-variant-numeric: tabular-nums; }
         .bv-dep-time .bv-st-main { font-size: 16px; }
+        .bv-dep-live { flex: none; display: inline-flex; align-items: center; gap: 5px; margin-left: auto; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--bv-ok-t); }
+        .bv-dep-live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--bv-ok); box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.55); animation: bv-live-pulse 1.5s infinite; }
+        @keyframes bv-live-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.55); }
+            70% { box-shadow: 0 0 0 6px rgba(40, 167, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+        }
 
         /* ---------- Finestre (ricerca, filtri, unità) ---------- */
         .bv-modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); opacity: 0; transition: opacity 0.2s ease; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box; }
@@ -478,6 +490,7 @@ export function initUIBateoLive() {
         @media (prefers-reduced-motion: reduce) {
             #bv-drawer, #bv-drawer.open { transition: none; }
             .bv-st.corrente .bv-st-node { animation: none; }
+            .bv-dep-live-dot { animation: none; }
             .bv-fab-container .bv-fab, .bv-fab-container.chiuso .bv-fab, .bv-fab-menu i, .bv-tiles-osm { transition: none; }
             .bv-fab-tema i.swap { animation: none; }
         }
@@ -519,10 +532,12 @@ export function initUIBateoLive() {
                 <div id="bv-nav-act"></div>
             </div>
             <div class="bv-speed-wrapper">
+                <span id="bv-nav-turno-slot" class="bv-nav-turno-slot"></span>
                 <span id="bv-speed-val" class="bv-speed-val">0.0</span>
                 <span class="bv-speed-unit">km/h</span>
                 <span id="bv-nav-delay" class="bv-nav-delay spento" title="Ritardo / anticipo">--</span>
             </div>
+            <div id="bv-clock" class="bv-clock">--:--:--</div>
         </div>
 
         <!-- Tasti Fluttuanti (FAB) -->
@@ -683,6 +698,7 @@ export function initUIBateoLive() {
     window.indietroBateoLive = indietroBateoLive;
 
     document.getElementById('bv-nav-toggle').addEventListener('click', toggleListaFermate);
+    avviaOrologioHud();
     initRewindUI();
 
     document.getElementById('bv-search-input').addEventListener('input', async function(e) {
@@ -795,7 +811,33 @@ export async function avviaMotoreBateoLive(db, auth, userData, isAdmin) {
     await loadMapDependencies();
 
     if (!map) {
-        baseOSM = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, className: 'bv-tiles-osm' });
+        // OSM France: stesso stile di OSM ma senza i quadrati sbagliati in laguna.
+        // updateWhenIdle:false carica le tile anche mentre scorri (su mobile di default aspetta che ti fermi),
+        // keepBuffer più alto tiene in memoria più tile attorno alla vista
+        baseOSM = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+            maxZoom: 19, subdomains: 'abc', className: 'bv-tiles-osm',
+            updateWhenIdle: false, updateInterval: 100, keepBuffer: 4
+        });
+
+        // Fallback: se OSM France viene bloccato o smette di rispondere, la mappa passa
+        // alle tile OSM standard (quelle usate finora) senza intervento dell'utente.
+        const OSM_URL_FALLBACK = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+        let osmInFallback = false, osmErroriDiFila = 0;
+        baseOSM.on('tileload', () => { osmErroriDiFila = 0; });
+        baseOSM.on('tileerror', (e) => {
+            if (!navigator.onLine) return;                       // offline: inutile cambiare sorgente
+            const t = e.tile, c = e.coords;
+            // la tile fallita viene subito richiesta al fallback (una sola volta)
+            if (!t._bvFallback && !/tile\.openstreetmap\.org/.test(t.src)) {
+                t._bvFallback = true;
+                t.src = OSM_URL_FALLBACK.replace('{z}', c.z).replace('{x}', c.x).replace('{y}', c.y);
+            }
+            // dopo 4 errori consecutivi tutte le tile nuove vanno direttamente al fallback
+            if (!osmInFallback && ++osmErroriDiFila >= 4) {
+                osmInFallback = true;
+                baseOSM.setUrl(OSM_URL_FALLBACK, true);
+            }
+        });
         baseSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
         nauticLayer = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', { maxZoom: 18 });
 
@@ -1063,19 +1105,129 @@ function elaboraBvPosizioneGPS(position) {
 function inviaBvPosizionePersonale(lat, lon, speed, heading) {
     if (!currentUserId) return;
 
+    const body = {
+        id: currentUserId,
+        lat: lat,
+        lon: lon,
+        speed: speed,
+        heading: heading,
+        nome: customUnitName || '', // solo il nome unità: mai il nome dell'utente (privacy)
+        line: customLine || '',
+        nav: corsaCondivisa || null // ritardo e prossima fermata della corsa (senza turno)
+    };
+    // le fermate della corsa si mandano solo quando cambiano e, per sicurezza, ogni 30 s
+    if (corsaCondivisa && fermateCondivise) {
+        const adesso = Date.now();
+        if (ultimaStaticaInviata.k !== corsaCondivisa.k || adesso - ultimaStaticaInviata.ts > 30000) {
+            body.corsa = { k: corsaCondivisa.k, fermate: fermateCondivise.map(f => [f.nome, Math.round(f.arr), Math.round(f.dep)]) };
+            ultimaStaticaInviata = { k: corsaCondivisa.k, ts: adesso };
+        }
+    } else {
+        ultimaStaticaInviata = { k: null, ts: 0 };
+    }
+
     fetch(`${API_URL}/api/users/location`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            id: currentUserId,
-            lat: lat,
-            lon: lon,
-            speed: speed,
-            heading: heading,
-            nome: customUnitName || currentUserName,
-            line: customLine || ''
-        })
+        body: JSON.stringify(body)
     }).catch(err => console.error("Errore invio posizione:", err));
+}
+
+// ---- Finestra unità per i segnali degli altri utenti (corsa condivisa dal loro navigatore) ----
+// Mostra linea, prossima fermata, ritardo e fermate; mai il nome dell'utente né il suo turno.
+let ultimiUtenti = {};
+const corseUtenti = new Map(); // `${uid}|${k}` -> { stato: 'caricamento' | 'ok' | 'errore', fermate, ts }
+
+function bvBadgeRitardo(sec) {
+    return Number.isFinite(sec) ? getDelayBadge(sec) : '';
+}
+
+function renderUserDrawer(uid) {
+    const u = ultimiUtenti[uid];
+    if (!u) return;
+    activeSelection = { type: 'user', id: uid };
+    const c = u.corsa && u.corsa.k ? u.corsa : null;
+    const linea = String((c && c.linea) || u.line || '').trim();
+    const nome = u.nome ? String(u.nome).trim() : '';
+    const titolo = nome || (linea ? `Linea ${linea}` : 'Unità');
+    const opts = {
+        badge: linea ? bvDotLinea(linea) : '<span class="bv-dh-ico"><i class="fa-solid fa-ship"></i></span>',
+        sub: nome ? (linea ? `Linea ${linea}` : '') : 'Segnale utente',
+        focusKey: `user-${uid}-${c ? c.k : ''}`
+    };
+    if (!c) {
+        openBateoLiveDrawer(titolo, `<p class="bv-empty">Nessuna corsa condivisa al momento.</p>`, opts);
+        return;
+    }
+
+    const key = `${uid}|${c.k}`;
+    const entry = corseUtenti.get(key);
+    if (!entry) {
+        // una sola corsa per utente in cache: tolgo le vecchie
+        [...corseUtenti.keys()].forEach(k => { if (k.startsWith(uid + '|')) corseUtenti.delete(k); });
+        corseUtenti.set(key, { stato: 'caricamento' });
+        const fine = (voce) => {
+            corseUtenti.set(key, voce);
+            if (activeSelection && activeSelection.type === 'user' && activeSelection.id === uid) renderUserDrawer(uid);
+        };
+        fetch(`${API_URL}/api/users/${encodeURIComponent(uid)}/corsa?k=${encodeURIComponent(c.k)}`)
+            .then(r => r.ok ? r.json() : null)
+            .then(d => fine(d && Array.isArray(d.fermate) && d.fermate.length ? { stato: 'ok', fermate: d.fermate } : { stato: 'errore', ts: Date.now() }))
+            .catch(() => fine({ stato: 'errore', ts: Date.now() }));
+        openBateoLiveDrawer(titolo, `<p class="bv-empty">Caricamento…</p>`, opts);
+        return;
+    }
+    if (entry.stato === 'caricamento') {
+        openBateoLiveDrawer(titolo, `<p class="bv-empty">Caricamento…</p>`, opts);
+        return;
+    }
+    if (entry.stato === 'errore') {
+        if (Date.now() - entry.ts > 5000) corseUtenti.delete(key); // al prossimo aggiornamento riprova
+        openBateoLiveDrawer(titolo, `<p class="bv-empty err">Fermate non disponibili.</p>`, opts);
+        return;
+    }
+
+    const F = entry.fermate;               // [[nome, arrivo, partenza]] in secondi dal giorno del turno (orari programmati)
+    const ultimo = F.length - 1;
+    const idx = Math.min(Math.max(Math.trunc(c.idx) || 0, 0), ultimo);
+    const rit = Number.isFinite(c.ritardo) ? c.ritardo : null;
+    const fuoriOrario = rit != null && Math.abs(Math.round(rit / 60)) >= 1;
+    const arrivata = c.stato === 'arrivato';
+    const inSosta = c.stato === 'in fermata';
+    const orarioProg = (i) => (i === ultimo ? F[i][1] : F[i][2]);
+
+    let riepilogo;
+    if (arrivata) {
+        riepilogo = bvRiepilogo('Arrivata a', F[idx][0], bvBadgeRitardo(rit));
+    } else if (inSosta) {
+        riepilogo = bvRiepilogo('In sosta a', F[idx][0], bvBadgeRitardo(rit));
+    } else {
+        const ora = hhmm(orarioProg(idx) + (rit || 0));
+        riepilogo = bvRiepilogo('Prossima fermata' + (c.fuori ? ' · fuori percorso' : ''), F[idx][0], `<div class="bv-sum-time">${ora}</div>${bvBadgeRitardo(rit)}`);
+    }
+
+    const riga = (etichetta, t) => bvRigaOrario(etichetta, `<b class="bv-st-main">${hhmm(t)}</b>`);
+    let html = `<div class="bv-timeline-title">Percorso corsa attuale</div><div class="bv-tl">`;
+    F.forEach((f, i) => {
+        const passata = i < idx || (arrivata && i === idx);
+        const corrente = !passata && inSosta && i === idx;
+        const stato = passata ? 'PASSED' : corrente ? 'CURRENT' : 'FUTURE';
+        let orari;
+        if (stato === 'FUTURE') {
+            const t = orarioProg(i);
+            orari = fuoriOrario
+                ? bvRigaOrario('', `<span class="bv-st-strike">${hhmm(t)}</span><b class="bv-st-main bv-st-big">${hhmm(t + rit)}</b>`)
+                : bvRigaOrario('', `<b class="bv-st-main bv-st-big">${hhmm(t)}</b>`);
+        } else {
+            orari = riga('Arrivo', f[1]);
+            if (corrente) orari += bvRigaOrario('Partenza', `<b class="bv-st-main bv-st-here">In sosta…</b>`);
+            else if (i !== ultimo) orari += riga('Partenza', f[2]);
+        }
+        const badge = stato === 'PASSED' ? '' : bvBadgeRitardo(rit);
+        html += bvRigaFermata(stato, (inSosta || !arrivata) && i === idx ? ' prossima' : '', f[0], orari, badge);
+    });
+    html += `</div>`;
+    openBateoLiveDrawer(titolo, html, { ...opts, pinned: riepilogo });
 }
 
 async function sincronizzaPosizioneAltriUtenti() {
@@ -1124,23 +1276,34 @@ async function sincronizzaPosizioneAltriUtenti() {
                 popupContent = `<div style="text-align:center;"><b>${bvEsc(u.nome)}</b><br>Velocità: ${parseFloat(u.speed || 0).toFixed(1)} km/h</div>`;
             }
 
+            // con la corsa condivisa il tocco apre la finestra unità; altrimenti resta il popup con la velocità
+            ultimiUtenti[uid] = u;
+            const conCorsa = !!(u.corsa && u.corsa.k);
             if (otherUsersMarkers[uid]) {
-                otherUsersMarkers[uid].setLatLng([u.lat, u.lon]);
-                otherUsersMarkers[uid].setIcon(icon);
-                if (otherUsersMarkers[uid].getPopup()) {
-                    otherUsersMarkers[uid].getPopup().setContent(popupContent);
-                }
+                const m = otherUsersMarkers[uid];
+                m.setLatLng([u.lat, u.lon]);
+                m.setIcon(icon);
+                if (conCorsa) { if (m.getPopup()) m.unbindPopup(); }
+                else if (m.getPopup()) m.getPopup().setContent(popupContent);
+                else m.bindPopup(popupContent);
             } else {
                 const marker = L.marker([u.lat, u.lon], { icon: icon }).addTo(map);
-                marker.bindPopup(popupContent);
+                if (!conCorsa) marker.bindPopup(popupContent);
+                marker.on('click', () => {
+                    const cu = ultimiUtenti[uid];
+                    if (cu && cu.corsa && cu.corsa.k) renderUserDrawer(uid);
+                });
                 otherUsersMarkers[uid] = marker;
             }
+            if (activeSelection && activeSelection.type === 'user' && activeSelection.id === uid) renderUserDrawer(uid);
         });
 
         Object.keys(otherUsersMarkers).forEach(uid => {
             if (!activeIds.includes(uid)) {
                 map.removeLayer(otherUsersMarkers[uid]);
                 delete otherUsersMarkers[uid];
+                delete ultimiUtenti[uid];
+                if (activeSelection && activeSelection.type === 'user' && activeSelection.id === uid) closeBateoLiveDrawer();
             }
         });
 
@@ -1174,6 +1337,7 @@ function chiudiBateoLive() {
     if (watchId) navigator.geolocation.clearWatch(watchId);
     document.getElementById('bv-hud-compass').style.display = 'none';
     document.getElementById('bv-hud-speed').style.display = 'none';
+    fermaOrologioHud();
     document.getElementById('bv-fab-center').style.display = 'none';
     document.getElementById('bv-fab-rotate').style.display = 'none';
     document.getElementById('bv-fab-nav').style.display = 'none';
@@ -1342,6 +1506,12 @@ function eseguiBateoLiveSearch() {
         btn.innerText = "Cerca";
         btn.classList.remove("error");
     }, 2000);
+}
+
+// true se la corsa è accoppiata a un'unità live che locateBateoLiveBoat() può mostrare
+function bvCorsaConUnita(staticTripId, liveBoatId) {
+    if (liveBoatId && globalBoats.some(b => b.id === liveBoatId)) return true;
+    return globalBoats.some(b => b.tripId === staticTripId);
 }
 
 function locateBateoLiveBoat(staticTripId, liveBoatId) {
@@ -1532,6 +1702,7 @@ async function renderStopDrawer(stop) {
                         <div class="bv-dep-dest" title="${dest}">${dest}</div>
                         <div class="bv-dep-sub">${stato}<span id="msg-${arr.tripId}" class="bv-dep-msg"></span></div>
                     </div>
+                    ${bvCorsaConUnita(arr.tripId, arr.liveBoatId) ? '<span class="bv-dep-live" title="Unità accoppiata: tocca per vederla in mappa"><span class="bv-dep-live-dot"></span>live</span>' : ''}
                     <div class="bv-dep-time">${timeHtml}${badgeHtml}</div>
                 </div>`;
             });
@@ -1963,6 +2134,16 @@ let ritardoSmussato = null;
 let firmaLista = '';
 let listaAperta = false;
 let htmlAttPrecedente = '';
+// Dati della corsa condivisi con gli altri utenti (mai nome utente né codice turno):
+// corsaCondivisa = stato dinamico a ogni invio; fermateCondivise = fermate della corsa, inviate solo quando cambiano.
+let corsaCondivisa = null;
+let fermateCondivise = null;
+let ultimaStaticaInviata = { k: null, ts: 0 };
+function hashCorsa(s) {
+    let h = 5381;
+    for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+    return (h >>> 0).toString(36);
+}
 
 let rottaLayer = null;                 // rotta della linea sulla mappa
 let rottaKey = null;
@@ -2254,11 +2435,11 @@ function pillTurnoNav() {
 }
 
 function htmlMessaggioNav(testo) {
-    return `<div class="bv-nav-act-row">${pillTurnoNav()}<span class="bv-nav-dest bv-nav-msg">${testo}</span></div>`;
+    return `<div class="bv-nav-act-row"><span class="bv-nav-dest bv-nav-msg">${testo}</span></div>`;
 }
 
 function htmlAttivitaNav(act, tipo, direzione, nowMin) {
-    // a sinistra turno e linea impilati; a destra orario e luogo di partenza → arrivo (il luogo va a capo, non si taglia)
+    // a sinistra la linea (il turno sta a sinistra della velocità); a destra orario e luogo di partenza → arrivo (il luogo va a capo, non si taglia)
     let sinistra;
     if (eCorsa(act)) sinistra = badgeLineaNav(lineaDellAttivita(act, nowMin));
     else sinistra = `<span class="bv-nav-pill">${esc(act.tipo || 'Attività')}</span>`;
@@ -2266,7 +2447,7 @@ function htmlAttivitaNav(act, tipo, direzione, nowMin) {
     const blocco = (ora, luogo) => `<div class="bv-nav-blocco"><div class="bv-nav-ora">${esc(ora)}</div><div class="bv-nav-luogo">${esc(luogo || '')}</div></div>`;
     const tag = tipo === 'prossima' ? '<div class="bv-nav-tag">Prossima attività</div>' : '';
     return `${tag}<div class="bv-nav-act-row">
-        <div class="bv-nav-id">${pillTurnoNav()}${sinistra}</div>
+        ${sinistra}
         ${blocco(act.partenza, act.da)}
         <div class="bv-nav-freccia"><i class="fa-solid fa-arrow-right-long"></i>${reb}</div>
         ${blocco(act.arrivo, act.a)}
@@ -2274,6 +2455,10 @@ function htmlAttivitaNav(act, tipo, direzione, nowMin) {
 }
 
 function impostaAttivitaNav(html) {
+    // il turno sta a sinistra della velocità, fuori dal riquadro attività
+    const slotTurno = navEl('bv-nav-turno-slot');
+    const pillTurno = pillTurnoNav();
+    if (slotTurno && slotTurno.innerHTML !== pillTurno) slotTurno.innerHTML = pillTurno;
     if (html === htmlAttPrecedente) return;
     htmlAttPrecedente = html;
     navEl('bv-nav-act').innerHTML = html;
@@ -2412,7 +2597,7 @@ function renderNavigatore() {
     if (!gpsAttivo) return;
 
     const messaggio = (testo) => {
-        customLine = '';
+        customLine = ''; corsaCondivisa = null; fermateCondivise = null;
         impostaAttivitaNav(htmlMessaggioNav(testo));
         mostraProssima(false);
         disegnaRitardoNav(null);
@@ -2441,6 +2626,7 @@ function renderNavigatore() {
 
     // linea comunicata agli altri: solo durante la corsa
     customLine = (tipo === 'in corso' && eCorsa(act)) ? lineaDellAttivita(act, nowMin) : '';
+    corsaCondivisa = null; fermateCondivise = null;
 
     impostaAttivitaNav(htmlAttivitaNav(act, tipo, serve && percorsoStato === 'ok' ? direzioneCorsa : '', nowMin));
 
@@ -2460,6 +2646,10 @@ function renderNavigatore() {
             nav = trovaProssimaDaOrario(percorso, nowSec);
         }
         disegnaProssimaNav(nav, tipo === 'in corso' && gpsPos.fuori);
+        if (tipo === 'in corso' && eCorsa(act)) {
+            corsaCondivisa = { k: hashCorsa(String(attKey)), linea: customLine, idx: nav.idx, stato: nav.stato, ritardo: ritardo == null ? null : Math.round(ritardo), fuori: !!gpsPos.fuori };
+            fermateCondivise = percorso.fermate;
+        }
     } else if (serve && percorsoStato === 'errore') {
         mostraProssima(true, 'Fermate non disponibili');
     } else if (serve) {
@@ -2479,11 +2669,48 @@ function tickNavigatore() {
 }
 
 function azzeraStatoNavigatore() {
-    turnoCorrente = null; oraRif = null;
+    turnoCorrente = null; oraRif = null; corsaCondivisa = null; fermateCondivise = null;
     attKey = null; percorso = null; percorsoStato = 'nessuno'; direzioneCorsa = ''; lineaCorsa = '';
     tokenPercorso++;
     minimoFermata = 0; ritardoSmussato = null; firmaLista = ''; htmlAttPrecedente = '';
     gpsPos = { lat: null, lon: null, acc: null, vel: null, along: null, scarto: null, ts: 0, fuori: false, ritardoIstantaneo: 0 };
+}
+
+// ---------------------------------------------------------------- orologio sotto la velocità e spazio per i tasti
+// L'orologio (ore:minuti:secondi, ora del dispositivo) gira solo finché il modulo è aperto.
+// Con il navigatore a tutta larghezza i tasti in basso a sinistra salgono sopra il riquadro: la sua altezza
+// (che cambia quando si apre la tendina delle fermate) arriva al CSS tramite la variabile --bv-hud-h.
+let orologioTimer = null, hudObserver = null;
+
+function aggiornaOrologio() {
+    const el = document.getElementById('bv-clock');
+    if (!el) return;
+    const t = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+    if (el.textContent !== t) el.textContent = t;
+}
+
+function aggiornaSpazioHud() {
+    const hud = document.getElementById('bv-hud-speed'), root = document.getElementById('modal-bateolive-main');
+    if (!hud || !root) return;
+    const h = hud.offsetHeight;
+    const pieno = h > 0 && hud.classList.contains('nav-on');
+    root.classList.toggle('hud-nav', pieno);
+    root.style.setProperty('--bv-hud-h', pieno ? h + 'px' : '0px');
+}
+
+function avviaOrologioHud() {
+    aggiornaOrologio();
+    if (!orologioTimer) orologioTimer = setInterval(aggiornaOrologio, 250);
+    const hud = document.getElementById('bv-hud-speed');
+    if (hud && typeof ResizeObserver === 'function' && !hudObserver) {
+        hudObserver = new ResizeObserver(aggiornaSpazioHud);
+        hudObserver.observe(hud);
+    }
+}
+
+function fermaOrologioHud() {
+    if (orologioTimer) { clearInterval(orologioTimer); orologioTimer = null; }
+    if (hudObserver) { hudObserver.disconnect(); hudObserver = null; }
 }
 
 // chiamata quando si accende il GPS: il tasto fa-route parte attivo

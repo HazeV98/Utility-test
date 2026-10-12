@@ -5,6 +5,7 @@ import {
     DATA_INIZIO_NUOVI_TURNI, dateToLocalISO, stringToNum, creaDataSicura, convertiTurnoPerMansione,
     isGiornoRiposoBase, trovaChiaveEsatta, cachePerData, calcolaTurnoBase, ferieDelGiorno, caricaDatiTurni
 } from "./turni-core.js"; // logica turni condivisa con dashboard e gps: va importato sempre con questo stesso percorso
+import { apriTurno } from "./turno-view.js"; // finestra con tutti i dati del turno (condivisa con dashboard e turni)
 
 const firebaseConfig = {
     apiKey: "AIzaSyDpamGt2bsT6TJMwnerIUTSfCVFBTJtos4",
@@ -117,6 +118,7 @@ let imgBaseFallback = "";
 let pzInstance = null; 
 let tempColoreAltro = "";
 let variantiData = {};
+let turnoViewCtx = null; // { codice, data, variante } del giorno aperto: lo usa il pulsante "dettagli turno"
 
 // --- FUNZIONI MENU DESTRO E MODIFICA MULTIPLA ---
 function apriMenuDestro() {
@@ -502,7 +504,7 @@ async function apriDettaglioGiornoCollega(date) {
         document.getElementById('modalDateCollega').innerText = formattaData(date);
         document.getElementById('infoTurniAreaCollega').innerHTML = htmlInfo;
 
-        const btnImmagine = document.getElementById('btnVisualizzaTurnoCollega');
+        const azioniTurno = document.getElementById('azioniTurnoCollega');
         let isRiposo = (codiceBase === 'RI' || codiceBase === 'RIPOSO' || codiceBase === 'AL');
 
         if (!isRiposo && codiceBase && codiceBase !== 'DISP' && codiceBase !== 'NESSUN TURNO') {
@@ -519,11 +521,13 @@ async function apriDettaglioGiornoCollega(date) {
                 currentImagePath = `turni_${dataAttiva}/${codiceBase}.jpg`;
                 imgBaseFallback = "";
             }
-            btnImmagine.style.display = 'block';
+            azioniTurno.style.display = 'flex';
+            turnoViewCtx = { codice: codiceBase, data: date, variante: giornoHaVarianti(date) };
         } else {
             currentImagePath = "";
             imgBaseFallback = "";
-            btnImmagine.style.display = 'none';
+            azioniTurno.style.display = 'none';
+            turnoViewCtx = null;
         }
     } catch(e) {
         console.error("Errore dettaglio turno collega:", e);
@@ -568,6 +572,29 @@ function salvaMansione() {
 }
 
 // --- GESTIONE FERIE PROGRAMMATE ---
+let tempFerieColore = "";
+
+function aggiornaSelezioneColoreFerie() {
+    document.querySelectorAll('#ferieColoreContainer .color-circle').forEach(c => {
+        c.classList.toggle('selected', (c.getAttribute('data-color') || "") === tempFerieColore);
+    });
+}
+
+function selezionaColoreFerie(hex, el) {
+    tempFerieColore = hex || "";
+    aggiornaSelezioneColoreFerie();
+}
+
+function eventoFerie(titolo, dStr) {
+    let colore = state.ferie && state.ferie.colore;
+    if (!colore) return { title: titolo, start: dStr, allDay: true, className: 'bg-ferie', myOrder: 1 };
+    return {
+        title: titolo, start: dStr, allDay: true, className: 'bg-ferie-custom', myOrder: 1,
+        backgroundColor: colore, borderColor: colore,
+        textColor: (colore === '#f1c40f') ? '#32325d' : '#ffffff'
+    };
+}
+
 function apriFerieModal() {
     chiudiMenuDestro();
     let estSelect = document.getElementById('ferieEstiveBase');
@@ -596,6 +623,9 @@ function apriFerieModal() {
 
     document.getElementById('ferieScambioAnno').addEventListener('change', (e) => aggiornaScambiUI(e.target.value));
     
+    tempFerieColore = state.ferie?.colore || "";
+    aggiornaSelezioneColoreFerie();
+
     switchFerieTab('base');
     document.getElementById('ferieModal').style.display = 'block';
 }
@@ -647,6 +677,7 @@ function salvaFerie() {
     state.ferie.baseAnno = annoBase;
     state.ferie.baseEstiva = parseInt(document.getElementById('ferieEstiveBase').value);
     state.ferie.baseInvernale = parseInt(document.getElementById('ferieInvernaliBase').value);
+    if (tempFerieColore) state.ferie.colore = tempFerieColore; else delete state.ferie.colore;
 
     let annoScambio = document.getElementById('ferieScambioAnno').value;
     if (annoScambio) {
@@ -1422,7 +1453,9 @@ async function inizializzaApp() {
         state.ferie = { version: VERSIONE_FERIE, scambi: {} };
     } else if (state.ferie.version !== VERSIONE_FERIE) {
         let avevaConfigurato = state.ferie.baseAnno !== undefined;
+        let coloreFerieSalvato = state.ferie.colore;
         state.ferie = { version: VERSIONE_FERIE, scambi: {} };
+        if (coloreFerieSalvato) state.ferie.colore = coloreFerieSalvato;
         let boost = new Date().getTime() + 5000;
         salvaLocal(boost);
         if (avevaConfigurato) {
@@ -1779,7 +1812,7 @@ async function gestisciInterazione(date) {
         infoArea.style.display = "block"; 
         popolaCambio();
         
-        const btnImmagine = document.getElementById('btnVisualizzaTurno'); 
+        const azioniTurno = document.getElementById('azioniTurno'); 
         let isRiposo = (codiceBase === 'RI' || codiceBase === 'RIPOSO' || codiceBase === 'AL');
         
         if (!isRiposo && codiceBase !== 'DISP' && codiceBase !== 'NESSUN TURNO') {
@@ -1796,11 +1829,13 @@ async function gestisciInterazione(date) {
                 currentImagePath = `turni_${dataAttiva}/${codiceBase}.jpg`; 
                 imgBaseFallback = ""; 
             }
-            btnImmagine.style.display = 'block';
+            azioniTurno.style.display = 'flex';
+            turnoViewCtx = { codice: codiceBase, data: date, variante: giornoHaVarianti(date) };
         } else { 
             currentImagePath = ""; 
             imgBaseFallback = ""; 
-            btnImmagine.style.display = 'none'; 
+            azioniTurno.style.display = 'none';
+            turnoViewCtx = null; 
         }
         document.getElementById('editModal').style.display = 'block';
     }
@@ -1917,6 +1952,16 @@ function salvaAltro() {
     }
     
     salvaERicarica(); 
+}
+
+function giornoHaVarianti(date) {
+    return !!(AVVISO_VARIANTI && variantiData && Object.prototype.hasOwnProperty.call(variantiData, date));
+}
+
+// Pulsante "lista": finestra con tutti i dati del turno; il suo pulsante immagine riusa il visualizzatore del calendario
+function apriDettaglioTurnoView() {
+    if (!turnoViewCtx) return;
+    apriTurno({ ...turnoViewCtx, apriImmagine: apriImmagineTurno });
 }
 
 function apriImmagineTurno() { 
@@ -2206,7 +2251,7 @@ function calcolaTurni(vistaStartObj = null, vistaEndObj = null) {
         
         let ferieAssegnate = getFerieGiorno(dStr); 
         if (ferieAssegnate) { 
-            evs.push({ title: ferieAssegnate, start: dStr, allDay: true, className: 'bg-ferie', myOrder: 1 }); 
+            evs.push(eventoFerie(ferieAssegnate, dStr)); 
         }
         
         let customColor = (state.colori && state.colori[dStr]) ? state.colori[dStr] : null;
@@ -2315,7 +2360,7 @@ function calcolaTurni(vistaStartObj = null, vistaEndObj = null) {
         if (currMod >= startNum && currMod < endNum && !processati.has(dStr)) {
             let ferieAssegnate = getFerieGiorno(dStr); 
             if (ferieAssegnate) { 
-                evs.push({ title: ferieAssegnate, start: dStr, allDay: true, className: 'bg-ferie', myOrder: 1 }); 
+                evs.push(eventoFerie(ferieAssegnate, dStr)); 
             }
             
             let customColor = (state.colori && state.colori[dStr]) ? state.colori[dStr] : null;
@@ -2753,7 +2798,7 @@ function inizializzaCalendario() {
         height: 'auto', 
         eventOrder: 'myOrder', 
         buttonText: { today: 'Oggi' }, 
-        customButtons: { btnSalto: { text: '🔍', click: apriJumpModal } }, 
+        customButtons: { btnSalto: { text: '\uf002', click: apriJumpModal } }, 
         headerToolbar: { left: 'prev,next', center: 'title', right: 'btnSalto today' }, 
         eventContent: function(arg) {
             return { html: arg.event.title };
@@ -2777,6 +2822,7 @@ window.apriFerieModal = apriFerieModal;
 window.switchFerieTab = switchFerieTab;
 window.chiudiFerieModal = chiudiFerieModal;
 window.salvaFerie = salvaFerie;
+window.selezionaColoreFerie = selezionaColoreFerie;
 window.resetFerie = resetFerie;
 window.elaboraPdfBibbia = elaboraPdfBibbia;
 window.chiudiPdfSyncModal = chiudiPdfSyncModal;
@@ -2809,6 +2855,7 @@ window.togglePermessoSPAltro = togglePermessoSPAltro;
 window.selezionaColoreAltro = selezionaColoreAltro;
 window.salvaAltro = salvaAltro;
 window.apriImmagineTurno = apriImmagineTurno;
+window.apriDettaglioTurnoView = apriDettaglioTurnoView;
 window.chiudiImageModal = chiudiImageModal;
 window.chiudiSeSfondo = chiudiSeSfondo;
 window.chiudiEditSeSfondo = chiudiEditSeSfondo;

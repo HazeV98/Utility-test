@@ -10,6 +10,8 @@ import {
     turnoEffettivo, unisciRebecchini, ferieDelGiorno, haVarianti, caricaDatiTurni
 } from "./turni-core.js"; // va importato sempre con questo stesso percorso (vedi turni-core.js)
 
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js"; // stessa versione del calendario: così le istanze sono compatibili
+
 const API_URL = 'https://api.bateolive.stream';
 let globalBoats = []; 
 let globalStops = [];
@@ -188,14 +190,14 @@ export function initUINavigatore() {
         .nav-fab { font-size: 18px; }
         .nav-fab.active { background: var(--bv-primary); border-color: var(--bv-primary); color: #fff; }
         .nav-fab:hover { transform: scale(1.05); }
-        .nav-fab-container { position: absolute; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); left: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 15px; pointer-events: none; }
+        .nav-fab-container { position: absolute; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); left: 20px; z-index: 1000; display: flex; flex-direction: column; flex-wrap: wrap; justify-content: flex-end; max-height: calc(100% - 165px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); gap: 15px; pointer-events: none; }
         .nav-fab-container .nav-fab { pointer-events: auto; opacity: 1; transform: none; transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.15), opacity 0.22s ease, background 0.2s, color 0.2s; }
         .nav-fab-container.chiuso .nav-fab { opacity: 0; transform: translateY(26px) scale(0.5); pointer-events: none; transition: transform 0.22s ease-in, opacity 0.18s ease, background 0.2s, color 0.2s; }
         .nav-fab-container:not(.chiuso) .nav-fab:hover { transform: scale(1.05); }
         .nav-fab-menu { position: absolute; bottom: calc(30px + env(safe-area-inset-bottom, 0px)); left: 20px; z-index: 1000; font-size: 18px; }
         .nav-fab-menu i { transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
         .nav-fab-menu.active i { transform: rotate(135deg); }
-        .hud-compass-container { position: absolute; top: calc(15px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); width: 250px; height: 60px; background: var(--bv-glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid var(--bv-border); box-shadow: var(--bv-shadow); overflow: hidden; z-index: 1000; align-items: center; justify-content: center; display: none; }
+        .hud-compass-container { display: none !important; position: absolute; top: calc(15px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); width: 250px; height: 60px; background: var(--bv-glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid var(--bv-border); box-shadow: var(--bv-shadow); overflow: hidden; z-index: 1000; align-items: center; justify-content: center; display: none; }
         .compass-tape { position: absolute; top: 10px; left: 0; height: 100%; display: flex; transition: transform 0.15s linear; }
         .compass-mark { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; width: 60px; flex-shrink: 0; }
         .tick { width: 2px; height: 8px; background: var(--bv-muted); opacity: 0.7; margin-bottom: 4px; border-radius: 2px; }
@@ -208,51 +210,56 @@ export function initUINavigatore() {
         .speed-val { font-size: 42px; font-weight: 900; color: var(--bv-primary); line-height: 0.9; font-variant-numeric: tabular-nums; }
         .speed-unit { font-size: 16px; font-weight: bold; color: var(--bv-muted); }
         .hud-speed-container [hidden] { display: none !important; }
-        .hud-speed-container.nav-on { width: min(290px, calc(100vw - 110px)); box-sizing: border-box; padding: 8px 12px 10px; }
+        .hud-speed-container.nav-on { left: 0; right: 0; bottom: 0; width: auto; box-sizing: border-box; padding: 14px 18px calc(16px + env(safe-area-inset-bottom, 0px)); border-radius: 22px 22px 0 0; border-width: 1px 0 0 0; }
+        #modal-navigatore-main.hud-nav .nav-fab-menu { bottom: calc(var(--bv-hud-h, 0px) + 14px); }
+        #modal-navigatore-main.hud-nav .nav-fab-container { bottom: calc(var(--bv-hud-h, 0px) + 74px); max-height: calc(100% - var(--bv-hud-h, 0px) - 149px - env(safe-area-inset-top, 0px)); }
+        .nvg-clock { display: none; margin-top: 6px; text-align: center; font-size: 17px; font-weight: 800; color: var(--bv-muted); font-variant-numeric: tabular-nums; letter-spacing: 0.5px; line-height: 1; }
+        .hud-speed-container.nav-on .nvg-clock { display: block; text-align: left; font-size: 24px; color: var(--bv-text); margin-top: 8px; }
         .hud-speed-container.nav-on .speed-wrapper { justify-content: flex-start; }
-        .hud-speed-container.nav-on .speed-val { font-size: 36px; }
-        .nvg-extra { display: none; flex-direction: column; gap: 6px; margin-bottom: 6px; }
+        .nvg-turno-slot { display: none; align-self: center; }
+        .hud-speed-container.nav-on .nvg-turno-slot { display: flex; }
+        .hud-speed-container.nav-on .speed-val { font-size: 46px; }
+        .nvg-extra { display: none; flex-direction: column; gap: 8px; margin-bottom: 8px; }
         .hud-speed-container.nav-on .nvg-extra { display: flex; }
-        .nvg-delay { display: none; margin-left: auto; font-size: 30px; font-weight: 900; line-height: 0.9; font-variant-numeric: tabular-nums; padding-left: 10px; border-left: 1px solid var(--bv-border); }
+        .nvg-delay { display: none; margin-left: auto; font-size: 38px; font-weight: 900; line-height: 0.9; font-variant-numeric: tabular-nums; padding-left: 10px; border-left: 1px solid var(--bv-border); }
         .hud-speed-container.nav-on .nvg-delay { display: inline-block; }
         .nvg-delay.tardi { color: var(--bv-bad-t); }
         .nvg-delay.presto { color: var(--bv-warn-t); }
         .nvg-delay.puntuale { color: var(--bv-ok-t); }
         .nvg-delay.spento { color: var(--bv-muted); opacity: 0.7; }
-        .nvg-lista { display: none; position: relative; max-height: 34vh; overflow-y: auto; border-bottom: 1px solid var(--bv-border); padding-bottom: 4px; }
+        .nvg-lista { display: none; position: relative; max-height: 40vh; overflow-y: auto; border-bottom: 1px solid var(--bv-border); padding-bottom: 4px; }
         .nvg-lista.aperta { display: block; }
-        .nvg-toggle { width: 100%; border: none; background: transparent; color: var(--bv-primary); font-size: 15px; line-height: 1; padding: 2px 0; cursor: pointer; }
+        .nvg-toggle { width: 100%; border: none; background: transparent; color: var(--bv-primary); font-size: 18px; line-height: 1; padding: 4px 0; cursor: pointer; }
         .nvg-toggle i { transition: transform 0.25s; }
         .nvg-toggle.aperto i { transform: rotate(180deg); }
         .nvg-next { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .nvg-next-txt { flex: 1; min-width: 0; }
-        .nvg-next-label { font-size: 11px; font-weight: 600; color: var(--bv-muted); }
-        .nvg-next-nome { font-size: 15px; font-weight: 800; color: var(--bv-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .nvg-next-ora { flex: none; font-size: 20px; font-weight: 900; color: var(--bv-primary); font-variant-numeric: tabular-nums; }
+        .nvg-next-label { font-size: 14px; font-weight: 600; color: var(--bv-muted); }
+        .nvg-next-nome { font-size: 20px; font-weight: 800; color: var(--bv-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .nvg-next-ora { flex: none; font-size: 26px; font-weight: 900; color: var(--bv-primary); font-variant-numeric: tabular-nums; }
         .nvg-act-row { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
-        .nvg-turno { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 36px; height: 26px; padding: 0 4px; box-sizing: border-box; border-radius: 6px; background: var(--bv-primary); color: #fff; font-size: 12px; font-weight: 800; line-height: 1; }
-        .nvg-turno small { font-size: 8px; font-weight: 700; letter-spacing: 0.3px; opacity: 0.85; }
-        .nvg-linea { flex: none; min-width: 26px; height: 26px; padding: 0 4px; box-sizing: border-box; border-radius: 13px; border: 2px solid; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
-        .nvg-id { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .nvg-turno { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 46px; height: 34px; padding: 0 5px; box-sizing: border-box; border-radius: 8px; background: var(--bv-primary); color: #fff; font-size: 15px; font-weight: 800; line-height: 1; }
+        .nvg-turno small { font-size: 10px; font-weight: 700; letter-spacing: 0.3px; opacity: 0.85; }
+        .nvg-linea { flex: none; min-width: 34px; height: 34px; padding: 0 5px; box-sizing: border-box; border-radius: 17px; border: 2px solid; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; }
         .nvg-blocco { flex: 1; min-width: 0; }
-        .nvg-ora { font-size: 16px; font-weight: 800; color: var(--bv-text); line-height: 1.1; font-variant-numeric: tabular-nums; }
-        .nvg-luogo { font-size: 11px; font-weight: 600; color: var(--bv-muted); line-height: 1.15; margin-top: 1px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
-        .nvg-freccia { flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 3px; color: var(--bv-muted); font-size: 13px; }
-        .nvg-reb { font-size: 8px; font-weight: 800; color: #8b5cf6; }
-        .nvg-tag { font-size: 11px; font-weight: 600; color: var(--bv-muted); margin-bottom: 3px; }
-        .nvg-dest { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; color: var(--bv-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .nvg-msg { white-space: normal; font-size: 12px; font-weight: 600; color: var(--bv-muted); }
-        .nvg-pre { flex: none; font-size: 12px; font-weight: 800; color: var(--bv-primary); }
-        .nvg-pill { flex: none; font-size: 10px; font-weight: 800; padding: 3px 6px; border-radius: 6px; background: var(--bv-fill-2); color: var(--bv-muted); }
+        .nvg-ora { font-size: 21px; font-weight: 800; color: var(--bv-text); line-height: 1.1; font-variant-numeric: tabular-nums; }
+        .nvg-luogo { font-size: 14px; font-weight: 600; color: var(--bv-muted); line-height: 1.2; margin-top: 1px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+        .nvg-freccia { flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 5px; color: var(--bv-muted); font-size: 16px; }
+        .nvg-reb { font-size: 10px; font-weight: 800; color: #8b5cf6; }
+        .nvg-tag { font-size: 14px; font-weight: 600; color: var(--bv-muted); margin-bottom: 3px; }
+        .nvg-dest { flex: 1; min-width: 0; font-size: 17px; font-weight: 700; color: var(--bv-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .nvg-msg { white-space: normal; font-size: 15px; font-weight: 600; color: var(--bv-muted); }
+        .nvg-pre { flex: none; font-size: 15px; font-weight: 800; color: var(--bv-primary); }
+        .nvg-pill { flex: none; font-size: 13px; font-weight: 800; padding: 4px 8px; border-radius: 6px; background: var(--bv-fill-2); color: var(--bv-muted); }
         .nvg-warn { color: var(--bv-warn-t); }
-        .nvg-fermata { display: flex; align-items: center; gap: 8px; padding: 5px 4px; margin: 0 -4px; font-size: 13px; color: var(--bv-text); }
+        .nvg-fermata { display: flex; align-items: center; gap: 8px; padding: 7px 4px; margin: 0 -4px; font-size: 17px; color: var(--bv-text); }
         .nvg-fermata.passata { opacity: 0.45; }
         .nvg-fermata.prossima { font-weight: 800; background: var(--bv-tint); border-radius: 6px; }
-        .nvg-punto { flex: none; width: 8px; height: 8px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--bv-primary); background: var(--bv-surface); }
+        .nvg-punto { flex: none; width: 10px; height: 10px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--bv-primary); background: var(--bv-surface); }
         .nvg-fnome { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .nvg-fora { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; }
         .nvg-fora.fine { color: var(--bv-primary); }
-        .hud-status { position: absolute; top: calc(85px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 1500; background: rgba(0,0,0,0.6); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .hud-status { position: absolute; top: calc(15px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 1500; background: rgba(0,0,0,0.6); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .nav-submodal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); opacity: 0; transition: opacity 0.2s ease; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box; }
         .nav-submodal-overlay.active { display: flex; opacity: 1; }
         .nav-submodal { background: var(--bv-surface); color: var(--bv-text); padding: 20px; border-radius: 18px; border: 1px solid var(--bv-border); width: 90%; max-width: 320px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 10px 34px rgba(0,0,0,0.35); position: relative; }
@@ -333,10 +340,12 @@ export function initUINavigatore() {
                 <div id="nvg-act"></div>
             </div>
             <div class="speed-wrapper">
+                <span id="nvg-turno-slot" class="nvg-turno-slot"></span>
                 <span id="speed-val" class="speed-val">0.0</span>
                 <span class="speed-unit">km/h</span>
                 <span id="nvg-delay" class="nvg-delay spento" title="Ritardo / anticipo">--</span>
             </div>
+            <div id="nvg-clock" class="nvg-clock">--:--:--</div>
         </div>
 
         <div class="nav-fab-container chiuso">
@@ -471,6 +480,7 @@ export function initUINavigatore() {
     window.toggleNavMenu = toggleNavMenu;
 
     document.getElementById('nvg-toggle').addEventListener('click', toggleListaFermate);
+    avviaOrologioHud();
 }
 
 // ==========================================
@@ -563,6 +573,8 @@ export async function avviaMotoreNavigatore(db, auth, userData) {
     currentUserId = (auth && auth.currentUser) ? auth.currentUser.uid : 'user_' + Math.random().toString(36).substr(2, 9);
     currentUserName = (userData && userData.nome) ? userData.nome : "Collega";
     userMansione = (userData && userData.mansione) || null;
+    firestoreTurni.db = db || null;
+    firestoreTurni.auth = auth || null;
 
     initUINavigatore();
     document.getElementById('modal-navigatore-main').style.display = 'flex';
@@ -571,7 +583,33 @@ export async function avviaMotoreNavigatore(db, auth, userData) {
     await loadMapDependencies();
     
     if (!map) {
-        baseOSM = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, className: 'nav-tiles-osm' });
+        // OSM France: stesso stile di OSM ma senza i quadrati sbagliati in laguna.
+        // updateWhenIdle:false carica le tile anche mentre scorri (su mobile di default aspetta che ti fermi),
+        // keepBuffer più alto tiene in memoria più tile attorno alla vista
+        baseOSM = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+            maxZoom: 19, subdomains: 'abc', className: 'nav-tiles-osm',
+            updateWhenIdle: false, updateInterval: 100, keepBuffer: 4
+        });
+
+        // Fallback: se OSM France viene bloccato o smette di rispondere, la mappa passa
+        // alle tile OSM standard (quelle usate finora) senza intervento dell'utente.
+        const OSM_URL_FALLBACK = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+        let osmInFallback = false, osmErroriDiFila = 0;
+        baseOSM.on('tileload', () => { osmErroriDiFila = 0; });
+        baseOSM.on('tileerror', (e) => {
+            if (!navigator.onLine) return;                       // offline: inutile cambiare sorgente
+            const t = e.tile, c = e.coords;
+            // la tile fallita viene subito richiesta al fallback (una sola volta)
+            if (!t._bvFallback && !/tile\.openstreetmap\.org/.test(t.src)) {
+                t._bvFallback = true;
+                t.src = OSM_URL_FALLBACK.replace('{z}', c.z).replace('{x}', c.x).replace('{y}', c.y);
+            }
+            // dopo 4 errori consecutivi tutte le tile nuove vanno direttamente al fallback
+            if (!osmInFallback && ++osmErroriDiFila >= 4) {
+                osmInFallback = true;
+                baseOSM.setUrl(OSM_URL_FALLBACK, true);
+            }
+        });
         baseSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
         nauticLayer = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', { maxZoom: 18 });
 
@@ -621,6 +659,7 @@ function chiudiNavigatore() {
     if (watchId) navigator.geolocation.clearWatch(watchId);
     document.getElementById('hud-compass').style.display = 'none';
     document.getElementById('hud-speed').style.display = 'none';
+    fermaOrologioHud();
     document.getElementById('fab-center').style.display = 'none';
     document.getElementById('fab-rotate').style.display = 'none';
     document.getElementById('fab-gps').classList.remove('active');
@@ -836,18 +875,31 @@ function elaboraPosizioneGPS(position) {
 function inviaPosizionePersonale(lat, lon, speed, heading) {
     if (!currentUserId) return;
 
+    const body = {
+        id: currentUserId,
+        lat: lat,
+        lon: lon,
+        speed: speed,
+        heading: heading,
+        nome: customUnitName || '', // solo il nome unità: mai il nome dell'utente (privacy)
+        line: customLine || '',
+        nav: corsaCondivisa || null // ritardo e prossima fermata della corsa (senza turno)
+    };
+    // le fermate della corsa si mandano solo quando cambiano e, per sicurezza, ogni 30 s
+    if (corsaCondivisa && fermateCondivise) {
+        const adesso = Date.now();
+        if (ultimaStaticaInviata.k !== corsaCondivisa.k || adesso - ultimaStaticaInviata.ts > 30000) {
+            body.corsa = { k: corsaCondivisa.k, fermate: fermateCondivise.map(f => [f.nome, Math.round(f.arr), Math.round(f.dep)]) };
+            ultimaStaticaInviata = { k: corsaCondivisa.k, ts: adesso };
+        }
+    } else {
+        ultimaStaticaInviata = { k: null, ts: 0 };
+    }
+
     fetch(`${API_URL}/api/users/location`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            id: currentUserId,
-            lat: lat,
-            lon: lon,
-            speed: speed,
-            heading: heading,
-            nome: customUnitName || currentUserName,
-            line: customLine || ''
-        })
+        body: JSON.stringify(body)
     }).catch(err => console.error("Errore invio posizione:", err));
 }
 
@@ -1398,6 +1450,16 @@ let ritardoSmussato = null;
 let firmaLista = '';
 let listaAperta = false;
 let htmlAttPrecedente = '';
+// Dati della corsa condivisi con gli altri utenti (mai nome utente né codice turno):
+// corsaCondivisa = stato dinamico a ogni invio; fermateCondivise = fermate della corsa, inviate solo quando cambiano.
+let corsaCondivisa = null;
+let fermateCondivise = null;
+let ultimaStaticaInviata = { k: null, ts: 0 };
+function hashCorsa(s) {
+    let h = 5381;
+    for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+    return (h >>> 0).toString(36);
+}
 
 let rottaLayer = null;                 // rotta della linea sulla mappa
 let rottaKey = null;
@@ -1421,12 +1483,94 @@ async function fetchJson(url) {
     return dati;
 }
 
+// ---------------------------------------------------------------- stato dei turni dell'utente (da Firestore)
+// Lo stato del calendario (turno di base, variazioni, ferie, mansione) sta su Firestore: calendario/{uid}.
+// Si legge da lì, così il navigatore funziona anche su un dispositivo dove il calendario non è mai stato aperto.
+// Il localStorage ('myTurniApp', scritto dal calendario) resta solo come copia di riserva se Firestore non risponde.
+// Questo modulo non scrive mai su Firestore né sul localStorage.
+const STATO_TURNI_TTL_MS = 5 * 60 * 1000;   // dopo tanto si rilegge (così le modifiche fatte nel calendario arrivano)
+const STATO_TURNI_RITENTA_MS = 30 * 1000;   // se si è ripiegato sulla copia locale si riprova prima
+const STATO_TURNI_TIMEOUT_MS = 6000;        // oltre questo Firestore si considera non raggiungibile
+const firestoreTurni = { db: null, auth: null };
+let statoTurni = null, statoTurniUid = null, statoTurniTs = 0, statoTurniInCorso = null;
+let mansioneProfilo = null, mansioneProfiloUid = null;
+const dbTurni = () => firestoreTurni.db;
+
+function conTimeout(promessa, ms) {
+    let t;
+    return Promise.race([promessa, new Promise((_, rifiuta) => { t = setTimeout(() => rifiuta(new Error('timeout')), ms); })])
+        .finally(() => clearTimeout(t));
+}
+
+function statoLocale() {
+    try { const s = JSON.parse(localStorage.getItem('myTurniApp')); return (s && typeof s === 'object') ? s : null; }
+    catch (e) { return null; }
+}
+
+// stessa precedenza del calendario: mansione dello stato, poi quella del profilo attivo
+function mansioneDaStato(s) {
+    if (!s) return null;
+    if (s.mansione) return s.mansione;
+    const p = s.profiloAttivoId && s.profiliSalvati && s.profiliSalvati[s.profiloAttivoId];
+    return (p && p.mansione) || null;
+}
+
+async function uidTurni() {
+    const a = firestoreTurni.auth;
+    if (!a) return null;
+    try { if (a.authStateReady) await conTimeout(a.authStateReady(), STATO_TURNI_TIMEOUT_MS); } catch (e) { /* si prosegue con quello che c'è */ }
+    return (a.currentUser && a.currentUser.uid) || null;
+}
+
+// documento del calendario dell'utente; null se non esiste o è stato cancellato
+async function leggiCalendarioCloud(uid) {
+    const db = dbTurni();
+    if (!db || !uid) return null;
+    const snap = await conTimeout(getDoc(doc(db, 'calendario', uid)), STATO_TURNI_TIMEOUT_MS);
+    const dati = snap.exists() ? snap.data() : null;
+    return (dati && !dati.deleted) ? dati : null;
+}
+
+// ultima risorsa per la mansione: il profilo utente (utenti/{uid}), come fa il calendario
+async function mansioneDalProfilo() {
+    const uid = await uidTurni();
+    if (!uid) return null;
+    if (mansioneProfiloUid === uid) return mansioneProfilo;
+    try {
+        const db = dbTurni();
+        const snap = db ? await conTimeout(getDoc(doc(db, 'utenti', uid)), STATO_TURNI_TIMEOUT_MS) : null;
+        mansioneProfilo = (snap && snap.exists() && snap.data().mansione) || null;
+        mansioneProfiloUid = uid;
+    } catch (e) { console.warn("Turni: profilo utente non leggibile", e); }
+    return mansioneProfilo;
+}
+
+async function caricaStatoTurni(forza = false) {
+    const uid = await uidTurni();
+    if (!forza && statoTurni && statoTurniUid === uid && Date.now() - statoTurniTs < STATO_TURNI_TTL_MS) return statoTurni;
+    if (statoTurniInCorso && statoTurniInCorso.uid === uid) return statoTurniInCorso.p;
+
+    const p = (async () => {
+        let stato = null;
+        try { stato = await leggiCalendarioCloud(uid); }
+        catch (e) { console.warn("Turni: Firestore non raggiungibile, uso la copia locale", e); }
+        const daCloud = !!stato;
+        if (!stato) stato = statoLocale() || {};
+        statoTurni = stato; statoTurniUid = uid;
+        statoTurniTs = Date.now() - (daCloud ? 0 : STATO_TURNI_TTL_MS - STATO_TURNI_RITENTA_MS);
+        return stato;
+    })();
+    statoTurniInCorso = { uid, p };
+    try { return await p; }
+    finally { if (statoTurniInCorso && statoTurniInCorso.p === p) statoTurniInCorso = null; }
+}
+
 // Turno di un giorno: { data, codice, stato: 'ok' | 'riposo' | 'varianti' | 'errore', attivita[], turno }
 async function turnoDelGiorno(dStr) {
-    let state = {};
-    try { state = JSON.parse(localStorage.getItem('myTurniApp')) || {}; } catch (e) { }
+    const state = await caricaStatoTurni();
+    const mansione = mansioneDaStato(state) || userMansione || await mansioneDalProfilo();
     const manuale = !!(state.variazioni && state.variazioni[dStr]);
-    let codice = turnoEffettivo(dStr, state, datiTurni, userMansione);
+    let codice = turnoEffettivo(dStr, state, datiTurni, mansione);
     // ferie previste dalla rotazione ferie (come nel calendario): senza variazione manuale il turno diventa FEP
     if (!manuale && datiTurni && !["RI", "AL"].includes(String(codice).toUpperCase())) {
         const ferie = ferieDelGiorno(state, dStr, datiTurni.ferie);
@@ -1607,11 +1751,11 @@ function pillTurnoNav() {
 }
 
 function htmlMessaggioNav(testo) {
-    return `<div class="nvg-act-row">${pillTurnoNav()}<span class="nvg-dest nvg-msg">${testo}</span></div>`;
+    return `<div class="nvg-act-row"><span class="nvg-dest nvg-msg">${testo}</span></div>`;
 }
 
 function htmlAttivitaNav(act, tipo, direzione, nowMin) {
-    // a sinistra turno e linea impilati; a destra orario e luogo di partenza → arrivo (il luogo va a capo, non si taglia)
+    // a sinistra la linea (il turno sta a sinistra della velocità); a destra orario e luogo di partenza → arrivo (il luogo va a capo, non si taglia)
     let sinistra;
     if (eCorsa(act)) sinistra = badgeLineaNav(lineaDellAttivita(act, nowMin));
     else sinistra = `<span class="nvg-pill">${esc(act.tipo || 'Attività')}</span>`;
@@ -1619,7 +1763,7 @@ function htmlAttivitaNav(act, tipo, direzione, nowMin) {
     const blocco = (ora, luogo) => `<div class="nvg-blocco"><div class="nvg-ora">${esc(ora)}</div><div class="nvg-luogo">${esc(luogo || '')}</div></div>`;
     const tag = tipo === 'prossima' ? '<div class="nvg-tag">Prossima attività</div>' : '';
     return `${tag}<div class="nvg-act-row">
-        <div class="nvg-id">${pillTurnoNav()}${sinistra}</div>
+        ${sinistra}
         ${blocco(act.partenza, act.da)}
         <div class="nvg-freccia"><i class="fa-solid fa-arrow-right-long"></i>${reb}</div>
         ${blocco(act.arrivo, act.a)}
@@ -1627,6 +1771,10 @@ function htmlAttivitaNav(act, tipo, direzione, nowMin) {
 }
 
 function impostaAttivitaNav(html) {
+    // il turno sta a sinistra della velocità, fuori dal riquadro attività
+    const slotTurno = navEl('nvg-turno-slot');
+    const pillTurno = pillTurnoNav();
+    if (slotTurno && slotTurno.innerHTML !== pillTurno) slotTurno.innerHTML = pillTurno;
     if (html === htmlAttPrecedente) return;
     htmlAttPrecedente = html;
     navEl('nvg-act').innerHTML = html;
@@ -1765,7 +1913,7 @@ function renderNavigatore() {
     if (!gpsAttivo) return;
 
     const messaggio = (testo) => {
-        customLine = '';
+        customLine = ''; corsaCondivisa = null; fermateCondivise = null;
         impostaAttivitaNav(htmlMessaggioNav(testo));
         mostraProssima(false);
         disegnaRitardoNav(null);
@@ -1794,6 +1942,7 @@ function renderNavigatore() {
 
     // linea comunicata agli altri: solo durante la corsa
     customLine = (tipo === 'in corso' && eCorsa(act)) ? lineaDellAttivita(act, nowMin) : '';
+    corsaCondivisa = null; fermateCondivise = null;
 
     impostaAttivitaNav(htmlAttivitaNav(act, tipo, serve && percorsoStato === 'ok' ? direzioneCorsa : '', nowMin));
 
@@ -1813,6 +1962,10 @@ function renderNavigatore() {
             nav = trovaProssimaDaOrario(percorso, nowSec);
         }
         disegnaProssimaNav(nav, tipo === 'in corso' && gpsPos.fuori);
+        if (tipo === 'in corso' && eCorsa(act)) {
+            corsaCondivisa = { k: hashCorsa(String(attKey)), linea: customLine, idx: nav.idx, stato: nav.stato, ritardo: ritardo == null ? null : Math.round(ritardo), fuori: !!gpsPos.fuori };
+            fermateCondivise = percorso.fermate;
+        }
     } else if (serve && percorsoStato === 'errore') {
         mostraProssima(true, 'Fermate non disponibili');
     } else if (serve) {
@@ -1832,11 +1985,48 @@ function tickNavigatore() {
 }
 
 function azzeraStatoNavigatore() {
-    turnoCorrente = null; oraRif = null;
+    turnoCorrente = null; oraRif = null; corsaCondivisa = null; fermateCondivise = null;
     attKey = null; percorso = null; percorsoStato = 'nessuno'; direzioneCorsa = ''; lineaCorsa = '';
     tokenPercorso++;
     minimoFermata = 0; ritardoSmussato = null; firmaLista = ''; htmlAttPrecedente = '';
     gpsPos = { lat: null, lon: null, acc: null, vel: null, along: null, scarto: null, ts: 0, fuori: false, ritardoIstantaneo: 0 };
+}
+
+// ---------------------------------------------------------------- orologio sotto la velocità e spazio per i tasti
+// L'orologio (ore:minuti:secondi, ora del dispositivo) gira solo finché il modulo è aperto.
+// Con il navigatore a tutta larghezza i tasti in basso a sinistra salgono sopra il riquadro: la sua altezza
+// (che cambia quando si apre la tendina delle fermate) arriva al CSS tramite la variabile --bv-hud-h.
+let orologioTimer = null, hudObserver = null;
+
+function aggiornaOrologio() {
+    const el = document.getElementById('nvg-clock');
+    if (!el) return;
+    const t = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+    if (el.textContent !== t) el.textContent = t;
+}
+
+function aggiornaSpazioHud() {
+    const hud = document.getElementById('hud-speed'), root = document.getElementById('modal-navigatore-main');
+    if (!hud || !root) return;
+    const h = hud.offsetHeight;
+    const pieno = h > 0 && hud.classList.contains('nav-on');
+    root.classList.toggle('hud-nav', pieno);
+    root.style.setProperty('--bv-hud-h', pieno ? h + 'px' : '0px');
+}
+
+function avviaOrologioHud() {
+    aggiornaOrologio();
+    if (!orologioTimer) orologioTimer = setInterval(aggiornaOrologio, 250);
+    const hud = document.getElementById('hud-speed');
+    if (hud && typeof ResizeObserver === 'function' && !hudObserver) {
+        hudObserver = new ResizeObserver(aggiornaSpazioHud);
+        hudObserver.observe(hud);
+    }
+}
+
+function fermaOrologioHud() {
+    if (orologioTimer) { clearInterval(orologioTimer); orologioTimer = null; }
+    if (hudObserver) { hudObserver.disconnect(); hudObserver = null; }
 }
 
 // chiamata quando si accende il GPS: il tasto fa-route parte attivo
