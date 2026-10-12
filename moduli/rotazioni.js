@@ -393,10 +393,62 @@ export function avviaMotoreRotazioni(db, auth) {
         return null;
     }
 
+    function calcolaIndiceCascataRot(dStr, cfgData) {
+        if (!cfgData || !cfgData.depositoAttivo || !cfgData.riposoStart) return null;
+        const curr = stringToNumUTC(dStr);
+        const cfgBase = cfgData.history && curr < stringToNumUTC(DATA_INIZIO_NUOVI_TURNI_ROT) ? cfgData.history : cfgData;
+        if (!cfgBase.rotazioneStart) return null;
+        const activeCfg = cfgData.futureConfig && curr >= stringToNumUTC(cfgData.futureConfig.dataInizio)
+            ? { start: cfgData.futureConfig.dataInizio, idx: cfgData.futureConfig.turnoIndex }
+            : { start: cfgBase.rotazioneStart, idx: cfgBase.turnoIndex };
+
+        let w = 0;
+        const refRot = stringToNumUTC(activeCfg.start);
+        if (curr >= refRot) {
+            for (let j = refRot; j < curr; j++) if (!isGiornoRiposoBaseRot(j, cfgBase)) w++;
+        } else {
+            for (let j = refRot; j > curr; j--) if (!isGiornoRiposoBaseRot(j, cfgBase)) w--;
+        }
+
+        const dateChiavi = Object.keys(globalRotPatternCache).sort();
+        let rotCorrente = dateChiavi.length > 0 ? globalRotPatternCache[dateChiavi[0]] : null;
+        for (let i = dateChiavi.length - 1; i >= 0; i--) {
+            if (curr >= stringToNumUTC(dateChiavi[i])) { rotCorrente = globalRotPatternCache[dateChiavi[i]]; break; }
+        }
+        const rotList = rotCorrente && rotCorrente[cfgBase.depositoAttivo] ? rotCorrente[cfgBase.depositoAttivo] : [];
+        if (rotList.length === 0) return null;
+
+        if (cfgBase.depositoAttivo.startsWith('tc_')) {
+            const refRip = stringToNumUTC(cfgBase.riposoStart);
+            const currPos = ((curr - refRip + 6) % 15 + 15) % 15;
+            const k = currPos >= 7 && currPos <= 12 ? currPos - 7 : currPos;
+            return Math.min(Math.floor(k / 2), rotList.length - 1);
+        }
+
+        const originalToExpanded = [];
+        let expandedLength = 0;
+        for (let i = 0; i < rotList.length; i++) {
+            originalToExpanded[i] = expandedLength;
+            const parti = String(rotList[i]).split('+');
+            expandedLength += parti.length > 1 ? Math.min(parti.length, 2) : 2;
+        }
+        const baseExpIdx = originalToExpanded[activeCfg.idx];
+        if (!Number.isInteger(baseExpIdx) || expandedLength === 0) return null;
+
+        const startPos = ((refRot - stringToNumUTC(cfgBase.riposoStart) + 6) % 15 + 15) % 15;
+        const offset = [1, 3, 5, 8, 10, 12].includes(startPos) ? 1 : 0;
+        const blockStartIdx = baseExpIdx - (baseExpIdx % 2);
+        return ((blockStartIdx + w + offset) % expandedLength + expandedLength) % expandedLength;
+    }
+
     function normalizzaTitoloRot(s) {
         return (s || '').toString().trim().toUpperCase()
             .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
             .replace(/[.\s]+/g, ' ').trim();
+    }
+
+    function ordinaRighePerCascataRot(righe) {
+        return righe.sort((a, b) => b.ordineCascata - a.ordineCascata || a.nome.localeCompare(b.nome));
     }
 
     // Costruisce, per le rotazioni non-disp assenti dal json mensile, i turni di tutti gli
@@ -429,6 +481,7 @@ export function avviaMotoreRotazioni(db, auth) {
 
                     const turniBase = {};   // codice grezzo, non convertito per mansione -> usato per l'accoppiamento armo
                     const turniDisplay = {}; // codice convertito secondo la propria mansione -> usato per la visualizzazione
+                    const ordineCascata = calcolaIndiceCascataRot(`${y}-${String(m).padStart(2, '0')}-01`, cfgData);
                     let haAlmenoUnGiornoValido = false;
                     for (let i = 1; i <= giorniMese; i++) {
                         const dStr = `${y}-${String(m).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
@@ -442,7 +495,7 @@ export function avviaMotoreRotazioni(db, auth) {
                     if (!haAlmenoUnGiornoValido) return null;
 
                     const nomeLabel = `${u.cognome || ''} ${u.nome || ''} ${u.progressivo || ''}`.replace(/\s+/g, ' ').trim();
-                    return { nome: nomeLabel || 'Sconosciuto', turniBase, turniDisplay, isMarinaio };
+                    return { nome: nomeLabel || 'Sconosciuto', turniBase, turniDisplay, isMarinaio, ordineCascata: ordineCascata ?? -1 };
                 } catch (e) { console.error("Errore calcolo turni per rotazione mancante", e); return null; }
             }));
 
@@ -500,9 +553,10 @@ export function avviaMotoreRotazioni(db, auth) {
                     }
                     turniUniti[day] = valore;
                 }
-                return { nome: nomi.join(" - "), turni: turniUniti };
+                const membroOrdinato = g.membri.find(mm => mm.ordineCascata >= 0);
+                return { nome: nomi.join(" - "), turni: turniUniti, ordineCascata: membroOrdinato ? membroOrdinato.ordineCascata : -1 };
             });
-            righe.sort((a, b) => a.nome.localeCompare(b.nome));
+            righe = ordinaRighePerCascataRot(righe);
 
             let finalObj = {};
             righe.forEach(r => finalObj[r.nome] = r.turni);
