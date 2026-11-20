@@ -21,6 +21,65 @@ import {
 const BLOCCA_SE_VARIANTI = true;
 
 
+// Backend distinti, come in BateoLive: turni/corse su Utility, geometrie e limiti su BateoLive.
+const API_BATEOLIVE_URL = 'https://bateolivebe.homeserver.foo';
+const LIMITI_PROFILO_GPS = 'actv';
+let gpsLimiti = null, gpsLimitiLoading = false, gpsLimitiLastTry = 0, gpsLimiteUltimo = null, gpsLimiteUltimoTs = 0;
+
+function costruisciIndiceLimitiGPS(dati) {
+    const CELLA = 0.01;
+    const inAnello = (x, y, anello) => {
+        let dentro = false;
+        for (let i = 0, j = anello.length - 1; i < anello.length; j = i++) {
+            const xi = anello[i][0], yi = anello[i][1], xj = anello[j][0], yj = anello[j][1];
+            if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) dentro = !dentro;
+        }
+        return dentro;
+    };
+    const inPoligono = (x, y, poly) => inAnello(x, y, poly[0]) && !poly.slice(1).some(anello => inAnello(x, y, anello));
+    const parti = [], griglia = new Map();
+    for (const c of (dati && dati.canali) || []) for (const poly of (c.g || [])) {
+        if (!poly || !poly[0] || !poly[0].length) continue;
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+        for (const pt of poly[0]) { x0 = Math.min(x0, pt[0]); x1 = Math.max(x1, pt[0]); y0 = Math.min(y0, pt[1]); y1 = Math.max(y1, pt[1]); }
+        const idx = parti.push({ b: [x0, y0, x1, y1], poly, v: Number(c.v) || 0, n: String(c.n || '') }) - 1;
+        for (let ix = Math.floor(x0 / CELLA); ix <= Math.floor(x1 / CELLA); ix++)
+            for (let iy = Math.floor(y0 / CELLA); iy <= Math.floor(y1 / CELLA); iy++) {
+                const k = ix + ',' + iy;
+                if (!griglia.has(k)) griglia.set(k, []);
+                griglia.get(k).push(idx);
+            }
+    }
+    return (lat, lon, now) => {
+        const candidati = griglia.get(Math.floor(lon / CELLA) + ',' + Math.floor(lat / CELLA)) || [];
+        let migliore = null, senzaLimite = null;
+        for (const i of candidati) {
+            const p = parti[i];
+            if (lon < p.b[0] || lon > p.b[2] || lat < p.b[1] || lat > p.b[3] || !inPoligono(lon, lat, p.poly)) continue;
+            if (p.v <= 0) { if (!senzaLimite) senzaLimite = { limite: 0, nome: p.n }; continue; }
+            if (!migliore || p.v < migliore.limite) migliore = { limite: p.v, nome: p.n };
+        }
+        const r = migliore || senzaLimite;
+        if (r) { gpsLimiteUltimo = r; gpsLimiteUltimoTs = now; return r; }
+        return gpsLimiteUltimo && now - gpsLimiteUltimoTs < 10000 ? gpsLimiteUltimo : null;
+    };
+}
+
+function caricaLimitiGPS() {
+    if (gpsLimiti || gpsLimitiLoading || Date.now() - gpsLimitiLastTry < 60000) return;
+    gpsLimitiLoading = true; gpsLimitiLastTry = Date.now();
+    fetch(`${API_BATEOLIVE_URL}/api/limiti/${LIMITI_PROFILO_GPS}`)
+        .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+        .then(d => { gpsLimiti = costruisciIndiceLimitiGPS(d); })
+        .catch(e => console.warn('GPS: limiti di velocità non disponibili:', e.message))
+        .finally(() => { gpsLimitiLoading = false; });
+}
+
+function formattaCoordinateGPS(lat, lon) {
+    return `${Math.abs(lat).toFixed(5)}° ${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(5)}° ${lon >= 0 ? 'E' : 'W'}`;
+}
+
+
 // --- parametri della navigazione
 const SOGLIA_FERMATA_M = 30;      // entro questa distanza dalla fermata il mezzo è "in fermata"
 const ACCURATEZZA_MAX_M = 80;     // fix GPS meno precisi di così non servono per la posizione sul percorso
@@ -29,8 +88,8 @@ const FINESTRA_INDIETRO_M = 150;  // dove cercare il mezzo rispetto all'ultima p
 const FINESTRA_AVANTI_M = 800;
 const FIX_SCADUTO_MS = 15000;     // senza fix da più di così il ritardo non si mostra
 const SMORZA_RITARDO = 0.2;       // peso di ogni nuovo fix nella media mobile del ritardo
-const PESO_CONTINUITA = 0.25;      // metri di "costo" per ogni metro di scostamento dalla posizione prevista
-const SOGLIA_MOVIMENTO_MS = 1.5;    // sopra questa velocità (m/s) il mezzo si considera in movimento
+const PESO_CONTINUITA = 0.25;     // metri di "costo" per ogni metro di scostamento dalla posizione prevista
+const SOGLIA_MOVIMENTO_MS = 1.5;  // sopra questa velocità (m/s) il mezzo si considera in movimento
 const PRECARICA_MIN = 15;         // quanti minuti prima si caricano le fermate della corsa successiva
 
 
@@ -68,7 +127,6 @@ const R_TERRA = 6371008.8;
 const RAD = Math.PI / 180;
 
 function interpola(xs, ys, v) {
-    // ys in funzione di xs (xs crescente), con estremi bloccati
     if (v <= xs[0]) return ys[0];
     const n = xs.length - 1;
     if (v >= xs[n]) return ys[n];
@@ -79,7 +137,6 @@ function interpola(xs, ys, v) {
     return ys[lo] + t * (ys[hi] - ys[lo]);
 }
 
-// Indice del segmento che contiene la distanza d (cum crescente)
 function cercaSegmento(cum, d) {
     const n = cum.length - 1;
     if (d <= cum[0]) return 0;
@@ -89,7 +146,6 @@ function cercaSegmento(cum, d) {
     return lo;
 }
 
-// Il percorso dal server (intero shape) viene ritagliato tra la prima e l'ultima fermata del tratto del turno.
 function ritaglia(p, d0, d1) {
     const pts = [{ lat: interpola(p.dist, p.lat, d0), lon: interpola(p.dist, p.lon, d0), d: 0 }];
     for (let i = 0; i < p.dist.length; i++) {
@@ -99,8 +155,6 @@ function ritaglia(p, d0, d1) {
     return pts;
 }
 
-// Orari di una corsa in secondi dal giorno del turno. Usa arrivo_sec/partenza_sec del backend;
-// se mancano ripiega su "HH:MM", aggiungendo 24 ore ogni volta che l'orario "torna indietro".
 function orariCorsa(dati, dataTurno) {
     const sfasa = (stringToNum(dati.corsa && dati.corsa.data_servizio) - stringToNum(dataTurno)) * 86400 || 0;
     const fc = dati.fermate;
@@ -118,9 +172,6 @@ function orariCorsa(dati, dataTurno) {
     }));
 }
 
-// Mette insieme una o più corse (più di una solo nei rebecchini) in un unico percorso:
-//   { lat[], lon[], x[], y[], cum[], lunghezza, geometria, fermate: [{ id, nome, dist, arr, dep }] }
-// tratte = [{ corsa: risposta di /corsa, percorso: risposta di /percorso | null }]
 function costruisciPercorso(tratte, dataTurno) {
     const punti = [];
     const fermate = [];
@@ -142,7 +193,6 @@ function costruisciPercorso(tratte, dataTurno) {
         for (let i = tratta.da; i <= tratta.a; i++) {
             const dist = conGeometria ? offset + p.fermate[i].dist - d0 : 0;
             if (n > 0 && i === tratta.da) {
-                // fermata di passaggio tra due corse (rebecchino): arriva con la prima corsa, riparte con la seconda
                 const ultima = fermate[fermate.length - 1];
                 if (ultima) ultima.dep = orari[i].dep;
                 continue;
@@ -167,13 +217,11 @@ function costruisciPercorso(tratte, dataTurno) {
     return percorso;
 }
 
-// Posizione (x, y in metri nel riferimento del percorso) di un punto GPS
 function aPiano(rt, lat, lon) {
     const o = rt.origine;
     return { x: (lon - o.lon0) * o.kx, y: (lat - o.lat0) * o.ky };
 }
 
-// Dove si trova, in base all'orario, il mezzo se fosse perfettamente in orario (usato per scegliere tra due passaggi)
 function alongDaOrario(rt, nowSec) {
     const F = rt.fermate;
     if (nowSec <= F[0].dep) return F[0].dist;
@@ -188,10 +236,6 @@ function alongDaOrario(rt, nowSec) {
     return F[F.length - 1].dist;
 }
 
-// Proietta la posizione sul percorso. Con una posizione precedente cerca solo nei dintorni, preferendo il punto
-// coerente con il moto ("atteso" = ultima posizione + velocità × tempo): così le andate e ritorno a pochi metri
-// di distanza (canali senza uscita) e i ripassi dallo stesso punto non fanno saltare la posizione.
-// Se non trova nulla cerca su tutto il percorso. Restituisce { along, scarto } oppure null.
 function proietta(rt, x, y, ultimaAlong, nowSec, atteso) {
     const nSeg = rt.x.length - 1;
     if (nSeg < 1) return null;
@@ -217,10 +261,6 @@ function proietta(rt, x, y, ultimaAlong, nowSec, atteso) {
             if (c.scarto < migliorScarto) migliorScarto = c.scarto;
         }
         if (candidatiLocali.length) {
-            // Nei punti in cui andata e ritorno si sovrappongono (es. Colonna a Murano)
-            // la sola distanza geometrica non basta: i due passaggi possono essere a pochi
-            // metri ma molto distanti lungo il giro. In questi casi usiamo anche la posizione
-            // prevista dall'orario per evitare di saltare direttamente al passaggio successivo.
             const ambigui = candidatiLocali.filter(c => c.scarto <= migliorScarto + 25);
             if (ambigui.length > 1) {
                 const attesa = alongDaOrario(rt, nowSec);
@@ -240,7 +280,6 @@ function proietta(rt, x, y, ultimaAlong, nowSec, atteso) {
         }
     }
 
-    // ricerca su tutto il percorso: un candidato per ogni passaggio della linea vicino al punto
     const candidati = [];
     let corrente = null;
     let migliore = null;
@@ -251,20 +290,18 @@ function proietta(rt, x, y, ultimaAlong, nowSec, atteso) {
         else if (corrente) { candidati.push(corrente); corrente = null; }
     }
     if (corrente) candidati.push(corrente);
-    if (!candidati.length) return migliore; // fuori percorso: si riporta comunque il punto più vicino
+    if (!candidati.length) return migliore;
     const attesa = alongDaOrario(rt, nowSec);
     const vicini = candidati.filter((c) => c.scarto <= migliore.scarto + 40);
     vicini.sort((a, b) => Math.abs(a.along - attesa) - Math.abs(b.along - attesa));
     return vicini[0];
 }
 
-// Orario che il mezzo dovrebbe avere in questo punto del percorso (interpolando tra le fermate in base alla distanza)
 function orarioProgrammato(rt, along, nowSec) {
     const F = rt.fermate;
     const k0 = F.findIndex((f) => Math.abs(along - f.dist) <= SOGLIA_FERMATA_M);
     if (k0 >= 0) {
-        // in fermata: finché si è dentro l'orario di sosta non c'è scostamento
-        if (k0 === 0 && nowSec < F[0].dep) return nowSec; // in attesa di partire
+        if (k0 === 0 && nowSec < F[0].dep) return nowSec;
         return Math.max(F[k0].arr, Math.min(F[k0].dep, nowSec));
     }
     if (along <= F[0].dist) return F[0].dep;
@@ -278,25 +315,22 @@ function orarioProgrammato(rt, along, nowSec) {
     return F[F.length - 1].arr;
 }
 
-// Prossima fermata in base alla posizione. "minimo" è l'indice sotto il quale le fermate sono già passate,
-// "velocita" (m/s) serve a distinguere un mezzo che arriva alla fermata da uno che la sta lasciando.
 function trovaProssima(rt, along, nowSec, minimo, velocita) {
     const F = rt.fermate;
     const inMovimento = velocita != null && velocita > SOGLIA_MOVIMENTO_MS;
     for (let k = Math.max(0, minimo); k < F.length; k++) {
-        const d = F[k].dist - along; // > 0: la fermata è ancora avanti
+        const d = F[k].dist - along;
         if (d > SOGLIA_FERMATA_M) return { idx: k, stato: 'in arrivo', distM: d };
         if (d >= -SOGLIA_FERMATA_M) {
             if (k === F.length - 1) return inMovimento && d > 10 ? { idx: k, stato: 'in arrivo', distM: d } : { idx: k, stato: 'arrivato', distM: 0 };
             if (d > 0 && inMovimento) return { idx: k, stato: 'in arrivo', distM: d };
-            if (d <= 0 && inMovimento) continue; // la sta lasciando
+            if (d <= 0 && inMovimento) continue;
             return { idx: k, stato: 'in fermata', distM: 0 };
         }
     }
     return { idx: F.length - 1, stato: 'arrivato', distM: 0 };
 }
 
-// Senza GPS: prossima fermata secondo l'orario
 function trovaProssimaDaOrario(rt, nowSec) {
     const F = rt.fermate;
     for (let k = 0; k < F.length; k++) {
@@ -316,7 +350,65 @@ export function initUIGPS() {
 
     const uiHTML = `
     <style>
-        .gps-body { flex: 1; overflow-y: auto; overflow-x: hidden; width: 100%; display: flex; flex-direction: column; gap: 14px; }
+        .gps-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            flex: none;
+        }
+        .gps-header-title {
+            margin: 0;
+            color: var(--primary);
+            font-weight: 800;
+            font-size: 19px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-width: 0;
+        }
+        .gps-close-btn {
+            flex: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background: rgba(100, 116, 139, 0.10);
+            color: var(--text-main);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.15s ease, background-color 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .gps-close-btn:active {
+            transform: scale(0.92);
+            background: rgba(100, 116, 139, 0.22);
+        }
+
+        .gps-body {
+            flex: 1 1 auto;
+            min-height: 0 !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+            touch-action: pan-y;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+        }
+        .gps-body > * {
+            flex-shrink: 0;
+        }
         .gps-clock { text-align: center; font-size: 42px; line-height: 1; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: 1px; color: var(--text-main); margin: 0 0 12px; }
 
         .gps-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -327,6 +419,13 @@ export function initUIGPS() {
         #gps-delay-val.presto { color: #d97706; }
         #gps-delay-val.puntuale { color: var(--success, #10b981); }
         #gps-delay-val.spento { color: var(--text-muted); opacity: 0.5; }
+        #gps-speed-val.superamento { color: var(--danger, #dc3545); }
+        .gps-channel-info { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 12px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md, 12px); background: var(--surface); text-align: center; }
+        .gps-limit-sign { width: 42px; height: 42px; border: 4px solid #d3151c; border-radius: 50%; background: #fff; color: #111; display: inline-flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 900; line-height: 1; box-sizing: border-box; flex: none; }
+        .gps-limit-sign[hidden] { display: none !important; }
+        .gps-channel-name { font-size: 14px; font-weight: 800; color: var(--text-main); }
+        .gps-channel-name[hidden] { display: none !important; }
+        .gps-coordinates { flex-basis: 100%; font-size: 11px; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
         .gps-act { padding: 4px 0; }
         .gps-act-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 13px; font-weight: 700; color: var(--text-muted); flex-wrap: wrap; }
@@ -366,17 +465,115 @@ export function initUIGPS() {
         .gps-status-box { font-size: 14px; font-weight: bold; text-align: center; padding: 10px; border-radius: var(--radius-sm); min-height: 40px; display: flex; align-items: center; justify-content: center; }
         .btn-attiva-gps { background: var(--primary); color: white; border: none; padding: 12px 28px; font-size: 16px; font-weight: bold; border-radius: 30px; cursor: pointer; box-shadow: var(--shadow-sm); transition: transform 0.2s; display: flex; align-items: center; gap: 8px; margin: 0 auto; }
         .btn-attiva-gps:active { transform: scale(0.95); }
+
+        /* GPS a tutto schermo con rispetto delle safe-area iPhone (Notch / Dynamic Island / Home bar / Landscape) */
+        #modal-gps-main {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-width: none !important;
+            max-height: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            overflow: hidden !important;
+            align-items: stretch !important;
+            justify-content: stretch !important;
+            z-index: 10020;
+        }
+        #modal-gps-main .gps-fullscreen-panel {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            max-width: none !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+            border-radius: 0 !important;
+            box-sizing: border-box;
+            padding-top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
+            padding-right: calc(env(safe-area-inset-right, 0px) + 14px) !important;
+            padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
+            padding-left: calc(env(safe-area-inset-left, 0px) + 14px) !important;
+        }
+        #modal-gps-main .gps-body { width: min(1500px, 100%); margin: 0 auto; }
+
+        .gps-marine-panel { display: block; min-width: 0; border: 1px solid var(--border-color); border-radius: var(--radius-md, 12px); background: var(--surface); overflow: hidden; }
+        .gps-marine-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px; border: 0; background: transparent; color: var(--text-muted); font-size: 12px; font-weight: 900; letter-spacing: .04em; text-align: left; cursor: pointer; }
+        .gps-marine-toggle i { transition: transform .25s; font-size: 16px; }
+        .gps-marine-toggle.aperto i { transform: rotate(180deg); }
+        .gps-marine-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 0 11px 11px; }
+        .gps-marine-title { min-width: 0; }
+        .gps-marine-item { min-width: 0; text-align: center; padding: 8px 6px; border-radius: 9px; background: rgba(100, 116, 139, .07); }
+        .gps-marine-details { display: none; border-top: 1px solid var(--border-color); padding: 11px; }
+        .gps-marine-details.aperto { display: block; }
+        .gps-marine-extra { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .gps-marine-extra-item { min-width: 0; text-align: center; padding: 10px 6px; border-radius: 9px; background: rgba(100, 116, 139, .07); }
+        .gps-marine-extra-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+        .gps-marine-extra-value { margin-top: 5px; font-size: 18px; line-height: 1.15; font-weight: 900; color: var(--text-main); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+        .gps-marine-extra-meta { margin-top: 4px; font-size: 10px; color: var(--text-muted); overflow-wrap: anywhere; }
+
+        .gps-turno-edit { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--surface); color: var(--text-muted); cursor: pointer; }
+        .gps-turno-edit:active { transform: scale(.94); }
+        .gps-turno-badge { display: inline-block; padding: 3px 6px; border-radius: 5px; background: rgba(14, 165, 233, .12); color: #0284c7; font-size: 9px; font-weight: 900; }
+        .gps-turno-badge[hidden] { display: none !important; }
+
+        .gps-marine-label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+        .gps-marine-value { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 7px 0 3px; font-size: clamp(24px, 4vw, 36px); line-height: 1; font-weight: 900; color: var(--text-main); font-variant-numeric: tabular-nums; }
+        .gps-marine-arrow { display: inline-block; font-size: 30px; line-height: 1; color: #0ea5e9; }
+        .gps-marine-arrow.tide-up { color: #16a34a; }
+        .gps-marine-arrow.tide-down { color: #2563eb; }
+        .gps-marine-meta { font-size: 10px; color: var(--text-muted); overflow-wrap: anywhere; }
+
+        @media (min-width: 900px) {
+            #modal-gps-main .gps-fullscreen-panel {
+                padding-top: calc(env(safe-area-inset-top, 0px) + 20px) !important;
+                padding-right: calc(env(safe-area-inset-right, 0px) + 28px) !important;
+                padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px) !important;
+                padding-left: calc(env(safe-area-inset-left, 0px) + 28px) !important;
+            }
+            #modal-gps-main .gps-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 16px; }
+            #gps-clock, #gps-next-box, #gps-marine-panel, .gps-metrics, .gps-channel-info, #gps-status { grid-column: 1 / -1; }
+            #gps-act-box { min-width: 0; }
+            #gps-clock { margin: 8px 0 4px; }
+            .gps-marine-extra { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
+        @media (max-width: 520px) {
+            #modal-gps-main .gps-fullscreen-panel {
+                padding-top: calc(env(safe-area-inset-top, 0px) + 10px) !important;
+                padding-right: calc(env(safe-area-inset-right, 0px) + 12px) !important;
+                padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
+                padding-left: calc(env(safe-area-inset-left, 0px) + 12px) !important;
+            }
+            .gps-header-title { font-size: 17px; }
+            .gps-marine-summary { gap: 7px; padding: 0 8px 8px; }
+            .gps-marine-item { padding: 8px 4px; }
+            .gps-marine-value { font-size: 25px; }
+            .gps-marine-extra { gap: 6px; }
+            .gps-marine-extra-item { padding: 8px 4px; }
+            .gps-marine-extra-value { font-size: 16px; }
+            .gps-clock { font-size: 36px; }
+        }
     </style>
 
     <div id="modal-gps-main" class="modal-overlay" style="display:none;" onclick="window.chiudiSuSfondo(event, 'modal-gps-main')">
-        <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px; position: relative;">
-            <i class="fa-solid fa-xmark" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); z-index: 20;" onclick="document.getElementById('modal-gps-main').style.display='none'"></i>
-
-            <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; margin-bottom: 16px; padding-bottom: 15px; padding-right: 36px; border-bottom: 1px solid var(--border-color);">
-                <i class="fa-solid fa-location-crosshairs"></i> Turno: <span id="gps-turno-val">--</span>
-            </h3>
+        <div class="modal-content gps-fullscreen-panel" style="display: flex; flex-direction: column; position: relative;">
+            <div class="gps-header">
+                <h3 class="gps-header-title">
+                    <i class="fa-solid fa-location-crosshairs"></i>
+                    <span>Turno: <span id="gps-turno-val">--</span></span>
+                    <span id="gps-turno-manuale-badge" class="gps-turno-badge" hidden>MANUALE</span>
+                    <button id="gps-turno-edit" class="gps-turno-edit" type="button" title="Modifica manualmente il turno" aria-label="Modifica manualmente il turno"><i class="fa-solid fa-pen"></i></button>
+                </h3>
+                <button id="gps-close-btn" class="gps-close-btn" type="button" title="Chiudi navigatore" aria-label="Chiudi navigatore" onclick="document.getElementById('modal-gps-main').style.display='none'">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
 
             <div class="gps-body">
+                <div id="gps-next-box"></div>
                 <div id="gps-clock" class="gps-clock">00:00:00</div>
                 <div class="gps-metrics">
                     <div class="gps-metric">
@@ -389,8 +586,23 @@ export function initUIGPS() {
                     </div>
                 </div>
 
+                <div class="gps-channel-info" aria-live="polite">
+                    <span id="gps-limit" class="gps-limit-sign" hidden aria-label="Limite di velocità"></span>
+                    <span id="gps-channel" class="gps-channel-name" hidden></span>
+                    <span id="gps-coordinates" class="gps-coordinates">In attesa della posizione GPS</span>
+                </div>
+
                 <div id="gps-act-box"></div>
-                <div id="gps-next-box"></div>
+                <div id="gps-marine-panel" class="gps-marine-panel" aria-live="polite">
+                    <button id="gps-marine-toggle" class="gps-marine-toggle" type="button" aria-expanded="false" aria-controls="gps-marine-details">
+                        <span><i class="fa-solid fa-water"></i> CONDIZIONI METEOMARINE ATTUALI</span><i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="gps-marine-summary">
+                        <div class="gps-marine-item"><div class="gps-marine-label">Marea</div><div id="gps-marine-tide" class="gps-marine-value">—</div><div id="gps-marine-tide-meta" class="gps-marine-meta">In attesa dei dati CPSM</div></div>
+                        <div class="gps-marine-item"><div class="gps-marine-label">Vento</div><div id="gps-marine-wind" class="gps-marine-value">—</div><div id="gps-marine-wind-meta" class="gps-marine-meta">In attesa dei dati CPSM</div></div>
+                    </div>
+                    <div id="gps-marine-details" class="gps-marine-details"><div id="gps-marine-extra" class="gps-marine-extra"></div></div>
+                </div>
 
                 <div id="gps-status" class="gps-status-box" style="background: transparent;">
                     <button id="btn-attiva-gps" class="btn-attiva-gps"><i class="fa-solid fa-location-arrow"></i> Attiva GPS</button>
@@ -409,6 +621,11 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
     // ---------------------------------------------------------------- elementi
     const modal = document.getElementById('modal-gps-main');
     const turnoVal = document.getElementById('gps-turno-val');
+    const turnoManualeBadge = document.getElementById('gps-turno-manuale-badge');
+    const btnModificaTurno = document.getElementById('gps-turno-edit');
+    const marineToggle = document.getElementById('gps-marine-toggle');
+    const marineDetails = document.getElementById('gps-marine-details');
+    const marineExtraEl = document.getElementById('gps-marine-extra');
     const speedVal = document.getElementById('gps-speed-val');
     const speedKnots = document.getElementById('gps-speed-knots');
     const delayVal = document.getElementById('gps-delay-val');
@@ -418,10 +635,21 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
     const statusDiv = document.getElementById('gps-status');
     const btnAttiva = document.getElementById('btn-attiva-gps');
     const clockVal = document.getElementById('gps-clock');
+    const gpsLimitEl = document.getElementById('gps-limit');
+    const gpsChannelEl = document.getElementById('gps-channel');
+    const gpsCoordEl = document.getElementById('gps-coordinates');
+    const marineTideEl = document.getElementById('gps-marine-tide');
+    const marineTideMetaEl = document.getElementById('gps-marine-tide-meta');
+    const marineWindEl = document.getElementById('gps-marine-wind');
+    const marineWindMetaEl = document.getElementById('gps-marine-wind-meta');
 
     // ---------------------------------------------------------------- stato
     let watchId = null;
     let speedHistory = [];
+    let cacheMeteomarinoGPS = null;
+    let meteomarinoGPSUltimoFetch = 0;
+    let meteomarinoGPSInCaricamento = false;
+    let marineAperto = false;
     const SMOOTHING_WINDOW_MS = 2000;
 
     let datiTurni = null;                  // rotazioni, disponibilità, varianti, ferie (turni-core.js, scaricati una volta sola)
@@ -445,11 +673,28 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
     let firmaLista = '';
     let listaAperta = false;
 
-    // ---------------------------------------------------------------- turno del giorno (copiato dalla dashboard)
 
+    function aggiornaInfoCanale(lat, lon, now) {
+        if (gpsCoordEl) gpsCoordEl.textContent = formattaCoordinateGPS(lat, lon);
+        if (!gpsLimiti) {
+            caricaLimitiGPS();
+            return null;
+        }
+        const r = gpsLimiti(lat, lon, now);
+        const limite = r && r.limite > 0 ? r.limite : null;
+        if (gpsLimitEl) {
+            gpsLimitEl.hidden = limite == null;
+            gpsLimitEl.textContent = limite == null ? '' : String(limite);
+            gpsLimitEl.title = limite == null ? '' : `Limite di velocità${r.nome ? ' · ' + r.nome : ''}`;
+        }
+        if (gpsChannelEl) {
+            gpsChannelEl.textContent = r ? r.nome : '';
+            gpsChannelEl.hidden = !r || !r.nome;
+        }
+        return limite;
+    }
 
-
-
+    // ---------------------------------------------------------------- turno del giorno
     async function initCaches() {
         if (datiTurni && !datiTurni.incompleto) return;
         try { datiTurni = await caricaDatiTurni(); }
@@ -469,8 +714,11 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
     async function turnoDelGiorno(dStr) {
         let state = {};
         try { state = JSON.parse(localStorage.getItem('myTurniApp')) || {}; } catch (e) { }
-        const manuale = !!(state.variazioni && state.variazioni[dStr]);
-        let codice = turnoEffettivo(dStr, state, datiTurni, userDataPrivate && userDataPrivate.mansione);
+        let overrideGPS = null;
+        try { overrideGPS = JSON.parse(localStorage.getItem('gps_turno_manuale')); } catch (e) { }
+        const manualeGPS = overrideGPS && overrideGPS.data === dStr && overrideGPS.codice ? String(overrideGPS.codice).trim().toUpperCase() : null;
+        const manuale = !!manualeGPS || !!(state.variazioni && state.variazioni[dStr]);
+        let codice = manualeGPS || turnoEffettivo(dStr, state, datiTurni, userDataPrivate && userDataPrivate.mansione);
         // ferie previste dalla rotazione ferie (come nel calendario): senza variazione manuale il turno diventa FEP
         if (!manuale && datiTurni && !["RI", "AL"].includes(String(codice).toUpperCase())) {
             const ferie = ferieDelGiorno(state, dStr, datiTurni.ferie);
@@ -493,6 +741,35 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
         }
         return esito;
     }
+
+    async function modificaTurnoGPS() {
+        const dataRiferimento = turnoCorrente?.data || dateToLocalISO(new Date());
+        let salvato = null;
+        try { salvato = JSON.parse(localStorage.getItem('gps_turno_manuale')); } catch (e) { }
+        const attuale = salvato?.data === dataRiferimento ? salvato.codice : (turnoCorrente?.codice || '');
+        const inserito = window.prompt('Inserisci il codice del turno da usare per il navigatore. Lascia vuoto per tornare al turno automatico.', attuale === 'N/D' ? '' : attuale);
+        if (inserito === null) return;
+        const codice = inserito.trim().toUpperCase();
+        if (codice) {
+            localStorage.setItem('gps_turno_manuale', JSON.stringify({ data: dataRiferimento, codice }));
+        } else {
+            localStorage.removeItem('gps_turno_manuale');
+        }
+        attKey = null; percorso = null; percorsoStato = 'nessuno'; minimoFermata = 0; firmaLista = ''; tokenPercorso++;
+        await caricaTurno();
+    }
+    if (btnModificaTurno) btnModificaTurno.addEventListener('click', modificaTurnoGPS);
+    if (marineToggle) marineToggle.addEventListener('click', () => {
+        marineAperto = !marineAperto;
+        marineToggle.classList.toggle('aperto', marineAperto);
+        marineToggle.setAttribute('aria-expanded', String(marineAperto));
+        marineDetails?.classList.toggle('aperto', marineAperto);
+        if (marineAperto) {
+            requestAnimationFrame(() => {
+                document.getElementById('gps-marine-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+        }
+    });
 
     // Attività in ordine, con partenza/arrivo in minuti dalla mezzanotte del giorno del turno (_p, _a)
     function preparaAttivita(turno) {
@@ -574,10 +851,10 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
 
     async function datiPercorso(corsa) {
         const shapeId = corsa.corsa && corsa.corsa.shapeId;
-        if (!shapeId) return null; // backend non aggiornato: si va avanti solo con gli orari
+        if (!shapeId) return null;
         try {
             const ids = corsa.fermate.map((f) => f.id).join(',');
-            return await fetchJson(`${API_URL}/api/v1/percorso?shape_id=${encodeURIComponent(shapeId)}&fermate=${encodeURIComponent(ids)}`);
+            return await fetchJson(`${API_BATEOLIVE_URL}/api/v1/percorso?shape_id=${encodeURIComponent(shapeId)}&fermate=${encodeURIComponent(ids)}`);
         } catch (e) {
             console.warn("GPS: percorso non disponibile", e);
             return null;
@@ -613,7 +890,6 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
         });
     }
 
-    // scarica in anticipo la corsa dopo quella in corso, così funziona anche se la linea dati cade
     function precaricaSuccessiva(act) {
         const lista = turnoCorrente ? turnoCorrente.attivita : [];
         const dopo = lista.find((a) => a._p >= act._a && eCorsa(a));
@@ -635,7 +911,6 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
     }
 
     function htmlAttivita(act, tipo, direzione) {
-        const titoli = { 'in corso': '', 'prossima': 'Prossima attività' };
         let etichetta;
         if (eCorsa(act)) {
             etichetta = `<span class="gps-linea" style="${getLineStyle(act.linea)}">${esc(act.linea)}</span>`;
@@ -669,7 +944,6 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
             dist = nav.distM >= 1000 ? `a ${(nav.distM / 1000).toFixed(1)} km` : `a ${Math.max(10, Math.round(nav.distM / 10) * 10)} m`;
         }
 
-        // la lista si ricostruisce solo quando cambia la fermata, non a ogni secondo
         const firma = `${nav.idx}|${nav.stato}`;
         if (firma !== firmaLista || !document.getElementById('gps-next-nome')) {
             firmaLista = firma;
@@ -713,12 +987,131 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
         delayLabel.textContent = m > 0 ? 'In ritardo' : m < 0 ? 'In anticipo' : 'In orario';
     }
 
-    // Un giro completo: sceglie l'attività, carica il percorso se serve, calcola ritardo e prossima fermata.
+    // ---------------------------------------------------------------- meteo marino CPSM (allineato alla dashboard)
+    function formattaValoreMarine(value, decimali = 1) {
+        return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value))
+            ? Number(value).toLocaleString('it-IT', { maximumFractionDigits: decimali, minimumFractionDigits: 0 })
+            : '—';
+    }
+    function distanzaStazioneGPS(stazione, lat, lon) {
+        if (stazione?.latitudine == null || stazione?.longitudine == null || !Number.isFinite(Number(stazione.latitudine)) || !Number.isFinite(Number(stazione.longitudine)) || lat == null || lon == null) return Infinity;
+        const rad = x => x * Math.PI / 180;
+        const dLat = rad(Number(stazione.latitudine) - lat), dLon = rad(Number(stazione.longitudine) - lon);
+        const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(lat)) * Math.cos(rad(Number(stazione.latitudine))) * Math.sin(dLon / 2) ** 2;
+        return 6371000 * 2 * Math.asin(Math.sqrt(h));
+    }
+    const PUNTA_SALUTE = { lat: 45.4310778, lon: 12.3363778 };
+    function stazioneRiferimentoGPS(tipo, latUtente = null, lonUtente = null) {
+        const stazioni = cacheMeteomarinoGPS?.stazioni || [];
+        const valide = stazioni.filter(st => {
+            const rec = st.dati?.[tipo];
+            if (!rec || rec.valore === null || rec.valore === undefined) return false;
+            if (tipo === 'vento') return rec.velocitaMs !== null || rec.direzioneGradi !== null;
+            return true;
+        });
+        if (!valide.length) return null;
+        if (tipo === 'livello') {
+            const punta = valide.find(st => /punta\s*(?:della\s*)?salute/i.test(st.nome || ''));
+            if (punta) return punta;
+            return valide.sort((a, b) => distanzaStazioneGPS(a, PUNTA_SALUTE.lat, PUNTA_SALUTE.lon) - distanzaStazioneGPS(b, PUNTA_SALUTE.lat, PUNTA_SALUTE.lon))[0];
+        }
+        const lat = latUtente != null && Number.isFinite(Number(latUtente)) ? Number(latUtente) : PUNTA_SALUTE.lat;
+        const lon = lonUtente != null && Number.isFinite(Number(lonUtente)) ? Number(lonUtente) : PUNTA_SALUTE.lon;
+        const ordinate = valide.sort((a, b) => distanzaStazioneGPS(a, lat, lon) - distanzaStazioneGPS(b, lat, lon));
+        if (tipo === 'vento') {
+            const conVentoAttivo = ordinate.find(st => Number(st.dati?.vento?.velocitaMs) > 0);
+            if (conVentoAttivo) return conVentoAttivo;
+        }
+        return ordinate[0];
+    }
+    function formattaDataMarine(value) {
+        if (!value) return '';
+        const d = new Date(String(value).replace(' ', 'T'));
+        return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+    function renderMeteomarinoGPS() {
+        if (!marineTideEl || !marineWindEl) return;
+        if (!cacheMeteomarinoGPS?.stazioni) {
+            marineTideEl.textContent = '—'; marineTideMetaEl.textContent = 'Dati CPSM non disponibili';
+            marineWindEl.textContent = '—'; marineWindMetaEl.textContent = 'Dati CPSM non disponibili';
+            if (marineExtraEl) marineExtraEl.innerHTML = '<div class="gps-marine-extra-item">Dati meteomarini non disponibili</div>';
+            return;
+        }
+        const stMarea = stazioneRiferimentoGPS('livello');
+        const stVento = stazioneRiferimentoGPS('vento', gps.lat, gps.lon);
+        const recMarea = stMarea?.dati?.livello;
+        const trend = stMarea?.andamentoMarea;
+        const crescente = Number.isFinite(Number(trend?.deltaCm)) && Number(trend.deltaCm) > 0;
+        const frecciaMarea = trend?.deltaCm == null ? '↕' : (crescente ? '↑' : '↓');
+        const classeMarea = trend?.deltaCm == null ? '' : (crescente ? 'tide-up' : 'tide-down');
+        marineTideEl.innerHTML = `<span class="gps-marine-arrow ${classeMarea}">${frecciaMarea}</span>${recMarea?.valoreCm == null ? '—' : `${formattaValoreMarine(recMarea.valoreCm, 1)} <small style="font-size:14px;">cm</small>`}`;
+        const delta = trend?.deltaCm == null ? 'Andamento in rilevamento' : (crescente ? 'Marea in crescita' : 'Marea in calo');
+        const stMareaNome = stMarea?.nome ? ` · ${stMarea.nome}` : '';
+        marineTideMetaEl.textContent = `${delta}${stMareaNome}${recMarea?.data ? ` · ${formattaDataMarine(recMarea.data)}` : ''}`;
+
+        const vento = stVento?.dati?.vento;
+        const gradi = vento?.direzioneGradi == null ? NaN : Number(vento.direzioneGradi);
+        const frecciaVento = Number.isFinite(gradi) ? `<span class="gps-marine-arrow" style="transform:rotate(${gradi}deg);">↑</span>` : '';
+        marineWindEl.innerHTML = `${frecciaVento}${vento?.velocitaMs == null ? '—' : `${formattaValoreMarine(vento.velocitaMs * 3.6, 1)} <small style="font-size:14px;">km/h</small>`}`;
+        const nodi = vento?.velocitaMs == null ? '' : ` · ${formattaValoreMarine(vento.velocitaMs * 1.94384, 1)} kn`;
+        const maxMs = vento?.velocitaMassimaMs == null ? '' : ` · max ${formattaValoreMarine(vento.velocitaMassimaMs, 1)} m/s`;
+        const stVentoNome = stVento?.nome ? ` · ${stVento.nome}` : '';
+        marineWindMetaEl.textContent = `${vento?.direzioneCardinale || 'Direzione n/d'}${Number.isFinite(gradi) ? ` (${Math.round(gradi)}°)` : ''}${nodi}${maxMs}${stVentoNome}${vento?.data ? ` · ${formattaDataMarine(vento.data)}` : ''}`;
+
+        const items = [
+            ['Pressione', 'pressione', 'hPa', v => formattaValoreMarine(v, 1)],
+            ['Radiazione solare', 'radiazione', 'W/m²', v => formattaValoreMarine(v, 0)],
+            ['Temperatura aria', 'temperaturaAria', '°C', v => formattaValoreMarine(v, 1)],
+            ['Temperatura acqua', 'temperaturaAcqua', '°C', v => formattaValoreMarine(v, 1)],
+            ['Umidità', 'umidita', '%', v => formattaValoreMarine(v, 0)],
+            ['Onde in laguna', 'ondeLaguna', 'm', v => v?.significativaM == null ? '—' : `${formattaValoreMarine(v.significativaM, 2)} <small style="font-size:10px;color:var(--text-muted);">sign. · max ${formattaValoreMarine(v.massimaM, 2)}</small>`],
+            ['Onde in mare', 'ondeMare', 'm', v => v?.significativaM == null ? '—' : `${formattaValoreMarine(v.significativaM, 2)} <small style="font-size:10px;color:var(--text-muted);">sign. · max ${formattaValoreMarine(v.massimaM, 2)}</small>`],
+        ];
+        if (marineExtraEl) marineExtraEl.innerHTML = items.map(([label, tipo, unita, fmt]) => {
+            const st = stazioneRiferimentoGPS(tipo, gps.lat, gps.lon);
+            const rec = st?.dati?.[tipo];
+            const raw = rec?.valore;
+            const valore = raw && typeof raw === 'object' ? fmt(raw) : fmt(raw);
+            const stNome = st?.nome || 'Stazione non indicata';
+            const dataOra = rec?.data ? ` · ${formattaDataMarine(rec.data)}` : '';
+            return `<div class="gps-marine-extra-item">
+                <div class="gps-marine-extra-label">${esc(label)}</div>
+                <div class="gps-marine-extra-value">${valore}${valore !== '—' ? `<small style="font-size:11px;margin-left:3px;color:var(--text-muted);">${esc(unita)}</small>` : ''}</div>
+                <div class="gps-marine-extra-meta">${esc(stNome + dataOra)}</div>
+            </div>`;
+        }).join('');
+    }
+    async function aggiornaMeteomarinoGPS(forza = false) {
+        if (meteomarinoGPSInCaricamento || (!forza && Date.now() - meteomarinoGPSUltimoFetch < 5 * 60 * 1000)) return;
+        meteomarinoGPSInCaricamento = true;
+        try {
+            const response = await fetch(`${API_URL}/api/meteomarino`, { cache: 'no-store' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            cacheMeteomarinoGPS = await response.json();
+            meteomarinoGPSUltimoFetch = Date.now();
+            renderMeteomarinoGPS();
+        } catch (e) {
+            console.warn('GPS: dati meteomarini non disponibili:', e.message);
+            if (!cacheMeteomarinoGPS) renderMeteomarinoGPS();
+        } finally { meteomarinoGPSInCaricamento = false; }
+    }
+
     function render() {
         if (!modal || modal.style.display === 'none') return;
-        if (!turnoCorrente) { turnoVal.textContent = '--'; mostraMessaggio('<i class="fa-solid fa-spinner fa-spin"></i> Carico il turno…'); disegnaRitardo(null); return; }
+        if (!turnoCorrente) {
+            turnoVal.textContent = '--';
+            if (turnoManualeBadge) turnoManualeBadge.hidden = true;
+            mostraMessaggio('<i class="fa-solid fa-spinner fa-spin"></i> Carico il turno…');
+            disegnaRitardo(null);
+            return;
+        }
 
         turnoVal.textContent = turnoCorrente.codice;
+        let overrideAttivo = null;
+        try { overrideAttivo = JSON.parse(localStorage.getItem('gps_turno_manuale')); } catch (e) { }
+        const manualeAttivo = Boolean(overrideAttivo && overrideAttivo.data === turnoCorrente.data && overrideAttivo.codice);
+        if (turnoManualeBadge) turnoManualeBadge.hidden = !manualeAttivo;
+        if (btnModificaTurno) btnModificaTurno.title = manualeAttivo ? 'Modifica il turno manuale (lascia vuoto per tornare automatico)' : 'Modifica manualmente il turno';
         if (turnoCorrente.stato === 'riposo') { mostraMessaggio(`Oggi non hai corse in programma (${esc(turnoCorrente.codice)}).`); disegnaRitardo(null); return; }
         if (turnoCorrente.stato === 'varianti') { mostraMessaggio('<i class="fa-solid fa-triangle-exclamation"></i> Variante in corso: per gli orari vedi il turno nella sezione turni.', true); disegnaRitardo(null); return; }
         if (turnoCorrente.stato === 'nd') { mostraMessaggio('Turno non calcolabile: completa la configurazione nel calendario.', true); disegnaRitardo(null); return; }
@@ -734,7 +1127,6 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
             return;
         }
 
-        // percorso: serve per la corsa in corso e, poco prima, per la successiva
         const serve = eCorsa(act) && (tipo === 'in corso' || act._p - nowSec / 60 <= PRECARICA_MIN);
         const chiave = chiaveAttivita(act);
         if (serve && chiave !== attKey) caricaPercorso(act);
@@ -743,7 +1135,6 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
 
         impostaAttivita(htmlAttivita(act, tipo, serve && percorsoStato === 'ok' ? direzioneCorsa : ''));
 
-        // ritardo e prossima fermata
         let ritardo = null;
         if (serve && percorsoStato === 'ok') {
             let nav;
@@ -751,10 +1142,9 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
             if (percorso.geometria && fixFresco) {
                 nav = trovaProssima(percorso, gps.along, nowSec, minimoFermata, gps.vel);
                 minimoFermata = Math.max(minimoFermata, nav.idx);
-                // media mobile dei fix, aggiornata con quanto il ritardo è cambiato dall'ultimo fix
                 const istantaneo = nowSec - orarioProgrammato(percorso, gps.along, nowSec);
                 ritardo = ritardoSmussato == null ? istantaneo : ritardoSmussato + (istantaneo - gps.ritardoIstantaneo);
-                if (nav.stato === 'arrivato' && ritardoSmussato != null) ritardo = ritardoSmussato; // a fine corsa il ritardo non cresce più
+                if (nav.stato === 'arrivato' && ritardoSmussato != null) ritardo = ritardoSmussato;
             } else {
                 nav = trovaProssimaDaOrario(percorso, nowSec);
             }
@@ -773,7 +1163,7 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
     // riga di stato sotto il riquadro: errori GPS, segnale, fuori percorso
     let messaggioErrore = null;
     function aggiornaStato(rt, tipo) {
-        if (watchId == null) return; // prima dell'attivazione c'è il pulsante
+        if (watchId == null) return;
         if (messaggioErrore) return;
         if (gps.acc == null) return;
         let testo = `<i class="fa-solid fa-satellite-dish"></i> Segnale GPS (±${Math.round(gps.acc)} m)`;
@@ -791,17 +1181,19 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
         const now = Date.now();
         messaggioErrore = null;
 
-        // velocità: media mobile degli ultimi 2 secondi
         const rawSpeedMs = coords.speed || 0;
         speedHistory.push({ speed: rawSpeedMs, time: now });
         speedHistory = speedHistory.filter(e => now - e.time <= SMOOTHING_WINDOW_MS);
         const avgSpeedMs = speedHistory.reduce((s, e) => s + e.speed, 0) / speedHistory.length;
-        speedVal.textContent = (avgSpeedMs * 3.6).toFixed(1);
+        const velocitaKmh = avgSpeedMs * 3.6;
+        speedVal.textContent = velocitaKmh.toFixed(1);
         speedKnots.textContent = `${(avgSpeedMs * 1.94384).toFixed(1)} nodi`;
 
         gps.lat = coords.latitude; gps.lon = coords.longitude; gps.acc = coords.accuracy; gps.vel = avgSpeedMs;
+        renderMeteomarinoGPS();
+        const limiteCanale = aggiornaInfoCanale(coords.latitude, coords.longitude, now);
+        speedVal.classList.toggle('superamento', limiteCanale != null && velocitaKmh > limiteCanale);
 
-        // posizione sul percorso
         if (percorso && percorso.geometria && turnoCorrente && coords.accuracy <= ACCURATEZZA_MAX_M) {
             const nowSec = secondiDalGiorno(turnoCorrente.data);
             const p = aPiano(percorso, coords.latitude, coords.longitude);
@@ -811,13 +1203,12 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
             if (pr) {
                 gps.fuori = pr.scarto > FUORI_PERCORSO_M;
                 if (!gps.fuori) {
-                    // un salto indietro di molto (nuovo passaggio) azzera le fermate già passate
                     if (gps.along != null && pr.along < gps.along - 300) minimoFermata = 0;
                     gps.along = pr.along; gps.scarto = pr.scarto; gps.ts = now;
                     const inst = nowSec - orarioProgrammato(percorso, pr.along, nowSec);
                     gps.ritardoIstantaneo = inst;
                     const arrivato = pr.along >= percorso.lunghezza - SOGLIA_FERMATA_M;
-                    const inAttesa = pr.along <= percorso.fermate[0].dist + SOGLIA_FERMATA_M && nowSec < percorso.fermate[0].dep; // fermo al primo attracco, non è ancora partito
+                    const inAttesa = pr.along <= percorso.fermate[0].dist + SOGLIA_FERMATA_M && nowSec < percorso.fermate[0].dep;
                     if (!arrivato && !inAttesa) ritardoSmussato = ritardoSmussato == null ? inst : ritardoSmussato + SMORZA_RITARDO * (inst - ritardoSmussato);
                 }
             }
@@ -887,6 +1278,7 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
     setInterval(() => {
         aggiornaOrologio();
         if (!modal || modal.style.display === 'none') return;
+        if (Date.now() - meteomarinoGPSUltimoFetch > 5 * 60 * 1000) aggiornaMeteomarinoGPS();
         if (serveRicaricare() && Date.now() - ultimoTentativoTurno > 5000) caricaTurno();
         else render();
     }, 1000);
@@ -896,11 +1288,13 @@ export function avviaMotoreGPS(db, auth, userDataPrivate) {
     window.apriModaleGPS = function () {
         modal.style.display = 'flex';
         render();
-        caricaTurno(); // riparte da localStorage: se hai cambiato il turno nel calendario lo trova aggiornato
+        renderMeteomarinoGPS();
+        aggiornaMeteomarinoGPS(true);
+        caricaTurno();
 
-        // se il permesso c'è già non serve premere il pulsante
         if (watchId == null && navigator.permissions && navigator.permissions.query) {
             navigator.permissions.query({ name: 'geolocation' }).then((r) => { if (r.state === 'granted') inizializzaGPS(); }).catch(() => { });
         }
     };
 }
+ 

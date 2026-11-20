@@ -1,4 +1,4 @@
-const CACHE_NAME = 'utility-app-v80';
+const CACHE_NAME = 'utility-app-v132';
 
 // Elenco completo dei file dell'app basato su mappa_file.json
 const PRECACHE_ASSETS = [
@@ -7,12 +7,12 @@ const PRECACHE_ASSETS = [
     './calendario.html',
     './manifest.json',
     './moduli/admin.js',
+    './moduli/archivio.js',
     './moduli/auth.js',
     './moduli/bacheca.js',
     './moduli/bacheca_turni.js',
     './moduli/bacheca_utility.js',
     './moduli/bateolive.js',
-    './moduli/bateolivelite.js',
     './moduli/barcadvisor.js',
     './moduli/buoni_pasto.js',
     './moduli/calendario.js',
@@ -48,7 +48,6 @@ const PRECACHE_ASSETS = [
     './moduli/ui_link.js',
     './moduli/ui_orari.js',
     './moduli/ui_promemoria.js',
-    './moduli/ui_report.js',
     './moduli/ui_rotazione_ferie.js',
     './moduli/ui_rotazioni.js',
     './moduli/ui_rubrica.js',

@@ -12,24 +12,152 @@ import {
 } from "./turni-core.js"; // va importato sempre con questo stesso percorso (vedi turni-core.js)
 
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js"; // stessa versione del calendario: così le istanze sono compatibili
-const API_URL = 'https://api.bateolive.stream';
+// Due backend separati (cartelle BateoLive-backend e Utility-backend), ognuno col proprio indirizzo
+const API_URL = 'https://bateolivebe.homeserver.foo';              // BateoLive: mappa, utenti live, storico, webcam, percorsi (/api/v1/percorso)
+const API_TURNI_URL = 'https://utilitybe.homeserver.foo';   // Utility: turni e corse dei turni (/api/v1/turno, /api/v1/corsa)
+
+// ---------- Limiti di velocità nei canali (da /api/limiti/<profilo>, vedi limiti.js del backend) ----------
+// Il confronto posizione/canale si fa qui, a ogni punto GPS: nessuna richiesta al server oltre al download iniziale.
+const LIMITI_PROFILO = 'actv';   // 'normale' = limiti ordinari, 'actv' = limiti in deroga per ACTV
+let bvLimitiDati = null; // dati grezzi dei limiti: servono anche alle etichette dei nomi dei canali
+let bvLimiti = null, bvLimitiInCorso = false, bvLimitiTentativo = 0, bvLimiteMostrato = null;
+
+function bvLimitiCostruisci(dati) {
+    const CELLA = 0.01; // gradi (~1 km): la griglia riduce i poligoni da controllare a pochi
+    const inAnello = (x, y, a) => {
+        let dentro = false;
+        for (let i = 0, j = a.length - 1; i < a.length; j = i++) {
+            const xi = a[i][0], yi = a[i][1], xj = a[j][0], yj = a[j][1];
+            if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) dentro = !dentro;
+        }
+        return dentro;
+    };
+    const inPoligono = (x, y, p) => { if (!inAnello(x, y, p[0])) return false; for (let k = 1; k < p.length; k++) if (inAnello(x, y, p[k])) return false; return true; };
+    const parti = [], griglia = new Map();
+    for (const c of (dati && dati.canali) || []) for (const poly of c.g) {
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+        for (const p of poly[0]) { if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0]; if (p[1] < y0) y0 = p[1]; if (p[1] > y1) y1 = p[1]; }
+        const idx = parti.push({ b: [x0, y0, x1, y1], poly, v: c.v, n: c.n }) - 1;
+        for (let ix = Math.floor(x0 / CELLA); ix <= Math.floor(x1 / CELLA); ix++)
+            for (let iy = Math.floor(y0 / CELLA); iy <= Math.floor(y1 / CELLA); iy++) {
+                const k = ix + ',' + iy;
+                (griglia.get(k) || griglia.set(k, []).get(k)).push(idx);
+            }
+    }
+    const alla = (lat, lon) => {
+        const cand = griglia.get(Math.floor(lon / CELLA) + ',' + Math.floor(lat / CELLA));
+        if (!cand) return null;
+        let meglio = null, senzaLimite = null;
+        for (const i of cand) {
+            const p = parti[i];
+            if (lon < p.b[0] || lon > p.b[2] || lat < p.b[1] || lat > p.b[3] || !inPoligono(lon, lat, p.poly)) continue;
+            if (p.v <= 0) { if (!senzaLimite) senzaLimite = { limite: 0, nome: p.n }; continue; } // tratto senza limite nel dato: si tiene solo il nome
+            if (!meglio || p.v < meglio.limite) meglio = { limite: p.v, nome: p.n }; // tratti sovrapposti: vale il limite più basso
+        }
+        return meglio || senzaLimite;
+    };
+    // con il GPS ogni tanto si esce per un attimo dal canale (rive, precisione): per 10 s resta l'ultimo limite noto
+    let ultimo = null, ultimoT = 0;
+    return { stabile(lat, lon, adesso) {
+        const r = alla(lat, lon);
+        if (r) { ultimo = r; ultimoT = adesso; return r; }
+        return ultimo && adesso - ultimoT < 10000 ? ultimo : null;
+    } };
+}
+
+function caricaLimitiVelocita() {
+    if (bvLimiti || bvLimitiInCorso || Date.now() - bvLimitiTentativo < 60000) return; // se fallisce, riprova al massimo una volta al minuto
+    bvLimitiInCorso = true; bvLimitiTentativo = Date.now();
+    fetch(API_URL + '/api/limiti/' + LIMITI_PROFILO)
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(d => { bvLimitiDati = d; bvLimiti = bvLimitiCostruisci(d); })
+        .catch(e => console.warn('Limiti di velocità non disponibili:', e.message))
+        .finally(() => { bvLimitiInCorso = false; });
+}
+
+function aggiornaLimiteVelocita(lat, lon, now) {
+    const coord = document.getElementById('bv-coord');
+    if (coord) coord.textContent = Math.abs(lat).toFixed(5) + '° ' + (lat >= 0 ? 'N' : 'S') + ', ' + Math.abs(lon).toFixed(5) + '° ' + (lon >= 0 ? 'E' : 'W');
+    const el = document.getElementById('bv-limite'), nomeEl = document.getElementById('bv-canale');
+    if (!el || !nomeEl) return;
+    if (!bvLimiti) { caricaLimitiVelocita(); return; }
+    const r = bvLimiti.stabile(lat, lon, now);
+    const v = r && r.limite > 0 ? r.limite : null;   // 0 = nel dato non c'è un limite: niente cartello
+    const nome = r ? r.nome : '';
+
+    // La velocità diventa rossa solo quando supera il limite del canale corrente.
+    // Il controllo viene eseguito a ogni aggiornamento GPS, anche se il canale non cambia.
+    const speedEl = document.getElementById('bv-speed-val');
+    if (speedEl) {
+        const velocita = Number.parseFloat(speedEl.textContent);
+        speedEl.classList.toggle('bv-speed-over-limit', v !== null && Number.isFinite(velocita) && velocita > v);
+    }
+
+    const chiave = v + '|' + nome;
+    if (chiave === bvLimiteMostrato) return;
+    bvLimiteMostrato = chiave;
+    if (v === null) { el.hidden = true; el.textContent = ''; el.removeAttribute('title'); }
+    else { el.textContent = String(v); el.title = 'Limite di velocità' + (nome ? ' · ' + nome : ''); el.hidden = false; }
+    nomeEl.textContent = nome;
+    nomeEl.hidden = !nome;
+}
+
+function azzeraLimiteVelocita() {
+    bvLimiteMostrato = null;
+    for (const id of ['bv-limite', 'bv-canale', 'bv-coord']) {
+        const e = document.getElementById(id);
+        if (e) { e.textContent = ''; if (id !== 'bv-coord') e.hidden = true; }
+    }
+}
+
 let globalBoats = [];
+// Posizioni simulate dall'orario (corse non rilevate dal GPS): disattivate di base, la scelta resta salvata
+let bvMostraSimulate = (() => { try { return localStorage.getItem('bv_mostra_simulate') === '1'; } catch (e) { return false; } })();
 let globalStops = [];
 let map = null;
 let oms = null;
 let boatMarkers = {};
 let otherUsersMarkers = {};
 let userMarker = null;
-let currentFilterLines = [];
+let filtroMezzi = { nav: { off: false, nascoste: new Set() }, bus: { off: false, nascoste: new Set() } }; // filtro per categoria: interruttore generale + linee nascoste
 let fetchInterval = null;
 let mapDepsLoaded = false;
 let activeSelection = null;
+// Telecamere in diretta: elenco dal server (data/webcam.json), segnalini in mappa, modalità modifica (solo admin)
+let authBateo = null;
+let webcams = [];
+const webcamMarkers = {};
+let webcamAdmin = false;
+let webcamModifica = false;
+let webcamInModifica = null; // id della telecamera nel modulo di modifica (null = nuova)
 // Nomi unità (normalizzati) inseriti manualmente da altri utenti: le unità ACTV corrispondenti vengono nascoste
 let hiddenActvUnitNames = new Set();
 
 // Livelli Mappa e Stile
 let baseOSM, baseSat, nauticLayer;
+let baseOffline = null;          // mappa vettoriale locale (PMTiles); null se non disponibile
+let bvTemaScuroAttivo = false;   // flavor attualmente usato dalla mappa vettoriale
 let currentMapMode = 0; // 0: Base, 1: Satellitare
+
+// Opzioni della mappa (finestra "Stile mappa"): salvate sul dispositivo e riapplicate alle aperture successive
+const BV_OPZ_CHIAVE = 'bv_opzioni_mappa';
+const BV_OPZ_DEFAULT = { nautico: true, cam: true, canali: false, briccole: false };
+const opzMappa = (() => {
+    let o = {};
+    try { o = JSON.parse(localStorage.getItem(BV_OPZ_CHIAVE) || '{}') || {}; } catch (e) { /* si parte dai valori di base */ }
+    const r = {};
+    for (const k of Object.keys(BV_OPZ_DEFAULT)) r[k] = typeof o[k] === 'boolean' ? o[k] : (k === 'briccole' ? null : BV_OPZ_DEFAULT[k]);   // briccole: senza scelta salvata vale il ruolo (acceso per admin e collab-mappe, spento per gli altri)
+    return r;
+})();
+
+// Segnali (briccole): elenco dal server (data/segnali.json). Li vedono tutti se attivano "Info briccole"; li modifica solo chi ha ruolo admin o collab-mappe.
+let segnali = [];
+let segnaliCaricati = false;
+let segnaliInCaricamento = false;
+let segnaliPuoModificare = false;   // ruolo admin o collab-mappe
+let segnaliModifica = false;        // modalità modifica (matita)
+let segnaliAggiungi = false;        // tasto + premuto: il prossimo tocco sulla mappa crea un segnale
+let segnaliInModifica = null;       // id del segnale nella scheda di modifica
 
 // Variabili GPS, Identità e Unità Personalizzata
 let watchId = null;
@@ -80,6 +208,8 @@ const ACTV_COLORS = {
     '20': { bg: '#cbb3d5', text: '#000000', border: '#cbb3d5' },
     '22': { bg: '#c4d82d', text: '#006600', border: '#006600' },
     'N':  { bg: '#1c355e', text: '#ffffff', border: '#1c355e' },
+    'NMU':  { bg: '#1c355e', text: '#ffffff', border: '#1c355e' },
+    'NLN':  { bg: '#1c355e', text: '#ffffff', border: '#1c355e' },
     'SA': { bg: '#ff7000', text: '#000000', border: '#ff7000' }
  };
 
@@ -100,9 +230,9 @@ const loadScript = (src) => new Promise((resolve, reject) => {
 // ---- Statistiche Umami: il tracker parte solo quando si apre questo modulo ----
 // auto-track disattivato: non si conta la pagina contenitore (/utility/index.html),
 // ogni apertura viene registrata come pagina virtuale con un URL proprio del modulo.
-const UMAMI_SRC = 'https://api.bateolive.stream/stats/script.js';
+const UMAMI_SRC = 'https://utilitybe.homeserver.foo/stats/script.js';
 const UMAMI_ID = '2b1a80cf-f9e6-4173-9ff3-0c1adefe19e3';
-const UMAMI_HOST = 'https://api.bateolive.stream/stats';
+const UMAMI_HOST = 'https://utilitybe.homeserver.foo/stats';
 
 function tracciaApertura(urlVirtuale, titolo) {
     const invia = () => window.umami && window.umami.track((p) => ({ ...p, url: urlVirtuale, title: titolo }));
@@ -133,6 +263,8 @@ async function loadMapDependencies() {
     }
     await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier-Leaflet/0.2.6/oms.min.js');
+    // mappa vettoriale offline: se la libreria non si carica si ricade su OSM (baseOSM)
+    try { await loadScript('https://unpkg.com/protomaps-leaflet@5.1.0/dist/protomaps-leaflet.js'); } catch (e) { /* fallback OSM */ }
     mapDepsLoaded = true;
 }
 
@@ -207,12 +339,105 @@ export function initUIBateoLive() {
         /* Marker */
         .bv-boat-icon { border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; box-shadow: 0 2px 8px rgba(0,0,0,0.45); cursor: pointer; transform: rotate(var(--marker-rotation, 0deg)); transition: transform 0.2s linear, scale 0.2s ease; }
         .bv-boat-icon:hover { scale: 1.15; }
+        /* Mezzi live: goccia (battelli) e pillola (bus). La forma ruota verso la direzione di marcia (--h), il numero di linea resta dritto.
+           Con la mappa ruotata (--marker-rotation) il marker si contro-ruota e la forma compensa, cosi' la direzione resta quella vera. */
+        .bv-veh { position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; transform: rotate(var(--marker-rotation, 0deg)); transition: scale 0.2s ease; }
+        .bv-veh:hover { scale: 1.15; }
+        .bv-veh-shape { position: absolute; inset: 0; transform: rotate(calc(var(--h, 0deg) - var(--marker-rotation, 0deg))); transition: transform 0.3s linear; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.45)); }
+        .bv-veh-shape svg { display: block; width: 100%; height: 100%; overflow: visible; }
+        .bv-veh-sim .bv-veh-shape { filter: drop-shadow(0 0 3px rgba(47, 129, 247, 0.7)) drop-shadow(0 2px 4px rgba(0,0,0,0.45)); }
+        .bv-veh-txt { position: relative; font-weight: 700; font-size: 11px; line-height: 1; pointer-events: none; }
+        .bv-veh .bv-sim-badge { top: 3px; right: 3px; }
+        /* Telecamere in diretta (YouTube) */
+        .bv-cam-icon { width: 21px; height: 21px; box-sizing: border-box; border-radius: 50%; background: #b91c1c; color: #fff; border: 1.5px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; font-size: 9px; transform: rotate(var(--marker-rotation, 0deg)); }
+        .bv-cam-icon.modifica { outline: 2px dashed var(--bv-primary); outline-offset: 2px; }
+        .bv-cam-badge { width: 26px; height: 26px; border-radius: 50%; background: #b91c1c; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+        .bv-cam-player { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; overflow: hidden; }
+        .bv-cam-player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+        .bv-cam-link { display: block; margin-top: 12px; text-align: center; font-size: 13px; font-weight: 600; color: var(--bv-primary); text-decoration: none; }
+        .bv-cam-hint { margin: 10px 0 6px; font-size: 12px; line-height: 1.4; color: var(--bv-muted); }
+        .bv-cam-vuoto { padding: 16px 4px; font-size: 13px; color: var(--bv-muted); }
+        .bv-cam-riga { display: flex; align-items: center; gap: 10px; padding: 12px 4px; border-bottom: 1px solid var(--bv-border); cursor: pointer; color: var(--bv-text); font-size: 14px; }
+        .bv-cam-riga > div { min-width: 0; }
+        .bv-cam-riga small { display: block; color: var(--bv-muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .bv-cam-coord { display: flex; gap: 10px; }
+        .bv-cam-coord > div { flex: 1; min-width: 0; }
+        .bv-cam-secondario { background: transparent; border: 1px solid var(--bv-border); color: var(--bv-text); padding: 9px; width: 100%; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 4px; }
+        .bv-cam-errore { color: var(--bv-danger); font-size: 13px; margin-top: 10px; }
+
+        /* ---------- Stile mappa e opzioni ---------- */
+        .bv-stile-scelte { display: flex; gap: 10px; margin-bottom: 14px; flex-shrink: 0; }
+        .bv-stile-opz { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 6px; border-radius: 12px; border: 2px solid var(--bv-border); background: var(--bv-fill); color: var(--bv-text); font-size: 13px; font-weight: 700; cursor: pointer; }
+        .bv-stile-opz i { font-size: 20px; color: var(--bv-muted); }
+        .bv-stile-opz.active { border-color: var(--bv-primary); background: var(--bv-tint); color: var(--bv-primary); }
+        .bv-stile-opz.active i { color: var(--bv-primary); }
+        .bv-opz { border-top: 1px solid var(--bv-border); padding-top: 4px; overflow-y: auto; min-height: 0; }
+        .bv-opz > summary { cursor: pointer; padding: 10px 2px; font-size: 14px; font-weight: 700; color: var(--bv-text); list-style: none; display: flex; align-items: center; justify-content: space-between; }
+        .bv-opz > summary::-webkit-details-marker { display: none; }
+        .bv-opz > summary::after { content: ''; width: 7px; height: 7px; border-right: 2px solid var(--bv-muted); border-bottom: 2px solid var(--bv-muted); transform: rotate(45deg); margin: -3px 4px 0 0; transition: transform 0.2s; }
+        .bv-opz[open] > summary::after { transform: rotate(-135deg); margin-top: 3px; }
+        .bv-opz-riga { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 2px; font-size: 14px; color: var(--bv-text); cursor: pointer; }
+        .bv-opz-riga[hidden] { display: none; }
+        .bv-opz-dx { display: flex; align-items: center; gap: 12px; }
+        .bv-opz-pdf { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--bv-border); background: var(--bv-fill); color: var(--bv-danger); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+        .bv-opz-pdf:disabled { opacity: 0.5; }
+        .bv-sw { position: relative; width: 42px; height: 24px; flex-shrink: 0; display: inline-block; }
+        .bv-sw input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
+        .bv-sw i { position: absolute; inset: 0; border-radius: 12px; background: var(--bv-border); transition: background 0.2s; pointer-events: none; }
+        .bv-sw i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform 0.2s; }
+        .bv-sw input:checked + i { background: var(--bv-primary); }
+        .bv-sw input:checked + i::after { transform: translateX(18px); }
+        /* ---------- Impostazioni ---------- */
+        .bv-imp-lista { overflow-y: auto; min-height: 0; border-top: 1px solid var(--bv-border); margin-top: 4px; }
+        .bv-imp-riga { display: flex; align-items: center; gap: 12px; padding: 12px 2px; font-size: 14px; color: var(--bv-text); cursor: pointer; border-bottom: 1px solid var(--bv-border); -webkit-tap-highlight-color: transparent; }
+        .bv-imp-riga:last-child { border-bottom: none; }
+        .bv-imp-riga > i:first-child, .bv-imp-riga > svg:first-child { width: 22px; flex-shrink: 0; text-align: center; font-size: 17px; color: var(--bv-primary); }
+        .bv-imp-lbl { flex: 1; font-weight: 600; }
+        .bv-imp-riga .bv-sw { pointer-events: none; }
+        .bv-imp-riga.active .bv-sw i { background: var(--bv-primary); }
+        .bv-imp-riga.active .bv-sw i::after { transform: translateX(18px); }
+        .bv-imp-freccia { color: var(--bv-muted); font-size: 12px; }
+        .bv-imp-azione.active .bv-imp-lbl { color: var(--bv-primary); }
+
+        /* ---------- Nomi dei canali ---------- */
+        .bv-canale-lbl { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%) rotate(var(--marker-rotation, 0deg)); white-space: nowrap; pointer-events: none; font-size: 11px; font-weight: 700; font-style: italic; color: #0b3c6e; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 5px #fff, 0 0 5px #fff; }
+        .bv-tiles-sat-attivo .bv-canale-lbl { color: #fff; text-shadow: 0 0 3px #000, 0 0 3px #000, 0 0 5px #000; }
+
+        /* ---------- Segnali (briccole) ---------- */
+        .bv-fab.bv-verde { background: #16a34a; border-color: #16a34a; color: #fff; }
+        .bv-fab.bv-seg-add { background: #111; border-color: #111; color: #fff; }
+        .bv-fab.bv-seg-add.active { background: var(--bv-primary); border-color: var(--bv-primary); }
+        .bv-seg-dot-wrap { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .bv-seg-dot { width: 13px; height: 13px; border-radius: 50%; background: #000; border: 2px solid #fff; box-sizing: border-box; box-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+        .bv-seg-dot.completo { border-color: #16a34a; }
+        .bv-seg-maniglia { width: 34px; height: 34px; border-radius: 50%; background: var(--bv-surface); color: var(--bv-primary); border: 2px solid var(--bv-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: grab; touch-action: none; transform: rotate(var(--marker-rotation, 0deg)); }
+        .bv-seg-badge { width: 26px; height: 26px; border-radius: 50%; background: #000; flex-shrink: 0; border: 2px solid #fff; box-sizing: border-box; box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+        .bv-seg-riga { display: flex; justify-content: space-between; gap: 12px; padding: 11px 2px; border-bottom: 1px solid var(--bv-border); font-size: 14px; color: var(--bv-text); }
+        .bv-seg-riga span { color: var(--bv-muted); }
+        .bv-seg-note { margin-top: 12px; font-size: 13px; line-height: 1.45; color: var(--bv-text); white-space: pre-wrap; word-break: break-word; }
+        .bv-seg-sez { margin-top: 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--bv-muted); }
+        .bv-seg-corpo { overflow-y: auto; min-height: 0; padding: 2px 2px 0; }
+        .bv-seg-cat { border: 1px solid var(--bv-border); border-radius: 12px; padding: 10px 12px 12px; }
+        .bv-seg-cat-tit { font-size: 13px; font-weight: 700; color: var(--bv-text); margin-bottom: 8px; }
+        .bv-seg-sel { display: flex; border: 1px solid var(--bv-border); border-radius: 10px; overflow: hidden; }
+        .bv-seg-sel button { flex: 1; padding: 10px 4px; border: none; border-right: 1px solid var(--bv-border); background: var(--bv-fill); color: var(--bv-text); font-size: 13px; font-weight: 600; cursor: pointer; }
+        .bv-seg-sel button:last-child { border-right: none; }
+        .bv-seg-sel button.active { background: var(--bv-primary); color: #fff; }
+        .bv-modal input[type="number"], .bv-modal textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--bv-border); background: var(--bv-fill); color: var(--bv-text); box-sizing: border-box; outline: none; font-size: 14px; font-family: inherit; }
+        .bv-modal textarea { resize: vertical; min-height: 70px; }
+        .bv-modal input[type="number"]:focus, .bv-modal textarea:focus { border-color: var(--bv-primary); box-shadow: 0 0 0 3px var(--bv-tint); }
+        .bv-fab-s { font-weight: 800; font-size: 19px; line-height: 1; font-family: inherit; }
+        /* Unità simulata dall'orario (non rilevata dal GPS): contorno blu e badge S */
+        .bv-boat-sim { position: relative; border: 2.5px solid #2f81f7; box-shadow: 0 0 0 2px rgba(47, 129, 247, 0.35), 0 2px 8px rgba(0,0,0,0.45); }
+        .bv-sim-badge { position: absolute; top: -8px; right: -8px; width: 15px; height: 15px; box-sizing: border-box; border-radius: 50%; background: #2f81f7; color: #fff; border: 1.5px solid #fff; font-size: 9px; font-weight: 800; line-height: 1; display: flex; align-items: center; justify-content: center; }
+        .bv-sim-note { margin: 0 0 10px; padding: 8px 10px; border-radius: 10px; font-size: 12px; line-height: 1.4; color: var(--bv-muted); background: color-mix(in srgb, #2f81f7 12%, transparent); border: 1px solid color-mix(in srgb, #2f81f7 35%, transparent); }
 
         .bv-stop-icon-wrap { width: 14px; height: 14px; }
         .bv-stop-icon-inner { background: var(--bv-surface); border: 2.5px solid var(--bv-primary); border-radius: 50%; width: 14px; height: 14px; box-sizing: border-box; box-shadow: 0 1px 5px rgba(0,0,0,0.4); cursor: pointer; transition: scale 0.2s ease; }
         .bv-stop-icon-inner:hover { scale: 1.4; }
 
         /* Badge linea (stessi colori ACTV ovunque) */
+        .bv-line-dot.bv-line-bus { min-width: 40px; padding: 0 8px; }
         .bv-line-dot { min-width: 24px; height: 24px; padding: 0 4px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; border: 2px solid; flex-shrink: 0; box-sizing: border-box; line-height: 1; }
 
         /* ---------- Tasti fluttuanti ---------- */
@@ -226,9 +451,25 @@ export function initUIBateoLive() {
         .bv-fab-container .bv-fab { pointer-events: auto; opacity: 1; transform: none; transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.15), opacity 0.22s ease, background 0.2s, color 0.2s; }
         .bv-fab-container.chiuso .bv-fab { opacity: 0; transform: translateY(26px) scale(0.5); pointer-events: none; transition: transform 0.22s ease-in, opacity 0.18s ease, background 0.2s, color 0.2s; }
         .bv-fab-container:not(.chiuso) .bv-fab:hover { transform: scale(1.05); }
+        /* Etichette accanto ai tasti */
+        .bv-fab-container .bv-fab { position: relative; }
+        .bv-fab-lbl { display: none; position: absolute; top: 50%; left: calc(100% + 8px); transform: translateY(-50%); padding: 4px 10px; border-radius: 999px; background: var(--bv-surface); border: 1px solid var(--bv-border); box-shadow: var(--bv-shadow); color: var(--bv-text); font-size: 12px; font-weight: 700; line-height: 1.25; font-family: inherit; white-space: nowrap; max-width: min(170px, calc(50vw - 85px)); overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+        .bv-fab-container .bv-fab-lbl { display: block; }
+        /* Due lati dello schermo: i tasti non stanno più in una colonna, si alternano a sinistra e a destra, sfalsati in altezza (la posizione la calcola aggiornaFabLayout) */
+        .bv-fab-container.due-colonne { left: 20px; right: 20px; height: 0; display: block; }
+        .bv-fab-container.due-colonne .bv-fab { position: absolute; }
+        .bv-fab-container.due-colonne .bv-fab-sx { left: 0; }
+        .bv-fab-container.due-colonne .bv-fab-dx { right: 0; }
+        .bv-fab-container.due-colonne .bv-fab-dx .bv-fab-lbl { left: auto; right: calc(100% + 8px); }
         .bv-fab-menu { position: absolute; bottom: calc(30px + env(safe-area-inset-bottom, 0px)); left: 20px; z-index: 1000; font-size: 18px; }
         .bv-fab-menu i { transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
-        .bv-fab-menu.active i { transform: rotate(135deg); }
+        .bv-fab-menu.active i { transform: rotate(180deg); }
+        /* ---------- Tasti zoom (in basso a destra, sopra l'HUD velocità se visibile) ---------- */
+        .bv-zoom { position: absolute; right: 20px; bottom: calc(30px + env(safe-area-inset-bottom, 0px)); z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+        .bv-zoom .bv-fab { font-size: 18px; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+        .bv-zoom .bv-fab.disabled { opacity: 0.35; pointer-events: none; }
+        #modal-bateolive-main.hud-box .bv-zoom { bottom: calc(30px + env(safe-area-inset-bottom, 0px) + var(--bv-hud-box-h, 0px) + 12px); }
+        #modal-bateolive-main.hud-nav .bv-zoom { bottom: calc(var(--bv-hud-h, 0px) + 14px); }
 
         .bv-error-banner { position: absolute; top: calc(20px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%) translateY(-20px); z-index: 1500; background: var(--bv-danger); color: #fff; padding: 10px 18px; border-radius: 12px; font-size: 13px; font-weight: 600; box-shadow: var(--bv-shadow); display: flex; align-items: center; gap: 8px; opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease; max-width: 85%; text-align: center; }
         .bv-error-banner.active { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -246,8 +487,18 @@ export function initUIBateoLive() {
         /* ---------- HUD velocità + navigatore (compatto, stessa struttura di prima) ---------- */
         .bv-hud-speed { position: absolute; bottom: calc(30px + env(safe-area-inset-bottom, 0px)); right: 20px; background: var(--bv-glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 12px 18px; border-radius: 16px; border: 1px solid var(--bv-border); box-shadow: var(--bv-shadow); z-index: 1000; display: none; }
         .bv-speed-wrapper { display: flex; align-items: baseline; justify-content: center; gap: 5px; }
-        .bv-speed-val { font-size: 42px; font-weight: 900; color: var(--bv-primary); line-height: 0.9; font-variant-numeric: tabular-nums; }
+        .bv-speed-val { font-size: 42px; font-weight: 900; color: var(--bv-primary); line-height: 0.9; font-variant-numeric: tabular-nums; transition: color 0.15s ease; }
+        .bv-speed-val.bv-speed-over-limit { color: #dc3545; }
         .bv-speed-unit { font-size: 16px; font-weight: bold; color: var(--bv-muted); }
+        /* ---------- limite di velocità del canale: cartello di divieto (cerchio bianco, bordo rosso) a sinistra della velocità ---------- */
+        .bv-limite { flex: none; align-self: center; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; box-sizing: border-box; border-radius: 50%; border: 5px solid #d3151c; background: #fff; color: #111; font-size: 22px; font-weight: 800; line-height: 1; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+        .bv-limite[hidden] { display: none !important; }
+        /* nome del canale e coordinate sotto la velocità */
+        .bv-hud-geo { margin-top: 6px; text-align: center; line-height: 1.3; }
+        .bv-canale { max-width: 200px; margin: 0 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 700; letter-spacing: 0.3px; color: var(--bv-text); }
+        .bv-canale[hidden] { display: none !important; }
+        .bv-coord { font-size: 11px; font-weight: 600; color: var(--bv-muted); font-variant-numeric: tabular-nums; }
+        .bv-coord:empty { display: none; }
 
         .bv-hud-speed [hidden] { display: none !important; }
         .bv-hud-speed.nav-on { left: 0; right: 0; bottom: 0; width: auto; box-sizing: border-box; padding: 14px 18px calc(16px + env(safe-area-inset-bottom, 0px)); border-radius: 22px 22px 0 0; border-width: 1px 0 0 0; }
@@ -259,6 +510,10 @@ export function initUIBateoLive() {
         .bv-nav-turno-slot { display: none; align-self: center; }
         .bv-hud-speed.nav-on .bv-nav-turno-slot { display: flex; }
         .bv-hud-speed.nav-on .bv-speed-val { font-size: 46px; }
+        .bv-hud-speed.nav-on .bv-hud-geo { text-align: left; margin-top: 8px; }
+        .bv-hud-speed.nav-on .bv-canale { max-width: none; margin: 0; font-size: 14px; }
+        .bv-hud-speed.nav-on .bv-coord { display: none; } /* con il navigatore acceso resta solo il nome del canale */
+        .bv-hud-speed.nav-on .bv-limite { width: auto; min-width: 46px; height: 34px; padding: 0 6px; border-radius: 8px; border-width: 3px; font-size: 20px; box-shadow: none; } /* con il navigatore: rettangolo, come il riquadro del turno */
         .bv-nav-extra { display: none; flex-direction: column; gap: 8px; margin-bottom: 8px; }
         .bv-hud-speed.nav-on .bv-nav-extra { display: flex; }
         .bv-nav-delay { display: none; margin-left: auto; font-size: 38px; font-weight: 900; line-height: 0.9; font-variant-numeric: tabular-nums; padding-left: 10px; border-left: 1px solid var(--bv-border); }
@@ -280,6 +535,11 @@ export function initUIBateoLive() {
         .bv-nav-act-row { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
         .bv-nav-turno { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 46px; height: 34px; padding: 0 5px; box-sizing: border-box; border-radius: 8px; background: var(--bv-primary); color: #fff; font-size: 15px; font-weight: 800; line-height: 1; }
         .bv-nav-turno small { font-size: 10px; font-weight: 700; letter-spacing: 0.3px; opacity: 0.85; }
+        .bv-nav-turno-edit { flex: none; width: 34px; height: 34px; margin-left: 6px; padding: 0; box-sizing: border-box; border-radius: 8px; border: 1px solid var(--bv-border); background: var(--bv-fill); color: var(--bv-primary); font-size: 14px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; touch-action: manipulation; }
+        .bv-nav-turno-edit:active { filter: brightness(0.9); }
+        .bv-nav-turno.manuale { outline: 2px dashed var(--bv-primary); outline-offset: 2px; }
+        .bv-modal-btn.secondario { background: transparent; color: var(--bv-text); border: 1px solid var(--bv-border); margin-top: 10px; }
+        .bv-turno-hint { margin: 0 0 4px; font-size: 12px; line-height: 1.4; color: var(--bv-muted); }
         .bv-nav-linea { flex: none; min-width: 34px; height: 34px; padding: 0 5px; box-sizing: border-box; border-radius: 17px; border: 2px solid; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; }
         .bv-nav-blocco { flex: 1; min-width: 0; }
         .bv-nav-ora { font-size: 21px; font-weight: 800; color: var(--bv-text); line-height: 1.1; font-variant-numeric: tabular-nums; }
@@ -429,6 +689,16 @@ export function initUIBateoLive() {
         .bv-switch input:checked + .bv-slider { background-color: var(--bv-ok); }
         .bv-switch input:checked + .bv-slider:before { transform: translateX(20px); }
         .bv-switch input:focus-visible + .bv-slider { outline: 2px solid var(--bv-primary); outline-offset: 2px; }
+        /* Filtri: categorie collassabili (Vaporetti / Bus) */
+        .bv-fcat { border: 1px solid var(--bv-border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; flex-shrink: 0; }
+        .bv-fcat-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 12px 4px 2px; }
+        .bv-fcat-btn { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; background: transparent; border: none; color: var(--bv-text); font: inherit; font-weight: 800; font-size: 15px; padding: 10px; text-align: left; cursor: pointer; }
+        .bv-fcat-chev { font-size: 12px; color: var(--bv-muted); transition: transform 0.2s; }
+        .bv-fcat.aperta .bv-fcat-chev { transform: rotate(90deg); }
+        .bv-fcat-n { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--bv-muted); }
+        .bv-fcat-body { display: none; padding: 0 12px 4px; border-top: 1px solid var(--bv-border); }
+        .bv-fcat.aperta .bv-fcat-body { display: block; }
+        .bv-fcat-body .bv-empty { margin: 10px 0; }
 
         #modal-bateolive-main ::-webkit-scrollbar { width: 6px; }
         #modal-bateolive-main ::-webkit-scrollbar-track { background: transparent; }
@@ -437,6 +707,7 @@ export function initUIBateoLive() {
         /* ---------- Rewind ---------- */
         #modal-bateolive-main.rewind-on .bv-fab-container,
         #modal-bateolive-main.rewind-on .bv-fab-menu,
+        #modal-bateolive-main.rewind-on .bv-zoom,
         #modal-bateolive-main.rewind-on .bv-hud-compass,
         #modal-bateolive-main.rewind-on .bv-hud-speed,
         #modal-bateolive-main.rewind-on .bv-hud-status,
@@ -484,6 +755,7 @@ export function initUIBateoLive() {
         @media (max-width: 599px) {
             #bv-drawer { top: auto; left: 10px; right: 10px; width: auto; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); max-height: 60%; transform: translateY(24px); }
             #bv-drawer.open { transform: none; }
+            #modal-bateolive-main:has(#bv-drawer.open) .bv-zoom { opacity: 0; pointer-events: none; }
             #modal-bateolive-main.rewind-on #bv-drawer { top: auto; bottom: 190px; max-height: calc(100% - 78px - 190px - env(safe-area-inset-top, 0px)); }
         }
 
@@ -533,9 +805,14 @@ export function initUIBateoLive() {
             </div>
             <div class="bv-speed-wrapper">
                 <span id="bv-nav-turno-slot" class="bv-nav-turno-slot"></span>
+                <span id="bv-limite" class="bv-limite" hidden aria-label="Limite di velocità"></span>
                 <span id="bv-speed-val" class="bv-speed-val">0.0</span>
                 <span class="bv-speed-unit">km/h</span>
                 <span id="bv-nav-delay" class="bv-nav-delay spento" title="Ritardo / anticipo">--</span>
+            </div>
+            <div class="bv-hud-geo">
+                <div id="bv-canale" class="bv-canale" hidden></div>
+                <div id="bv-coord" class="bv-coord"></div>
             </div>
             <div id="bv-clock" class="bv-clock">--:--:--</div>
         </div>
@@ -549,33 +826,29 @@ export function initUIBateoLive() {
         <div class="bv-fab-container chiuso">
             <div id="bv-fab-gps" class="bv-fab" onclick="toggleBvGPS()" title="Attiva/Disattiva GPS">
                 <i class="fa-solid fa-satellite-dish"></i>
-            </div>
-            <div id="bv-fab-center" class="bv-fab" onclick="toggleBvCenterMap()" title="Centra sulla posizione" style="display: none;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 2L4 20L12 17L20 20L12 2Z"/></svg>
-            </div>
-            <div id="bv-fab-rotate" class="bv-fab" onclick="toggleBvMapRotation()" title="Rotazione mappa (rotta in alto)" style="display: none;">
-                <i class="fa-regular fa-compass"></i>
-            </div>
-            <div id="bv-fab-nav" class="bv-fab active" onclick="toggleBvNavigatore()" title="Navigatore turno" style="display: none;">
-                <i class="fa-solid fa-route"></i>
-            </div>
-            <div id="bv-fab-layers" class="bv-fab" onclick="cambiaStileBvMappa()" title="Cambia stile cartografico">
+            <span class="bv-fab-lbl">GPS</span></div>
+            <div id="bv-fab-layers" class="bv-fab" onclick="apriStileMappaModal()" title="Stile mappa e livelli">
                 <i class="fa-solid fa-layer-group"></i>
-            </div>
-            <div id="bv-fab-tema" class="bv-fab bv-fab-tema" onclick="toggleBvTema()" role="button" title="Passa al tema scuro" aria-label="Passa al tema scuro">
-                <i class="fa-solid fa-moon"></i>
-            </div>
-            <div id="bv-fab-unit" class="bv-fab" onclick="apriBateoLiveUnitModal()" title="Configura unità" style="display: none;">
-                <i class="fa-solid fa-ship"></i>
-            </div>
-            <div id="bv-fab-rewind" class="bv-fab" onclick="apriRewind()" title="Rewind: rivedi i movimenti passati"><i class="fa-solid fa-clock-rotate-left"></i></div>
-            <div class="bv-fab" onclick="apriBateoLiveSearchModal()" title="Cerca mezzo o fermata"><i class="fa-solid fa-magnifying-glass"></i></div>
-            <div class="bv-fab" onclick="apriBateoLiveFilterModal()" title="Filtra linee"><i class="fa-solid fa-filter"></i></div>
+            <span class="bv-fab-lbl">Stile mappa</span></div>
+            <div id="bv-fab-settings" class="bv-fab" onclick="apriImpostazioniModal()" role="button" title="Impostazioni" aria-label="Impostazioni">
+                <i class="fa-solid fa-gear"></i>
+            <span class="bv-fab-lbl">Impostazioni</span></div>
+            <div id="bv-fab-rewind" class="bv-fab" onclick="apriRewind()" title="Rewind: rivedi i movimenti passati"><i class="fa-solid fa-clock-rotate-left"></i><span class="bv-fab-lbl">Rewind</span></div>
+            <div class="bv-fab" onclick="apriBateoLiveSearchModal()" title="Cerca mezzo o fermata"><i class="fa-solid fa-magnifying-glass"></i><span class="bv-fab-lbl">Cerca</span></div>
+            <div class="bv-fab" onclick="apriBateoLiveFilterModal()" title="Filtra linee"><i class="fa-solid fa-filter"></i><span class="bv-fab-lbl">Filtra linee</span></div>
         </div>
 
         <!-- Apre/chiude la colonna dei tasti (chiusa di base) -->
         <div id="bv-fab-menu" class="bv-fab bv-fab-menu" onclick="toggleBvMenu()" role="button" aria-expanded="false" aria-label="Mostra i tasti" title="Mostra i tasti">
-            <i class="fa-solid fa-plus"></i>
+            <i class="fa-solid fa-chevron-up"></i>
+        </div>
+
+        <!-- Zoom mappa: passo fine, tarato per viste da ~250 a ~1000 m davanti -->
+        <div class="bv-zoom">
+            <div id="bv-fab-segnali-add" class="bv-fab bv-seg-add" style="display:none" onclick="armaAggiuntaSegnale()" role="button" aria-pressed="false" title="Aggiungi un segnale" aria-label="Aggiungi un segnale"><i class="fa-solid fa-plus"></i></div>
+            <div id="bv-fab-segnali-edit" class="bv-fab" style="display:none" onclick="toggleSegnaliModifica()" role="button" aria-pressed="false" title="Modifica segnali" aria-label="Modifica segnali"><i class="fa-solid fa-pen"></i></div>
+            <div id="bv-zoom-in" class="bv-fab" onclick="zoomBvMappa(1)" role="button" aria-label="Avvicina la mappa" title="Zoom +"><i class="fa-solid fa-plus"></i></div>
+            <div id="bv-zoom-out" class="bv-fab" onclick="zoomBvMappa(-1)" role="button" aria-label="Allontana la mappa" title="Zoom -"><i class="fa-solid fa-minus"></i></div>
         </div>
 
         <div id="bv-drawer">
@@ -625,6 +898,162 @@ export function initUIBateoLive() {
         </div>
 
         <!-- Sottomodale Configurazione Unità -->
+        <!-- Telecamere: modulo di aggiunta/modifica (solo admin) -->
+        <div id="bv-cam-modal" class="bv-modal-overlay" onclick="chiudiWebcamModal(event)">
+            <div class="bv-modal" onclick="event.stopPropagation()">
+                <h3 id="bv-cam-modal-titolo">Telecamera</h3>
+                <div style="margin-bottom: 12px;">
+                    <label class="bv-label" for="bv-cam-nome">Nome (es. Hotel Danieli)</label>
+                    <input type="text" id="bv-cam-nome" maxlength="80" autocomplete="off">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label class="bv-label" for="bv-cam-url">Link YouTube della diretta</label>
+                    <input type="text" id="bv-cam-url" inputmode="url" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off" autocapitalize="off" spellcheck="false">
+                </div>
+                <div class="bv-cam-coord">
+                    <div><label class="bv-label" for="bv-cam-lat">Latitudine</label><input type="text" id="bv-cam-lat" inputmode="decimal" autocomplete="off"></div>
+                    <div><label class="bv-label" for="bv-cam-lon">Longitudine</label><input type="text" id="bv-cam-lon" inputmode="decimal" autocomplete="off"></div>
+                </div>
+                <button type="button" class="bv-cam-secondario" onclick="bvWebcamCentroMappa()">Usa il centro della mappa</button>
+                <div id="bv-cam-errore" class="bv-cam-errore" hidden></div>
+                <button type="button" class="bv-modal-btn" id="bv-cam-salva" onclick="bvWebcamSalva()">Salva</button>
+                <button type="button" class="bv-modal-btn error" id="bv-cam-elimina" onclick="bvWebcamElimina()" hidden>Elimina telecamera</button>
+            </div>
+        </div>
+
+        <!-- Impostazioni: interruttori e comandi che prima erano tasti sulla mappa -->
+        <div id="bv-imp-modal" class="bv-modal-overlay" onclick="chiudiBateoLiveModals(event)">
+            <div class="bv-modal" onclick="event.stopPropagation()">
+                <h3>Impostazioni</h3>
+                <div class="bv-imp-lista">
+                    <div id="bv-fab-sim" class="bv-imp-riga" onclick="toggleBvSimulate()" role="button" aria-pressed="false">
+                        <i class="fa-regular fa-clock"></i><span class="bv-imp-lbl">Simulati</span><span class="bv-sw"><i></i></span>
+                    </div>
+                    <div id="bv-fab-tema" class="bv-imp-riga bv-fab-tema" onclick="toggleBvTema()" role="button" aria-pressed="false">
+                        <i class="fa-solid fa-moon"></i><span class="bv-imp-lbl">Tema scuro</span><span class="bv-sw"><i></i></span>
+                    </div>
+                    <div id="bv-fab-cam-admin" class="bv-imp-riga bv-imp-azione" style="display:none" onclick="chiudiImpostazioniModal(); toggleWebcamModifica()" role="button" aria-pressed="false" title="Modifica telecamere" aria-label="Modifica telecamere">
+                        <i class="fa-solid fa-pen-to-square"></i><span class="bv-imp-lbl">Modifica telecamere</span><i class="fa-solid fa-chevron-right bv-imp-freccia"></i>
+                    </div>
+                    <div id="bv-fab-center" class="bv-imp-riga" style="display:none" onclick="toggleBvCenterMap()" role="button" aria-pressed="false">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 2L4 20L12 17L20 20L12 2Z"/></svg><span class="bv-imp-lbl">Centra sulla posizione</span><span class="bv-sw"><i></i></span>
+                    </div>
+                    <div id="bv-fab-nav" class="bv-imp-riga" style="display:none" onclick="toggleBvNavigatore()" role="button" aria-pressed="false">
+                        <i class="fa-solid fa-route"></i><span class="bv-imp-lbl">Navigatore</span><span class="bv-sw"><i></i></span>
+                    </div>
+                    <div id="bv-fab-rotate" class="bv-imp-riga" style="display:none" onclick="toggleBvMapRotation()" role="button" aria-pressed="false">
+                        <i class="fa-regular fa-compass"></i><span class="bv-imp-lbl">Ruota mappa</span><span class="bv-sw"><i></i></span>
+                    </div>
+                    <div id="bv-fab-unit" class="bv-imp-riga bv-imp-azione" style="display:none" onclick="chiudiImpostazioniModal(); apriBateoLiveUnitModal()" role="button" title="Configura unità">
+                        <i class="fa-solid fa-ship"></i><span class="bv-imp-lbl">Unità</span><i class="fa-solid fa-chevron-right bv-imp-freccia"></i>
+                    </div>
+                </div>
+                <button type="button" class="bv-modal-btn secondario" onclick="chiudiImpostazioniModal()">Chiudi</button>
+            </div>
+        </div>
+
+        <!-- Stile mappa: base cartografica e opzioni dei livelli -->
+        <div id="bv-stile-modal" class="bv-modal-overlay" onclick="chiudiBateoLiveModals(event)">
+            <div class="bv-modal" onclick="event.stopPropagation()">
+                <h3>Stile mappa</h3>
+                <div class="bv-stile-scelte">
+                    <button type="button" id="bv-stile-0" class="bv-stile-opz" onclick="impostaStileMappa(0)"><i class="fa-solid fa-map"></i><span>OpenStreetMap</span></button>
+                    <button type="button" id="bv-stile-1" class="bv-stile-opz" onclick="impostaStileMappa(1)"><i class="fa-solid fa-satellite"></i><span>Satellitare</span></button>
+                </div>
+                <details class="bv-opz" id="bv-opz-det">
+                    <summary>Opzioni</summary>
+                    <label class="bv-opz-riga"><span>Layer nautico</span><span class="bv-sw"><input type="checkbox" id="bv-opz-nautico" onchange="cambiaOpzioneMappa('nautico', this.checked)"><i></i></span></label>
+                    <label class="bv-opz-riga"><span>Videocamere</span><span class="bv-sw"><input type="checkbox" id="bv-opz-cam" onchange="cambiaOpzioneMappa('cam', this.checked)"><i></i></span></label>
+                    <label class="bv-opz-riga"><span>Nomi canali</span><span class="bv-sw"><input type="checkbox" id="bv-opz-canali" onchange="cambiaOpzioneMappa('canali', this.checked)"><i></i></span></label>
+                    <div class="bv-opz-riga" id="bv-opz-briccole-riga">
+                        <span>Info briccole</span>
+                        <span class="bv-opz-dx">
+                            <button type="button" id="bv-opz-pdf" class="bv-opz-pdf" onclick="bvSegnaliPdf()" title="Scarica il PDF riepilogativo dei segnali" aria-label="Scarica il PDF riepilogativo dei segnali"><i class="fa-solid fa-file-pdf"></i></button>
+                            <label class="bv-sw"><input type="checkbox" id="bv-opz-briccole" onchange="cambiaOpzioneMappa('briccole', this.checked)"><i></i></label>
+                        </span>
+                    </div>
+                </details>
+                <button type="button" class="bv-modal-btn secondario" onclick="chiudiStileMappaModal()">Chiudi</button>
+            </div>
+        </div>
+
+        <!-- Segnali: scheda di modifica (admin e collab-mappe) -->
+        <div id="bv-seg-modal" class="bv-modal-overlay" onclick="chiudiSegnaleModal(event)">
+            <div class="bv-modal" style="max-width: 360px;" onclick="event.stopPropagation()">
+                <h3>Scheda segnale</h3>
+                <div class="bv-seg-corpo" onfocusin="if (event.target.id !== 'bv-seg-canale') bvSegCanaleChiudi()">
+                    <div style="margin-bottom: 12px;">
+                        <label class="bv-label" for="bv-seg-canale">Canale</label>
+                        <div class="bv-search-container">
+                            <input type="text" id="bv-seg-canale" maxlength="80" autocomplete="off" placeholder="Canale in cui si trova" oninput="bvSegCanaleSuggerisci()" onfocus="bvSegCanaleSuggerisci()">
+                            <div id="bv-seg-canale-sugg" class="bv-suggestions-dropdown"></div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label class="bv-label" for="bv-seg-numero">Numero del segnale</label>
+                        <input type="text" id="bv-seg-numero" maxlength="20" autocomplete="off">
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label class="bv-label">Tipo di segnale</label>
+                        <div class="bv-seg-sel" id="bv-seg-tipo">
+                            <button type="button" data-v="palo" onclick="bvSegSel(this)">Palo singolo</button>
+                            <button type="button" data-v="gruppo" onclick="bvSegSel(this)">Gruppo pali</button>
+                            <button type="button" data-v="dama" onclick="bvSegSel(this)">Dama</button>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 12px;" id="bv-seg-pali-wrap" hidden>
+                        <label class="bv-label" for="bv-seg-pali">Numero di pali</label>
+                        <input type="number" id="bv-seg-pali" inputmode="numeric" min="2" max="99" step="1" value="3">
+                        <label class="bv-label" for="bv-seg-pali-presenti" style="margin-top: 12px;">Pali presenti</label>
+                        <input type="number" id="bv-seg-pali-presenti" inputmode="numeric" min="0" max="99" step="1" value="3">
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <label class="bv-label">Presente</label>
+                        <div class="bv-seg-sel" id="bv-seg-presente">
+                            <button type="button" data-v="1" onclick="bvSegSel(this)">Sì</button>
+                            <button type="button" data-v="0" onclick="bvSegSel(this)">No</button>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <div class="bv-seg-cat">
+                            <div class="bv-seg-cat-tit">Luce</div>
+                            <label class="bv-label">Funzionante</label>
+                            <div class="bv-seg-sel" id="bv-seg-luce-funz">
+                                <button type="button" data-v="1" onclick="bvSegSel(this)">Sì</button>
+                                <button type="button" data-v="0" onclick="bvSegSel(this)">No</button>
+                            </div>
+                            <label class="bv-label" style="margin-top: 12px;">Struttura presente</label>
+                            <div class="bv-seg-sel" id="bv-seg-luce-strutt">
+                                <button type="button" data-v="1" onclick="bvSegSel(this)">Sì</button>
+                                <button type="button" data-v="0" onclick="bvSegSel(this)">No</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 4px;">
+                        <label class="bv-label" for="bv-seg-note">Note</label>
+                        <textarea id="bv-seg-note" maxlength="1000" rows="3"></textarea>
+                    </div>
+                </div>
+                <div id="bv-seg-errore" class="bv-cam-errore" hidden></div>
+                <button type="button" class="bv-modal-btn" id="bv-seg-salva" onclick="bvSegnaleSalva()">Salva</button>
+                <button type="button" class="bv-modal-btn error" id="bv-seg-elimina" onclick="bvSegnaleElimina()">Elimina segnale</button>
+            </div>
+        </div>
+
+        <!-- Cambio turno al volo: carica la corsa di un altro turno -->
+        <div id="bv-turno-modal" class="bv-modal-overlay" onclick="chiudiModificaTurnoNav(event)">
+            <div class="bv-modal" onclick="event.stopPropagation()">
+                <h3>Cambia turno</h3>
+                <div style="margin-bottom: 12px;">
+                    <label class="bv-label" for="bv-turno-input">Codice del turno</label>
+                    <input type="text" id="bv-turno-input" placeholder="Codice turno" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" onkeydown="if (event.key === 'Enter') applicaTurnoManuale();">
+                </div>
+                <div class="bv-turno-hint">Carica la corsa in corso di questo turno al posto del tuo. Vale finché non spegni il GPS.</div>
+                <button type="button" class="bv-modal-btn" onclick="applicaTurnoManuale()">Carica</button>
+                <button type="button" class="bv-modal-btn secondario" id="bv-turno-ripristina" onclick="ripristinaTurnoCalendario()" hidden>Torna al mio turno</button>
+            </div>
+        </div>
+
         <div id="bv-unit-modal" class="bv-modal-overlay" onclick="chiudiBateoLiveModals(event)">
             <div class="bv-modal" onclick="event.stopPropagation()">
                 <h3>Configurazione unità</h3>
@@ -689,13 +1118,42 @@ export function initUIBateoLive() {
     window.toggleBvGPS = toggleBvGPS;
     window.toggleBvCenterMap = toggleBvCenterMap;
     window.toggleBvMapRotation = toggleBvMapRotation;
-    window.cambiaStileBvMappa = cambiaStileBvMappa;
+    window.apriStileMappaModal = apriStileMappaModal;
+    window.apriImpostazioniModal = apriImpostazioniModal;
+    window.chiudiImpostazioniModal = chiudiImpostazioniModal;
+    window.chiudiStileMappaModal = chiudiStileMappaModal;
+    window.impostaStileMappa = impostaStileMappa;
+    window.cambiaOpzioneMappa = cambiaOpzioneMappa;
+    window.toggleSegnaliModifica = toggleSegnaliModifica;
+    window.armaAggiuntaSegnale = armaAggiuntaSegnale;
+    window.chiudiSegnaleModal = chiudiSegnaleModal;
+    window.bvSegSel = bvSegSel;
+    window.bvSegCanaleSuggerisci = bvSegCanaleSuggerisci;
+    window.bvSegCanaleChiudi = bvSegCanaleChiudi;
+    window.bvSegCanaleScegli = bvSegCanaleScegli;
+    window.bvSegnaleSalva = bvSegnaleSalva;
+    window.bvSegnaleElimina = bvSegnaleElimina;
+    window.bvSegnaliPdf = bvSegnaliPdf;
     window.toggleBvNavigatore = toggleBvNavigatore;
     window.toggleBvMenu = toggleBvMenu;
+    avviaFabLayout();
+    window.apriModificaTurnoNav = apriModificaTurnoNav;
+    window.chiudiModificaTurnoNav = chiudiModificaTurnoNav;
+    window.applicaTurnoManuale = applicaTurnoManuale;
+    window.ripristinaTurnoCalendario = ripristinaTurnoCalendario;
+    window.toggleBvSimulate = toggleBvSimulate;
+    aggiornaFabSimulate();
+    window.zoomBvMappa = zoomBvMappa;
     window.toggleBvTema = toggleBvTema;
     window.apriRewind = apriRewind;
     window.chiudiRewind = chiudiRewind;
     window.indietroBateoLive = indietroBateoLive;
+    window.toggleWebcamModifica = toggleWebcamModifica;
+    window.apriFormWebcam = apriFormWebcam;
+    window.chiudiWebcamModal = chiudiWebcamModal;
+    window.bvWebcamCentroMappa = bvWebcamCentroMappa;
+    window.bvWebcamSalva = bvWebcamSalva;
+    window.bvWebcamElimina = bvWebcamElimina;
 
     document.getElementById('bv-nav-toggle').addEventListener('click', toggleListaFermate);
     avviaOrologioHud();
@@ -711,13 +1169,13 @@ export function initUIBateoLive() {
         }
 
         const mStops = globalStops.filter(s => s.name.toLowerCase().includes(q));
-        const mBoats = globalBoats.filter(b => b.line.toLowerCase() === q || b.label.toLowerCase().includes(q));
+        const mBoats = globalBoats.filter(b => b.line.toLowerCase() === q || (!b.simulated && b.label.toLowerCase().includes(q)));
 
         let html = '';
 
         mBoats.slice(0, 4).forEach(b => {
             html += `<div class="bv-suggestion-item" onclick="selezionaBateoLiveSuggestion('boat', '${b.id}')">
-                        ${bvDotLinea(b.line)} <span>${bvEsc(b.label)}</span>
+                        ${bvDotLinea(b.line, b)} <span>${bvEsc(b.label)}</span>
                      </div>`;
         });
 
@@ -748,10 +1206,12 @@ function bvAggiornaIconaTema(scuro, anima) {
     const btn = document.getElementById('bv-fab-tema');
     const ico = btn && btn.querySelector('i');
     if (!ico) return;
-    ico.className = scuro ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    ico.className = scuro ? 'fa-solid fa-moon' : 'fa-regular fa-sun';   // icona fissa sull'interruttore: acceso = tema scuro
     const testo = scuro ? 'Passa al tema chiaro' : 'Passa al tema scuro';
     btn.title = testo;
     btn.setAttribute('aria-label', testo);
+    btn.classList.toggle('active', scuro);
+    btn.setAttribute('aria-pressed', scuro ? 'true' : 'false');
     if (anima) { void ico.offsetWidth; ico.classList.add('swap'); }
 }
 
@@ -772,6 +1232,19 @@ function bvAggiornaTema(anima) {
     root.classList.toggle('bv-forza-chiaro', bvTemaForzato === 'light');
     root.classList.toggle('bv-dark', scuro);
     bvAggiornaIconaTema(scuro, anima === true);
+    if (bvTemaScuroAttivo !== scuro) {
+        bvTemaScuroAttivo = scuro;
+        if (map && baseOffline && currentMapMode === 0) {
+            map.removeLayer(baseOffline);
+            baseOffline = creaLayerOffline(scuro);
+            if (baseOffline) {
+                baseOffline.addTo(map);
+                if (opzMappa.nautico && map.hasLayer(nauticLayer)) nauticLayer.bringToFront();
+            } else {
+                map.addLayer(baseOSM);
+            }
+        }
+    }
 }
 
 function toggleBvTema() {
@@ -796,15 +1269,30 @@ function avviaOsservatoreTema() {
     } catch (e) { /* il tema non deve mai rompere la mappa */ }
 }
 
+function creaLayerOffline(scuro) {
+    if (!window.protomapsL) return null;
+    try {
+        return protomapsL.leafletLayer({
+            url: `${API_URL}/tiles/actv_venezia.pmtiles`,
+            flavor: scuro ? 'dark' : 'light',
+            lang: 'it',
+            maxDataZoom: 15,
+            maxZoom: 19
+        });
+    } catch (e) { return null; }
+}
+
 export async function avviaMotoreBateoLive(db, auth, userData, isAdmin) {
     tracciaApertura('/bateolive-completo', 'BateoLive');
     currentUserId = (auth && auth.currentUser) ? auth.currentUser.uid : 'user_' + Math.random().toString(36).substr(2, 9);
     currentUserName = (userData && userData.nome) ? userData.nome : "Collega";
+    authBateo = auth || null;
     userMansione = (userData && userData.mansione) || null;
     firestoreTurni.db = db || null;
     firestoreTurni.auth = auth || null;
 
     initUIBateoLive();
+    verificaRuoloAdmin(db, userData);
     document.getElementById('modal-bateolive-main').style.display = 'flex';
     avviaOsservatoreTema();
 
@@ -841,11 +1329,35 @@ export async function avviaMotoreBateoLive(db, auth, userData, isAdmin) {
         baseSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
         nauticLayer = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', { maxZoom: 18 });
 
+        const rootEl = document.getElementById('modal-bateolive-main');
+        bvTemaScuroAttivo = rootEl ? rootEl.classList.contains('bv-dark') : false;
+
+        baseOffline = creaLayerOffline(bvTemaScuroAttivo);
+        const layerBaseIniziale = baseOffline || baseOSM;
+
         map = L.map('bv-map', { 
             attributionControl: false, 
             zoomControl: false,
-            layers: [baseOSM, nauticLayer]
+            zoomSnap: 0.25,
+            zoomDelta: 0.5,
+            layers: opzMappa.nautico ? [layerBaseIniziale, nauticLayer] : [layerBaseIniziale]
         }).setView([45.4371, 12.3326], 13);
+
+        // se l'archivio PMTiles non risponde sul backend, si torna a OSM
+        if (baseOffline) {
+            fetch(`${API_URL}/tiles/actv_venezia.pmtiles`, { method: 'HEAD' })
+                .then(r => { if (!r.ok) throw new Error(); })
+                .catch(() => {
+                    if (map && baseOffline && map.hasLayer(baseOffline)) map.removeLayer(baseOffline);
+                    baseOffline = null;
+                    if (currentMapMode === 0) {
+                        map.addLayer(baseOSM);
+                        if (opzMappa.nautico && map.hasLayer(nauticLayer)) nauticLayer.bringToFront();
+                    }
+                });
+        }
+        map.on('zoomend zoomlevelschange', aggiornaBvZoomBtn);
+        aggiornaBvZoomBtn();
 
         // rotta della linea: sopra le tile, sotto marker di unità e fermate, non intercetta i click
         map.createPane('bv-rotta');
@@ -865,6 +1377,12 @@ export async function avviaMotoreBateoLive(db, auth, userData, isAdmin) {
         });
 
         loadStops();
+        map.on('moveend', pianificaFermateBus);
+        pianificaFermateBus();
+        map.on('moveend', pianificaOverlayMappa);   // nomi canali e segnali: stesso schema delle fermate bus (zoom alto, solo riquadro visibile)
+        map.on('click', (e) => { if (segnaliAggiungi) creaSegnaleInPunto(e.latlng); });
+        caricaWebcam();
+        applicaOpzioniMappa();
         fetchAndUpdateBoats();
         fetchInterval = setInterval(() => {
             fetchAndUpdateBoats();
@@ -872,6 +1390,7 @@ export async function avviaMotoreBateoLive(db, auth, userData, isAdmin) {
         }, 1500);
     } else {
         setTimeout(() => map.invalidateSize(), 100);
+        caricaWebcam();
         if (!fetchInterval) {
             fetchInterval = setInterval(() => {
                 fetchAndUpdateBoats();
@@ -893,37 +1412,184 @@ function salvaConfigurazioneUnita() {
     chiudiBateoLiveModals({ target: { classList: { contains: () => true } } });
 }
 
-function cambiaStileBvMappa() {
+let bvMessaggioHudTimer = null;
+function bvMessaggioHud(testo, ms = 2500) {
+    const hud = document.getElementById('bv-hud-status');
+    if (!hud) return;
+    hud.innerText = testo;
+    hud.style.background = "rgba(0, 82, 155, 0.9)";
+    hud.style.display = 'block';
+    clearTimeout(bvMessaggioHudTimer);
+    bvMessaggioHudTimer = setTimeout(() => {
+        if (watchId && !lastValidHeading && document.getElementById('bv-speed-val').textContent === "0.0") {
+            hud.innerText = "Acquisizione GPS...";
+            hud.style.background = "rgba(0,0,0,0.6)";
+        } else {
+            hud.style.display = 'none';
+        }
+    }, ms);
+}
+
+// Finestra "Stile mappa": base (OpenStreetMap / satellitare) e, sotto, le opzioni dei livelli (chiuse di base)
+function apriImpostazioniModal() {
+    const m = document.getElementById('bv-imp-modal');
+    if (!m) return;
+    m.classList.add('active');
+    lockBateoLiveMap();
+}
+
+function chiudiImpostazioniModal() {
+    chiudiBateoLiveModals({ target: { classList: { contains: () => true } } });
+}
+
+// Zoom automatico all'accensione del GPS: l'utente sta al centro dello schermo, quindi dal centro al bordo alto
+// (la prua, con la mappa ruotata) si vedono circa BV_GPS_METRI_AVANTI metri. Si applica al primo fix GPS.
+const BV_GPS_METRI_AVANTI = 300;
+let bvZoomGpsDaFare = false;
+function bvZoomPerMetriAvanti(metri, lat) {
+    const wrap = document.getElementById('bv-map-wrapper');
+    const h = wrap ? wrap.clientHeight : 0;
+    if (!map || !h) return null;
+    const mpp = metri / (h / 2);   // metri per pixel necessari
+    const z = Math.log2(156543.03392 * Math.cos(lat * Math.PI / 180) / mpp);
+    if (!isFinite(z)) return null;
+    return Math.min(map.getMaxZoom(), Math.max(map.getMinZoom(), Math.floor(z * 4) / 4));   // passo 0,25 come zoomSnap, per difetto: si vede almeno quella distanza
+}
+
+function apriStileMappaModal() {
     if (!map) return;
-    
-    currentMapMode = (currentMapMode + 1) % 2;
-    const hudStatus = document.getElementById('bv-hud-status');
-    
+    sincronizzaFinestraStile();
+    document.getElementById('bv-stile-modal').classList.add('active');
+    lockBateoLiveMap();
+}
+
+function chiudiStileMappaModal() {
+    chiudiBateoLiveModals({ target: { classList: { contains: () => true } } });
+}
+
+function sincronizzaFinestraStile() {
+    for (const m of [0, 1]) {
+        const b = document.getElementById('bv-stile-' + m);
+        if (b) b.classList.toggle('active', currentMapMode === m);
+    }
+    const set = (id, v) => { const e = document.getElementById(id); if (e) e.checked = !!v; };
+    set('bv-opz-nautico', opzMappa.nautico);
+    set('bv-opz-cam', opzMappa.cam);
+    set('bv-opz-canali', opzMappa.canali);
+    set('bv-opz-briccole', briccoleAttive());
+}
+
+function impostaStileMappa(modo) {
+    if (!map) return;
+    currentMapMode = modo === 1 ? 1 : 0;
+    if (baseOffline) {
+        if (map.hasLayer(baseOffline)) map.removeLayer(baseOffline);
+        baseOffline = creaLayerOffline(bvTemaScuroAttivo) || null;   // flavor sempre allineato al tema
+    }
     if (map.hasLayer(baseOSM)) map.removeLayer(baseOSM);
     if (map.hasLayer(baseSat)) map.removeLayer(baseSat);
-    
-    if (!map.hasLayer(nauticLayer)) map.addLayer(nauticLayer);
-
-    if (currentMapMode === 0) {
-        map.addLayer(baseOSM);
-        hudStatus.innerText = "Mappa base nautica";
-    } else if (currentMapMode === 1) {
-        map.addLayer(baseSat);
-        hudStatus.innerText = "Mappa Satellitare";
+    map.addLayer(currentMapMode === 0 ? (baseOffline || baseOSM) : baseSat);
+    if (opzMappa.nautico) {
+        if (!map.hasLayer(nauticLayer)) map.addLayer(nauticLayer);
+        nauticLayer.bringToFront();
     }
-    
-    if (map.hasLayer(nauticLayer)) nauticLayer.bringToFront();
+    const root = document.getElementById('modal-bateolive-main');
+    if (root) root.classList.toggle('bv-tiles-sat-attivo', currentMapMode === 1);
+    sincronizzaFinestraStile();
+    bvMessaggioHud(currentMapMode === 0 ? "Mappa base nautica" : "Mappa Satellitare", 2000);
+}
 
-    hudStatus.style.background = "rgba(0, 82, 155, 0.9)";
-    hudStatus.style.display = 'block';
-    setTimeout(() => {
-        if (watchId && !lastValidHeading && document.getElementById('bv-speed-val').textContent === "0.0") {
-            hudStatus.innerText = "Acquisizione GPS...";
-            hudStatus.style.background = "rgba(0,0,0,0.6)";
-        } else {
-            hudStatus.style.display = 'none';
+function cambiaOpzioneMappa(chiave, valore) {
+    if (!(chiave in BV_OPZ_DEFAULT)) return;
+    opzMappa[chiave] = !!valore;
+    try { localStorage.setItem(BV_OPZ_CHIAVE, JSON.stringify(opzMappa)); } catch (e) { /* senza storage vale solo per questa sessione */ }
+    applicaOpzioniMappa();
+}
+
+// Applica alla mappa le opzioni scelte (all'apertura e a ogni cambio)
+function applicaOpzioniMappa() {
+    if (!map) return;
+    if (opzMappa.nautico) {
+        if (!map.hasLayer(nauticLayer)) map.addLayer(nauticLayer);
+        nauticLayer.bringToFront();
+    } else if (map.hasLayer(nauticLayer)) {
+        map.removeLayer(nauticLayer);
+    }
+    if (!opzMappa.cam) {
+        if (webcamModifica) toggleWebcamModifica(false);
+        if (activeSelection && activeSelection.type === 'webcam') closeBateoLiveDrawer();
+    }
+    const fabCam = document.getElementById('bv-fab-cam-admin');
+    if (fabCam) fabCam.style.display = webcamAdmin && opzMappa.cam ? '' : 'none';
+    disegnaWebcam();
+    aggiornaNomiCanali();
+    aggiornaUiSegnali();
+}
+
+// ---------------------------------------------------------------- etichette e disposizione dei tasti
+// Se i tasti non entrano in una colonna (di solito con il navigatore aperto in basso) si dispongono sui due lati
+// dello schermo, alternati e sfalsati in altezza, così le etichette stanno a destra dei tasti di sinistra e a sinistra
+// di quelli di destra. A destra si sale sopra i tasti zoom.
+let fabLayoutRaf = 0, fabLayoutObs = null, fabLayoutRootObs = null;
+function richiediFabLayout() {
+    if (fabLayoutRaf) return;
+    fabLayoutRaf = requestAnimationFrame(() => { fabLayoutRaf = 0; aggiornaFabLayout(); });
+}
+
+function aggiornaFabLayout() {
+    const root = document.getElementById('modal-bateolive-main');
+    const cont = root && root.querySelector('.bv-fab-container');
+    if (!root || !cont || !root.clientHeight) return;
+    // si riparte dalla colonna singola e si misura se i tasti vanno a capo
+    cont.classList.remove('due-colonne');
+    [...cont.children].forEach(el => { el.classList.remove('bv-fab-sx', 'bv-fab-dx'); el.style.bottom = ''; });
+    const tasti = [...cont.children].filter(el => el.style.display !== 'none');
+    const aCapo = tasti.length > 1 && cont.getBoundingClientRect().width > 60;
+    if (aCapo) {
+        cont.classList.add('due-colonne');
+        const dalBasso = tasti.slice().reverse();
+        const base = cont.getBoundingClientRect().bottom;
+        const zoom = root.querySelector('.bv-zoom');
+        const zr = zoom ? zoom.getBoundingClientRect() : null;
+        const libero = zr && zr.height ? Math.max(0, base - zr.top + 12) : 0; // quanto salire a destra per stare sopra lo zoom
+        const back = root.querySelector('.bv-back-btn, .bv-profile-btn');
+        const limite = Math.max(back ? back.getBoundingClientRect().bottom + 12 : 0, root.getBoundingClientRect().top + 80);
+        const spazio = base - limite;
+        const nS = Math.ceil(dalBasso.length / 2), nD = Math.floor(dalBasso.length / 2);
+        // inizio dei tasti di destra: sfalsato di mezzo passo rispetto a quelli di sinistra
+        const inizioDx = (p) => p / 2 + p * Math.ceil(Math.max(0, libero - p / 2) / p);
+        let passo = 60;
+        for (; passo >= 52; passo -= 2) {
+            const cimaS = 45 + passo * (nS - 1);
+            const cimaD = nD ? inizioDx(passo) + 45 + passo * (nD - 1) : 0;
+            if (Math.max(cimaS, cimaD) <= spazio) break;
         }
-    }, 2000);
+        if (passo < 52) passo = 52;
+        const dx0 = inizioDx(passo);
+        dalBasso.forEach((el, j) => {
+            const sx = j % 2 === 0, k = Math.floor(j / 2);
+            el.classList.add(sx ? 'bv-fab-sx' : 'bv-fab-dx');
+            el.style.bottom = (sx ? k * passo : dx0 + k * passo) + 'px';
+        });
+    }
+    if (fabLayoutObs) fabLayoutObs.takeRecords(); // le modifiche appena fatte non devono far ripartire il calcolo
+}
+
+function avviaFabLayout() {
+    const root = document.getElementById('modal-bateolive-main');
+    const cont = root && root.querySelector('.bv-fab-container');
+    if (!root || !cont) return;
+    if (fabLayoutObs) fabLayoutObs.disconnect();
+    if (fabLayoutRootObs) fabLayoutRootObs.disconnect();
+    if (typeof MutationObserver === 'function') {
+        fabLayoutObs = new MutationObserver(richiediFabLayout);
+        fabLayoutObs.observe(cont, { attributes: true, attributeFilter: ['style'], subtree: true }); // tasti che compaiono/spariscono
+        fabLayoutRootObs = new MutationObserver(richiediFabLayout);
+        fabLayoutRootObs.observe(root, { attributes: true, attributeFilter: ['class', 'style'] }); // altezza HUD, apertura del modulo
+    }
+    window.removeEventListener('resize', richiediFabLayout);
+    window.addEventListener('resize', richiediFabLayout);
+    richiediFabLayout();
 }
 
 // Apre/chiude la colonna dei tasti. Delay a cascata: in apertura parte il tasto più vicino al fondo, in chiusura quello in alto.
@@ -948,6 +1614,22 @@ function toggleBvMenu(forza = null) {
     btn.title = testo;
     clearTimeout(menuFabTimer);
     menuFabTimer = setTimeout(() => visibili.forEach(el => { el.style.transitionDelay = ''; }), 700);
+    aggiornaFabLayout();
+}
+
+// Zoom a passi di mezzo livello (~x1.41): da 250 a 1000 m davanti sono 4 tocchi, abbastanza fine per rifinire la vista
+const ZOOM_PASSO = 0.5;
+function zoomBvMappa(verso) {
+    if (!map) return;
+    const z = map.getZoom() + verso * ZOOM_PASSO;
+    map.setZoom(Math.min(map.getMaxZoom(), Math.max(map.getMinZoom(), z)));
+}
+
+function aggiornaBvZoomBtn() {
+    if (!map) return;
+    const zin = document.getElementById('bv-zoom-in'), zout = document.getElementById('bv-zoom-out');
+    if (zin) zin.classList.toggle('disabled', map.getZoom() >= map.getMaxZoom() - 0.01);
+    if (zout) zout.classList.toggle('disabled', map.getZoom() <= map.getMinZoom() + 0.01);
 }
 
 function toggleBvCenterMap(forceState = null) {
@@ -997,6 +1679,7 @@ function toggleBvGPS() {
 
     if (fab.classList.contains('active')) {
         fab.classList.remove('active');
+        bvZoomGpsDaFare = false;
         hudCompass.style.display = 'none';
         hudSpeed.style.display = 'none';
         hudStatus.style.display = 'none';
@@ -1009,6 +1692,7 @@ function toggleBvGPS() {
         toggleBvCenterMap(false);
         toggleBvMapRotation(false);
         
+        azzeraLimiteVelocita();
         if (watchId) navigator.geolocation.clearWatch(watchId);
         if (userMarker) {
             map.removeLayer(userMarker);
@@ -1030,7 +1714,9 @@ function toggleBvGPS() {
         toggleBvCenterMap(true);
         toggleBvMapRotation(true);   // col GPS acceso la mappa ruota subito con la rotta
         speedHistory = [];
+        bvZoomGpsDaFare = true;   // al primo fix GPS si imposta lo zoom per vedere ~300 m davanti
         
+        caricaLimitiVelocita();
         watchId = navigator.geolocation.watchPosition(elaboraBvPosizioneGPS, (err) => {
             hudStatus.innerText = "Errore GPS: " + err.message;
             hudStatus.style.background = "rgba(227, 0, 27, 0.8)";
@@ -1053,6 +1739,7 @@ function elaboraBvPosizioneGPS(position) {
 
     let speedKmh = avgSpeedMs * 3.6;
     document.getElementById('bv-speed-val').textContent = speedKmh.toFixed(1);
+    aggiornaLimiteVelocita(coords.latitude, coords.longitude, now);
     aggiornaPosizioneNavigatore(coords, now, avgSpeedMs);
 
     if (coords.heading !== null && (rawSpeedMs >= 0.5 || lastValidHeading === null)) {
@@ -1080,7 +1767,12 @@ function elaboraBvPosizioneGPS(position) {
         userMarker.setIcon(userIcon);
     }
     
-    if (followUser) map.setView([coords.latitude, coords.longitude]);
+    if (followUser) {
+        const zGps = bvZoomGpsDaFare ? bvZoomPerMetriAvanti(BV_GPS_METRI_AVANTI, coords.latitude) : null;
+        bvZoomGpsDaFare = false;
+        if (zGps !== null) map.setView([coords.latitude, coords.longitude], zGps);
+        else map.setView([coords.latitude, coords.longitude]);
+    }
 
     let normalizedHeading = validHeading % 360;
     if (normalizedHeading < 0) normalizedHeading += 360;
@@ -1328,12 +2020,15 @@ function unlockBateoLiveMap() {
     map.doubleClickZoom.enable();
     map.touchZoom.enable();
     if (map.tap) map.tap.enable();
+    if (courseUp) map.dragging.disable();   // con la mappa ruotata col GPS il trascinamento resta bloccato
 }
 
 function chiudiBateoLive() {
     if (rewind.attivo) chiudiRewind();
     document.getElementById('modal-bateolive-main').style.display = 'none';
     closeBateoLiveDrawer();
+    uscitaWebcam();
+    uscitaSegnali();
     if (watchId) navigator.geolocation.clearWatch(watchId);
     document.getElementById('bv-hud-compass').style.display = 'none';
     document.getElementById('bv-hud-speed').style.display = 'none';
@@ -1365,7 +2060,12 @@ function chiudiBateoLive() {
 let drawerFocusKey = null;
 
 function closeBateoLiveDrawer() {
+    const eraWebcam = activeSelection && activeSelection.type === 'webcam';
     activeSelection = null;
+    if (eraWebcam) { // togliere l'iframe ferma il video (altrimenti l'audio continua a finestra chiusa)
+        const c = document.getElementById('bv-drawer-content');
+        if (c) c.innerHTML = '';
+    }
     drawerFocusKey = null;
     const drawer = document.getElementById('bv-drawer');
     if (drawer) drawer.classList.remove('open');
@@ -1399,6 +2099,9 @@ function chiudiBateoLiveModals(e) {
     document.getElementById('bv-search-modal').classList.remove('active');
     document.getElementById('bv-filter-modal').classList.remove('active');
     document.getElementById('bv-unit-modal').classList.remove('active');
+    const tmStile = document.getElementById('bv-stile-modal'); if (tmStile) tmStile.classList.remove('active');
+    const tmImp = document.getElementById('bv-imp-modal'); if (tmImp) tmImp.classList.remove('active');
+    const tmTurno = document.getElementById('bv-turno-modal'); if (tmTurno) tmTurno.classList.remove('active');
     document.getElementById('bv-search-suggestions').classList.remove('active');
 
     unlockBateoLiveMap();
@@ -1418,31 +2121,108 @@ function apriBateoLiveSearchModal() {
     setTimeout(() => input.focus(), 50);
 }
 
-async function openBateoLiveFilterModalInternal() {
-    document.getElementById('bv-filter-modal').classList.add('active');
-    lockBateoLiveMap();
-    try {
-        const lines = [...new Set(globalBoats.map(b => b.line).filter(l => l !== '-'))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+// ---- Filtri: due categorie (Vaporetti e Bus), chiuse di default, ognuna con l'interruttore generale e le sue linee
+let bvFiltroBozza = null;                      // copia su cui lavora il modale finche' non si preme "Applica filtro"
+let bvFiltroAperte = { nav: false, bus: false };
+const BV_CATEGORIE = [{ id: 'nav', titolo: 'Vaporetti' }, { id: 'bus', titolo: 'Bus' }];
+const categoriaMezzo = (boat) => (eMezzoSuGomma(boat) ? 'bus' : 'nav');
 
-        let html = '';
-        lines.forEach(line => {
-            const isChecked = currentFilterLines.length === 0 || currentFilterLines.includes(line) ? 'checked' : '';
-            const c = getLineColors(line);
+function mezzoVisibileFiltro(boat) {
+    const f = filtroMezzi[categoriaMezzo(boat)];
+    return !f.off && !f.nascoste.has(String(boat.line).toUpperCase());
+}
 
-            html += `
+function bvLineeCategoria(cat) {
+    return [...new Set(globalBoats.filter(b => b.line !== '-' && categoriaMezzo(b) === cat).map(b => String(b.line)))]
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+}
+
+function bvFiltroHtml() {
+    return BV_CATEGORIE.map(cat => {
+        const linee = bvLineeCategoria(cat.id), f = bvFiltroBozza[cat.id];
+        const accesa = (l) => !f.off && !f.nascoste.has(l.toUpperCase());
+        const visibili = linee.filter(accesa).length;
+        const aperta = bvFiltroAperte[cat.id];
+        const righe = linee.length ? linee.map(l => {
+            const esempio = globalBoats.find(b => String(b.line) === l && categoriaMezzo(b) === cat.id);
+            return `
             <div class="bv-toggle-row">
                 <div class="bv-toggle-info">
-                    <div class="bv-line-dot" style="background-color: ${c.bg}; color: ${c.text}; border-color: ${c.border};">${line}</div>
-                    <span>Linea ${line}</span>
+                    ${bvDotLinea(l, esempio)}
+                    <span>Linea ${bvEsc(l)}</span>
                 </div>
                 <label class="bv-switch">
-                    <input type="checkbox" value="${line}" class="bv-line-filter-cb" ${isChecked}>
+                    <input type="checkbox" value="${bvEsc(l)}" class="bv-line-filter-cb" data-cat="${cat.id}" ${accesa(l) ? 'checked' : ''}>
                     <span class="bv-slider"></span>
                 </label>
             </div>`;
-        });
-        document.getElementById('bv-filter-list').innerHTML = html || '<p class="bv-empty">Nessuna linea attiva trovata.</p>';
-    } catch (e) {}
+        }).join('') : '<p class="bv-empty">Nessuna linea attiva trovata.</p>';
+        return `
+        <div class="bv-fcat${aperta ? ' aperta' : ''}">
+            <div class="bv-fcat-head">
+                <button type="button" class="bv-fcat-btn" data-cat="${cat.id}" aria-expanded="${aperta}">
+                    <i class="fa-solid fa-chevron-right bv-fcat-chev"></i>
+                    <span>${cat.titolo}</span>
+                    <span class="bv-fcat-n">${visibili}/${linee.length}</span>
+                </button>
+                <label class="bv-switch" title="${cat.titolo}: tutte le linee">
+                    <input type="checkbox" class="bv-cat-cb" data-cat="${cat.id}" ${f.off ? '' : 'checked'}>
+                    <span class="bv-slider"></span>
+                </label>
+            </div>
+            <div class="bv-fcat-body">${righe}</div>
+        </div>`;
+    }).join('');
+}
+
+function bvFiltroRender() {
+    const el = document.getElementById('bv-filter-list');
+    if (!el || !bvFiltroBozza) return;
+    const alto = el.scrollTop;
+    el.innerHTML = bvFiltroHtml();
+    el.scrollTop = alto;
+}
+
+function bvFiltroEventi() {
+    const el = document.getElementById('bv-filter-list');
+    if (!el || el._bvFiltro) return;
+    el._bvFiltro = true;
+    el.addEventListener('click', (e) => {
+        const btn = e.target.closest('.bv-fcat-btn');
+        if (!btn) return;
+        bvFiltroAperte[btn.dataset.cat] = !bvFiltroAperte[btn.dataset.cat];
+        bvFiltroRender();
+    });
+    el.addEventListener('change', (e) => {
+        const t = e.target, cat = t.dataset && t.dataset.cat;
+        if (!cat || !bvFiltroBozza) return;
+        const f = bvFiltroBozza[cat];
+        if (t.classList.contains('bv-cat-cb')) {
+            // interruttore generale: acceso = tutte le linee, spento = nessuna
+            f.off = !t.checked;
+            f.nascoste.clear();
+        } else if (t.classList.contains('bv-line-filter-cb')) {
+            const linea = t.value.toUpperCase(), tutte = bvLineeCategoria(cat).map(l => l.toUpperCase());
+            if (f.off) {
+                if (t.checked) { f.off = false; f.nascoste = new Set(tutte.filter(l => l !== linea)); } // categoria spenta: accendendo una linea resta solo quella
+            } else if (t.checked) f.nascoste.delete(linea);
+            else f.nascoste.add(linea);
+            if (!f.off && tutte.length && tutte.every(l => f.nascoste.has(l))) { f.off = true; f.nascoste.clear(); } // tutte le linee spente = categoria spenta
+        }
+        bvFiltroRender();
+    });
+}
+
+async function openBateoLiveFilterModalInternal() {
+    document.getElementById('bv-filter-modal').classList.add('active');
+    lockBateoLiveMap();
+    bvFiltroBozza = {
+        nav: { off: filtroMezzi.nav.off, nascoste: new Set(filtroMezzi.nav.nascoste) },
+        bus: { off: filtroMezzi.bus.off, nascoste: new Set(filtroMezzi.bus.nascoste) }
+    };
+    bvFiltroAperte = { nav: false, bus: false };
+    bvFiltroEventi();
+    bvFiltroRender();
 }
 
 function apriBateoLiveFilterModal() {
@@ -1450,14 +2230,9 @@ function apriBateoLiveFilterModal() {
 }
 
 function applicaBateoLiveFilter() {
-    const checkboxes = document.querySelectorAll('.bv-line-filter-cb');
-    const allChecked = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
-
-    if (allChecked.length === checkboxes.length || allChecked.length === 0) {
-        currentFilterLines = [];
-    } else {
-        currentFilterLines = allChecked;
-    }
+    if (bvFiltroBozza) filtroMezzi = bvFiltroBozza;
+    bvFiltroBozza = null;
+    pianificaFermateBus();
 
     chiudiBateoLiveModals({ target: { classList: { contains: () => true } } });
 
@@ -1510,30 +2285,37 @@ function eseguiBateoLiveSearch() {
 
 // true se la corsa è accoppiata a un'unità live che locateBateoLiveBoat() può mostrare
 function bvCorsaConUnita(staticTripId, liveBoatId) {
-    if (liveBoatId && globalBoats.some(b => b.id === liveBoatId)) return true;
-    return globalBoats.some(b => b.tripId === staticTripId);
+    if (liveBoatId && globalBoats.some(b => !b.simulated && b.id === liveBoatId)) return true;
+    return globalBoats.some(b => !b.simulated && b.tripId === staticTripId);
+}
+
+// Corse della finestra fermata aperta: servono per aprire il percorso di una corsa non rilevata dal GPS
+let bvCorseFermata = {};
+
+function bvUnitaDaOrario(staticTripId) {
+    const arr = bvCorseFermata[staticTripId] || {};
+    return { id: 'sim-' + staticTripId, label: 'Corsa da orario', line: arr.routeId || '-', tripId: staticTripId, simulated: true, destination: arr.destination || '' };
 }
 
 function locateBateoLiveBoat(staticTripId, liveBoatId) {
     let boat = null;
     if (liveBoatId) {
-        boat = globalBoats.find(b => b.id === liveBoatId);
+        boat = globalBoats.find(b => !b.simulated && b.id === liveBoatId);
     }
     if (!boat) {
-        boat = globalBoats.find(b => b.tripId === staticTripId);
+        boat = globalBoats.find(b => !b.simulated && b.tripId === staticTripId);
     }
 
     if (boat) {
         map.setView([boat.lat, boat.lon], 16);
         renderBoatDrawer(boat);
-    } else {
-        const msgDiv = document.getElementById('msg-' + staticTripId);
-        if (msgDiv) {
-            msgDiv.innerHTML = "Posizione non disponibile";
-            msgDiv.style.color = "var(--bv-bad-t)";
-            setTimeout(() => { msgDiv.innerHTML = ""; }, 3000);
-        }
+        return;
     }
+
+    // Corsa non rilevata dal GPS: si apre il percorso con tutte le fermate e gli orari programmati
+    const sim = globalBoats.find(b => b.simulated && b.tripId === staticTripId);
+    if (sim) map.setView([sim.lat, sim.lon], 16);
+    renderBoatDrawer(sim || bvUnitaDaOrario(staticTripId));
 }
 
 function showBateoLiveError(show, message) {
@@ -1550,7 +2332,8 @@ function formatTime(unixTimestamp) {
 }
 
 function getDelayBadge(delaySec) {
-    if (delaySec === 0 || delaySec === null || delaySec === undefined) return `<span class="bv-pill bv-pill-ok">In orario</span>`;
+    if (delaySec === null || delaySec === undefined) return ''; // corsa non rilevata: nessun ritardo noto, niente "In orario"
+    if (delaySec === 0) return `<span class="bv-pill bv-pill-ok">In orario</span>`;
     const min = Math.round(delaySec / 60);
     if (min >= 1) return `<span class="bv-pill bv-pill-bad" title="In ritardo di ${min} min">+${min}'</span>`;
     if (min <= -1) return `<span class="bv-pill bv-pill-warn" title="In anticipo di ${-min} min">${min}'</span>`;
@@ -1560,9 +2343,10 @@ function getDelayBadge(delaySec) {
 const bvEsc = (v) => esc(v == null ? '' : String(v));
 
 // Badge della linea con i colori ACTV (gli stessi di mappa e navigatore)
-function bvDotLinea(line) {
-    const c = getLineColors(String(line).toUpperCase());
-    return `<span class="bv-line-dot" style="background-color:${c.bg};color:${c.text};border-color:${c.border};">${bvEsc(line)}</span>`;
+function bvDotLinea(line, mezzo) {
+    const c = mezzo && mezzo.line === line ? coloriMezzo(mezzo) : getLineColors(String(line).toUpperCase());
+    const gomma = !!mezzo && mezzo.line === line && eMezzoSuGomma(mezzo);
+    return `<span class="bv-line-dot${gomma ? ' bv-line-bus' : ''}" style="background-color:${c.bg};color:${c.text};border-color:${c.border};">${bvEsc(line)}</span>`;
 }
 
 // Riquadro di riepilogo in cima al pannello
@@ -1593,8 +2377,8 @@ function buildTimeLine(label, scheduled, estimated, isDelayed) {
 async function renderBoatDrawer(boat) {
     activeSelection = { type: 'boat', data: boat };
     const opts = {
-        badge: bvDotLinea(boat.line),
-        sub: boat.line && boat.line !== '-' ? `Linea ${boat.line}` : '',
+        badge: bvDotLinea(boat.line, boat),
+        sub: [boat.line && boat.line !== '-' ? `Linea ${boat.line}` : '', boat.simulated && boat.lat ? 'posizione stimata' : ''].filter(Boolean).join(' · '),
         focusKey: `boat-${boat.id}`
     };
 
@@ -1628,7 +2412,11 @@ async function renderBoatDrawer(boat) {
             riepilogo = bvRiepilogo('Prossima fermata', prox.stopName, `<div class="bv-sum-time">${ora}</div>${getDelayBadge(prox.delay)}`);
         }
 
-        let html = `<div class="bv-timeline-title">Percorso corsa attuale</div><div class="bv-tl">`;
+        // corsa non rilevata dal GPS: l'avviso resta fissato in alto, sopra il riepilogo della prossima fermata
+        const simNote = boat.simulated
+            ? `<div class="bv-sim-note">${boat.lat ? 'Corsa non rilevata dal GPS: <b>posizione stimata</b> in base all\'orario programmato, il ritardo non è noto.' : 'Corsa non rilevata dal GPS: orari programmati, il ritardo non è noto.'}</div>`
+            : '';
+        let html = `<div class="bv-timeline-title">${boat.simulated ? 'Percorso corsa · orari programmati' : 'Percorso corsa attuale'}</div><div class="bv-tl">`;
         stopTimes.forEach((st, i) => {
             const isOffSchedule = Math.abs(Math.round(st.delay / 60)) >= 1;
 
@@ -1656,20 +2444,23 @@ async function renderBoatDrawer(boat) {
             html += bvRigaFermata(st.status, i === idxProx ? ' prossima' : '', st.stopName, orari, getDelayBadge(st.delay));
         });
         html += `</div>`;
-        openBateoLiveDrawer(boat.label, html, { ...opts, pinned: riepilogo });
+        openBateoLiveDrawer(boat.label, html, { ...opts, pinned: simNote + riepilogo });
     } catch (e) { console.error(e); }
 }
 
 async function renderStopDrawer(stop) {
     if (rewind.attivo) return; // in rewind le fermate non mostrano i dati live
     activeSelection = { type: 'stop', data: stop };
-    const opts = { badge: '<span class="bv-dh-ico"><i class="fa-solid fa-anchor"></i></span>', sub: 'Fermata' };
+    const fermataBus = Array.isArray(stop.modi) && !stop.modi.includes('nav');
+    const opts = { badge: `<span class="bv-dh-ico"><i class="fa-solid ${fermataBus ? 'fa-bus' : 'fa-anchor'}"></i></span>`, sub: fermataBus ? 'Fermata bus' : 'Fermata' };
     try {
         const res = await fetch(`${API_URL}/api/stop/${stop.id}`);
         const arrivals = await res.json();
 
         if (!activeSelection || activeSelection.type !== 'stop' || activeSelection.data.id !== stop.id) return;
 
+        bvCorseFermata = {};
+        arrivals.forEach(a => { bvCorseFermata[a.tripId] = a; });
         let html = `<div class="bv-timeline-title">Partenze da un'ora fa alle prossime 3 ore</div>`;
         if (arrivals.length === 0) {
             html += `<p class="bv-empty">Nessuna partenza in programma.</p>`;
@@ -1697,7 +2488,7 @@ async function renderStopDrawer(stop) {
                 const dest = bvEsc(arr.destination || 'Sconosciuta');
                 html += `
                 <div class="bv-dep${cls}" onclick="locateBateoLiveBoat('${arr.tripId}', '${arr.liveBoatId || ''}')">
-                    ${bvDotLinea(arr.routeId)}
+                    ${bvDotLinea(arr.routeId, { line: arr.routeId, mode: arr.mode })}
                     <div class="bv-dep-txt">
                         <div class="bv-dep-dest" title="${dest}">${dest}</div>
                         <div class="bv-dep-sub">${stato}<span id="msg-${arr.tripId}" class="bv-dep-msg"></span></div>
@@ -1711,11 +2502,66 @@ async function renderStopDrawer(stop) {
     } catch (e) { console.error(e); }
 }
 
+// ---- Fermate bus: mostrate solo con zoom alto e solo quelle nel riquadro visibile (sono oltre 2.200: tutte insieme appesantirebbero la mappa)
+const BV_ZOOM_FERMATE_BUS = 15;
+const BV_MAX_FERMATE_BUS = 800;
+let fermateBusTutte = null;          // elenco completo, scaricato una volta sola al primo zoom utile
+let fermateBusInCaricamento = false;
+let fermateBusLayer = null;
+let fermateBusRenderer = null;
+const fermateBusDisegnate = new Map();   // id -> marker
+let fermateBusTimer = null;
+
+function pianificaFermateBus() {
+    clearTimeout(fermateBusTimer);
+    fermateBusTimer = setTimeout(aggiornaFermateBus, 150);
+}
+
+async function aggiornaFermateBus() {
+    if (!map) return;
+    const visibili = map.getZoom() >= BV_ZOOM_FERMATE_BUS && !filtroMezzi.bus.off;
+    if (!visibili) {
+        if (fermateBusLayer) { fermateBusLayer.clearLayers(); fermateBusDisegnate.clear(); }
+        return;
+    }
+    if (!fermateBusTutte) {
+        if (fermateBusInCaricamento) return;
+        fermateBusInCaricamento = true;
+        try {
+            const res = await fetch(`${API_URL}/api/stops?modo=bus`);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            fermateBusTutte = (await res.json()).filter(stop => Array.isArray(stop.modi) && !stop.modi.includes('nav')); // un server vecchio senza 'modi' non da' fermate bus
+        } catch (e) {
+            console.error('Errore caricamento fermate bus:', e);
+            return;
+        } finally { fermateBusInCaricamento = false; }
+    }
+    if (!fermateBusLayer) {
+        fermateBusRenderer = L.canvas({ padding: 0.5 });   // disegnate su canvas, senza un elemento DOM per fermata
+        fermateBusLayer = L.layerGroup().addTo(map);
+    }
+    const area = map.getBounds().pad(0.25);
+    const tieni = map.getBounds().pad(0.6);
+    // fuori dal riquadro (con margine): si tolgono
+    for (const [id, m] of fermateBusDisegnate) {
+        if (!tieni.contains(m.getLatLng())) { fermateBusLayer.removeLayer(m); fermateBusDisegnate.delete(id); }
+    }
+    // dentro il riquadro: si aggiungono
+    for (const stop of fermateBusTutte) {
+        if (fermateBusDisegnate.size >= BV_MAX_FERMATE_BUS) break;
+        if (fermateBusDisegnate.has(stop.id) || !area.contains([stop.lat, stop.lon])) continue;
+        const m = L.circleMarker([stop.lat, stop.lon], { renderer: fermateBusRenderer, radius: 6, weight: 2.5, color: '#E31E24', fillColor: '#ffffff', fillOpacity: 1 });
+        m.on('click', () => renderStopDrawer(stop));
+        m.addTo(fermateBusLayer);
+        fermateBusDisegnate.set(stop.id, m);
+    }
+}
+
 async function loadStops() {
     try {
         const res = await fetch(`${API_URL}/api/stops`);
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        globalStops = await res.json();
+        globalStops = (await res.json()).filter(stop => !Array.isArray(stop.modi) || stop.modi.includes('nav')); // le fermate bus hanno un loro strato (zoom alto)
         showBateoLiveError(false);
         
         const stopIcon = L.divIcon({ html: '<div class="bv-stop-icon-inner"></div>', className: 'bv-stop-icon-wrap', iconSize: [14, 14], iconAnchor: [7, 7] });
@@ -1742,12 +2588,80 @@ function normalizzaNomeUnita(nome) {
         .trim();
 }
 
+// ---- Icone dei mezzi: goccia (battelli) e pillola (bus/tram), orientate verso la direzione di marcia
+const boatHeadings = {};       // id -> { lat, lon, h }: ultima posizione usata e direzione nota (gradi, 0 = nord, in senso orario)
+const BV_MOVIMENTO_MIN_M = 6;  // sotto questo spostamento tra due aggiornamenti la direzione resta quella di prima
+
+function bvDistanzaM(lat1, lon1, lat2, lon2) {
+    const R = 6371000, rad = Math.PI / 180;
+    const dLat = (lat2 - lat1) * rad, dLon = (lon2 - lon1) * rad;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+function bvRotta(lat1, lon1, lat2, lon2) {
+    const rad = Math.PI / 180;
+    const y = Math.sin((lon2 - lon1) * rad) * Math.cos(lat2 * rad);
+    const x = Math.cos(lat1 * rad) * Math.sin(lat2 * rad) - Math.sin(lat1 * rad) * Math.cos(lat2 * rad) * Math.cos((lon2 - lon1) * rad);
+    return (Math.atan2(y, x) / rad + 360) % 360;
+}
+
+// Direzione di marcia: quella dal server (corse simulate) se c'e', altrimenti ricavata dallo spostamento tra due aggiornamenti. null = ancora ignota.
+function direzioneMezzo(boat) {
+    if (Number.isFinite(boat.heading)) { boatHeadings[boat.id] = { lat: boat.lat, lon: boat.lon, h: boat.heading }; return boat.heading; }
+    const prev = boatHeadings[boat.id];
+    if (!prev) { boatHeadings[boat.id] = { lat: boat.lat, lon: boat.lon, h: null }; return null; }
+    if (bvDistanzaM(prev.lat, prev.lon, boat.lat, boat.lon) >= BV_MOVIMENTO_MIN_M) {
+        prev.h = Math.round(bvRotta(prev.lat, prev.lon, boat.lat, boat.lon));
+        prev.lat = boat.lat; prev.lon = boat.lon;
+    }
+    return prev.h;
+}
+
+const eMezzoSuGomma = (boat) => !!boat.mode && boat.mode !== 'nav'; // bus e tram: pillola; battelli: goccia
+
+// Colori: i battelli hanno quelli ACTV di sempre; bus e tram sono tutti rossi con scritta bianca
+function coloriMezzo(boat) {
+    if (eMezzoSuGomma(boat)) {
+        // tutti i bus con linea: rosso con scritta bianca (le linee bus hanno gli stessi numeri dei battelli ma non ne prendono i colori)
+        return !boat.line || String(boat.line) === '-' ? { bg: '#6b7280', text: '#ffffff', border: '#ffffff' } : { bg: '#E31E24', text: '#ffffff', border: '#ffffff' };
+    }
+    return getLineColors(String(boat.line).toUpperCase());
+}
+
+// Goccia: corpo tondo (r 13) con la punta in alto, che indica la direzione. Senza direzione nota resta un cerchio.
+// Pillola: capsula lunga nel senso di marcia con un piccolo chevron sul lato anteriore.
+function iconaMezzo(boat) {
+    const c = coloriMezzo(boat);
+    const h = direzioneMezzo(boat);
+    const gomma = eMezzoSuGomma(boat);
+    const stroke = boat.simulated ? '#2f81f7' : c.border;
+    const sw = 2.5;
+    let forma;
+    if (gomma) {
+        forma = `<rect x="9" y="1.5" width="22" height="37" rx="11" fill="${c.bg}" stroke="${stroke}" stroke-width="${sw}"/>`
+            + (h === null ? '' : `<path d="M15.5 8.5 L20 4.5 L24.5 8.5" fill="none" stroke="${c.text}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>`);
+    } else {
+        forma = h === null
+            ? `<circle cx="20" cy="20" r="13" fill="${c.bg}" stroke="${stroke}" stroke-width="${sw}"/>`
+            : `<path d="M20 1 L29.88 11.55 A13 13 0 1 1 10.12 11.55 Z" fill="${c.bg}" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round"/>`;
+    }
+    const linea = bvEsc(String(boat.line));
+    const piccolo = String(boat.line).length >= 3 ? ' style="font-size:9.5px"' : '';
+    const stile = `width:40px;height:40px;color:${c.text};--h:${h === null ? 0 : h}deg;`;
+    const html = `<div class="bv-veh${boat.simulated ? ' bv-veh-sim' : ''}" style="${stile}">`
+        + `<div class="bv-veh-shape"><svg viewBox="0 0 40 40" aria-hidden="true">${forma}</svg></div>`
+        + `<span class="bv-veh-txt"${piccolo}>${linea}</span>`
+        + (boat.simulated ? '<span class="bv-sim-badge">S</span>' : '')
+        + `</div>`;
+    return L.divIcon({ html, className: '', iconSize: [40, 40], iconAnchor: [20, 20] });
+}
+
 // Crea/aggiorna/rimuove il marker di una singola unità ACTV, nascondendola se un altro
 // utente ha inserito manualmente lo stesso nome unità (i suoi dati GPS sono più precisi).
 function renderOrHideBoatMarker(boat) {
     if (!boat.lat || !boat.lon) return;
 
-    if (currentFilterLines.length > 0 && !currentFilterLines.includes(boat.line.toUpperCase())) {
+    if (!mezzoVisibileFiltro(boat)) {
         if (boatMarkers[boat.id]) {
             oms.removeMarker(boatMarkers[boat.id]);
             map.removeLayer(boatMarkers[boat.id]);
@@ -1766,16 +2680,14 @@ function renderOrHideBoatMarker(boat) {
         return;
     }
 
-    const c = getLineColors(boat.line.toUpperCase());
-    const iconHtml = `<div class="bv-boat-icon" style="background-color: ${c.bg}; color: ${c.text}; border: 2.5px solid ${c.border}; width: 26px; height: 26px; box-sizing: border-box;">${boat.line}</div>`;
-    const customBoatIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [26, 26], iconAnchor: [13, 13] });
+    const customBoatIcon = iconaMezzo(boat);
 
     if (boatMarkers[boat.id]) {
         boatMarkers[boat.id].setLatLng([boat.lat, boat.lon]);
         boatMarkers[boat.id].setIcon(customBoatIcon);
         boatMarkers[boat.id].off('click').on('click', () => renderBoatDrawer(boat));
     } else {
-        const marker = L.marker([boat.lat, boat.lon], { icon: customBoatIcon, zIndexOffset: 1000 }).addTo(map);
+        const marker = L.marker([boat.lat, boat.lon], { icon: customBoatIcon, zIndexOffset: boat.simulated ? 500 : 1000 }).addTo(map);
         marker.on('click', () => renderBoatDrawer(boat));
         oms.addMarker(marker);
         boatMarkers[boat.id] = marker;
@@ -1793,15 +2705,874 @@ function aggiornaVisibilitaBarcheActv() {
     globalBoats.forEach(boat => renderOrHideBoatMarker(boat));
 }
 
+function aggiornaFabSimulate() {
+    const fab = document.getElementById('bv-fab-sim');
+    if (!fab) return;
+    fab.classList.toggle('active', bvMostraSimulate);
+    fab.setAttribute('aria-pressed', bvMostraSimulate ? 'true' : 'false');
+    const t = bvMostraSimulate ? 'Nascondi le posizioni simulate' : "Mostra le posizioni simulate dall'orario";
+    fab.title = t;
+    fab.setAttribute('aria-label', t);
+}
+
+function toggleBvSimulate() {
+    bvMostraSimulate = !bvMostraSimulate;
+    try { localStorage.setItem('bv_mostra_simulate', bvMostraSimulate ? '1' : '0'); } catch (e) {}
+    aggiornaFabSimulate();
+    if (!bvMostraSimulate) {
+        // spegnendo, le unità simulate spariscono subito senza aspettare il prossimo aggiornamento
+        globalBoats = globalBoats.filter(b => !b.simulated);
+        Object.keys(boatMarkers).forEach(id => {
+            if (!id.startsWith('sim-')) return;
+            oms.removeMarker(boatMarkers[id]);
+            map.removeLayer(boatMarkers[id]);
+            delete boatMarkers[id];
+        });
+    }
+    fetchAndUpdateBoats();
+}
+
+// ==========================================
+// TELECAMERE IN DIRETTA (YouTube)
+// Segnalini sulla mappa che aprono la diretta di una telecamera. L'elenco sta sul server (data/webcam.json):
+// lettura per tutti, modifica solo per l'admin (il server verifica l'ID token Firebase e l'uid).
+// ==========================================
+function iconaWebcam() {
+    return L.divIcon({
+        html: `<div class="bv-cam-icon${webcamModifica ? ' modifica' : ''}"><i class="fa-solid fa-video"></i></div>`,
+        className: '', iconSize: [21, 21], iconAnchor: [10.5, 10.5]
+    });
+}
+
+function urlEmbedWebcam(w) {
+    const base = 'https://www.youtube.com/embed/';
+    const p = 'autoplay=1&mute=1&playsinline=1&rel=0';
+    return w.tipo === 'canale'
+        ? `${base}live_stream?channel=${encodeURIComponent(w.ytId)}&${p}`
+        : `${base}${encodeURIComponent(w.ytId)}?${p}`;
+}
+
+function apriPlayerWebcam(w) {
+    activeSelection = { type: 'webcam', id: w.id };
+    const html = `<div class="bv-cam-player"><iframe src="${esc(urlEmbedWebcam(w))}" title="${esc(w.nome)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+        <a class="bv-cam-link" href="${esc(w.url)}" target="_blank" rel="noopener noreferrer">Apri su YouTube</a>`;
+    openBateoLiveDrawer(w.nome, html, { badge: '<span class="bv-cam-badge"><i class="fa-solid fa-video"></i></span>', sub: 'Telecamera in diretta' });
+}
+
+function disegnaWebcam() {
+    if (!map) return;
+    const elenco = opzMappa.cam ? webcams : [];   // opzione "Videocamere" spenta: nessun segnalino
+    const ids = new Set(elenco.map(w => w.id));
+    Object.keys(webcamMarkers).forEach(id => {
+        if (ids.has(id)) return;
+        map.removeLayer(webcamMarkers[id]);
+        delete webcamMarkers[id];
+    });
+    elenco.forEach(w => {
+        let m = webcamMarkers[w.id];
+        if (!m) {
+            m = L.marker([w.lat, w.lon], { icon: iconaWebcam(), zIndexOffset: 300, draggable: webcamModifica, title: w.nome, keyboard: false }).addTo(map);
+            m.on('click', () => {
+                const c = webcams.find(x => x.id === w.id);
+                if (!c) return;
+                if (webcamModifica) apriFormWebcam(c.id); else apriPlayerWebcam(c);
+            });
+            m.on('dragend', () => salvaPosizioneWebcam(w.id));
+            webcamMarkers[w.id] = m;
+        } else {
+            m.setLatLng([w.lat, w.lon]);
+        }
+    });
+}
+
+async function caricaWebcam() {
+    try {
+        const r = await fetch(`${API_URL}/api/webcam`);
+        if (!r.ok) return;
+        const lista = await r.json();
+        if (!Array.isArray(lista)) return;
+        webcams = lista;
+        disegnaWebcam();
+    } catch (e) { /* senza rete restano quelle già in mappa */ }
+}
+
+async function bvTokenAdmin() {
+    try {
+        const u = authBateo && authBateo.currentUser;
+        return u ? await u.getIdToken() : null;
+    } catch (e) { return null; }
+}
+
+// L'icona di modifica compare solo con ruolo "admin" nel profilo (collezione utenti). Serve solo a mostrare il tasto:
+// il controllo vero lo fa il server a ogni modifica, leggendo il profilo con il token dell'utente.
+async function verificaRuoloAdmin(db, userData) {
+    let ruolo = userData && userData.ruolo;
+    if (ruolo === undefined && db && authBateo && authBateo.currentUser) {
+        try {
+            const snap = await getDoc(doc(db, 'utenti', authBateo.currentUser.uid));
+            ruolo = snap.exists() ? snap.data().ruolo : undefined;
+        } catch (e) { /* senza profilo leggibile niente modifica */ }
+    }
+    webcamAdmin = ruolo === 'admin';
+    segnaliPuoModificare = ruolo === 'admin' || ruolo === 'collab-mappe';   // stesso criterio per vedere e modificare i segnali
+    const fab = document.getElementById('bv-fab-cam-admin');
+    if (fab) fab.style.display = webcamAdmin && opzMappa.cam ? '' : 'none';
+    if (!webcamAdmin && webcamModifica) toggleWebcamModifica(false);
+    sincronizzaFinestraStile();
+    aggiornaUiSegnali();
+}
+
+async function webcamApi(metodo, percorso, body) {
+    const token = await bvTokenAdmin();
+    if (!token) throw new Error('Accesso non disponibile: riapri BateoLive e riprova');
+    const r = await fetch(`${API_URL}${percorso}`, {
+        method: metodo,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: body ? JSON.stringify(body) : undefined
+    });
+    const dati = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(dati.errore || `Errore ${r.status}`);
+    return dati;
+}
+
+function impostaModificaWebcam() {
+    Object.values(webcamMarkers).forEach(m => {
+        m.setIcon(iconaWebcam());
+        if (m.dragging) { if (webcamModifica) m.dragging.enable(); else m.dragging.disable(); }
+    });
+}
+
+function toggleWebcamModifica(forza) {
+    if (!webcamAdmin && forza !== false) return;
+    webcamModifica = typeof forza === 'boolean' ? forza : !webcamModifica;
+    const fab = document.getElementById('bv-fab-cam-admin');
+    if (fab) { fab.classList.toggle('active', webcamModifica); fab.setAttribute('aria-pressed', webcamModifica ? 'true' : 'false'); }
+    impostaModificaWebcam();
+    if (webcamModifica) {
+        renderWebcamAdmin();
+    } else {
+        if (activeSelection && activeSelection.type === 'webcam-admin') closeBateoLiveDrawer();
+        chiudiWebcamModal();
+    }
+}
+
+function uscitaWebcam() {
+    if (webcamModifica) toggleWebcamModifica(false);
+    chiudiWebcamModal();
+}
+
+function renderWebcamAdmin() {
+    activeSelection = { type: 'webcam-admin' };
+    const righe = webcams.length
+        ? webcams.map(w => `<div class="bv-cam-riga" onclick="apriFormWebcam('${esc(w.id)}')"><span class="bv-cam-badge"><i class="fa-solid fa-video"></i></span><div><b>${esc(w.nome)}</b><small>${esc(w.url)}</small></div></div>`).join('')
+        : '<div class="bv-cam-vuoto">Nessuna telecamera: aggiungine una.</div>';
+    const html = `<button type="button" class="bv-modal-btn" style="margin-top:0" onclick="apriFormWebcam()"><i class="fa-solid fa-plus"></i> Aggiungi telecamera</button>
+        <div class="bv-cam-hint">Tocca un segnalino sulla mappa per modificarlo, trascinalo per spostarlo.</div>${righe}`;
+    openBateoLiveDrawer('Telecamere', html, { badge: '<span class="bv-cam-badge"><i class="fa-solid fa-video"></i></span>', sub: 'Modalità modifica' });
+}
+
+function apriFormWebcam(id) {
+    const w = id ? webcams.find(x => x.id === id) : null;
+    webcamInModifica = w ? w.id : null;
+    const c = map.getCenter();
+    document.getElementById('bv-cam-modal-titolo').textContent = w ? 'Modifica telecamera' : 'Nuova telecamera';
+    document.getElementById('bv-cam-nome').value = w ? w.nome : '';
+    document.getElementById('bv-cam-url').value = w ? w.url : '';
+    document.getElementById('bv-cam-lat').value = (w ? w.lat : c.lat).toFixed(6);
+    document.getElementById('bv-cam-lon').value = (w ? w.lon : c.lng).toFixed(6);
+    document.getElementById('bv-cam-elimina').hidden = !w;
+    document.getElementById('bv-cam-errore').hidden = true;
+    document.getElementById('bv-cam-modal').classList.add('active');
+    lockBateoLiveMap();
+}
+
+function chiudiWebcamModal(e) {
+    if (e && e.target && e.target.classList && !e.target.classList.contains('bv-modal-overlay')) return;
+    const m = document.getElementById('bv-cam-modal');
+    if (!m || !m.classList.contains('active')) return;
+    m.classList.remove('active');
+    unlockBateoLiveMap();
+}
+
+function bvWebcamCentroMappa() {
+    const c = map.getCenter();
+    document.getElementById('bv-cam-lat').value = c.lat.toFixed(6);
+    document.getElementById('bv-cam-lon').value = c.lng.toFixed(6);
+}
+
+function mostraErroreWebcam(msg) {
+    const el = document.getElementById('bv-cam-errore');
+    el.textContent = msg;
+    el.hidden = false;
+}
+
+async function bvWebcamSalva() {
+    const num = (id) => Number(String(document.getElementById(id).value).trim().replace(',', '.'));
+    const body = {
+        nome: document.getElementById('bv-cam-nome').value,
+        url: document.getElementById('bv-cam-url').value,
+        lat: num('bv-cam-lat'), lon: num('bv-cam-lon')
+    };
+    const btn = document.getElementById('bv-cam-salva');
+    btn.disabled = true;
+    document.getElementById('bv-cam-errore').hidden = true;
+    try {
+        const salvata = webcamInModifica
+            ? await webcamApi('PUT', `/api/webcam/${encodeURIComponent(webcamInModifica)}`, body)
+            : await webcamApi('POST', '/api/webcam', body);
+        const i = webcams.findIndex(x => x.id === salvata.id);
+        if (i >= 0) webcams[i] = salvata; else webcams.push(salvata);
+        disegnaWebcam();
+        chiudiWebcamModal();
+        if (webcamModifica) renderWebcamAdmin();
+    } catch (e) {
+        mostraErroreWebcam(e.message);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function bvWebcamElimina() {
+    if (!webcamInModifica || !confirm('Eliminare questa telecamera?')) return;
+    try {
+        await webcamApi('DELETE', `/api/webcam/${encodeURIComponent(webcamInModifica)}`);
+        webcams = webcams.filter(x => x.id !== webcamInModifica);
+        disegnaWebcam();
+        chiudiWebcamModal();
+        if (webcamModifica) renderWebcamAdmin();
+    } catch (e) {
+        mostraErroreWebcam(e.message);
+    }
+}
+
+// Segnalino trascinato: si salva la nuova posizione; se il server rifiuta torna dov'era
+async function salvaPosizioneWebcam(id) {
+    const m = webcamMarkers[id], w = webcams.find(x => x.id === id);
+    if (!m || !w) return;
+    const p = m.getLatLng();
+    try {
+        const salvata = await webcamApi('PUT', `/api/webcam/${encodeURIComponent(id)}`, { lat: p.lat, lon: p.lng });
+        Object.assign(w, salvata);
+    } catch (e) {
+        m.setLatLng([w.lat, w.lon]);
+        alert('Spostamento non salvato: ' + e.message);
+    }
+}
+
+// ==========================================
+// NOMI DEI CANALI
+// Etichette ricavate dai tratti dei limiti di velocità (stessi dati: i nomi sono quelli di limiti_laguna.json).
+// Come le fermate bus: solo con zoom alto e solo nel riquadro visibile.
+// ==========================================
+const BV_ZOOM_NOMI_CANALI = 14;
+const BV_MAX_NOMI_CANALI = 150;
+let nomiCanaliEtichette = null;      // [{ n, lat, lon }]
+let nomiCanaliCaricamento = false;
+let nomiCanaliLayer = null;
+const nomiCanaliDisegnati = new Map();   // indice -> marker
+let overlayMappaTimer = null;
+
+function pianificaOverlayMappa() {
+    clearTimeout(overlayMappaTimer);
+    overlayMappaTimer = setTimeout(() => { aggiornaNomiCanali(); aggiornaSegnaliMappa(); }, 150);
+}
+
+function bvPuntoInAnello(x, y, a) {
+    let dentro = false;
+    for (let i = 0, j = a.length - 1; i < a.length; j = i++) {
+        const xi = a[i][0], yi = a[i][1], xj = a[j][0], yj = a[j][1];
+        if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) dentro = !dentro;
+    }
+    return dentro;
+}
+
+// Un'etichetta per ogni tratto con nome (i tratti piccoli vicini a uno già etichettato con lo stesso nome non ne hanno)
+function costruisciNomiCanali(dati) {
+    const parti = [];
+    for (const c of (dati && dati.canali) || []) {
+        const nome = String(c.n || '').trim();
+        if (!nome) continue;
+        for (const poly of c.g || []) {
+            const ring = poly && poly[0];
+            if (!ring || ring.length < 3) continue;
+            let A = 0, cx = 0, cy = 0, mx = 0, my = 0;
+            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                const f = ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
+                A += f; cx += (ring[j][0] + ring[i][0]) * f; cy += (ring[j][1] + ring[i][1]) * f;
+                mx += ring[i][0]; my += ring[i][1];
+            }
+            let lon = NaN, lat = NaN;
+            if (Math.abs(A) > 1e-14) { lon = cx / (3 * A); lat = cy / (3 * A); }
+            if (!Number.isFinite(lon) || !bvPuntoInAnello(lon, lat, ring)) {
+                // baricentro fuori dal tratto (canale curvo): si usa il vertice più vicino alla media dei vertici
+                const ax = mx / ring.length, ay = my / ring.length;
+                let best = ring[0], bd = Infinity;
+                for (const p of ring) { const d = (p[0] - ax) ** 2 + (p[1] - ay) ** 2; if (d < bd) { bd = d; best = p; } }
+                lon = best[0]; lat = best[1];
+            }
+            parti.push({ n: nome, lat, lon, a: Math.abs(A) });
+        }
+    }
+    parti.sort((p, q) => q.a - p.a);   // prima i tratti grandi
+    const perNome = new Map(), out = [];
+    for (const p of parti) {
+        const gia = perNome.get(p.n) || perNome.set(p.n, []).get(p.n);
+        if (gia.some(e => bvDistanzaM(e.lat, e.lon, p.lat, p.lon) < 300)) continue;
+        const e = { n: p.n, lat: p.lat, lon: p.lon };
+        gia.push(e); out.push(e);
+    }
+    return out;
+}
+
+async function aggiornaNomiCanali() {
+    if (!map) return;
+    const visibili = opzMappa.canali && map.getZoom() >= BV_ZOOM_NOMI_CANALI;
+    if (!visibili) {
+        if (nomiCanaliLayer) { nomiCanaliLayer.clearLayers(); nomiCanaliDisegnati.clear(); }
+        return;
+    }
+    if (!nomiCanaliEtichette) {
+        if (nomiCanaliCaricamento) return;
+        nomiCanaliCaricamento = true;
+        try {
+            if (!bvLimitiDati) {
+                const r = await fetch(`${API_URL}/api/limiti/${LIMITI_PROFILO}`);
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                bvLimitiDati = await r.json();
+                if (!bvLimiti) bvLimiti = bvLimitiCostruisci(bvLimitiDati);
+            }
+            nomiCanaliEtichette = costruisciNomiCanali(bvLimitiDati);
+        } catch (e) {
+            console.warn('Nomi dei canali non disponibili:', e.message);
+            return;
+        } finally { nomiCanaliCaricamento = false; }
+        if (!opzMappa.canali) return;
+    }
+    if (!nomiCanaliLayer) nomiCanaliLayer = L.layerGroup().addTo(map);
+    const area = map.getBounds().pad(0.25), tieni = map.getBounds().pad(0.6);
+    for (const [k, m] of nomiCanaliDisegnati) {
+        if (!tieni.contains(m.getLatLng())) { nomiCanaliLayer.removeLayer(m); nomiCanaliDisegnati.delete(k); }
+    }
+    for (let i = 0; i < nomiCanaliEtichette.length; i++) {
+        if (nomiCanaliDisegnati.size >= BV_MAX_NOMI_CANALI) break;
+        const e = nomiCanaliEtichette[i];
+        if (nomiCanaliDisegnati.has(i) || !area.contains([e.lat, e.lon])) continue;
+        const icona = L.divIcon({ html: `<span class="bv-canale-lbl">${bvEsc(e.n)}</span>`, className: '', iconSize: [0, 0] });
+        const m = L.marker([e.lat, e.lon], { icon: icona, interactive: false, keyboard: false, zIndexOffset: -500 }).addTo(nomiCanaliLayer);
+        nomiCanaliDisegnati.set(i, m);
+    }
+}
+
+// ==========================================
+// SEGNALI (BRICCOLE)
+// Segnalini neri sopra quelli cartografici. L'elenco sta sul server (data/segnali.json).
+// Compaiono con "Info briccole" attivo (di base acceso per admin e collab-mappe, spento per gli altri; la scelta resta salvata),
+// solo con zoom alto (BV_ZOOM_SEGNALI) e solo nel riquadro visibile, perché possono diventare molti.
+// ==========================================
+// Soglia di zoom dei segnali: ce n'è uno ogni ~25 m e i canali vicini ne mettono tanti sullo schermo, quindi serve più zoom delle fermate bus.
+// A zoom 17.5 sono circa 0,6 m per pixel (~40 px tra due segnali sullo stesso canale); più bassa e i segnalini si sovrappongono.
+const BV_ZOOM_SEGNALI = 15.5;
+const BV_MAX_SEGNALI = 800;
+let segnaliLayer = null;
+const segnaliDisegnati = new Map();   // id -> { m: segnalino nero, h: maniglia di spostamento (solo in modifica), trascinando }
+
+function briccoleAttive() { return typeof opzMappa.briccole === 'boolean' ? opzMappa.briccole : segnaliPuoModificare; }
+function zoomSegnaliOk() { return !!map && map.getZoom() >= BV_ZOOM_SEGNALI; }
+
+const TIPI_SEGNALE = { palo: 'Palo singolo', gruppo: 'Gruppo pali', dama: 'Dama' };
+const etichettaTipoSegnale = (t) => TIPI_SEGNALE[t] || TIPI_SEGNALE.palo;
+
+async function caricaSegnali() {
+    if (segnaliInCaricamento) return;
+    segnaliInCaricamento = true;
+    try {
+        const r = await fetch(`${API_URL}/api/segnali`);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const lista = await r.json();
+        if (!Array.isArray(lista)) throw new Error('risposta non valida');
+        segnali = lista;
+        segnaliCaricati = true;
+        aggiornaSegnaliMappa();
+    } catch (e) {
+        console.warn('Segnali non disponibili:', e.message);
+    } finally { segnaliInCaricamento = false; }
+}
+
+// Mostra o nasconde matita e +, cambia l'aspetto della matita, ridisegna i segnalini
+function aggiornaUiSegnali() {
+    const attive = briccoleAttive();
+    if ((!attive || !segnaliPuoModificare) && (segnaliModifica || segnaliAggiungi)) {
+        segnaliModifica = false;
+        disarmaAggiuntaSegnale();
+        chiudiSegnaleModal();
+        svuotaSegnaliMappa();
+    }
+    if (!attive && activeSelection && activeSelection.type === 'segnale') closeBateoLiveDrawer();
+    const edit = document.getElementById('bv-fab-segnali-edit'), add = document.getElementById('bv-fab-segnali-add');
+    if (edit) {
+        edit.style.display = attive && segnaliPuoModificare ? '' : 'none';
+        edit.classList.toggle('bv-verde', segnaliModifica);
+        edit.setAttribute('aria-pressed', segnaliModifica ? 'true' : 'false');
+        edit.title = segnaliModifica ? 'Esci dalla modifica dei segnali' : 'Modifica segnali';
+        edit.innerHTML = segnaliModifica ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-pen"></i>';
+    }
+    if (add) {
+        add.style.display = attive && segnaliPuoModificare && segnaliModifica ? '' : 'none';
+        add.classList.toggle('active', segnaliAggiungi);
+        add.setAttribute('aria-pressed', segnaliAggiungi ? 'true' : 'false');
+    }
+    if (attive && !segnaliCaricati) caricaSegnali();
+    aggiornaSegnaliMappa();
+    aggiornaFabLayout();
+}
+
+function toggleSegnaliModifica(forza) {
+    if ((!briccoleAttive() || !segnaliPuoModificare) && forza !== false) return;
+    segnaliModifica = typeof forza === 'boolean' ? forza : !segnaliModifica;
+    if (!segnaliModifica) {
+        disarmaAggiuntaSegnale();
+        chiudiSegnaleModal();
+        if (activeSelection && activeSelection.type === 'segnale') closeBateoLiveDrawer();
+    }
+    svuotaSegnaliMappa();   // si ridisegnano con (o senza) la maniglia di spostamento
+    aggiornaUiSegnali();
+}
+
+function uscitaSegnali() {
+    if (segnaliModifica) toggleSegnaliModifica(false);
+    disarmaAggiuntaSegnale();
+    chiudiSegnaleModal();
+    segnaliCaricati = false;   // alla prossima apertura si rilegge l'elenco
+}
+
+function armaAggiuntaSegnale() {
+    if (!segnaliModifica || !map) return;
+    if (segnaliAggiungi) { disarmaAggiuntaSegnale(); aggiornaUiSegnali(); return; }
+    if (!zoomSegnaliOk()) { bvMessaggioHud('Avvicinati di più per aggiungere un segnale', 3000); return; }
+    segnaliAggiungi = true;
+    map.getContainer().style.cursor = 'crosshair';
+    bvMessaggioHud('Tocca la mappa per posizionare il segnale', 3500);
+    aggiornaUiSegnali();
+}
+
+function disarmaAggiuntaSegnale() {
+    if (!segnaliAggiungi) return;
+    segnaliAggiungi = false;
+    if (map) map.getContainer().style.cursor = '';
+}
+
+async function creaSegnaleInPunto(ll) {
+    if (!segnaliAggiungi || !segnaliModifica) return;
+    disarmaAggiuntaSegnale();
+    aggiornaUiSegnali();
+    try {
+        const nuovo = await webcamApi('POST', '/api/segnali', {
+            lat: ll.lat, lon: ll.lng, canale: '', numero: '', tipo: 'palo', pali: null, paliPresenti: null, presente: true, luceFunzionante: false, luceStruttura: false, note: ''
+        });
+        segnali.push(nuovo);
+        aggiornaSegnaliMappa();
+    } catch (e) {
+        alert('Segnale non aggiunto: ' + e.message);
+    }
+}
+
+// Dati tutti inseriti: canale, numero, tipo, presente, luce (funzionante e struttura) e, per il gruppo pali, numero di pali e pali presenti.
+// Le note sono facoltative. Il bordo verde lo vedono solo admin e collab-mappe.
+function segnaleCompleto(s) {
+    if (!s) return false;
+    const txt = (v) => v != null && String(v).trim() !== '';
+    if (!txt(s.canale) || !txt(s.numero)) return false;
+    if (!TIPI_SEGNALE[s.tipo]) return false;
+    if (typeof s.presente !== 'boolean') return false;
+    if (typeof s.luceFunzionante !== 'boolean' || typeof s.luceStruttura !== 'boolean') return false;
+    if (s.tipo === 'gruppo' && (s.pali == null || s.paliPresenti == null)) return false;
+    return true;
+}
+const segnaleBordoVerde = (s) => segnaliPuoModificare && segnaleCompleto(s);
+
+function iconaSegnale(s) {
+    const cls = segnaleBordoVerde(s) ? 'bv-seg-dot completo' : 'bv-seg-dot';
+    return L.divIcon({ html: `<div class="bv-seg-dot-wrap"><div class="${cls}"></div></div>`, className: '', iconSize: [26, 26], iconAnchor: [13, 13] });
+}
+
+// La maniglia sta alla stessa posizione geografica del segnale ma è disegnata spostata di un tratto fisso in alto a destra
+// (ancora negativa): si trascina lei e il dito non copre il segnalino.
+function iconaManigliaSegnale() {
+    return L.divIcon({ html: '<div class="bv-seg-maniglia"><i class="fa-solid fa-up-down-left-right"></i></div>', className: '', iconSize: [34, 34], iconAnchor: [-12, 46] });
+}
+
+function rimuoviSegnaleDisegnato(id) {
+    const o = segnaliDisegnati.get(id);
+    if (!o) return;
+    if (segnaliLayer) { segnaliLayer.removeLayer(o.m); if (o.h) segnaliLayer.removeLayer(o.h); }
+    segnaliDisegnati.delete(id);
+}
+
+function svuotaSegnaliMappa() {
+    if (segnaliLayer) segnaliLayer.clearLayers();
+    segnaliDisegnati.clear();
+}
+
+function creaMarkerSegnale(s) {
+    const titolo = `${etichettaTipoSegnale(s.tipo)}${s.numero ? ' n. ' + s.numero : ''}`;
+    const m = L.marker([s.lat, s.lon], { icon: iconaSegnale(s), zIndexOffset: 250, keyboard: false, title: titolo }).addTo(segnaliLayer);
+    m.on('click', () => {
+        const c = segnali.find(x => x.id === s.id);
+        if (!c) return;
+        if (segnaliModifica) apriFormSegnale(c.id); else apriSchedaSegnale(c);
+    });
+    const o = { m, h: null, trascinando: false, verde: segnaleBordoVerde(s) };
+    if (segnaliModifica) {
+        const h = L.marker([s.lat, s.lon], { icon: iconaManigliaSegnale(), zIndexOffset: 260, draggable: true, keyboard: false, title: 'Trascina per spostare' }).addTo(segnaliLayer);
+        h.on('dragstart', () => { o.trascinando = true; });
+        h.on('drag', () => m.setLatLng(h.getLatLng()));
+        h.on('dragend', () => { o.trascinando = false; salvaPosizioneSegnale(s.id); });
+        o.h = h;
+    }
+    segnaliDisegnati.set(s.id, o);
+}
+
+function aggiornaSegnaliMappa() {
+    if (!map) return;
+    if (!segnaliLayer) segnaliLayer = L.layerGroup().addTo(map);
+    if (!briccoleAttive() || !zoomSegnaliOk()) {
+        if (segnaliDisegnati.size) svuotaSegnaliMappa();
+        return;
+    }
+    const perId = new Map(segnali.map(s => [s.id, s]));
+    const area = map.getBounds().pad(0.25), tieni = map.getBounds().pad(0.6);
+    for (const [id, o] of segnaliDisegnati) {
+        const s = perId.get(id);
+        if (!s || (!o.trascinando && !tieni.contains([s.lat, s.lon]))) { rimuoviSegnaleDisegnato(id); continue; }
+        if (!o.trascinando) { o.m.setLatLng([s.lat, s.lon]); if (o.h) o.h.setLatLng([s.lat, s.lon]); }
+        const verde = segnaleBordoVerde(s);
+        if (o.verde !== verde) { o.verde = verde; o.m.setIcon(iconaSegnale(s)); }
+    }
+    for (const s of segnali) {
+        if (segnaliDisegnati.size >= BV_MAX_SEGNALI) break;
+        if (segnaliDisegnati.has(s.id) || !area.contains([s.lat, s.lon])) continue;
+        creaMarkerSegnale(s);
+    }
+}
+
+// Segnalino spostato con la maniglia: si salva la nuova posizione; se il server rifiuta torna dov'era
+async function salvaPosizioneSegnale(id) {
+    const o = segnaliDisegnati.get(id), s = segnali.find(x => x.id === id);
+    if (!o || !o.h || !s) return;
+    const p = o.h.getLatLng();
+    try {
+        const salvato = await webcamApi('PUT', `/api/segnali/${encodeURIComponent(id)}`, { lat: p.lat, lon: p.lng });
+        Object.assign(s, salvato);
+    } catch (e) {
+        o.m.setLatLng([s.lat, s.lon]);
+        o.h.setLatLng([s.lat, s.lon]);
+        alert('Spostamento non salvato: ' + e.message);
+    }
+}
+
+// Scheda in sola lettura (fuori dalla modalità modifica)
+// Sì / No, oppure un trattino se il dato non è mai stato inserito (segnali salvati prima di questi campi)
+const snx = (v) => (v == null ? '-' : (v ? 'Sì' : 'No'));
+
+function apriSchedaSegnale(s) {
+    activeSelection = { type: 'segnale', id: s.id };
+    const riga = (k, v) => `<div class="bv-seg-riga"><span>${k}</span><b>${v}</b></div>`;
+    const html = riga('Canale', bvEsc(s.canale) || '—')
+        + riga('Numero', bvEsc(s.numero) || '—')
+        + riga('Tipo', bvEsc(etichettaTipoSegnale(s.tipo)))
+        + (s.tipo === 'gruppo' ? riga('Numero di pali', bvEsc(s.pali)) + riga('Pali presenti', bvEsc(s.paliPresenti == null ? s.pali : s.paliPresenti)) : '')
+        + riga('Presente', s.presente ? 'Sì' : 'No')
+        + '<div class="bv-seg-sez">Luce</div>'
+        + riga('Funzionante', snx(s.luceFunzionante))
+        + riga('Struttura presente', snx(s.luceStruttura))
+        + (s.note ? `<div class="bv-seg-note">${bvEsc(s.note)}</div>` : '');
+    openBateoLiveDrawer(`${etichettaTipoSegnale(s.tipo)}${s.numero ? ' n. ' + s.numero : ''}`, html, { badge: '<span class="bv-seg-badge"></span>', sub: s.canale || 'Segnale' });
+}
+
+// ---- scheda di modifica ----
+function valoreSegSel(id) {
+    const a = document.querySelector(`#${id} button.active`);
+    return a ? a.dataset.v : null;
+}
+
+function impostaSegSel(id, v) {
+    document.querySelectorAll(`#${id} button`).forEach(b => b.classList.toggle('active', b.dataset.v === String(v)));
+}
+
+function aggiornaPaliVisibili() {
+    const w = document.getElementById('bv-seg-pali-wrap');
+    if (w) w.hidden = valoreSegSel('bv-seg-tipo') !== 'gruppo';
+}
+
+function bvSegSel(btn) {
+    const gruppo = btn.parentElement;
+    gruppo.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+    if (gruppo.id === 'bv-seg-tipo') {
+        const pali = document.getElementById('bv-seg-pali');
+        if (btn.dataset.v === 'gruppo' && pali && !String(pali.value).trim()) pali.value = '3';   // di base 3 pali
+        const presenti = document.getElementById('bv-seg-pali-presenti');
+        if (btn.dataset.v === 'gruppo' && presenti && !String(presenti.value).trim()) presenti.value = pali ? pali.value : '3';
+        aggiornaPaliVisibili();
+    }
+}
+
+function apriFormSegnale(id) {
+    const s = segnali.find(x => x.id === id);
+    if (!s) return;
+    segnaliInModifica = s.id;
+    document.getElementById('bv-seg-canale').value = s.canale || '';
+    document.getElementById('bv-seg-numero').value = s.numero || '';
+    impostaSegSel('bv-seg-tipo', s.tipo || 'palo');
+    document.getElementById('bv-seg-pali').value = s.pali || 3;
+    document.getElementById('bv-seg-pali-presenti').value = s.paliPresenti == null ? (s.pali || 3) : s.paliPresenti;
+    impostaSegSel('bv-seg-presente', s.presente ? '1' : '0');
+    impostaSegSel('bv-seg-luce-funz', s.luceFunzionante ? '1' : '0');
+    impostaSegSel('bv-seg-luce-strutt', s.luceStruttura ? '1' : '0');
+    document.getElementById('bv-seg-note').value = s.note || '';
+    bvSegCanaleChiudi();
+    caricaNomiCanaliNoti();   // nomi per i suggerimenti del campo canale
+    aggiornaPaliVisibili();
+    document.getElementById('bv-seg-errore').hidden = true;
+    document.getElementById('bv-seg-modal').classList.add('active');
+    lockBateoLiveMap();
+}
+
+function chiudiSegnaleModal(e) {
+    if (e && e.target && e.target.classList && !e.target.classList.contains('bv-modal-overlay')) return;
+    const m = document.getElementById('bv-seg-modal');
+    if (!m || !m.classList.contains('active')) return;
+    m.classList.remove('active');
+    segnaliInModifica = null;
+    bvSegCanaleChiudi();
+    unlockBateoLiveMap();
+}
+
+// ---- suggerimenti per il campo canale: nomi già presenti nei segnali salvati e nomi dei canali della laguna (stessi dati dei limiti) ----
+let nomiCanaliNoti = [];
+async function caricaNomiCanaliNoti() {
+    try {
+        if (!bvLimitiDati) {
+            const r = await fetch(`${API_URL}/api/limiti/${LIMITI_PROFILO}`);
+            if (r.ok) { bvLimitiDati = await r.json(); if (!bvLimiti) bvLimiti = bvLimitiCostruisci(bvLimitiDati); }
+        }
+    } catch (e) { /* restano i nomi dei segnali già salvati */ }
+    const nomi = new Set();
+    for (const c of (bvLimitiDati && bvLimitiDati.canali) || []) { const n = String(c.n || '').trim(); if (n) nomi.add(n); }
+    nomiCanaliNoti = [...nomi];
+}
+
+const bvNormTesto = (t) => String(t == null ? '' : t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+function bvSegCanaleChiudi() {
+    const box = document.getElementById('bv-seg-canale-sugg');
+    if (box) { box.classList.remove('active'); box.innerHTML = ''; }
+}
+
+function bvSegCanaleSuggerisci() {
+    const input = document.getElementById('bv-seg-canale'), box = document.getElementById('bv-seg-canale-sugg');
+    if (!input || !box) return;
+    const q = bvNormTesto(input.value);
+    if (!q) { bvSegCanaleChiudi(); return; }
+    const tutti = new Map();   // nome normalizzato -> nome come scritto (senza doppioni)
+    for (const n of [...segnali.map(x => x.canale), ...nomiCanaliNoti]) {
+        const t = String(n || '').trim();
+        if (t && !tutti.has(bvNormTesto(t))) tutti.set(bvNormTesto(t), t);
+    }
+    const inizio = [], dentro = [];
+    for (const [k, nome] of tutti) {
+        if (k === q) continue;   // già scritto per intero
+        if (k.startsWith(q)) inizio.push(nome); else if (k.includes(q)) dentro.push(nome);
+    }
+    const ordina = (a, b) => a.localeCompare(b, 'it');
+    const lista = [...inizio.sort(ordina), ...dentro.sort(ordina)].slice(0, 8);
+    if (!lista.length) { bvSegCanaleChiudi(); return; }
+    box.innerHTML = lista.map(n => `<div class="bv-suggestion-item" data-n="${bvEsc(n)}" onclick="bvSegCanaleScegli(this)"><i class="fa-solid fa-water bv-sugg-ico"></i><span>${bvEsc(n)}</span></div>`).join('');
+    box.classList.add('active');
+}
+
+function bvSegCanaleScegli(el) {
+    document.getElementById('bv-seg-canale').value = el.dataset.n || '';
+    bvSegCanaleChiudi();
+}
+
+function mostraErroreSegnale(msg) {
+    const el = document.getElementById('bv-seg-errore');
+    el.textContent = msg;
+    el.hidden = false;
+}
+
+async function bvSegnaleSalva() {
+    if (!segnaliInModifica) return;
+    const id = segnaliInModifica;
+    const tipo = valoreSegSel('bv-seg-tipo') || 'palo';
+    const body = {
+        canale: document.getElementById('bv-seg-canale').value,
+        numero: document.getElementById('bv-seg-numero').value,
+        tipo,
+        pali: tipo === 'gruppo' ? Number(document.getElementById('bv-seg-pali').value) : null,
+        paliPresenti: tipo === 'gruppo' ? Number(document.getElementById('bv-seg-pali-presenti').value) : null,
+        presente: valoreSegSel('bv-seg-presente') !== '0',
+        luceFunzionante: valoreSegSel('bv-seg-luce-funz') === '1',
+        luceStruttura: valoreSegSel('bv-seg-luce-strutt') === '1',
+        note: document.getElementById('bv-seg-note').value
+    };
+    if (tipo === 'gruppo' && body.paliPresenti > body.pali) {
+        mostraErroreSegnale('I pali presenti non possono essere più dei pali del gruppo');
+        return;
+    }
+    const btn = document.getElementById('bv-seg-salva');
+    btn.disabled = true;
+    document.getElementById('bv-seg-errore').hidden = true;
+    try {
+        const salvato = await webcamApi('PUT', `/api/segnali/${encodeURIComponent(id)}`, body);
+        const i = segnali.findIndex(x => x.id === salvato.id);
+        if (i >= 0) segnali[i] = salvato; else segnali.push(salvato);
+        const o = segnaliDisegnati.get(id);
+        if (o) o.m.options.title = `${etichettaTipoSegnale(salvato.tipo)}${salvato.numero ? ' n. ' + salvato.numero : ''}`;
+        chiudiSegnaleModal();
+        aggiornaSegnaliMappa();
+    } catch (e) {
+        mostraErroreSegnale(e.message);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function bvSegnaleElimina() {
+    if (!segnaliInModifica || !confirm('Eliminare questo segnale?')) return;
+    const id = segnaliInModifica;
+    try {
+        await webcamApi('DELETE', `/api/segnali/${encodeURIComponent(id)}`);
+        segnali = segnali.filter(x => x.id !== id);
+        rimuoviSegnaleDisegnato(id);
+        chiudiSegnaleModal();
+    } catch (e) {
+        mostraErroreSegnale(e.message);
+    }
+}
+
+// ---- PDF riepilogativo: Canale / tipo + numero / info ----
+async function bvSegnaliPdf() {
+    const btn = document.getElementById('bv-opz-pdf');
+    if (btn) btn.disabled = true;
+    try {
+        try { // elenco fresco dal server (si usa quello in memoria se non risponde)
+            const r = await fetch(`${API_URL}/api/segnali`);
+            if (r.ok) { const l = await r.json(); if (Array.isArray(l)) { segnali = l; segnaliCaricati = true; } }
+        } catch (e) { /* resta l'elenco già caricato */ }
+        if (!segnali.length) { alert('Non ci sono ancora segnali da esportare.'); return; }
+        if (!(window.jspdf && window.jspdf.jsPDF)) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+        const { jsPDF } = window.jspdf;
+        const pulisci = (t) => String(t == null ? '' : t).replace(/[^\x20-\x7E\u00A0-\u00FF\n]/g, '').trim();   // i font base del PDF non hanno emoji e simboli esotici
+        const confronta = (a, b) => String(a).localeCompare(String(b), 'it', { numeric: true, sensitivity: 'base' });
+
+        const gruppi = new Map();
+        for (const s of segnali) {
+            const c = pulisci(s.canale) || 'non indicato';
+            (gruppi.get(c) || gruppi.set(c, []).get(c)).push(s);
+        }
+        const canali = [...gruppi.keys()].sort((a, b) => (a === 'non indicato') - (b === 'non indicato') || confronta(a, b));
+
+        // Se il nome comincia già con "Canale" (o è un rio, un bacino...) non si ripete la parola davanti
+        const titoloCanale = (c) => (c === 'non indicato' || !/^(canal|rio\b|bacino\b)/i.test(c)) ? `Canale ${c}` : c;
+        const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+        const W = 210, M = 15, MAXY = 282, LARG = W - 2 * M;
+        let y = 20;
+        const salto = (h) => { if (y + h > MAXY) { doc.addPage(); y = 20; } };
+
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(17);
+        doc.text('Segnali - Info briccole', M, y); y += 7;
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(110);
+        doc.text(`Aggiornato al ${new Date().toLocaleDateString('it-IT')} - ${segnali.length} segnali`, M, y); y += 9;
+        doc.setTextColor(0);
+
+        for (const canale of canali) {
+            salto(22);
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
+            doc.text(titoloCanale(canale), M, y);
+            doc.setDrawColor(180); doc.line(M, y + 1.8, W - M, y + 1.8);
+            y += 8;
+
+            const lista = gruppi.get(canale).slice().sort((a, b) => confronta(a.numero || '', b.numero || ''));
+            const sn = (v) => (v == null ? '-' : (v ? 'Sì' : 'No'));
+            const coord = (v, positivo, negativo) => {
+                const n = Number(v);
+                return v == null || v === '' || !Number.isFinite(n) ? '-' : `${Math.abs(n).toFixed(6)}° ${n >= 0 ? positivo : negativo}`;
+            };
+            const meta = lista.map(s => {
+                const lat = coord(s.lat, 'N', 'S');
+                const lon = coord(s.lon, 'E', 'W');
+                const righe = [
+                    `Presente: ${sn(s.presente)}`,
+                    ...(s.tipo === 'gruppo' ? [`Pali: ${s.pali} - presenti: ${s.paliPresenti == null ? s.pali : s.paliPresenti}`] : []),
+                    `Luce - funzionante: ${sn(s.luceFunzionante)}`,
+                    `Struttura presente: ${sn(s.luceStruttura)}`,
+                    `Coordinate: ${lat} / ${lon}`
+                ];
+                const note = pulisci(s.note);
+                if (note) righe.push(...doc.splitTextToSize(`Note: ${note}`, (LARG / 2) - 12));
+                return { s, righe };
+            });
+
+            // Due segnali per riga: ciascuno occupa metà pagina, con separatore verticale centrale.
+            const metaW = LARG / 2;
+            for (let i = 0; i < meta.length; i += 2) {
+                const coppia = meta.slice(i, i + 2);
+                const altezze = coppia.map(({ righe }) => 5.2 + righe.length * 4.6 + 3);
+                const altezzaRiga = Math.max(...altezze);
+                salto(altezzaRiga + 2);
+                const top = y;
+                coppia.forEach(({ s, righe }, j) => {
+                    const x = M + j * metaW + 3;
+                    doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+                    doc.text(`${etichettaTipoSegnale(s.tipo)} n. ${pulisci(s.numero) || '-'}`, x, top + 4.5, { maxWidth: metaW - 10 });
+                    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.8);
+                    righe.forEach((t, k) => doc.text(t, x, top + 10 + k * 4.6, { maxWidth: metaW - 10 }));
+                });
+                doc.setDrawColor(175); doc.setLineWidth(0.3);
+                doc.line(M + metaW, top, M + metaW, top + altezzaRiga);
+                y += altezzaRiga + 2;
+            }
+            y += 3;
+        }
+
+        const n = doc.getNumberOfPages();
+        for (let p = 1; p <= n; p++) {
+            doc.setPage(p); doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(130);
+            doc.text(`Pagina ${p} di ${n}`, W - M, 291, { align: 'right' });
+        }
+        doc.save(`segnali-briccole-${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch (e) {
+        alert('PDF non creato: ' + e.message);
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
 async function fetchAndUpdateBoats() {
     if (!map || rewind.attivo) return;
     try {
-        const response = await fetch(`${API_URL}/api/vaporetti/live`);
+        const q = bvMostraSimulate ? '?sim=1' : '';
+        const [response, resBus] = await Promise.all([
+            fetch(`${API_URL}/api/vaporetti/live${q}`),
+            fetch(`${API_URL}/api/bus/live${q}`).catch(() => null)   // server senza bus: restano i battelli
+        ]);
         if (!response.ok) throw new Error('HTTP ' + response.status);
-        const boats = await response.json();
+        let boats = await response.json();
+        if (resBus && resBus.ok) { try { boats = boats.concat(await resBus.json()); } catch (e) { /* bus non leggibili: solo battelli */ } }
         if (rewind.attivo) return;
         globalBoats = boats;
         showBateoLiveError(false);
+
+        // le unità sparite dal feed (o corse simulate finite) non devono restare ferme in mappa
+        const idsAttuali = new Set(boats.map(b => b.id));
+        Object.keys(boatMarkers).forEach(id => {
+            if (idsAttuali.has(id)) return;
+            oms.removeMarker(boatMarkers[id]);
+            map.removeLayer(boatMarkers[id]);
+            delete boatMarkers[id];
+        });
+        Object.keys(boatHeadings).forEach(id => { if (!idsAttuali.has(id)) delete boatHeadings[id]; });
 
         boats.forEach(boat => renderOrHideBoatMarker(boat));
 
@@ -2250,11 +4021,17 @@ async function caricaStatoTurni(forza = false) {
 }
 
 // Turno di un giorno: { data, codice, stato: 'ok' | 'riposo' | 'varianti' | 'errore', attivita[], turno }
-async function turnoDelGiorno(dStr) {
-    const state = await caricaStatoTurni();
-    const mansione = mansioneDaStato(state) || userMansione || await mansioneDalProfilo();
-    const manuale = !!(state.variazioni && state.variazioni[dStr]);
-    let codice = turnoEffettivo(dStr, state, datiTurni, mansione);
+async function turnoDelGiorno(dStr, forzato = null) {
+    let state = null, manuale = false, codice;
+    if (forzato) {
+        codice = forzato; // turno scelto a mano: niente calendario, niente ferie
+        manuale = true;
+    } else {
+        state = await caricaStatoTurni();
+        const mansione = mansioneDaStato(state) || userMansione || await mansioneDalProfilo();
+        manuale = !!(state.variazioni && state.variazioni[dStr]);
+        codice = turnoEffettivo(dStr, state, datiTurni, mansione);
+    }
     // ferie previste dalla rotazione ferie (come nel calendario): senza variazione manuale il turno diventa FEP
     if (!manuale && datiTurni && !["RI", "AL"].includes(String(codice).toUpperCase())) {
         const ferie = ferieDelGiorno(state, dStr, datiTurni.ferie);
@@ -2268,7 +4045,15 @@ async function turnoDelGiorno(dStr) {
     if (BLOCCA_SE_VARIANTI && haVarianti(datiTurni, dStr)) { esito.stato = 'varianti'; return esito; }
 
     try {
-        const dati = await fetchJson(`${API_URL}/api/v1/turno?codice=${encodeURIComponent(codice)}&data=${encodeURIComponent(dStr)}`);
+        const urlTurno = (cod) => `${API_TURNI_URL}/api/v1/turno?codice=${encodeURIComponent(cod)}&data=${encodeURIComponent(dStr)}`;
+        let dati;
+        try {
+            dati = await fetchJson(urlTurno(codice));
+        } catch (e) {
+            // codice digitato a mano in minuscolo: si riprova in maiuscolo
+            if (forzato && codice !== codice.toUpperCase()) { codice = codice.toUpperCase(); esito.codice = codice; dati = await fetchJson(urlTurno(codice)); }
+            else throw e;
+        }
         esito.turno = dati.turno;
         esito.attivita = preparaAttivita(dati.turno);
     } catch (e) {
@@ -2313,13 +4098,13 @@ async function caricaTurno() {
         // di notte il turno in corso può essere quello iniziato ieri sera
         if (presto) {
             const ieriData = new Date(ora.getFullYear(), ora.getMonth(), ora.getDate() - 1, 12);
-            const ieri = await turnoDelGiorno(dateToLocalISO(ieriData));
+            const ieri = await turnoDelGiorno(dateToLocalISO(ieriData), turnoManuale);
             if (ieri.stato === 'ok' && ieri.attivita.length) {
                 const fine = Math.max(...ieri.attivita.map((a) => a._a));
                 if (secondiDalGiorno(ieri.data, ora) / 60 <= fine + 30) scelto = ieri;
             }
         }
-        if (!scelto) scelto = await turnoDelGiorno(oggi);
+        if (!scelto) scelto = await turnoDelGiorno(oggi, turnoManuale);
 
         // stesso turno di prima: si tengono percorso e fermate già caricati
         const uguale = turnoCorrente && scelto.data === turnoCorrente.data && scelto.codice === turnoCorrente.codice && scelto.stato === turnoCorrente.stato;
@@ -2353,7 +4138,7 @@ async function datiCorsa(act, data) {
         linea: act.linea, data: data,
         partenza_min: act.partenza_min, arrivo_min: act.arrivo_min, da: act.da, a: act.a
     });
-    return fetchJson(`${API_URL}/api/v1/corsa?${params}`);
+    return fetchJson(`${API_TURNI_URL}/api/v1/corsa?${params}`);
 }
 
 async function datiPercorso(corsa) {
@@ -2429,9 +4214,53 @@ function badgeLineaNav(linea) {
     return `<span class="bv-nav-linea" style="background:${c.bg};color:${c.text};border-color:${c.border};">${esc(linea)}</span>`;
 }
 
+// Turno scelto a mano con il tasto modifica (null = turno del calendario). Vale finché non si spegne il GPS.
+let turnoManuale = null;
+
 function pillTurnoNav() {
-    if (!turnoCorrente) return '';
-    return `<span class="bv-nav-turno" title="Turno"><small>TURNO</small>${esc(turnoCorrente.codice)}</span>`;
+    const modifica = `<button type="button" class="bv-nav-turno-edit" onclick="apriModificaTurnoNav()" title="Cambia turno" aria-label="Cambia turno"><i class="fa-solid fa-pen"></i></button>`;
+    if (!turnoCorrente) return modifica;
+    return `<span class="bv-nav-turno${turnoManuale ? ' manuale' : ''}" title="Turno"><small>${turnoManuale ? 'MANUALE' : 'TURNO'}</small>${esc(turnoCorrente.codice)}</span>${modifica}`;
+}
+
+function apriModificaTurnoNav() {
+    const m = document.getElementById('bv-turno-modal'), inp = document.getElementById('bv-turno-input'), rip = document.getElementById('bv-turno-ripristina');
+    if (!m || !inp) return;
+    inp.value = turnoManuale || ((turnoCorrente && turnoCorrente.codice !== 'N/D') ? turnoCorrente.codice : '');
+    if (rip) rip.hidden = !turnoManuale;
+    m.classList.add('active');
+    lockBateoLiveMap();
+    setTimeout(() => { inp.focus(); inp.select(); }, 60);
+}
+
+function chiudiModificaTurnoNav(e) {
+    if (e && e.target && e.target.classList && !e.target.classList.contains('bv-modal-overlay')) return;
+    const m = document.getElementById('bv-turno-modal');
+    if (m) m.classList.remove('active');
+    unlockBateoLiveMap();
+}
+
+function applicaTurnoManuale() {
+    const inp = document.getElementById('bv-turno-input');
+    const v = inp ? inp.value.trim().replace(/\s+/g, ' ') : '';
+    chiudiModificaTurnoNav();
+    if (v) cambiaTurnoNav(v);
+}
+
+function ripristinaTurnoCalendario() {
+    chiudiModificaTurnoNav();
+    cambiaTurnoNav(null);
+}
+
+// Carica la corsa del turno indicato (o torna a quello del calendario con null)
+async function cambiaTurnoNav(codice) {
+    turnoManuale = codice;
+    turnoCorrente = null; // la schermata mostra "Carico il turno…" e riparte da zero
+    attKey = null; percorso = null; percorsoStato = 'nessuno'; minimoFermata = 0; firmaLista = ''; htmlAttPrecedente = '';
+    tokenPercorso++;
+    renderNavigatore();
+    for (let i = 0; i < 60 && inCaricamento; i++) await new Promise(r => setTimeout(r, 100)); // aspetta un eventuale caricamento già in corso
+    caricaTurno();
 }
 
 function htmlMessaggioNav(testo) {
@@ -2458,7 +4287,7 @@ function impostaAttivitaNav(html) {
     // il turno sta a sinistra della velocità, fuori dal riquadro attività
     const slotTurno = navEl('bv-nav-turno-slot');
     const pillTurno = pillTurnoNav();
-    if (slotTurno && slotTurno.innerHTML !== pillTurno) slotTurno.innerHTML = pillTurno;
+    if (slotTurno && slotTurno.dataset.html !== pillTurno) { slotTurno.innerHTML = pillTurno; slotTurno.dataset.html = pillTurno; }
     if (html === htmlAttPrecedente) return;
     htmlAttPrecedente = html;
     navEl('bv-nav-act').innerHTML = html;
@@ -2696,6 +4525,9 @@ function aggiornaSpazioHud() {
     const pieno = h > 0 && hud.classList.contains('nav-on');
     root.classList.toggle('hud-nav', pieno);
     root.style.setProperty('--bv-hud-h', pieno ? h + 'px' : '0px');
+    const riquadro = h > 0 && !pieno;
+    root.classList.toggle('hud-box', riquadro);
+    root.style.setProperty('--bv-hud-box-h', riquadro ? h + 'px' : '0px');
 }
 
 function avviaOrologioHud() {
@@ -2730,6 +4562,7 @@ function avviaNavigatore() {
 // chiamata quando si spegne il GPS o si chiude BateoLive
 function fermaNavigatore() {
     gpsAttivo = false;
+    turnoManuale = null;
     if (navTimer) { clearInterval(navTimer); navTimer = null; }
     azzeraStatoNavigatore();
     customLine = '';
@@ -2977,7 +4810,8 @@ async function rwCaricaChunk(c) {
         if (sessione !== rewind.sessione) return;                 // nel frattempo si è cambiato giorno o si è usciti
         for (const [id, bt] of Object.entries(dati.boats || {})) {
             let tb = rewind.boats.get(id);
-            if (!tb) { tb = { line: bt.line, label: bt.label || null, pts: [] }; rewind.boats.set(id, tb); }
+            if (!tb) { tb = { line: bt.line, label: bt.label || null, mode: bt.mode || (id.startsWith('bus-') ? 'bus' : 'nav'), pts: [] }; rewind.boats.set(id, tb); }
+            if (bt.color) { tb.color = bt.color; tb.textColor = bt.textColor; tb.border = bt.border; }
             if (bt.line && bt.line !== '-') tb.line = bt.line;
             if (bt.label) tb.label = bt.label;
             tb.pts = rwUnisci(tb.pts, bt.pts);
@@ -3033,10 +4867,21 @@ function rwTick(ts) {
     }
 }
 
-function rwIcona(line) {
-    const c = getLineColors(String(line || '-').toUpperCase());
-    const html = `<div class="bv-boat-icon" style="background-color: ${c.bg}; color: ${c.text}; border: 2.5px solid ${c.border}; width: 26px; height: 26px; box-sizing: border-box;">${esc(line || '-')}</div>`;
-    return L.divIcon({ html, className: '', iconSize: [26, 26], iconAnchor: [13, 13] });
+// direzione di marcia all'istante t: dal segmento registrato che contiene t (null se fermo o senza dati)
+function rwDirezione(pts, t) {
+    const n = pts.length;
+    if (n < 2 || t < pts[0][0]) return null;
+    let lo = 0, hi = n - 1;
+    while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (pts[mid][0] <= t) lo = mid; else hi = mid - 1; }
+    const a = pts[lo], b = pts[lo + 1];
+    if (!b || b[0] - a[0] > RW_GAP_MAX) return null;
+    if (bvDistanzaM(a[1], a[2], b[1], b[2]) < BV_MOVIMENTO_MIN_M) return null;
+    return Math.round(bvRotta(a[1], a[2], b[1], b[2]));
+}
+
+// stessa goccia (battelli) o pillola (bus) della mappa live; dir = direzione di marcia o null se ancora ignota
+function rwIcona(b, id, dir) {
+    return iconaMezzo({ id: 'rw:' + id, line: b.line || '-', mode: b.mode, color: b.color, textColor: b.textColor, border: b.border, heading: dir === null ? undefined : dir, lat: 0, lon: 0, simulated: false });
 }
 
 function rwDisegna() {
@@ -3047,14 +4892,18 @@ function rwDisegna() {
         if (!pos) return;
         visibili.add(id);
         let m = rewind.markers[id];
+        const dir = rwDirezione(b.pts, t);
         if (!m) {
-            m = L.marker(pos, { icon: rwIcona(b.line), zIndexOffset: 1000, keyboard: false });
+            m = L.marker(pos, { icon: rwIcona(b, id, dir), zIndexOffset: 1000, keyboard: false });
             m.on('click', () => rwApriBarca(id));
             m.addTo(rewind.layer);
-            m.rwLine = b.line;
+            m.rwDir = dir;
+            m.rwChiave = `${b.line}|${b.mode}|${b.color}|${dir === null ? 'x' : Math.round(dir / 8)}`;
             rewind.markers[id] = m;
         } else {
-            if (m.rwLine !== b.line) { m.setIcon(rwIcona(b.line)); m.rwLine = b.line; }
+            if (dir !== null) m.rwDir = dir;                    // fermo o senza dati: resta l'ultima direzione nota
+            const chiave = `${b.line}|${b.mode}|${b.color}|${m.rwDir === null ? 'x' : Math.round(m.rwDir / 8)}`;
+            if (m.rwChiave !== chiave) { m.setIcon(rwIcona(b, id, m.rwDir)); m.rwChiave = chiave; } // l'icona si rifa solo se cambia linea o la direzione (a passi di 8 gradi)
             m.setLatLng(pos);
         }
     });
@@ -3171,7 +5020,7 @@ function rwBarcaIntestazione(d) {
     const nome = d.nomeUnita || (det && det.boatLabel) || null;
     return {
         titolo: nome || `Linea ${lineaFinale}`,
-        badge: bvDotLinea(lineaFinale),
+        badge: bvDotLinea(lineaFinale, rewind.boats.get(d.id)),
         sub: `${nome ? `Linea ${lineaFinale} · ` : ''}Rewind alle ${rwOra(rewind.t, true)}`
     };
 }

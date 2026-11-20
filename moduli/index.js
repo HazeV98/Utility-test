@@ -856,6 +856,7 @@ window.renderGestioneAccessi = () => {
         let roleBadge = "";
         if(u.ruolo === 'admin') roleBadge = " <span style='background:red;color:white;padding:2px 5px;border-radius:4px;font-size:10px;margin-left:5px;'>ADMIN</span>";
         if(u.ruolo === 'collaborator') roleBadge = " <span style='background:#6f42c1;color:white;padding:2px 5px;border-radius:4px;font-size:10px;margin-left:5px;'>COLLAB</span>";
+        if(u.ruolo === 'collab-mappe') roleBadge = " <span style='background:#0d9488;color:white;padding:2px 5px;border-radius:4px;font-size:10px;margin-left:5px;'>COLLAB MAPPE</span>";
         if(u.ruolo === 'vip') roleBadge = " <span style='background:gold;color:black;padding:2px 5px;border-radius:4px;font-size:10px;margin-left:5px;'>VIP</span>";
 
         const incBadge = profiloCompleto(u) ? '' : " <span style='background:var(--danger);color:white;padding:2px 5px;border-radius:4px;font-size:10px;margin-left:5px;'>INCOMPLETO</span>";
@@ -903,6 +904,7 @@ window.toggleAppBan = async (uid, status) => {
 window.apriDettaglioUtente = (uid) => {
     const u = window.utentiMap[uid]; if(!u) return;
     const isCollab = u.ruolo === 'collaborator';
+    const isCollabMappe = u.ruolo === 'collab-mappe';
     const isVip = u.ruolo === 'vip';
     
     document.getElementById('dettaglio-utente-body').innerHTML = `
@@ -920,6 +922,15 @@ window.apriDettaglioUtente = (uid) => {
             btnCollab.innerHTML = "<i class='fa-solid fa-user-minus'></i> Revoca Collaboratore"; btnCollab.style.background = "transparent"; btnCollab.style.color = "var(--danger)"; btnCollab.style.border = "2px solid var(--danger)"; btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'user'); 
         } else { 
             btnCollab.innerHTML = "<i class='fa-solid fa-user-shield'></i> Rendi Collaboratore"; btnCollab.style.background = "#6f42c1"; btnCollab.style.color = "white"; btnCollab.style.border = "none"; btnCollab.onclick = () => window.cambiaRuoloUtente(uid, 'collaborator'); 
+        }
+    }
+
+    const btnCollabMappe = document.getElementById('btn-rendi-collab-mappe');
+    if (btnCollabMappe) {
+        if (isCollabMappe) {
+            btnCollabMappe.innerHTML = "<i class='fa-solid fa-user-minus'></i> Revoca Collaboratore Mappe"; btnCollabMappe.style.background = "transparent"; btnCollabMappe.style.color = "var(--danger)"; btnCollabMappe.style.border = "2px solid var(--danger)"; btnCollabMappe.onclick = () => window.cambiaRuoloUtente(uid, 'user');
+        } else {
+            btnCollabMappe.innerHTML = "<i class='fa-solid fa-map-location-dot'></i> Rendi Collaboratore Mappe"; btnCollabMappe.style.background = "#0d9488"; btnCollabMappe.style.color = "white"; btnCollabMappe.style.border = "none"; btnCollabMappe.onclick = () => window.cambiaRuoloUtente(uid, 'collab-mappe');
         }
     }
 
@@ -1454,11 +1465,6 @@ onAuthStateChanged(auth, async (user) => {
             window.injectAdminConfigTools();
         }
 
-        if(globalIsVip) {
-            const vipBadge = document.getElementById('vipBadge');
-            if (vipBadge) vipBadge.style.display = 'block';
-        }
-
         window.LayoutEngine.init();
 
         try {
@@ -1467,14 +1473,6 @@ onAuthStateChanged(auth, async (user) => {
             window.currentUserData = safeData; 
             globalIsCollab = safeData.ruolo === 'collaborator';
             globalIsVip = safeData.ruolo === 'vip';
-            
-            if (globalIsVip) {
-                const vBadge = document.getElementById('vipBadge');
-                if (vBadge) vBadge.style.display = 'block';
-            } else {
-                const vBadge = document.getElementById('vipBadge');
-                if (vBadge) vBadge.style.display = 'none';
-            }
 
             localStorage.setItem(cacheKey, JSON.stringify(safeData));
 

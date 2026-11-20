@@ -46,7 +46,7 @@
         "isModule": true,
         "moduleId": "rotazioni",
         "moduleName": "rotazioni",
-        "splitModule": true
+        "splitModule": false
     },
     {
         "id": "turni",
@@ -63,17 +63,17 @@
         "splitModule": false
     },
     {
-        "id": "varianti",
-        "label": "Varianti",
-        "icon": "fa-solid fa-list-ul",
-        "defaultColor": "#a1a1a1",
+        "id": "link",
+        "label": "Link",
+        "icon": "fa-solid fa-link",
+        "defaultColor": "#495057",
         "conditions": [
             "tutti"
         ],
         "isModule": true,
-        "moduleId": "varianti",
-        "moduleName": "varianti",
-        "splitModule": false
+        "moduleId": "link",
+        "moduleName": "link",
+        "splitModule": true
     },
     {
         "id": "bachecaturni",
@@ -128,29 +128,12 @@
         "splitModule": true
     },
     {
-        "id": "bateolivelite",
-        "label": "BateoLive",
-        "icon": "fa-solid fa-map-location-dot",
-        "defaultColor": "#0066cc",
-        "conditions": [
-            "tutti"
-        ],
-        "excludeConditions": [
-            "vip",
-            "admin"
-        ],
-        "isModule": true,
-        "moduleId": "bateolivelite",
-        "moduleName": "bateolivelite",
-        "splitModule": false
-    },
-    {
         "id": "bateolive",
         "label": "BateoLive",
         "icon": "fa-solid fa-map-location-dot",
         "defaultColor": "#0066cc",
         "conditions": [
-            "vip"
+            "tutti"
         ],
         "excludeConditions": [],
         "isModule": true,
@@ -217,21 +200,34 @@
         "folder": "Orari"
     },
     {
-        "id": "documenti",
-        "label": "Documenti",
-        "icon": "fa-solid fa-file-lines",
+        "id": "arrivavenetort",
+        "label": "Orari Arriva veneto RT",
+        "icon": "fa-solid fa-bus-simple",
+        "defaultColor": "#6f42c1",
+        "conditions": [
+            "admin"
+        ],
+        "excludeConditions": [],
+        "href": "https://mobilityav.arriva.it/",
+        "folder": "Orari"
+    },
+    {
+        "id": "archivio",
+        "label": "Archivio",
+        "icon": "fa-regular fa-folder-open",
         "defaultColor": "#6f42c1",
         "conditions": [
             "tutti"
         ],
+        "excludeConditions": [],
         "isModule": true,
-        "moduleId": "documenti",
-        "moduleName": "documenti",
-        "splitModule": true
+        "moduleId": "archivio",
+        "moduleName": "archivio",
+        "splitModule": false
     },
     {
         "id": "storie",
-        "label": "Storie dal TPL",
+        "label": "Bacheca Utility",
         "icon": "fa-solid fa-book",
         "defaultColor": "#fd7e14",
         "conditions": [
@@ -272,20 +268,6 @@
         "folder": "Altre funzioni"
     },
     {
-        "id": "link",
-        "label": "Link",
-        "icon": "fa-solid fa-link",
-        "defaultColor": "#495057",
-        "conditions": [
-            "tutti"
-        ],
-        "isModule": true,
-        "moduleId": "link",
-        "moduleName": "link",
-        "splitModule": true,
-        "folder": "Altre funzioni"
-    },
-    {
         "id": "dds",
         "label": "Archivio DDS",
         "icon": "fa-solid fa-box-archive",
@@ -311,6 +293,21 @@
         "moduleId": "promemoria",
         "moduleName": "promemoria",
         "splitModule": true,
+        "folder": "Altre funzioni"
+    },
+    {
+        "id": "controllo_turni",
+        "label": "Analisi Turni",
+        "icon": "fa-solid fa-file-code",
+        "defaultColor": "#fd7e14",
+        "conditions": [
+            "tutti"
+        ],
+        "excludeConditions": [],
+        "isModule": true,
+        "moduleId": "controllo_turni",
+        "moduleName": "controllo_turni",
+        "splitModule": false,
         "folder": "Altre funzioni"
     },
     {
@@ -347,10 +344,11 @@
         "conditions": [
             "tutti"
         ],
+        "excludeConditions": [],
         "isModule": true,
         "moduleId": "report",
         "moduleName": "report",
-        "splitModule": true
+        "splitModule": false
     },
     {
         "id": "spriss",
@@ -400,5 +398,20 @@
         "moduleName": "varianti_admin",
         "splitModule": false,
         "folder": "Admin"
+    },
+    {
+        "id": "vademecum",
+        "label": "Vademecum",
+        "icon": "fa-solid fa-book-open",
+        "defaultColor": "#6f42c1",
+        "conditions": [
+            "admin",
+            "vip"
+        ],
+        "excludeConditions": [],
+        "isModule": true,
+        "moduleId": "vademecum",
+        "moduleName": "vademecum",
+        "splitModule": false
     }
 ]

@@ -1,0 +1,202 @@
+{
+  "PT01": [
+    {
+      "partenza_luogo": "S.TOMA'",
+      "partenza_ora": "8:27",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "9:02"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "9:08",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "10:13"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "10:37",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "10:39"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "10:45",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "11:50"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "11:56",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "13:01"
+    }
+  ],
+  "PT02": [
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "15:54",
+      "arrivo_luogo": "S.MARCO",
+      "arrivo_ora": "16:27"
+    },
+    {
+      "partenza_luogo": "S.MARCO",
+      "partenza_ora": "16:31",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "17:04"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "17:18",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "17:34"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "17:34",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "17:41"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "17:49",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "18:04"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "18:42",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "18:58"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "18:58",
+      "arrivo_luogo": "RIALTO",
+      "arrivo_ora": "19:05"
+    },
+    {
+      "partenza_luogo": "RIALTO",
+      "partenza_ora": "19:13",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "19:28"
+    }
+  ],
+  "PT03_LUN-VEN": [
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "6:01",
+      "arrivo_luogo": "DEP. TRONCHETT",
+      "arrivo_ora": "6:11"
+    },
+    {
+      "partenza_luogo": "DEP. TRONCHETT",
+      "partenza_ora": "6:11",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "6:21"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "6:21",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "6:52"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "7:02",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "7:33"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "7:53",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "7:57"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "8:01",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "8:32"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "8:42",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "9:13"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "9:33",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "9:37"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "9:41",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "10:12"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "10:22",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "10:53"
+    }
+  ],
+  "PT03_SAB": [
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "8:53",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "8:57"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "9:01",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "9:32"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "9:42",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "10:13"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "10:33",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "10:37"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "10:41",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "11:12"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "11:22",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "11:53"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "12:13",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "12:17"
+    },
+    {
+      "partenza_luogo": "P.ROMA",
+      "partenza_ora": "12:21",
+      "arrivo_luogo": "LIDO",
+      "arrivo_ora": "12:52"
+    },
+    {
+      "partenza_luogo": "LIDO",
+      "partenza_ora": "13:02",
+      "arrivo_luogo": "P.ROMA",
+      "arrivo_ora": "13:33"
+    }
+  ]
+}
