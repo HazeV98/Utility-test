@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, deleteUser, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, getDocFromServer, collection, getDocs, query, orderBy, deleteDoc, where, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getMessaging, getToken, deleteToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
+import { getMessaging, getToken, deleteToken, onMessage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
 import { avviaMotoreAuth } from './auth.js';
 
@@ -70,7 +70,8 @@ const provider = new GoogleAuthProvider();
 
 avviaMotoreAuth(auth, db, provider);
 
-const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2"; 
+const ADMIN_UID = "xm1LR5TeiKgBfuo0Htt6q3G1LdU2";
+const BACKEND_URL = 'https://utilitybe.homeserver.foo'; // backend del mini PC (bacheca avvisi) 
 let globalIsAdmin = false; 
 let globalIsCollab = false;
 let globalIsVip = false;
@@ -188,7 +189,7 @@ window.avviaMotoreGuidaDaIndex = async () => {
 
 window.avviaMotoreBachecaUtilityDaIndex = async () => {
     const fullName = `${window.currentUserData?.nome || ''} ${window.currentUserData?.cognome || ''}`.trim();
-    const fn = await ModuliLazyLoader.avviaMotore('bacheca_utility', true);
+    const fn = await ModuliLazyLoader.avviaMotore('bacheca_utility', false);
     if (fn) fn(app, db, auth, globalIsAdmin || globalIsCollab, fullName);
 };
 
@@ -203,22 +204,17 @@ window.controllaBacheca = async () => {
         const pid = stateApp.profiloAttivoId || 'default';
         const profileObj = stateApp.profiliSalvati ? stateApp.profiliSalvati[pid] : stateApp;
         const rotazioneUtente = profileObj ? profileObj.depositoAttivo : null;
-        
-        const formatterDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' });
-        const oggiStr = formatterDate.format(new Date());
 
-        const q = query(collection(db, "bacheca_utility"), orderBy("timestamp", "desc"));
-        const snap = await getDocs(q);
+        // Il server restituisce solo gli avvisi non scaduti e visibili a questo utente (rotazione, ruolo)
+        const token = await auth.currentUser.getIdToken();
+        const risposta = await fetch(`${BACKEND_URL}/api/bacheca?rotazione=${encodeURIComponent(rotazioneUtente || '')}`, { headers: { 'Authorization': 'Bearer ' + token } });
+        if (!risposta.ok) throw new Error('Server bacheca: errore ' + risposta.status);
+        const { avvisi } = await risposta.json();
 
         let avvisiNormali = 0; let avvisiDDS = [];
 
-        snap.forEach(d => {
-            let m = d.data();
-            if (m.scadenza && m.scadenza < oggiStr) return; 
-            if (!globalIsAdmin && !globalIsCollab && m.target && m.target !== "tutti") {
-                if (!rotazioneUtente || !m.target.includes(rotazioneUtente)) return;
-            }
-            const giaLetto = localStorage.getItem('letto_' + d.id);
+        avvisi.forEach(m => {
+            const giaLetto = localStorage.getItem('letto_' + m.id);
             if (m.timestamp > ultimoAccesso && !giaLetto) {
                 if (m.tipo === "dds") avvisiDDS.push(m.titolo_dds);
                 else avvisiNormali++;
@@ -317,21 +313,16 @@ window.controllaRichiesteSospese = async () => {
     } catch(e) { console.error("Errore badge rotazioni:", e); }
 };
 
-// --- REPORT: nuove domande (per l'admin) o nuove risposte (per l'utente) ---
-// Sfrutta i flag già gestiti da report.js (letta_da_admin / letta_da_utente),
-// che vengono azzerati automaticamente all'apertura della relativa chat.
+// --- REPORT (Assistenza): numero di chat con messaggi non letti (nuovi messaggi per l'admin, nuove risposte per l'utente) ---
+// Il conteggio arriva dal backend; si azzera quando la chat viene aperta (gestito da report.js).
 window.controllaSegnalazioni = async () => {
     if (!auth.currentUser) { window.aggiornaBadgeUI('report', 0); return; }
     try {
-        const colRef = collection(db, "segnalazioni");
-        let q;
-        if (globalIsAdmin) {
-            q = query(colRef, where("letta_da_admin", "==", false));
-        } else {
-            q = query(colRef, where("mittente_uid", "==", auth.currentUser.uid), where("letta_da_utente", "==", false));
-        }
-        const snap = await getDocs(q);
-        window.aggiornaBadgeUI('report', snap.size);
+        const token = await auth.currentUser.getIdToken();
+        const risposta = await fetch(`${BACKEND_URL}/api/assistenza/badge`, { headers: { 'Authorization': 'Bearer ' + token } });
+        if (!risposta.ok) throw new Error('Server assistenza: errore ' + risposta.status);
+        const { nonLette } = await risposta.json();
+        window.aggiornaBadgeUI('report', nonLette);
     } catch(e) { console.error("Errore badge report:", e); }
 };
 
@@ -416,172 +407,209 @@ window.aggiornaTuttiIBadge = () => {
 };
 
 // ============================================================================
-// GESTIONE NOTIFICHE NATIVE / WEB PUSH
+// GESTIONE NOTIFICHE (APP NATIVA / WEB PUSH): toggle generale + toggle Annunci Bacheca
+// Nel profilo (Firestore utenti/{uid}) si salvano: fcm_token (dispositivo collegato),
+// preferenze_notifiche.bacheca_utility e rotazione_notifiche. L'invio lo fa il backend (bacheca.js).
+// Le altre preferenze gia' presenti nel profilo (promemoria, dds, ...) non vengono toccate.
 // ============================================================================
-window.inizializzaNotificheSeNativa = async (userData) => {
-    const isNative = window.Capacitor && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins.PushNotifications;
-    const isWeb = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
+const VAPID_KEY = "BLex63nSSs-uyUZUIRzWPOQyznfTkHC8ZtNnInGArryQnYddSfIHjAH1IwfoopM9otZ4jl2NGL5vM4xtLHkqwyI";
 
-    if (isNative || isWeb) {
-        document.getElementById('native-notifications-center').style.display = 'block';
-        
-        const statusText = document.getElementById('notif-status-text');
-        const btn = document.getElementById('btn-attiva-notifiche');
-        const btnDisattiva = document.getElementById('btn-disattiva-notifiche');
-        const prefSection = document.getElementById('notif-preferences-section');
+const isNativePush = () => !!(window.Capacitor && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins.PushNotifications);
+const isWebPush = () => 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
 
-        if (userData && (userData.ruolo === 'admin' || userData.ruolo === 'collaborator' || globalIsAdmin || globalIsCollab)) {
-            document.getElementById('label-notif-rotazioni').style.display = 'flex';
-        }
-
-        if (userData && userData.preferenze_notifiche) {
-            document.getElementById('pref-notif-promemoria').checked = !!userData.preferenze_notifiche.promemoria;
-            document.getElementById('pref-notif-dds').checked = !!userData.preferenze_notifiche.dds;
-            document.getElementById('pref-notif-utility').checked = !!userData.preferenze_notifiche.bacheca_utility;
-            document.getElementById('pref-notif-rotazioni').checked = !!userData.preferenze_notifiche.richieste_rotazioni;
-            document.getElementById('pref-notif-segnalazioni').checked = !!userData.preferenze_notifiche.segnalazioni;
-
-            if (Array.isArray(userData.preferenze_notifiche.mansioni_turni)) {
-                document.querySelectorAll('.pref-mansione').forEach(cb => {
-                    cb.checked = userData.preferenze_notifiche.mansioni_turni.includes(cb.value);
-                });
-            }
-        }
-
-        const aggiornaGraficaPermessi = (isGranted) => {
-            if (isGranted) {
-                statusText.innerHTML = "<i class='fa-solid fa-circle-check'></i> Notifiche app attive";
-                statusText.style.color = "var(--success)";
-                btn.style.display = 'none';
-                if (btnDisattiva) btnDisattiva.style.display = 'flex';
-                prefSection.style.display = 'block';
-            } else {
-                statusText.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Notifiche bloccate o non attive";
-                statusText.style.color = "#856404";
-                btn.style.display = 'block';
-                if (btnDisattiva) btnDisattiva.style.display = 'none';
-                prefSection.style.display = 'none';
-            }
-        };
-
-        if (isNative) {
-            const PushNotifications = window.Capacitor.Plugins.PushNotifications;
-            PushNotifications.addListener('registration', async (token) => {
-                if (auth.currentUser) {
-                    await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: token.value, device_type: 'android_app' }, { merge: true });
-                    aggiornaGraficaPermessi(true);
-                }
-            });
-
-            let permStatus = await PushNotifications.checkPermissions();
-            if (permStatus.receive === 'prompt') { permStatus = await PushNotifications.requestPermissions(); }
-            if (permStatus.receive === 'granted') { PushNotifications.register(); aggiornaGraficaPermessi(true); } 
-            else { aggiornaGraficaPermessi(false); }
-        } else if (isWeb) {
-            if (Notification.permission === 'granted') {
-                aggiornaGraficaPermessi(true);
-                try {
-                    const messaging = getMessaging(app);
-                    const swRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
-                    const token = await getToken(messaging, { 
-                        vapidKey: "BLex63nSSs-uyUZUIRzWPOQyznfTkHC8ZtNnInGArryQnYddSfIHjAH1IwfoopM9otZ4jl2NGL5vM4xtLHkqwyI",
-                        serviceWorkerRegistration: swRegistration
-                    });
-                    if (token && auth.currentUser) {
-                        await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: token, device_type: 'pwa_web' }, { merge: true });
-                    }
-                } catch (e) { console.warn("Nessun token web ottenuto:", e); }
-            } else { aggiornaGraficaPermessi(false); }
-        }
-    }
-};
-
-window.gestisciNotificheNative = async () => {
-    const isNative = window.Capacitor && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins.PushNotifications;
-    const isWeb = 'Notification' in window;
-    const statusText = document.getElementById('notif-status-text');
-    const btnDisattiva = document.getElementById('btn-disattiva-notifiche');
-    
-    statusText.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Richiesta permesso in corso...";
-
-    if (isNative) {
-        const PushNotifications = window.Capacitor.Plugins.PushNotifications;
-        let permStatus = await PushNotifications.requestPermissions();
-        if (permStatus.receive === 'granted') { await PushNotifications.register(); } 
-        else {
-            statusText.innerHTML = "<i class='fa-solid fa-xmark'></i> Devi attivarle dalle Impostazioni.";
-            statusText.style.color = "var(--danger)";
-        }
-    } else if (isWeb) {
-        try {
-            const permission = await Notification.requestPermission();
-            if (permission === 'granted') {
-                statusText.innerHTML = "<i class='fa-solid fa-circle-check'></i> Notifiche app attive";
-                statusText.style.color = "var(--success)";
-                document.getElementById('btn-attiva-notifiche').style.display = 'none';
-                if (btnDisattiva) btnDisattiva.style.display = 'flex';
-                document.getElementById('notif-preferences-section').style.display = 'block';
-
-                try {
-                    const messaging = getMessaging(app);
-                    const swRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
-                    const token = await getToken(messaging, { 
-                        vapidKey: "BLex63nSSs-uyUZUIRzWPOQyznfTkHC8ZtNnInGArryQnYddSfIHjAH1IwfoopM9otZ4jl2NGL5vM4xtLHkqwyI",
-                        serviceWorkerRegistration: swRegistration
-                    });
-                    if (token && auth.currentUser) {
-                        await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: token, device_type: 'pwa_web' }, { merge: true });
-                    }
-                } catch (e) { console.error("Errore recupero token FCM Web:", e); }
-            } else {
-                statusText.innerHTML = "<i class='fa-solid fa-xmark'></i> Devi attivarle dalle Impostazioni del browser.";
-                statusText.style.color = "var(--danger)";
-            }
-        } catch (error) {
-            statusText.innerHTML = "<i class='fa-solid fa-xmark'></i> Errore durante la richiesta.";
-            statusText.style.color = "var(--danger)";
-        }
-    }
-};
-
-window.disattivaNotifiche = async () => {
-    if (!confirm("Vuoi disattivare le notifiche e scollegare questo dispositivo?")) return;
-    const statusText = document.getElementById('notif-status-text');
-    statusText.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Disattivazione in corso...";
-    
+function rotazioneDaProfiloLocale() {
     try {
-        if (auth.currentUser) await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: null, device_type: null }, { merge: true });
-        const isWeb = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
-        if (isWeb) {
-            try { const messaging = getMessaging(app); await deleteToken(messaging); } 
-            catch (e) { console.warn("Service worker non presente", e); }
-        }
+        const stateApp = JSON.parse(localStorage.getItem('myTurniApp')) || {};
+        const pid = stateApp.profiloAttivoId || 'default';
+        const profileObj = stateApp.profiliSalvati ? stateApp.profiliSalvati[pid] : stateApp;
+        return (profileObj && profileObj.depositoAttivo) || null;
+    } catch (e) { return null; }
+}
 
-        statusText.innerHTML = "<i class='fa-solid fa-bell-slash'></i> Notifiche disattivate";
+function mostraStatoNotifiche(attive) {
+    const toggle = document.getElementById('toggle-notifiche-generale');
+    const statusText = document.getElementById('notif-status-text');
+    const prefSection = document.getElementById('notif-preferences-section');
+    if (toggle) toggle.checked = attive;
+    if (prefSection) prefSection.style.display = attive ? 'block' : 'none';
+    if (statusText) {
+        statusText.innerHTML = attive
+            ? "<i class='fa-solid fa-circle-check'></i> Notifiche attive su questo dispositivo"
+            : "<i class='fa-solid fa-bell-slash'></i> Notifiche disattivate";
+        statusText.style.color = attive ? "var(--success)" : "var(--text-muted)";
+    }
+}
+
+let listenerNativoRegistrato = false;
+function registraListenerNativo() {
+    if (listenerNativoRegistrato || !isNativePush()) return;
+    listenerNativoRegistrato = true;
+    window.Capacitor.Plugins.PushNotifications.addListener('registration', async (token) => {
+        if (auth.currentUser) {
+            await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: token.value, device_type: 'android_app' }, { merge: true });
+        }
+    });
+}
+
+// Con l'app aperta e visibile il sistema non mostra la notifica: all'arrivo di un messaggio si aggiornano
+// badge e banner della bacheca, cosi' il nuovo avviso si vede subito.
+let listenerPrimoPianoRegistrato = false;
+function registraListenerPrimoPiano() {
+    if (listenerPrimoPianoRegistrato) return;
+    listenerPrimoPianoRegistrato = true;
+    const aggiornaBacheca = () => {
+        if (window.controllaBacheca) window.controllaBacheca();
+        if (window.controllaSegnalazioni) window.controllaSegnalazioni();
+        if (window.aggiornaAssistenza) window.aggiornaAssistenza();
+    };
+    try {
+        if (isNativePush()) window.Capacitor.Plugins.PushNotifications.addListener('pushNotificationReceived', aggiornaBacheca);
+        else if (isWebPush()) onMessage(getMessaging(app), aggiornaBacheca);
+    } catch (e) { console.warn("Listener notifiche in primo piano non attivato:", e); }
+}
+
+// Chiede il permesso (se serve) e collega questo dispositivo. Restituisce true se riuscito.
+async function collegaDispositivo() {
+    if (!auth.currentUser) return false;
+
+    if (isNativePush()) {
+        const PushNotifications = window.Capacitor.Plugins.PushNotifications;
+        registraListenerNativo();
+        let permesso = await PushNotifications.checkPermissions();
+        if (permesso.receive !== 'granted') permesso = await PushNotifications.requestPermissions();
+        if (permesso.receive !== 'granted') return false;
+        await PushNotifications.register(); // il token arriva dal listener 'registration'
+        return true;
+    }
+
+    if (isWebPush()) {
+        const permesso = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+        if (permesso !== 'granted') return false;
+        const messaging = getMessaging(app);
+        const swRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+        const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: swRegistration });
+        if (!token) return false;
+        await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: token, device_type: 'pwa_web' }, { merge: true });
+        return true;
+    }
+
+    return false;
+}
+
+async function scollegaDispositivo() {
+    if (auth.currentUser) {
+        await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: null, device_type: null }, { merge: true });
+    }
+    if (isWebPush()) {
+        try { await deleteToken(getMessaging(app)); }
+        catch (e) { console.warn("Service worker non presente", e); }
+    }
+}
+
+// Tiene aggiornati nel profilo la rotazione (serve al server per gli avvisi mirati)
+// e, al primo collegamento, attiva di default gli annunci della bacheca.
+async function sincronizzaProfiloNotifiche(primoCollegamento) {
+    if (!auth.currentUser) return;
+    const dati = {};
+    const rotazione = rotazioneDaProfiloLocale();
+    const profilo = window.currentUserData || {};
+    if (rotazione && profilo.rotazione_notifiche !== rotazione) dati.rotazione_notifiche = rotazione;
+
+    const prefs = profilo.preferenze_notifiche || {};
+    if (primoCollegamento && prefs.bacheca_utility === undefined) {
+        dati.preferenze_notifiche = { bacheca_utility: true };
+    }
+    if (Object.keys(dati).length === 0) return;
+
+    await setDoc(doc(db, "utenti", auth.currentUser.uid), dati, { merge: true });
+    if (window.currentUserData) {
+        if (dati.rotazione_notifiche) window.currentUserData.rotazione_notifiche = dati.rotazione_notifiche;
+        if (dati.preferenze_notifiche) window.currentUserData.preferenze_notifiche = { ...prefs, ...dati.preferenze_notifiche };
+    }
+    const prefUtility = document.getElementById('pref-notif-utility');
+    if (prefUtility && dati.preferenze_notifiche) prefUtility.checked = true;
+}
+
+window.inizializzaNotificheSeNativa = async (userData) => {
+    if (!isNativePush() && !isWebPush()) return;
+    document.getElementById('native-notifications-center').style.display = 'block';
+
+    const prefUtility = document.getElementById('pref-notif-utility');
+    if (prefUtility) prefUtility.checked = !!(userData && userData.preferenze_notifiche && userData.preferenze_notifiche.bacheca_utility);
+
+    registraListenerNativo();
+    registraListenerPrimoPiano();
+
+    // Attive solo se il dispositivo risulta collegato (token nel profilo) e il permesso e' ancora concesso
+    let permessoOk = false;
+    try {
+        permessoOk = isNativePush()
+            ? (await window.Capacitor.Plugins.PushNotifications.checkPermissions()).receive === 'granted'
+            : Notification.permission === 'granted';
+    } catch (e) { permessoOk = false; }
+
+    const attive = !!(permessoOk && userData && userData.fcm_token);
+    mostraStatoNotifiche(attive);
+
+    if (attive) {
+        // Rinnova il token in silenzio e aggiorna la rotazione
+        try { await collegaDispositivo(); await sincronizzaProfiloNotifiche(false); }
+        catch (e) { console.warn("Aggiornamento notifiche non riuscito:", e); }
+    }
+};
+
+window.cambiaNotificheGenerali = async (attiva) => {
+    const toggle = document.getElementById('toggle-notifiche-generale');
+    const statusText = document.getElementById('notif-status-text');
+    if (toggle) toggle.disabled = true;
+    if (statusText) {
+        statusText.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Un momento...";
         statusText.style.color = "var(--text-muted)";
-        document.getElementById('btn-disattiva-notifiche').style.display = 'none';
-        document.getElementById('btn-attiva-notifiche').style.display = 'flex';
-        document.getElementById('notif-preferences-section').style.display = 'none';
-        
+    }
+
+    try {
+        if (attiva) {
+            const collegato = await collegaDispositivo();
+            if (collegato) {
+                await sincronizzaProfiloNotifiche(true);
+                mostraStatoNotifiche(true);
+            } else {
+                mostraStatoNotifiche(false);
+                if (statusText) {
+                    statusText.innerHTML = "<i class='fa-solid fa-xmark'></i> Permesso negato: attivalo dalle impostazioni del dispositivo o del browser.";
+                    statusText.style.color = "var(--danger)";
+                }
+            }
+        } else {
+            await scollegaDispositivo();
+            mostraStatoNotifiche(false);
+        }
     } catch (error) {
-        statusText.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Errore disattivazione";
-        statusText.style.color = "var(--danger)";
+        console.error("Errore gestione notifiche:", error);
+        mostraStatoNotifiche(!attiva);
+        if (statusText) {
+            statusText.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i> Errore, riprova.";
+            statusText.style.color = "var(--danger)";
+        }
+    } finally {
+        if (toggle) toggle.disabled = false;
     }
 };
 
 window.salvaPreferenzeNotifiche = async () => {
     if (!auth.currentUser) return;
-    const mansioniSelezionate = Array.from(document.querySelectorAll('.pref-mansione:checked')).map(cb => cb.value);
-    const preferenze_notifiche = {
-        promemoria: document.getElementById('pref-notif-promemoria').checked,
-        dds: document.getElementById('pref-notif-dds').checked,
-        bacheca_utility: document.getElementById('pref-notif-utility').checked,
-        richieste_rotazioni: document.getElementById('pref-notif-rotazioni').checked,
-        segnalazioni: document.getElementById('pref-notif-segnalazioni').checked,
-        mansioni_turni: mansioniSelezionate
-    };
-    try { await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_notifiche: preferenze_notifiche }, { merge: true }); } 
-    catch (error) { console.error("Errore salvataggio preferenze notifiche:", error); }
+    const prefUtility = document.getElementById('pref-notif-utility');
+    const attivo = prefUtility.checked;
+    try {
+        // merge: aggiorna solo questa preferenza e lascia intatte le altre
+        await setDoc(doc(db, "utenti", auth.currentUser.uid), { preferenze_notifiche: { bacheca_utility: attivo } }, { merge: true });
+        if (window.currentUserData) {
+            window.currentUserData.preferenze_notifiche = { ...(window.currentUserData.preferenze_notifiche || {}), bacheca_utility: attivo };
+        }
+    } catch (error) {
+        console.error("Errore salvataggio preferenze notifiche:", error);
+        prefUtility.checked = !attivo;
+    }
 };
 
 // ============================================================================

@@ -1,502 +1,540 @@
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDoc, onSnapshot, query, where, orderBy, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// ==========================================================================================
+// ASSISTENZA APP (front end) - file unico: interfaccia (ex ui_report.js) + logica.
+// Sistema di chat: ogni richiesta e' una chat con un oggetto. I dati arrivano dal backend (assistenza.js sul mini PC).
+//  - utente: elenco delle proprie chat, tasto "Nuova chat", messaggi con allegati (foto, video, PDF)
+//  - admin:  elenco di tutte le chat con nome, cognome e matricola; dentro la chat tocca il nome per il profilo
+// Firebase serve solo per il login (il token viene inviato al server). Il ruolo admin lo decide il server.
+// Nell'app resta il caricamento di sempre: import(./report.js). Il vecchio ui_report.js va eliminato.
+// ==========================================================================================
 
-let db;
-let auth;
-let currentUid;
-let isAdmin = false;
-let vistaCronologia = false;
-let unsubscribeReports = null;
-let segnalazioniLocali = {}; 
-let chatApertaId = null;     
+// ---------- Configurazione ----------
+const API_ORIGIN = 'https://utilitybe.homeserver.foo';
+const API_ASSISTENZA = API_ORIGIN + '/api/assistenza';
+const MAX_OGGETTO = 80;
+const MAX_ALLEGATI = 6;
+const MAX_MB_ALLEGATO = 100;
+const LATO_MAX_FOTO = 1600;          // le foto vengono ridimensionate prima dell'invio
+const INTERVALLO_CHAT_MS = 4000;     // aggiornamento della chat aperta
+const INTERVALLO_LISTA_MS = 15000;   // aggiornamento dell'elenco chat
 
+let auth = null;
+let isAdmin = false;                 // aggiornato dal server a ogni caricamento
+let chatAperta = null;               // { id (null finche' non parte il primo messaggio), oggetto, utente }
+let ultimoSeq = 0;
+let allegatiScelti = [];
+let inInvio = false;
+let inAggiornamentoChat = false;
+let timerAvviati = false;
+let ultimaListaJson = '';
+const cacheChat = new Map();
+
+// ---------- Utilita' ----------
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const linkifica = (testoEscapato) => testoEscapato.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+const fmtSize = (b) => (b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB');
+const fmtDataOra = (ts) => { const d = new Date(ts); return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }); };
+const fmtOraLista = (ts) => {
+    const d = new Date(ts), oggi = new Date();
+    return d.toDateString() === oggi.toDateString()
+        ? d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+        : d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' });
+};
+const nomeCompleto = (u) => [u && u.nome, u && u.cognome].filter(Boolean).join(' ') || (u && u.email ? u.email.split('@')[0] : 'Utente');
+const attesa = (ms) => new Promise((r) => setTimeout(r, ms));
+const visibile = (id) => { const el = document.getElementById(id); return !!el && getComputedStyle(el).display !== 'none'; };
+
+async function tokenUtente() {
+    const u = auth && auth.currentUser;
+    if (!u) throw new Error('Non autenticato');
+    return u.getIdToken();
+}
+
+async function api(percorso, { metodo = 'GET' } = {}) {
+    const res = await fetch(API_ASSISTENZA + percorso, { method: metodo, headers: { 'Authorization': 'Bearer ' + await tokenUtente() } });
+    let dati = null;
+    try { dati = await res.json(); } catch (_) { /* risposta senza corpo */ }
+    if (!res.ok) throw new Error((dati && dati.errore) || ('Errore ' + res.status));
+    return dati;
+}
+
+// Invio con percentuale di avanzamento (utile per i video)
+async function inviaMultipart(percorso, formData, onProgress) {
+    const token = await tokenUtente();
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', API_ASSISTENZA + percorso);
+        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(Math.round(e.loaded / e.total * 100)); };
+        xhr.onload = () => {
+            let d = null;
+            try { d = JSON.parse(xhr.responseText); } catch (_) { /* nessun JSON */ }
+            if (xhr.status >= 200 && xhr.status < 300) resolve(d);
+            else reject(new Error((d && d.errore) || ('Errore ' + xhr.status)));
+        };
+        xhr.onerror = () => reject(new Error('Connessione al server non riuscita'));
+        xhr.send(formData);
+    });
+}
+
+async function comprimiImmagine(file) {
+    if (!file.type.startsWith('image/') || file.type === 'image/gif') return file;
+    try {
+        const bmp = await createImageBitmap(file);
+        const scala = Math.min(1, LATO_MAX_FOTO / Math.max(bmp.width, bmp.height));
+        const w = Math.round(bmp.width * scala), h = Math.round(bmp.height * scala);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(bmp, 0, 0, w, h);
+        if (bmp.close) bmp.close();
+        const blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', 0.85));
+        if (!blob || blob.size >= file.size) return file;
+        return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+    } catch (_) { return file; } // formato non leggibile dal browser: si invia l'originale
+}
+
+// ==========================================================================================
+// INTERFACCIA
+// ==========================================================================================
 export function initUISegnalazioni() {
-    // Rimuove eventuali modali duplicate per evitare bug nell'apertura
-    ['modal-segnalazioni-main', 'modal-nuova-segnalazione', 'modal-chat-segnalazione'].forEach(id => {
+    // Rimuove eventuali finestre duplicate (anche quelle della vecchia versione) per evitare bug nell'apertura
+    ['modal-segnalazioni-main', 'modal-nuova-chat', 'modal-chat-assistenza', 'modal-profilo-assistenza', 'modal-nuova-segnalazione', 'modal-chat-segnalazione', 'as-stili'].forEach((id) => {
         const el = document.getElementById(id);
         if (el) el.remove();
     });
 
+    const st = document.createElement('style');
+    st.id = 'as-stili';
+    st.textContent = `
+        .as-nuova { width:100%; background:var(--info); color:#fff; border:none; padding:16px; font-size:15px; font-weight:700; border-radius:var(--radius-md); cursor:pointer; display:flex; justify-content:center; align-items:center; gap:10px; box-shadow:0 4px 12px rgba(0,136,255,0.3); margin-bottom:15px; }
+        .as-vuoto { text-align:center; padding:40px 20px; color:var(--text-muted); font-size:15px; background:var(--surface-hover); border-radius:12px; border:1px dashed var(--border-color); line-height:1.5; }
+        .as-chat { background:var(--surface); border:1px solid var(--border-color); border-left:5px solid var(--info); border-radius:12px; padding:14px 16px; margin-bottom:10px; cursor:pointer; box-shadow:var(--shadow-sm); }
+        .as-chat-nuova { border-left-color:var(--danger); background:var(--surface-hover); }
+        .as-chat-top { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+        .as-chat-titolo { font-weight:800; font-size:15px; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .as-chat-ora { font-size:11px; color:var(--text-muted); flex-shrink:0; }
+        .as-chat-utente { font-size:12.5px; color:var(--info); font-weight:600; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .as-chat-prev { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:13px; color:var(--text-muted); margin-top:6px; }
+        .as-prev-testo { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .as-badge { background:var(--danger); color:#fff; font-size:11px; font-weight:700; min-width:20px; height:20px; padding:0 6px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+        .as-chat-box { height:85vh; max-width:500px; display:flex; flex-direction:column; padding:0; overflow:hidden; }
+        .as-head { padding:12px 14px; border-bottom:1px solid var(--border-color); display:flex; align-items:center; gap:10px; background:var(--surface); }
+        .as-head-testi { flex:1; min-width:0; }
+        .as-titolo { font-weight:800; font-size:16px; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .as-sottotitolo { display:block; max-width:100%; background:none; border:none; padding:2px 0 0 0; font-size:12.5px; font-weight:600; color:var(--info); cursor:pointer; text-align:left; font-family:inherit; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .as-head-btn { width:36px; height:36px; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; border-radius:10px; border:1px solid var(--border-color); background:var(--surface); color:var(--text-muted); font-size:15px; cursor:pointer; padding:0; }
+        .as-head-btn.as-danger { color:var(--danger); border-color:var(--danger-border); }
+        .as-messaggi { flex:1; overflow-y:auto; padding:16px; background:rgba(0,0,0,0.02); display:flex; flex-direction:column; }
+        .as-msg { display:flex; flex-direction:column; margin-bottom:12px; width:100%; }
+        .as-mia { align-items:flex-end; }
+        .as-altra { align-items:flex-start; }
+        .as-autore { font-size:11px; font-weight:700; color:var(--text-muted); margin:0 6px 3px 6px; }
+        .as-bolla { max-width:85%; padding:10px 14px; font-size:14px; line-height:1.4; overflow-wrap:anywhere; box-shadow:var(--shadow-sm); }
+        .as-mia .as-bolla { background:var(--info); color:#fff; border-radius:14px 14px 0 14px; }
+        .as-altra .as-bolla { background:var(--surface); color:var(--text-main); border:1px solid var(--border-color); border-radius:14px 14px 14px 0; }
+        .as-testo { white-space:pre-wrap; }
+        .as-bolla a { color:inherit; text-decoration:underline; }
+        .as-ora { font-size:10px; color:var(--text-muted); margin-top:4px; font-weight:500; }
+        .as-foto { display:grid; grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); gap:6px; margin-top:6px; }
+        .as-foto img { width:100%; height:110px; object-fit:cover; border-radius:10px; display:block; }
+        .as-foto a:only-child { grid-column:1 / -1; }
+        .as-foto a:only-child img { height:auto; max-height:260px; }
+        .as-video { width:100%; max-height:260px; border-radius:10px; background:#000; margin-top:6px; }
+        .as-pdf { display:flex; align-items:center; gap:8px; padding:8px 10px; margin-top:6px; border-radius:10px; background:rgba(0,0,0,0.08); text-decoration:none !important; }
+        .as-pdf i { font-size:18px; }
+        .as-pdf-nome { flex:1; min-width:0; font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .as-pdf-size { font-size:11px; opacity:0.8; flex-shrink:0; }
+        .as-allegati-scelti { padding:0 12px; background:var(--surface); }
+        .as-scelto { display:flex; align-items:center; gap:8px; padding:6px 10px; margin-top:6px; border:1px solid var(--border-color); border-radius:10px; background:var(--surface-hover); }
+        .as-scelto-nome { flex:1; min-width:0; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .as-scelto-size { font-size:11px; color:var(--text-muted); flex-shrink:0; }
+        .as-barra { padding:12px; border-top:1px solid var(--border-color); background:var(--surface); display:flex; gap:8px; align-items:flex-end; }
+        .as-barra textarea { flex:1; resize:none; padding:12px 15px; border-radius:20px; border:1px solid var(--border-color); background:var(--surface-hover); outline:none; font-family:inherit; font-size:14px; color:var(--text-main); line-height:1.4; max-height:120px; }
+        .as-btn-tondo { background:var(--info); color:#fff; border:none; width:44px; height:44px; border-radius:50%; cursor:pointer; display:flex; justify-content:center; align-items:center; flex-shrink:0; font-size:16px; padding:0; }
+        .as-btn-tondo:disabled { opacity:0.6; }
+        .as-btn-chiaro { background:var(--surface-hover); color:var(--text-muted); border:1px solid var(--border-color); }
+        .as-riga-profilo { display:flex; align-items:center; gap:10px; padding:12px 4px; border-bottom:1px solid var(--border-color); font-size:14px; }
+        .as-riga-profilo i.as-ico { width:20px; color:var(--info); text-align:center; }
+        .as-riga-profilo b { display:block; font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; }
+    `;
+    document.head.appendChild(st);
+
     const uiHTML = `
-    <!-- MODALI SEGNALAZIONI MAIN -->
+    <!-- ELENCO CHAT -->
     <div id="modal-segnalazioni-main" class="modal-overlay" onclick="window.chiudiSuSfondo(event, 'modal-segnalazioni-main')">
         <div class="modal-content" style="max-width: 440px; height: 85vh; display: flex; flex-direction: column; padding: 20px;">
             <i class="fa-solid fa-xmark close-modal" style="position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiModal('modal-segnalazioni-main')"></i>
-            <h3 style="margin-top: 0; color: var(--info); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-headset"></i> Segnalazioni</h3>
+            <h3 style="margin-top: 0; color: var(--info); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-headset"></i> Assistenza</h3>
             <div style="flex: 1; overflow-y: auto; padding-right: 5px;">
-                <button style="background-color: var(--info); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; box-shadow: 0 4px 12px rgba(0, 136, 255, 0.3); width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; transition: all 0.2s; margin-bottom: 15px;" onclick="window.apriModaleNuovaSegnalazione()"><i class="fa-solid fa-paper-plane"></i> Nuova Domanda</button>
-                <button id="btn-cronologia-admin" style="display: none; background-color: var(--surface); color: var(--text-main); border: 2px solid var(--border-color); padding: 14px; font-size: 14px; font-weight: 700; border-radius: var(--radius-md); cursor: pointer; width: 100%; justify-content: center; align-items: center; gap: 10px; transition: all 0.2s; margin-bottom: 15px;" onclick="window.toggleVistaAdminSegnalazioni()"><i class="fa-solid fa-clock-rotate-left"></i> Mostra Cronologia Risolte</button>
-                <div id="reports-list"></div>
+                <button id="as-btn-nuova" class="as-nuova" onclick="window.apriNuovaChatAssistenza()"><i class="fa-solid fa-plus"></i> Nuova chat</button>
+                <div id="as-lista"></div>
             </div>
-            <button class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 15px;" onclick="window.chiudiModal('modal-segnalazioni-main')"><i class="fa-solid fa-xmark"></i> Chiudi Finestra</button>
         </div>
     </div>
 
-    <!-- MODALE CREA NUOVA -->
-    <div id="modal-nuova-segnalazione" class="modal-overlay" style="z-index: 7500;">
+    <!-- NUOVA CHAT: OGGETTO DELLA RICHIESTA -->
+    <div id="modal-nuova-chat" class="modal-overlay" style="z-index: 7500;" onclick="window.chiudiSuSfondo(event, 'modal-nuova-chat')">
         <div class="modal-content">
-            <h3 style="margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px; text-align:center;"><i class="fa-solid fa-paper-plane" style="color:var(--info);"></i> Invia Domanda</h3>
+            <h3 style="margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:15px; text-align:center;"><i class="fa-solid fa-comments" style="color:var(--info);"></i> Nuova richiesta</h3>
             <div class="float-wrapper">
-                <textarea id="rep-messaggio" rows="4" class="input-field" placeholder=" " style="resize: vertical;"></textarea>
-                <label style="top: 20px;">Messaggio / Problema</label>
+                <input type="text" id="as-oggetto" class="input-field" placeholder=" " maxlength="${MAX_OGGETTO}" onkeydown="if(event.key==='Enter'){event.preventDefault();window.iniziaChatAssistenza();}">
+                <label>Oggetto della richiesta</label>
             </div>
-            <div class="float-wrapper">
-                <input type="url" id="rep-link" class="input-field" placeholder=" ">
-                <label>Link Allegato (Facoltativo)</label>
-            </div>
-            <button id="btn-salva-rep" class="btn-action" style="background-color: var(--info);" onclick="window.inviaSegnalazione()"><i class="fa-solid fa-paper-plane"></i> Invia ora</button>
-            <button class="btn-modal" style="background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color);" onclick="window.chiudiModaleNuovaSegnalazione()">Annulla</button>
+            <button class="btn-action" style="background-color: var(--info);" onclick="window.iniziaChatAssistenza()"><i class="fa-solid fa-comments"></i> Apri chat</button>
+            <button class="btn-modal" style="background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color);" onclick="document.getElementById('modal-nuova-chat').style.display='none'">Annulla</button>
         </div>
     </div>
 
-    <!-- MODALE CHAT SEGNALAZIONE -->
-    <div id="modal-chat-segnalazione" class="modal-overlay" style="z-index: 7600; display:none;" onclick="if(event.target === this) window.chiudiChatModal()">
-        <div class="modal-content" style="height: 80vh; max-width: 500px; display:flex; flex-direction:column; padding:0; overflow:hidden;">
-            <!-- Header Chat -->
-            <div style="padding: 15px 20px; border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background:var(--surface);">
-                <h3 style="margin:0; font-size:16px; color:var(--info); display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-comments"></i> Chat Ticket</h3>
-                <i class="fa-solid fa-xmark" style="font-size:22px; cursor:pointer; color:var(--text-muted); transition:0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" onclick="window.chiudiChatModal()"></i>
+    <!-- CHAT -->
+    <div id="modal-chat-assistenza" class="modal-overlay" style="z-index: 7600;" onclick="if(event.target === this) window.chiudiChatAssistenza()">
+        <div class="modal-content as-chat-box">
+            <div class="as-head">
+                <button class="as-head-btn" aria-label="Indietro" onclick="window.chiudiChatAssistenza()"><i class="fa-solid fa-arrow-left"></i></button>
+                <div class="as-head-testi">
+                    <div id="as-chat-titolo" class="as-titolo"></div>
+                    <button id="as-chat-utente" class="as-sottotitolo" style="display:none;" onclick="window.apriProfiloAssistenza()"></button>
+                </div>
+                <button id="as-btn-elimina" class="as-head-btn as-danger" style="display:none;" aria-label="Elimina chat" title="Elimina chat" onclick="window.eliminaChatAssistenza()"><i class="fa-solid fa-trash-can"></i></button>
             </div>
-            
-            <!-- Area Messaggi -->
-            <div id="chat-messages-container" style="flex:1; overflow-y:auto; padding:20px; background:rgba(0,0,0,0.02); display:flex; flex-direction:column;">
-                <!-- I fumetti vengono generati dinamicamente da JavaScript -->
+            <div id="as-messaggi" class="as-messaggi"></div>
+            <div id="as-allegati-scelti" class="as-allegati-scelti"></div>
+            <div class="as-barra">
+                <input type="file" id="as-input-file" multiple accept="image/*,video/*,application/pdf" style="display:none;" onchange="window.aggiungiAllegatiAssistenza(this)">
+                <button class="as-btn-tondo as-btn-chiaro" aria-label="Allega foto, video o PDF" title="Allega foto, video o PDF" onclick="document.getElementById('as-input-file').click()"><i class="fa-solid fa-paperclip"></i></button>
+                <textarea id="as-input" rows="1" placeholder="Scrivi un messaggio..." oninput="window.autoAltezzaAssistenza(this)" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();window.inviaMessaggioAssistenza();}"></textarea>
+                <button id="as-btn-invia" class="as-btn-tondo" aria-label="Invia" title="Invia" onclick="window.inviaMessaggioAssistenza()"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
-            
-            <!-- Barra Input Chat -->
-            <div style="padding:15px; border-top:1px solid var(--border-color); background:var(--surface); display:flex; gap:10px; align-items:flex-end;">
-                <textarea id="input-chat-modal" rows="1" placeholder="Scrivi un messaggio..." style="flex:1; resize:none; padding:12px 15px; border-radius:20px; border:1px solid var(--border-color); background:var(--surface-hover); outline:none; font-family:inherit; color:var(--text-main); line-height:1.4;"></textarea>
-                <button id="btn-invia-chat-modal" style="background:var(--info); color:white; border:none; width:45px; height:45px; border-radius:50%; cursor:pointer; display:flex; justify-content:center; align-items:center; flex-shrink:0; transition:0.2s;"><i class="fa-solid fa-paper-plane" style="font-size: 16px;"></i></button>
-            </div>
+        </div>
+    </div>
+
+    <!-- PROFILO UTENTE (SOLO ADMIN) -->
+    <div id="modal-profilo-assistenza" class="modal-overlay" style="z-index: 7700;" onclick="window.chiudiSuSfondo(event, 'modal-profilo-assistenza')">
+        <div class="modal-content" style="max-width: 380px;">
+            <i class="fa-solid fa-xmark close-modal" onclick="document.getElementById('modal-profilo-assistenza').style.display='none'"></i>
+            <h3 style="margin-top: 0; color: var(--info); display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-circle-user"></i> Profilo utente</h3>
+            <div id="as-profilo-corpo" style="margin-top: 10px; max-height: 60vh; overflow-y: auto;"></div>
         </div>
     </div>
     `;
     document.body.insertAdjacentHTML('beforeend', uiHTML);
 }
 
+// ==========================================================================================
+// AVVIO
+// ==========================================================================================
 export function avviaMotoreSegnalazioni(database, authentication, uidOrUserData, userIsAdmin) {
-    if (!document.getElementById('modal-segnalazioni-main')) {
-        initUISegnalazioni();
-    }
-
-    db = database;
+    if (!document.getElementById('modal-segnalazioni-main')) initUISegnalazioni();
     auth = authentication;
-    currentUid = auth?.currentUser?.uid || (typeof uidOrUserData === 'string' ? uidOrUserData : uidOrUserData?.uid);
-    isAdmin = userIsAdmin;
-
-    const btnCronologia = document.getElementById('btn-cronologia-admin');
-    if (btnCronologia) {
-        btnCronologia.style.display = isAdmin ? 'flex' : 'none';
-    }
-    
-    ascoltaSegnalazioni();
+    isAdmin = !!userIsAdmin;   // provvisorio: il valore giusto lo conferma il server al primo caricamento
+    avviaTimer();
+    ultimaListaJson = '';
+    caricaLista(false);
 }
 
-function formattaData(ts) {
-    if (!ts) return '';
-    const d = new Date(ts);
-    return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' alle ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+function avviaTimer() {
+    if (timerAvviati) return;
+    timerAvviati = true;
+    setInterval(() => { if (!document.hidden && chatAperta && chatAperta.id && visibile('modal-chat-assistenza')) aggiornaChat(false, false); }, INTERVALLO_CHAT_MS);
+    setInterval(() => { if (!document.hidden && visibile('modal-segnalazioni-main')) caricaLista(true); }, INTERVALLO_LISTA_MS);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) window.aggiornaAssistenza(); });
 }
 
-window.apriModaleSegnalazioni = async () => {
+// Chiamata anche da index.js quando arriva una notifica con l'app aperta
+window.aggiornaAssistenza = () => {
+    if (!auth) return;
+    if (visibile('modal-segnalazioni-main')) caricaLista(true);
+    if (chatAperta && chatAperta.id && visibile('modal-chat-assistenza')) aggiornaChat(false, false);
+};
+
+window.apriModaleSegnalazioni = () => {
     const modal = document.getElementById('modal-segnalazioni-main');
     if (modal) modal.style.display = 'flex';
-    
-    const uidAttivo = auth?.currentUser?.uid || currentUid;
-    if (uidAttivo && typeof uidAttivo === 'string' && db) {
-        try {
-            const updateData = isAdmin ? 
-                { ultimo_accesso_segnalazioni_admin: Date.now() } : 
-                { ultimo_accesso_segnalazioni: Date.now() };
-            await updateDoc(doc(db, "utenti", uidAttivo), updateData);
-        } catch(e) {
-            console.error("Errore salvataggio accesso report:", e);
-        }
-    }
+    caricaLista(false);
 };
 
-window.apriModaleNuovaSegnalazione = () => { 
-    document.getElementById('modal-nuova-segnalazione').style.display = 'flex'; 
-};
-window.chiudiModaleNuovaSegnalazione = () => {
-    document.getElementById('modal-nuova-segnalazione').style.display = 'none';
-};
-
-window.apriChatSegnalazione = (id) => {
-    try {
-        chatApertaId = id;
-        const modal = document.getElementById('modal-chat-segnalazione');
-        if (modal) {
-            modal.style.display = 'flex';
-            renderizzaChatInterna(id);
-        } else {
-            console.error("Modale chat non trovata nel DOM!");
-        }
-    } catch(e) {
-        console.error("Errore apertura chat:", e);
-    }
-};
-
-window.chiudiChatModal = () => {
-    chatApertaId = null;
-    const modal = document.getElementById('modal-chat-segnalazione');
-    if (modal) modal.style.display = 'none';
-};
-
-window.toggleVistaAdminSegnalazioni = () => {
-    vistaCronologia = !vistaCronologia;
-    const btn = document.getElementById('btn-cronologia-admin');
-    
-    if(vistaCronologia) {
-        btn.style.backgroundColor = "var(--info-light)";
-        btn.style.borderColor = "var(--info)";
-        btn.style.color = "var(--info)";
-    } else {
-        btn.style.backgroundColor = "var(--surface)";
-        btn.style.borderColor = "var(--border-color)";
-        btn.style.color = "var(--text-main)";
-    }
-
-    btn.innerHTML = vistaCronologia 
-        ? '<i class="fa-solid fa-list-ul"></i> Torna a Chat Attive' 
-        : '<i class="fa-solid fa-clock-rotate-left"></i> Mostra Cronologia Risolte';
-    ascoltaSegnalazioni();
-};
-
-function ascoltaSegnalazioni() {
-    if (!currentUid || typeof currentUid !== 'string' || !db) return;
-    if (unsubscribeReports) unsubscribeReports();
-
-    const colRef = collection(db, "segnalazioni");
-    let q;
-
-    // USIAMO "timestamp_creazione" COME PRIMA, COSI' FIREBASE NON VA IN ERRORE PER L'INDICE MANCANTE
-    if (isAdmin) {
-        const statoTarget = vistaCronologia ? "risposto" : "in_attesa";
-        q = query(colRef, where("stato", "==", statoTarget), orderBy("timestamp_creazione", "desc"));
-    } else {
-        q = query(colRef, where("mittente_uid", "==", currentUid), orderBy("timestamp_creazione", "desc"));
-    }
-
-    unsubscribeReports = onSnapshot(q, (snapshot) => {
-        const listContainer = document.getElementById('reports-list');
-        if(!listContainer) return;
-
-        listContainer.innerHTML = '';
-        segnalazioniLocali = {}; 
-
-        if (snapshot.empty) {
-            listContainer.innerHTML = `<div style="text-align:center; padding:40px 20px; color:var(--text-muted); font-size:15px; background:var(--surface-hover); border-radius:12px; border:1px dashed var(--border-color); margin-top:10px;">Nessuna conversazione trovata.</div>`;
-            return;
-        }
-
-        // CARICHIAMO I TICKET IN UN ARRAY PER ORDINARLI IN LOCALE TRAMITE JAVASCRIPT
-        let ticketList = [];
-        snapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            if(!data.timestamp_ultimo_messaggio) data.timestamp_ultimo_messaggio = data.timestamp_creazione;
-            ticketList.push({ id: docSnap.id, data: data });
-        });
-
-        // ORDINAMENTO IN TEMPO REALE (CHAT PIÙ RECENTE IN ALTO)
-        ticketList.sort((a, b) => b.data.timestamp_ultimo_messaggio - a.data.timestamp_ultimo_messaggio);
-
-        // Riallinea il badge notifica sull'icona del modulo (index.js)
-        if (window.controllaSegnalazioni) window.controllaSegnalazioni();
-
-        // STAMPIAMO I TICKET SULLO SCHERMO
-        ticketList.forEach(ticket => {
-            segnalazioniLocali[ticket.id] = ticket.data; 
-            creaCardSegnalazione(ticket.id, ticket.data, listContainer);
-            
-            if (isAdmin && !vistaCronologia && ticket.data.letta_da_admin === false) {
-                updateDoc(doc(db, "segnalazioni", ticket.id), { letta_da_admin: true });
-            } else if (!isAdmin && ticket.data.letta_da_utente === false) {
-                updateDoc(doc(db, "segnalazioni", ticket.id), { letta_da_utente: true });
-            }
-        });
-
-        if (chatApertaId && segnalazioniLocali[chatApertaId]) {
-            renderizzaChatInterna(chatApertaId);
-        }
-    }, (error) => {
-        console.error("Errore query segnalazioni:", error);
-        const listContainer = document.getElementById('reports-list');
-        if (listContainer) {
-            listContainer.innerHTML = `<div style="text-align:center; padding:20px; color:var(--danger); font-size:13px; background:var(--surface-hover); border-radius:12px; border:1px solid var(--danger); margin-top:10px;">Errore caricamento segnalazioni: ${error.code || error.message}</div>`;
-        }
-    });
-}
-
-function creaCardSegnalazione(id, data, container) {
-    const isRisolto = data.stato === 'risposto';
-    const cardBorderColor = isRisolto ? 'var(--success)' : 'var(--info)';
-    
-    const card = document.createElement('div');
-    card.style.cssText = `background: var(--surface); padding: 20px; border-radius: 14px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 12px; border-left: 6px solid ${cardBorderColor}; position: relative; margin-bottom: 15px; animation: slideInUp 0.3s ease both;`;
-    
-    let statusBadge = isRisolto 
-        ? '<div style="position:absolute; top:16px; right:16px; font-size:11px; font-weight:700; padding:4px 8px; border-radius:6px; text-transform:uppercase; background:rgba(15,157,88,0.15); color:var(--success);">Risolto</div>' 
-        : `<button style="position:absolute; top:16px; right:16px; font-size:11px; font-weight:700; padding:4px 8px; border-radius:6px; text-transform:uppercase; background:var(--success); color:white; border:none; cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s; box-shadow:0 2px 5px rgba(0,0,0,0.2);" onclick="window.segnaRisolto('${id}')"><i class="fa-solid fa-check"></i> Segna Risolto</button>`;
-    
-    let dot = "";
-    if (isAdmin && !vistaCronologia && !data.letta_da_admin) dot = '<span style="width:10px; height:10px; background:var(--danger); border-radius:50%; display:inline-block; margin-left:5px; box-shadow:0 0 5px var(--danger);"></span>';
-    if (!isAdmin && !data.letta_da_utente) dot = '<span style="width:10px; height:10px; background:var(--danger); border-radius:50%; display:inline-block; margin-left:5px; box-shadow:0 0 5px var(--danger);"></span>';
-
-    let infoUtente = "";
-    let headerName = isAdmin ? (data.mittente_nome || 'Utente Sconosciuto') : 'Tua Segnalazione';
-
-    if (isAdmin) {
-        let waIcon = "";
-        let phoneInfo = "";
-        if (data.mittente_telefono && data.mittente_telefono.trim() !== "") {
-            let num = data.mittente_telefono.replace(/\D/g, '');
-            if (num.length > 0) {
-                if (!num.startsWith('39')) num = '39' + num;
-                waIcon = `<a href="https://wa.me/${num}" target="_blank" style="color:#25D366; margin-left:12px; font-size:26px; vertical-align:middle; text-decoration:none;"><i class="fa-brands fa-whatsapp"></i></a>`;
-            }
-            phoneInfo = `<br><span style="color:var(--text-main); line-height: 26px;"><i class="fa-solid fa-phone" style="font-size:12px; width:16px;"></i> <b>Telefono:</b> ${data.mittente_telefono}</span> ${waIcon}`;
-        }
-        infoUtente = `
-        <div style="font-size:13px; background:var(--surface-hover); padding:12px; border-radius:10px; margin-bottom:12px; border:1px dashed var(--border-color); color: var(--text-muted); line-height: 1.6;">
-            <span style="color:var(--text-main);"><i class="fa-solid fa-hashtag" style="font-size:12px; width:16px;"></i> <b>Matricola:</b> ${data.mittente_matricola || 'N/D'}</span><br>
-            <span style="color:var(--text-main);"><i class="fa-solid fa-envelope" style="font-size:12px; width:16px;"></i> <b>Email:</b> ${data.mittente_email || 'N/D'}</span>
-            ${phoneInfo}
+// ==========================================================================================
+// ELENCO CHAT
+// ==========================================================================================
+function htmlRigaChat(c) {
+    const nuova = c.non_letti > 0;
+    const sotto = isAdmin && c.utente
+        ? `<div class="as-chat-utente"><i class="fa-solid fa-user"></i> ${esc(nomeCompleto(c.utente))}${c.utente.matricola ? ' · matr. ' + esc(c.utente.matricola) : ''}</div>`
+        : '';
+    return `
+        <div class="as-chat ${nuova ? 'as-chat-nuova' : ''}" onclick="window.apriChatAssistenza('${esc(c.id)}')">
+            <div class="as-chat-top"><span class="as-chat-titolo">${esc(c.oggetto)}</span><span class="as-chat-ora">${fmtOraLista(c.ultimo_messaggio)}</span></div>
+            ${sotto}
+            <div class="as-chat-prev"><span class="as-prev-testo">${esc(c.anteprima)}</span>${nuova ? `<span class="as-badge">${c.non_letti}</span>` : ''}</div>
         </div>`;
-    }
-
-    let chat = [...(data.storico_chat || [])];
-    if (chat.length === 0) {
-        chat.push({ autore: 'user', testo: data.messaggio, timestamp: data.timestamp_creazione, link: data.link_allegato });
-        if (data.risposta_admin) {
-            chat.push({ autore: 'admin', testo: data.risposta_admin, timestamp: data.timestamp_risposta || data.timestamp_creazione, link: data.link_risposta });
-        }
-    }
-
-    const ultimoMsg = chat[chat.length - 1] || { autore: 'user', testo: data.messaggio };
-    const isAdminMsg = ultimoMsg.autore === 'admin';
-
-    let chatPreviewHtml = `
-        <div style="font-size:14px; color:var(--text-main); background:var(--surface-hover); padding:14px; border-radius:10px; line-height:1.5; white-space:pre-wrap; border-left: 3px solid ${isAdminMsg ? 'var(--success)' : 'var(--info)'};">
-            <div style="font-size:11px; font-weight:bold; margin-bottom:6px; color:${isAdminMsg ? 'var(--success)' : 'var(--info)'}; display:flex; align-items:center; gap:5px;"><i class="fa-solid ${isAdminMsg ? 'fa-reply' : 'fa-user'}"></i> ${isAdminMsg ? 'Ultima risposta (Admin)' : 'Ultimo messaggio'}</div>
-            ${ultimoMsg.testo}
-            ${ultimoMsg.link ? `<br><a href="${ultimoMsg.link}" target="_blank" style="font-size:13px; color:var(--info); text-decoration:none; display:inline-flex; align-items:center; gap:5px; margin-top:5px; font-weight:500;"><i class="fa-solid fa-link"></i> Link Allegato</a>` : ''}
-        </div>
-    `;
-
-    let deleteBtn = `<button style="background:var(--surface); color:var(--danger); border:1px solid var(--danger); padding:10px; border-radius:10px; font-weight:600; font-size:13px; cursor:pointer; flex:1; display:flex; justify-content:center; align-items:center; gap:6px;" onclick="window.eliminaSegnalazione('${id}')"><i class="fa-solid fa-trash"></i> Elimina</button>`;
-    
-    let actionsHtml = isRisolto ? `
-        <div style="display:flex; gap:10px; margin-top:5px;">
-            <button style="background:var(--surface-hover); color:var(--info); border:1px solid var(--info); padding:10px; border-radius:10px; font-weight:600; font-size:13px; cursor:pointer; flex:2; display:flex; justify-content:center; align-items:center; gap:6px;" onclick="window.apriChatSegnalazione('${id}')"><i class="fa-solid fa-comments"></i> Cronologia Messaggi</button>
-            ${deleteBtn}
-        </div>
-    ` : `
-        <div style="display:flex; flex-direction:column; gap:10px; margin-top:5px;">
-            <div style="display:flex; gap:10px;">
-                <button style="background:var(--surface-hover); color:var(--info); border:1px solid var(--info); padding:10px; border-radius:10px; font-weight:600; font-size:13px; cursor:pointer; flex:2; display:flex; justify-content:center; align-items:center; gap:6px;" onclick="window.apriChatSegnalazione('${id}')"><i class="fa-solid fa-comments"></i> Vedi messaggi</button>
-                ${deleteBtn}
-            </div>
-            <div style="display:flex; gap:8px;">
-                <textarea id="quick-reply-${id}" rows="1" placeholder="Scrivi una risposta..." style="flex:1; padding:12px; border-radius:10px; border:1px solid var(--border-color); background:var(--surface); color:var(--text-main); font-family:inherit; resize:none;"></textarea>
-                <button style="background:var(--info); color:white; border:none; padding:10px 15px; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; width:45px;" onclick="window.inviaRispostaChat('${id}', 'quick-reply-${id}')"><i class="fa-solid fa-paper-plane"></i></button>
-            </div>
-        </div>
-    `;
-
-    card.innerHTML = `
-        ${statusBadge}
-        <div style="font-weight:800; font-size:16px; color:var(--info); display:flex; align-items:center; gap:6px; margin-top: 10px;"><i class="fa-solid fa-circle-user"></i> ${headerName} ${dot}</div>
-        <div style="font-size:11px; color:var(--text-muted); margin-bottom:${isAdmin ? '12px' : '0'}; display:flex; gap:5px; align-items:center;"><i class="fa-regular fa-clock"></i> Aggiornato: ${formattaData(data.timestamp_ultimo_messaggio)}</div>
-        ${infoUtente}
-        ${chatPreviewHtml}
-        ${actionsHtml}
-    `;
-    container.appendChild(card);
 }
 
-function renderizzaChatInterna(id) {
-    const data = segnalazioniLocali[id];
-    if (!data) return;
-    const container = document.getElementById('chat-messages-container');
-    if (!container) return;
-    container.innerHTML = '';
-    
-    let chat = [...(data.storico_chat || [])];
-    if (chat.length === 0) {
-        chat.push({ autore: 'user', testo: data.messaggio, timestamp: data.timestamp_creazione, link: data.link_allegato });
-        if (data.risposta_admin) {
-            chat.push({ autore: 'admin', testo: data.risposta_admin, timestamp: data.timestamp_risposta || data.timestamp_creazione, link: data.link_risposta });
-        }
+async function caricaLista(silenzioso) {
+    const cont = document.getElementById('as-lista');
+    if (!cont || !auth) return;
+    if (!silenzioso) cont.innerHTML = `<div class="as-vuoto"><i class="fa-solid fa-spinner fa-spin"></i> Caricamento...</div>`;
+    try {
+        const r = await api('/chat');
+        isAdmin = !!r.admin;
+        const btnNuova = document.getElementById('as-btn-nuova');
+        if (btnNuova) btnNuova.style.display = isAdmin ? 'none' : 'flex';
+
+        cacheChat.clear();
+        r.chat.forEach((c) => cacheChat.set(c.id, c));
+        const json = JSON.stringify(r.chat) + isAdmin;
+        if (silenzioso && json === ultimaListaJson) return;   // nulla di nuovo: niente ridisegno
+        ultimaListaJson = json;
+
+        cont.innerHTML = r.chat.length
+            ? r.chat.map(htmlRigaChat).join('')
+            : `<div class="as-vuoto">${isAdmin ? 'Nessuna richiesta dagli utenti.' : "Non hai ancora aperto nessuna chat.<br>Premi «Nuova chat» per scrivere all'assistenza."}</div>`;
+        if (window.controllaSegnalazioni) window.controllaSegnalazioni();
+    } catch (e) {
+        if (!silenzioso) cont.innerHTML = `<div class="as-vuoto" style="color:var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> Errore caricamento: ${esc(e.message)}</div>`;
     }
+}
 
-    chat.forEach(msg => {
-        const isMe = (isAdmin && msg.autore === 'admin') || (!isAdmin && msg.autore === 'user');
-        const align = isMe ? 'flex-end' : 'flex-start';
-        const bg = isMe ? 'var(--info)' : 'var(--surface)';
-        const color = isMe ? '#fff' : 'var(--text-main)';
-        const border = isMe ? '14px 14px 0px 14px' : '14px 14px 14px 0px';
-        const borderStyle = isMe ? 'none' : '1px solid var(--border-color)';
-        
-        container.innerHTML += `
-            <div style="display:flex; flex-direction:column; align-items:${align}; margin-bottom:12px; width: 100%;">
-                <div style="background:${bg}; color:${color}; padding:10px 14px; max-width:85%; border-radius:${border}; border:${borderStyle}; font-size:14px; white-space:pre-wrap; box-shadow:var(--shadow-sm); line-height: 1.4;">
-                    ${msg.testo}
-                    ${msg.link ? `<br><a href="${msg.link}" target="_blank" style="font-size:12px; color:${isMe ? '#fff' : 'var(--info)'}; text-decoration:underline; display:inline-flex; align-items:center; gap:5px; margin-top:5px;"><i class="fa-solid fa-link"></i> Link</a>` : ''}
-                </div>
-                <div style="font-size:10px; color:var(--text-muted); margin-top:4px; font-weight: 500;">${formattaData(msg.timestamp)}</div>
-            </div>
-        `;
-    });
-    
-    setTimeout(() => { container.scrollTop = container.scrollHeight; }, 50);
+// ==========================================================================================
+// NUOVA CHAT
+// ==========================================================================================
+window.apriNuovaChatAssistenza = () => {
+    document.getElementById('as-oggetto').value = '';
+    document.getElementById('modal-nuova-chat').style.display = 'flex';
+    setTimeout(() => document.getElementById('as-oggetto').focus(), 100);
+};
 
-    const btnSend = document.getElementById('btn-invia-chat-modal');
-    const inputField = document.getElementById('input-chat-modal');
-    if(!btnSend || !inputField) return;
-    
-    const newBtnSend = btnSend.cloneNode(true);
-    btnSend.parentNode.replaceChild(newBtnSend, btnSend);
-    
-    const isRisolto = data.stato === 'risposto';
-    if(isRisolto) {
-        inputField.disabled = true;
-        inputField.placeholder = "Segnalazione risolta.";
-        newBtnSend.disabled = true;
-        newBtnSend.style.opacity = '0.5';
+// La chat si apre subito con l'oggetto come titolo; sul server nasce con il primo messaggio
+window.iniziaChatAssistenza = () => {
+    const oggetto = document.getElementById('as-oggetto').value.replace(/\s+/g, ' ').trim();
+    if (!oggetto) return alert("Scrivi l'oggetto della richiesta.");
+    document.getElementById('modal-nuova-chat').style.display = 'none';
+    apriChat({ id: null, oggetto, utente: null });
+    document.getElementById('as-messaggi').innerHTML = `<div class="as-vuoto">Scrivi il primo messaggio: la richiesta verrà inviata all'assistenza.</div>`;
+};
+
+// ==========================================================================================
+// CHAT
+// ==========================================================================================
+function apriChat(chat) {
+    chatAperta = chat;
+    ultimoSeq = 0;
+    allegatiScelti = [];
+    window.aggiornaUI_AllegatiAssistenza();
+    const input = document.getElementById('as-input');
+    input.value = '';
+    window.autoAltezzaAssistenza(input);
+    document.getElementById('as-messaggi').innerHTML = `<div class="as-vuoto"><i class="fa-solid fa-spinner fa-spin"></i> Caricamento...</div>`;
+    aggiornaIntestazioneChat();
+    document.getElementById('modal-chat-assistenza').style.display = 'flex';
+}
+
+window.apriChatAssistenza = async (id) => {
+    const c = cacheChat.get(id);
+    apriChat({ id, oggetto: c ? c.oggetto : '', utente: c ? c.utente || null : null });
+    await aggiornaChat(true, true);
+};
+
+window.chiudiChatAssistenza = () => {
+    chatAperta = null;
+    allegatiScelti = [];
+    document.getElementById('modal-chat-assistenza').style.display = 'none';
+    ultimaListaJson = '';
+    caricaLista(true);
+};
+
+function aggiornaIntestazioneChat() {
+    if (!chatAperta) return;
+    document.getElementById('as-chat-titolo').textContent = chatAperta.oggetto;
+    const sotto = document.getElementById('as-chat-utente');
+    const elimina = document.getElementById('as-btn-elimina');
+    const mostraAdmin = isAdmin && chatAperta.id && chatAperta.utente;
+    if (mostraAdmin) {
+        const u = chatAperta.utente;
+        sotto.style.display = 'block';
+        sotto.innerHTML = `<i class="fa-solid fa-circle-user"></i> ${esc(nomeCompleto(u))}${u.matricola ? ' · Matr. ' + esc(u.matricola) : ''} <i class="fa-solid fa-chevron-right" style="font-size:10px;"></i>`;
     } else {
-        inputField.disabled = false;
-        inputField.placeholder = "Scrivi un messaggio...";
-        newBtnSend.disabled = false;
-        newBtnSend.style.opacity = '1';
-        newBtnSend.onclick = () => window.inviaRispostaChat(id, 'input-chat-modal');
-        
-        inputField.onkeypress = (e) => {
-            if(e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                window.inviaRispostaChat(id, 'input-chat-modal');
-            }
-        };
+        sotto.style.display = 'none';
+    }
+    elimina.style.display = isAdmin && chatAperta.id ? 'inline-flex' : 'none';
+}
+
+function htmlAllegati(lista) {
+    if (!lista || !lista.length) return '';
+    const url = (a) => esc(API_ORIGIN + a.url);
+    const immagini = lista.filter((a) => a.mime.startsWith('image/'));
+    const video = lista.filter((a) => a.mime.startsWith('video/'));
+    const pdf = lista.filter((a) => a.mime === 'application/pdf');
+    let h = '';
+    if (immagini.length) h += `<div class="as-foto">${immagini.map((a) => `<a href="${url(a)}" target="_blank" rel="noopener"><img src="${url(a)}" alt="${esc(a.nome)}" loading="lazy"></a>`).join('')}</div>`;
+    video.forEach((a) => { h += `<video class="as-video" controls preload="metadata" playsinline src="${url(a)}"></video>`; });
+    pdf.forEach((a) => { h += `<a class="as-pdf" href="${url(a)}" target="_blank" rel="noopener"><i class="fa-solid fa-file-pdf"></i><span class="as-pdf-nome">${esc(a.nome)}</span><span class="as-pdf-size">${fmtSize(a.size)}</span></a>`; });
+    return h;
+}
+
+function htmlMessaggio(m) {
+    const mio = (isAdmin && m.autore === 'admin') || (!isAdmin && m.autore === 'utente');
+    const autore = mio ? '' : `<div class="as-autore">${m.autore === 'admin' ? 'Assistenza' : esc(nomeCompleto(chatAperta && chatAperta.utente))}</div>`;
+    return `
+        <div class="as-msg ${mio ? 'as-mia' : 'as-altra'}">
+            ${autore}
+            <div class="as-bolla">${m.testo ? `<div class="as-testo">${linkifica(esc(m.testo))}</div>` : ''}${htmlAllegati(m.allegati)}</div>
+            <div class="as-ora">${fmtDataOra(m.timestamp)}</div>
+        </div>`;
+}
+
+// Scarica i messaggi nuovi (quelli dopo l'ultimo gia' mostrato). Aprire la chat la segna come letta sul server.
+async function aggiornaChat(forzaScroll, attendi) {
+    if (!chatAperta || !chatAperta.id) return;
+    if (inAggiornamentoChat) { if (!attendi) return; while (inAggiornamentoChat) await attesa(100); }
+    if (!chatAperta || !chatAperta.id) return;
+    const idRichiesto = chatAperta.id;
+    inAggiornamentoChat = true;
+    try {
+        const r = await api(`/chat/${encodeURIComponent(idRichiesto)}/messaggi?dopo=${ultimoSeq}`);
+        if (!chatAperta || chatAperta.id !== idRichiesto) return;   // nel frattempo la chat e' stata chiusa
+        isAdmin = !!r.admin;
+        chatAperta.oggetto = r.chat.oggetto;
+        chatAperta.utente = r.chat.utente || null;
+        aggiornaIntestazioneChat();
+
+        const cont = document.getElementById('as-messaggi');
+        if (ultimoSeq === 0) cont.innerHTML = '';
+        if (r.messaggi.length) {
+            const vicinoAlFondo = cont.scrollHeight - cont.scrollTop - cont.clientHeight < 120;
+            cont.insertAdjacentHTML('beforeend', r.messaggi.map(htmlMessaggio).join(''));
+            ultimoSeq = Math.max(ultimoSeq, ...r.messaggi.map((m) => m.seq));
+            if (forzaScroll || vicinoAlFondo) setTimeout(() => { cont.scrollTop = cont.scrollHeight; }, 50);
+            if (window.controllaSegnalazioni) window.controllaSegnalazioni();
+        }
+    } catch (e) {
+        console.warn('Aggiornamento chat non riuscito:', e.message);
+        const cont = document.getElementById('as-messaggi');
+        if (cont && ultimoSeq === 0) cont.innerHTML = `<div class="as-vuoto" style="color:var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(e.message)}</div>`;
+    } finally {
+        inAggiornamentoChat = false;
     }
 }
 
-window.inviaSegnalazione = async () => {
-    const btn = document.getElementById('btn-salva-rep');
-    const msgInput = document.getElementById('rep-messaggio');
-    const linkInput = document.getElementById('rep-link');
-    const msg = msgInput.value.trim();
-    const link = linkInput.value.trim();
-    if (!msg) return;
+// ---------- Invio ----------
+window.autoAltezzaAssistenza = (el) => {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+};
 
-    const uidAttivo = auth?.currentUser?.uid || currentUid;
-    if (!uidAttivo || typeof uidAttivo !== 'string' || !db) {
-        alert("Sessione non valida. Ricarica la pagina e riprova.");
-        return;
-    }
+window.inviaMessaggioAssistenza = async () => {
+    if (inInvio || !chatAperta) return;
+    const input = document.getElementById('as-input');
+    const btn = document.getElementById('as-btn-invia');
+    const testo = input.value.trim();
+    if (!testo && allegatiScelti.length === 0) return;
 
+    inInvio = true;
     btn.disabled = true;
+    const iconaOriginale = btn.innerHTML;
+    btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i>";
+
+    const fd = new FormData();
+    fd.append('testo', testo);
+    allegatiScelti.forEach((f) => fd.append('allegati', f, f.name));
+    const conAllegati = allegatiScelti.length > 0;
+    const progresso = (p) => { if (conAllegati) btn.innerHTML = `<span style="font-size:11px; font-weight:700;">${p}%</span>`; };
+
     try {
-        const uDoc = await getDoc(doc(db, "utenti", uidAttivo));
-        const ud = uDoc.data() || {};
-        const userEmail = auth?.currentUser?.email || ud.email || "N/D";
-        const now = Date.now();
-        
-        await addDoc(collection(db, "segnalazioni"), {
-            mittente_uid: uidAttivo,
-            mittente_nome: ud.nome ? `${ud.nome} ${ud.cognome || ''}`.trim() : userEmail,
-            mittente_matricola: ud.matricola || "N/D",
-            mittente_email: userEmail,
-            mittente_telefono: ud.telefono || null,
-            messaggio: msg, 
-            link_allegato: link || null,
-            storico_chat: [{ 
-                autore: 'user', 
-                testo: msg, 
-                timestamp: now, 
-                link: link || null 
-            }],
-            timestamp_creazione: now,
-            timestamp_ultimo_messaggio: now, 
-            stato: "in_attesa",
-            letta_da_admin: false,
-            letta_da_utente: true
-        });
-        window.chiudiModaleNuovaSegnalazione();
-        msgInput.value = ""; 
-        linkInput.value = "";
-    } catch(e) { 
-        console.error("Errore invio:", e);
-        alert("Errore durante l'invio: " + (e.code || e.message));
+        if (!chatAperta.id) {
+            fd.append('oggetto', chatAperta.oggetto);
+            const r = await inviaMultipart('/chat', fd, progresso);
+            chatAperta.id = r.chat.id;
+            ultimoSeq = 0;
+        } else {
+            await inviaMultipart(`/chat/${encodeURIComponent(chatAperta.id)}/messaggi`, fd, progresso);
+        }
+        input.value = '';
+        window.autoAltezzaAssistenza(input);
+        allegatiScelti = [];
+        window.aggiornaUI_AllegatiAssistenza();
+        await aggiornaChat(true, true);
+        ultimaListaJson = '';
+        caricaLista(true);
+    } catch (e) {
+        alert('Invio non riuscito: ' + e.message);
     } finally {
+        inInvio = false;
         btn.disabled = false;
+        btn.innerHTML = iconaOriginale;
+        input.focus();
     }
 };
 
-window.inviaRispostaChat = async (id, inputId) => {
-    const input = document.getElementById(inputId);
-    if(!input) return;
-    const msg = input.value.trim();
-    if (!msg) return;
+// ---------- Allegati ----------
+window.aggiungiAllegatiAssistenza = async (input) => {
+    const files = Array.from(input.files || []);
+    input.value = '';
+    for (const f of files) {
+        if (allegatiScelti.length >= MAX_ALLEGATI) { alert(`Massimo ${MAX_ALLEGATI} allegati per messaggio.`); break; }
+        const ammesso = f.type.startsWith('image/') || f.type.startsWith('video/') || f.type === 'application/pdf';
+        if (!ammesso) { alert(`"${f.name}": formato non supportato (solo foto, video e PDF).`); continue; }
+        const finale = await comprimiImmagine(f);
+        if (finale.size > MAX_MB_ALLEGATO * 1048576) { alert(`"${f.name}" supera ${MAX_MB_ALLEGATO} MB.`); continue; }
+        allegatiScelti.push(finale);
+    }
+    window.aggiornaUI_AllegatiAssistenza();
+};
 
-    input.disabled = true;
-    
-    // Svuotiamo IMMEDIATAMENTE il campo di testo per dare feedback visivo
-    input.value = "";
+window.rimuoviAllegatoAssistenza = (i) => {
+    allegatiScelti.splice(i, 1);
+    window.aggiornaUI_AllegatiAssistenza();
+};
 
+window.aggiornaUI_AllegatiAssistenza = () => {
+    const el = document.getElementById('as-allegati-scelti');
+    if (!el) return;
+    el.innerHTML = allegatiScelti.map((f, i) => {
+        const icona = f.type.startsWith('image/') ? 'fa-image' : f.type.startsWith('video/') ? 'fa-film' : 'fa-file-pdf';
+        return `<div class="as-scelto"><i class="fa-solid ${icona}" style="color:var(--info);"></i><span class="as-scelto-nome">${esc(f.name)}</span><span class="as-scelto-size">${fmtSize(f.size)}</span><button type="button" class="as-head-btn as-danger" style="width:28px; height:28px;" aria-label="Rimuovi allegato" onclick="window.rimuoviAllegatoAssistenza(${i})"><i class="fa-solid fa-xmark"></i></button></div>`;
+    }).join('');
+};
+
+// ==========================================================================================
+// ADMIN: PROFILO UTENTE ED ELIMINAZIONE
+// ==========================================================================================
+function htmlProfilo(p) {
+    const riga = (icona, etichetta, valore) => `<div class="as-riga-profilo"><i class="fa-solid ${icona} as-ico"></i><div><b>${etichetta}</b>${valore}</div></div>`;
+    const nome = [p.nome, p.cognome].filter(Boolean).join(' ') || (p.email ? p.email.split('@')[0] : 'Utente');
+    let h = `<div style="font-size:18px; font-weight:800; color:var(--text-main); margin-bottom:6px;">${esc(nome)}</div>`;
+    if (p.matricola) h += riga('fa-hashtag', 'Matricola', esc(p.matricola));
+    if (p.email) h += riga('fa-envelope', 'Email', `<a href="mailto:${esc(p.email)}" style="color:var(--info);">${esc(p.email)}</a>`);
+    if (p.telefono) {
+        let num = p.telefono.replace(/\D/g, '');
+        if (num && !num.startsWith('39')) num = '39' + num;
+        const wa = num ? `<a href="https://wa.me/${num}" target="_blank" rel="noopener" style="color:#25D366; margin-left:12px; font-size:22px; vertical-align:middle;"><i class="fa-brands fa-whatsapp"></i></a>` : '';
+        h += riga('fa-phone', 'Telefono', `<a href="tel:${esc(p.telefono)}" style="color:var(--info);">${esc(p.telefono)}</a>${wa}`);
+    }
+    if (p.ruolo) h += riga('fa-user-tag', 'Ruolo', esc(p.ruolo));
+    if (p.rotazione) h += riga('fa-rotate', 'Rotazione', esc(p.rotazione));
+    return h;
+}
+
+window.apriProfiloAssistenza = async () => {
+    if (!chatAperta || !chatAperta.id || !isAdmin) return;
+    const corpo = document.getElementById('as-profilo-corpo');
+    corpo.innerHTML = `<div class="as-vuoto"><i class="fa-solid fa-spinner fa-spin"></i> Caricamento...</div>`;
+    document.getElementById('modal-profilo-assistenza').style.display = 'flex';
     try {
-        const now = Date.now();
-        const updateData = {
-            storico_chat: arrayUnion({ 
-                autore: isAdmin ? 'admin' : 'user', 
-                testo: msg, 
-                timestamp: now 
-            }),
-            timestamp_ultimo_messaggio: now, 
-            letta_da_admin: isAdmin,
-            letta_da_utente: !isAdmin
-        };
-
-        if (!isAdmin) {
-            updateData.stato = "in_attesa"; 
-        }
-
-        await updateDoc(doc(db, "segnalazioni", id), updateData);
-    } catch(e) { 
-        console.error("Errore invio chat:", e); 
-        // Se c'è stato un errore, rimettiamo il testo
-        const currentInput = document.getElementById(inputId);
-        if(currentInput) currentInput.value = msg;
-    }
-    
-    // Ripristiniamo la possibilità di scrivere usando l'elemento nel DOM aggiornato
-    const currentInput = document.getElementById(inputId);
-    if(currentInput) {
-        currentInput.disabled = false;
-        currentInput.focus();
+        const r = await api(`/chat/${encodeURIComponent(chatAperta.id)}/profilo`);
+        corpo.innerHTML = htmlProfilo(r.profilo);
+    } catch (e) {
+        corpo.innerHTML = `<div class="as-vuoto" style="color:var(--danger);">Errore: ${esc(e.message)}</div>`;
     }
 };
 
-window.segnaRisolto = async (id) => {
-    if (confirm("Vuoi contrassegnare questo ticket come risolto?")) {
-        try {
-            await updateDoc(doc(db, "segnalazioni", id), {
-                stato: "risposto",
-                letta_da_utente: false, 
-                timestamp_ultimo_messaggio: Date.now() 
-            });
-            if(chatApertaId === id) window.chiudiChatModal();
-        } catch(e) {
-            console.error("Errore chiusura:", e);
-        }
+window.eliminaChatAssistenza = async () => {
+    if (!chatAperta || !chatAperta.id || !isAdmin) return;
+    if (!confirm("Vuoi eliminare questa chat con tutti i messaggi e gli allegati?")) return;
+    try {
+        await api(`/chat/${encodeURIComponent(chatAperta.id)}`, { metodo: 'DELETE' });
+        window.chiudiChatAssistenza();
+    } catch (e) {
+        alert("Errore durante l'eliminazione: " + e.message);
     }
 };
 
-window.eliminaSegnalazione = async (id) => {
-    if (confirm("Vuoi eliminare questa segnalazione e la sua chat?")) {
-        try {
-            await deleteDoc(doc(db, "segnalazioni", id));
-            if(chatApertaId === id) window.chiudiChatModal();
-        } catch (e) {
-            console.error("Errore eliminazione:", e);
-        }
-    }
-};
+console.log("Assistenza: file caricato e pronto all'uso.");
