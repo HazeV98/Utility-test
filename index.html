@@ -527,38 +527,19 @@
                 </div>
                 <div class="setting-content">
                     <div id="native-notifications-center" style="display: none; width: 100%;">
-                        <p id="notif-status-text" style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 15px; font-weight: 500;">Controllo stato in corso...</p>
-                        <button id="btn-attiva-notifiche" class="btn-modal" style="background: var(--primary); color: white; margin-top: 0; display: none; width: 100%;" onclick="window.gestisciNotificheNative()"><i class="fa-solid fa-toggle-on"></i> Abilita Notifiche</button>
-                        <button id="btn-disattiva-notifiche" class="btn-modal" style="background: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 10px; display: none; width: 100%;" onclick="window.disattivaNotifiche()"><i class="fa-solid fa-bell-slash"></i> Disattiva Notifiche</button>
+                        <p id="notif-status-text" style="font-size: 13px; color: var(--text-muted); text-align: center; margin: 0 0 15px 0; font-weight: 500;">Controllo stato in corso...</p>
 
-                        <div id="notif-preferences-section" style="display: none; margin-top: 15px; text-align: left; font-size: 14px;">
-                            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
-                            <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; color: var(--text-main); font-weight: 500;">
-                                <input type="checkbox" id="pref-notif-promemoria" style="width:18px; height:18px; accent-color:var(--primary);" onchange="window.salvaPreferenzeNotifiche()"> Promemoria
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; color: var(--text-main); font-weight: 500;">
-                                <input type="checkbox" id="pref-notif-dds" style="width:18px; height:18px; accent-color:var(--primary);" onchange="window.salvaPreferenzeNotifiche()"> DDS
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; color: var(--text-main); font-weight: 500;">
-                                <input type="checkbox" id="pref-notif-utility" style="width:18px; height:18px; accent-color:var(--primary);" onchange="window.salvaPreferenzeNotifiche()"> Annunci Bacheca
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; color: var(--text-main); font-weight: 500;">
-                                <input type="checkbox" id="pref-notif-segnalazioni" style="width:18px; height:18px; accent-color:var(--primary);" onchange="window.salvaPreferenzeNotifiche()"> Ticket Segnalazioni
-                            </label>
-                            <label id="label-notif-rotazioni" style="display: none; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; color: var(--primary); font-weight: 700;">
-                                <input type="checkbox" id="pref-notif-rotazioni" style="width:18px; height:18px; accent-color:var(--primary);" onchange="window.salvaPreferenzeNotifiche()"> Nuove Richieste Rotazioni
-                            </label>
+                        <label style="display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; color: var(--text-main); font-weight: 600;">
+                            <span><i class="fa-solid fa-bell" style="color: var(--primary); width: 24px;"></i> Notifiche</span>
+                            <span class="bp-switch"><input type="checkbox" id="toggle-notifiche-generale" onchange="window.cambiaNotificheGenerali(this.checked)"><span class="bp-slider"></span></span>
+                        </label>
 
-                            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
-                            <strong style="display: block; margin-bottom: 12px; font-size: 13px; color: var(--text-muted); text-transform: uppercase;">Mansioni Bacheca Turni:</strong>
-                            <div id="mansioni-turni-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
-                                <label style="cursor: pointer; display:flex; align-items:center; gap:6px; color: var(--text-main);"><input type="checkbox" class="pref-mansione" style="accent-color:var(--primary);" value="Preposto al comando" onchange="window.salvaPreferenzeNotifiche()"> Preposto</label>
-                                <label style="cursor: pointer; display:flex; align-items:center; gap:6px; color: var(--text-main);"><input type="checkbox" class="pref-mansione" style="accent-color:var(--primary);" value="Marinaio" onchange="window.salvaPreferenzeNotifiche()"> Marinaio</label>
-                                <label style="cursor: pointer; display:flex; align-items:center; gap:6px; color: var(--text-main);"><input type="checkbox" class="pref-mansione" style="accent-color:var(--primary);" value="Comandante" onchange="window.salvaPreferenzeNotifiche()"> Comandante</label>
-                                <label style="cursor: pointer; display:flex; align-items:center; gap:6px; color: var(--text-main);"><input type="checkbox" class="pref-mansione" style="accent-color:var(--primary);" value="Timoniere" onchange="window.salvaPreferenzeNotifiche()"> Timoniere</label>
-                                <label style="cursor: pointer; display:flex; align-items:center; gap:6px; color: var(--text-main);"><input type="checkbox" class="pref-mansione" style="accent-color:var(--primary);" value="Marinaio polivalente" onchange="window.salvaPreferenzeNotifiche()"> Mar. Poliv.</label>
-                                <label style="cursor: pointer; display:flex; align-items:center; gap:6px; color: var(--text-main);"><input type="checkbox" class="pref-mansione" style="accent-color:var(--primary);" value="Direttore di macchina" onchange="window.salvaPreferenzeNotifiche()"> Dir. Macchina</label>
-                            </div>
+                        <div id="notif-preferences-section" style="display: none; margin-top: 15px;">
+                            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 0 0 15px 0;">
+                            <label style="display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; color: var(--text-main); font-weight: 500;">
+                                <span><i class="fa-solid fa-bullhorn" style="color: var(--primary); width: 24px;"></i> Annunci Bacheca</span>
+                                <span class="bp-switch"><input type="checkbox" id="pref-notif-utility" onchange="window.salvaPreferenzeNotifiche()"><span class="bp-slider"></span></span>
+                            </label>
                         </div>
                     </div>
                 </div>
