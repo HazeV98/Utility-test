@@ -26,6 +26,8 @@ let inInvio = false;
 let inAggiornamentoChat = false;
 let timerAvviati = false;
 let ultimaListaJson = '';
+let vistaArchivio = false;           // false = Chat, true = Archivio
+let listaCorrente = [];
 const cacheChat = new Map();
 
 // ---------- Utilita' ----------
@@ -49,8 +51,12 @@ async function tokenUtente() {
     return u.getIdToken();
 }
 
-async function api(percorso, { metodo = 'GET' } = {}) {
-    const res = await fetch(API_ASSISTENZA + percorso, { method: metodo, headers: { 'Authorization': 'Bearer ' + await tokenUtente() } });
+async function api(percorso, { metodo = 'GET', corpo = null } = {}) {
+    const res = await fetch(API_ASSISTENZA + percorso, {
+        method: metodo,
+        headers: { 'Authorization': 'Bearer ' + await tokenUtente(), ...(corpo ? { 'Content-Type': 'application/json' } : {}) },
+        body: corpo ? JSON.stringify(corpo) : undefined
+    });
     let dati = null;
     try { dati = await res.json(); } catch (_) { /* risposta senza corpo */ }
     if (!res.ok) throw new Error((dati && dati.errore) || ('Errore ' + res.status));
@@ -107,6 +113,9 @@ export function initUISegnalazioni() {
     st.textContent = `
         .as-nuova { width:100%; background:var(--info); color:#fff; border:none; padding:16px; font-size:15px; font-weight:700; border-radius:var(--radius-md); cursor:pointer; display:flex; justify-content:center; align-items:center; gap:10px; box-shadow:0 4px 12px rgba(0,136,255,0.3); margin-bottom:15px; }
         .as-vuoto { text-align:center; padding:40px 20px; color:var(--text-muted); font-size:15px; background:var(--surface-hover); border-radius:12px; border:1px dashed var(--border-color); line-height:1.5; }
+        .as-tabs { display:flex; gap:8px; margin-bottom:12px; }
+        .as-tab { flex:1; padding:10px; border-radius:10px; border:1px solid var(--border-color); background:var(--surface); color:var(--text-muted); font-weight:700; font-size:13px; font-family:inherit; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:6px; }
+        .as-tab.attiva { background:var(--info-light); border-color:var(--info); color:var(--info); }
         .as-chat { background:var(--surface); border:1px solid var(--border-color); border-left:5px solid var(--info); border-radius:12px; padding:14px 16px; margin-bottom:10px; cursor:pointer; box-shadow:var(--shadow-sm); }
         .as-chat-nuova { border-left-color:var(--danger); background:var(--surface-hover); }
         .as-chat-top { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
@@ -149,7 +158,7 @@ export function initUISegnalazioni() {
         .as-scelto-nome { flex:1; min-width:0; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .as-scelto-size { font-size:11px; color:var(--text-muted); flex-shrink:0; }
         .as-barra { padding:12px; border-top:1px solid var(--border-color); background:var(--surface); display:flex; gap:8px; align-items:flex-end; }
-        .as-barra textarea { flex:1; resize:none; padding:12px 15px; border-radius:20px; border:1px solid var(--border-color); background:var(--surface-hover); outline:none; font-family:inherit; font-size:14px; color:var(--text-main); line-height:1.4; max-height:120px; }
+        .as-barra textarea { flex:1; resize:none; box-sizing:border-box; height:44px; min-height:44px; padding:12px 15px; border-radius:20px; border:1px solid var(--border-color); background:var(--surface-hover); outline:none; font-family:inherit; font-size:14px; color:var(--text-main); line-height:1.4; max-height:120px; }
         .as-btn-tondo { background:var(--info); color:#fff; border:none; width:44px; height:44px; border-radius:50%; cursor:pointer; display:flex; justify-content:center; align-items:center; flex-shrink:0; font-size:16px; padding:0; }
         .as-btn-tondo:disabled { opacity:0.6; }
         .as-btn-chiaro { background:var(--surface-hover); color:var(--text-muted); border:1px solid var(--border-color); }
@@ -167,6 +176,10 @@ export function initUISegnalazioni() {
             <h3 style="margin-top: 0; color: var(--info); font-weight: 800; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-headset"></i> Assistenza</h3>
             <div style="flex: 1; overflow-y: auto; padding-right: 5px;">
                 <button id="as-btn-nuova" class="as-nuova" onclick="window.apriNuovaChatAssistenza()"><i class="fa-solid fa-plus"></i> Nuova chat</button>
+                <div class="as-tabs">
+                    <button id="as-tab-chat" class="as-tab attiva" onclick="window.cambiaVistaAssistenza(false)"><i class="fa-solid fa-comments"></i> Chat</button>
+                    <button id="as-tab-archivio" class="as-tab" onclick="window.cambiaVistaAssistenza(true)"><i class="fa-solid fa-box-archive"></i> Archivio</button>
+                </div>
                 <div id="as-lista"></div>
             </div>
         </div>
@@ -194,6 +207,7 @@ export function initUISegnalazioni() {
                     <div id="as-chat-titolo" class="as-titolo"></div>
                     <button id="as-chat-utente" class="as-sottotitolo" style="display:none;" onclick="window.apriProfiloAssistenza()"></button>
                 </div>
+                <button id="as-btn-archivia" class="as-head-btn" style="display:none;" aria-label="Archivia chat" title="Archivia chat" onclick="window.archiviaChatAssistenza()"><i class="fa-solid fa-box-archive"></i></button>
                 <button id="as-btn-elimina" class="as-head-btn as-danger" style="display:none;" aria-label="Elimina chat" title="Elimina chat" onclick="window.eliminaChatAssistenza()"><i class="fa-solid fa-trash-can"></i></button>
             </div>
             <div id="as-messaggi" class="as-messaggi"></div>
@@ -268,6 +282,20 @@ function htmlRigaChat(c) {
         </div>`;
 }
 
+function renderLista() {
+    const cont = document.getElementById('as-lista');
+    if (!cont) return;
+    const inArchivio = listaCorrente.filter((c) => c.archiviata);
+    const mostrate = vistaArchivio ? inArchivio : listaCorrente.filter((c) => !c.archiviata);
+    document.getElementById('as-tab-chat').classList.toggle('attiva', !vistaArchivio);
+    document.getElementById('as-tab-archivio').classList.toggle('attiva', vistaArchivio);
+    document.getElementById('as-tab-archivio').innerHTML = `<i class="fa-solid fa-box-archive"></i> Archivio${inArchivio.length ? ' (' + inArchivio.length + ')' : ''}`;
+    if (mostrate.length) { cont.innerHTML = mostrate.map(htmlRigaChat).join(''); return; }
+    cont.innerHTML = `<div class="as-vuoto">${vistaArchivio
+        ? 'Nessuna chat in archivio.'
+        : isAdmin ? 'Nessuna richiesta dagli utenti.' : "Non hai ancora aperto nessuna chat.<br>Premi «Nuova chat» per scrivere all'assistenza."}</div>`;
+}
+
 async function caricaLista(silenzioso) {
     const cont = document.getElementById('as-lista');
     if (!cont || !auth) return;
@@ -280,18 +308,22 @@ async function caricaLista(silenzioso) {
 
         cacheChat.clear();
         r.chat.forEach((c) => cacheChat.set(c.id, c));
-        const json = JSON.stringify(r.chat) + isAdmin;
+        const json = JSON.stringify(r.chat) + isAdmin + vistaArchivio;
         if (silenzioso && json === ultimaListaJson) return;   // nulla di nuovo: niente ridisegno
         ultimaListaJson = json;
-
-        cont.innerHTML = r.chat.length
-            ? r.chat.map(htmlRigaChat).join('')
-            : `<div class="as-vuoto">${isAdmin ? 'Nessuna richiesta dagli utenti.' : "Non hai ancora aperto nessuna chat.<br>Premi «Nuova chat» per scrivere all'assistenza."}</div>`;
+        listaCorrente = r.chat;
+        renderLista();
         if (window.controllaSegnalazioni) window.controllaSegnalazioni();
     } catch (e) {
         if (!silenzioso) cont.innerHTML = `<div class="as-vuoto" style="color:var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> Errore caricamento: ${esc(e.message)}</div>`;
     }
 }
+
+window.cambiaVistaAssistenza = (archivio) => {
+    vistaArchivio = !!archivio;
+    ultimaListaJson = '';
+    renderLista();
+};
 
 // ==========================================================================================
 // NUOVA CHAT
@@ -321,7 +353,7 @@ function apriChat(chat) {
     window.aggiornaUI_AllegatiAssistenza();
     const input = document.getElementById('as-input');
     input.value = '';
-    window.autoAltezzaAssistenza(input);
+    input.style.height = '';   // altezza di base: la finestra e' ancora nascosta e misurarla darebbe 0 (campo schiacciato)
     document.getElementById('as-messaggi').innerHTML = `<div class="as-vuoto"><i class="fa-solid fa-spinner fa-spin"></i> Caricamento...</div>`;
     aggiornaIntestazioneChat();
     document.getElementById('modal-chat-assistenza').style.display = 'flex';
@@ -329,7 +361,7 @@ function apriChat(chat) {
 
 window.apriChatAssistenza = async (id) => {
     const c = cacheChat.get(id);
-    apriChat({ id, oggetto: c ? c.oggetto : '', utente: c ? c.utente || null : null });
+    apriChat({ id, oggetto: c ? c.oggetto : '', utente: c ? c.utente || null : null, archiviata: c ? !!c.archiviata : false });
     await aggiornaChat(true, true);
 };
 
@@ -355,6 +387,11 @@ function aggiornaIntestazioneChat() {
         sotto.style.display = 'none';
     }
     elimina.style.display = isAdmin && chatAperta.id ? 'inline-flex' : 'none';
+    const archivia = document.getElementById('as-btn-archivia');
+    archivia.style.display = chatAperta.id ? 'inline-flex' : 'none';
+    archivia.innerHTML = chatAperta.archiviata ? '<i class="fa-solid fa-box-open"></i>' : '<i class="fa-solid fa-box-archive"></i>';
+    archivia.title = chatAperta.archiviata ? "Ripristina dall'archivio" : 'Archivia chat';
+    archivia.setAttribute('aria-label', archivia.title);
 }
 
 function htmlAllegati(lista) {
@@ -394,6 +431,7 @@ async function aggiornaChat(forzaScroll, attendi) {
         isAdmin = !!r.admin;
         chatAperta.oggetto = r.chat.oggetto;
         chatAperta.utente = r.chat.utente || null;
+        chatAperta.archiviata = !!r.chat.archiviata;
         aggiornaIntestazioneChat();
 
         const cont = document.getElementById('as-messaggi');
@@ -416,8 +454,9 @@ async function aggiornaChat(forzaScroll, attendi) {
 
 // ---------- Invio ----------
 window.autoAltezzaAssistenza = (el) => {
+    if (!el.scrollHeight) return;   // finestra nascosta: niente da misurare
     el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    el.style.height = Math.min(Math.max(el.scrollHeight, 44), 120) + 'px';
 };
 
 window.inviaMessaggioAssistenza = async () => {
@@ -448,7 +487,7 @@ window.inviaMessaggioAssistenza = async () => {
             await inviaMultipart(`/chat/${encodeURIComponent(chatAperta.id)}/messaggi`, fd, progresso);
         }
         input.value = '';
-        window.autoAltezzaAssistenza(input);
+        input.style.height = '';
         allegatiScelti = [];
         window.aggiornaUI_AllegatiAssistenza();
         await aggiornaChat(true, true);
@@ -534,6 +573,24 @@ window.eliminaChatAssistenza = async () => {
         window.chiudiChatAssistenza();
     } catch (e) {
         alert("Errore durante l'eliminazione: " + e.message);
+    }
+};
+
+window.archiviaChatAssistenza = async () => {
+    if (!chatAperta || !chatAperta.id) return;
+    const archivia = !chatAperta.archiviata;
+    try {
+        await api(`/chat/${encodeURIComponent(chatAperta.id)}/archivia`, { metodo: 'POST', corpo: { archivia } });
+        if (archivia) {
+            window.chiudiChatAssistenza();   // la chat passa in Archivio
+        } else {
+            chatAperta.archiviata = false;
+            aggiornaIntestazioneChat();
+            ultimaListaJson = '';
+            caricaLista(true);
+        }
+    } catch (e) {
+        alert('Operazione non riuscita: ' + e.message);
     }
 };
 

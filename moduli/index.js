@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, deleteUser, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, getDocFromServer, collection, getDocs, query, orderBy, deleteDoc, where, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, getDocFromServer, collection, getDocs, query, orderBy, deleteDoc, where, Timestamp, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken, onMessage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
 
 import { avviaMotoreAuth } from './auth.js';
@@ -440,13 +440,26 @@ function mostraStatoNotifiche(attive) {
     }
 }
 
+// Ogni dispositivo aggiunge il proprio token all'elenco fcm_tokens: cosi' telefono e PC dello stesso account ricevono entrambi
+// le notifiche (prima l'ultimo dispositivo aperto sovrascriveva gli altri). fcm_token resta l'ultimo, per compatibilita'.
+async function salvaTokenDispositivo(token, tipoDispositivo) {
+    if (!auth.currentUser) return;
+    const ref = doc(db, "utenti", auth.currentUser.uid);
+    const precedente = localStorage.getItem('fcm_token_dispositivo');
+    if (precedente && precedente !== token) {
+        try { await setDoc(ref, { fcm_tokens: arrayRemove(precedente) }, { merge: true }); } catch (e) { console.warn("Token precedente non rimosso:", e); }
+    }
+    await setDoc(ref, { fcm_token: token, fcm_tokens: arrayUnion(token), device_type: tipoDispositivo }, { merge: true });
+    localStorage.setItem('fcm_token_dispositivo', token);
+}
+
 let listenerNativoRegistrato = false;
 function registraListenerNativo() {
     if (listenerNativoRegistrato || !isNativePush()) return;
     listenerNativoRegistrato = true;
     window.Capacitor.Plugins.PushNotifications.addListener('registration', async (token) => {
         if (auth.currentUser) {
-            await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: token.value, device_type: 'android_app' }, { merge: true });
+            await salvaTokenDispositivo(token.value, 'android_app');
         }
     });
 }
@@ -486,10 +499,12 @@ async function collegaDispositivo() {
         const permesso = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
         if (permesso !== 'granted') return false;
         const messaging = getMessaging(app);
-        const swRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+        // Scope dedicato: sw.js (registrato in index.html) usa gia' lo scope './' e due service worker non possono
+        // convivere nello stesso scope, altrimenti si sostituiscono a vicenda e le notifiche arrivano a intermittenza.
+        const swRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js', { scope: './firebase-cloud-messaging-push-scope' });
         const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: swRegistration });
         if (!token) return false;
-        await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: token, device_type: 'pwa_web' }, { merge: true });
+        await salvaTokenDispositivo(token, 'pwa_web');
         return true;
     }
 
@@ -498,7 +513,20 @@ async function collegaDispositivo() {
 
 async function scollegaDispositivo() {
     if (auth.currentUser) {
-        await setDoc(doc(db, "utenti", auth.currentUser.uid), { fcm_token: null, device_type: null }, { merge: true });
+        const ref = doc(db, "utenti", auth.currentUser.uid);
+        const mio = localStorage.getItem('fcm_token_dispositivo');
+        if (!mio) {
+            await setDoc(ref, { fcm_token: null, device_type: null }, { merge: true });   // dispositivo collegato con la versione precedente
+        } else {
+            // toglie solo il token di questo dispositivo: gli altri dispositivi dello stesso account restano collegati
+            const snap = await getDocFromServer(ref);
+            const dati = snap.exists() ? snap.data() : {};
+            const restanti = (Array.isArray(dati.fcm_tokens) ? dati.fcm_tokens : []).filter((x) => x !== mio);
+            const aggiornamento = { fcm_tokens: arrayRemove(mio) };
+            if (dati.fcm_token === mio || !dati.fcm_token) aggiornamento.fcm_token = restanti.length ? restanti[0] : null;
+            await setDoc(ref, aggiornamento, { merge: true });
+            localStorage.removeItem('fcm_token_dispositivo');
+        }
     }
     if (isWebPush()) {
         try { await deleteToken(getMessaging(app)); }
@@ -548,7 +576,11 @@ window.inizializzaNotificheSeNativa = async (userData) => {
             : Notification.permission === 'granted';
     } catch (e) { permessoOk = false; }
 
-    const attive = !!(permessoOk && userData && userData.fcm_token);
+    // Il dispositivo e' collegato se il suo token e' nell'elenco; chi si era collegato con la versione precedente ha solo fcm_token
+    const mio = localStorage.getItem('fcm_token_dispositivo');
+    const tokens = userData && Array.isArray(userData.fcm_tokens) ? userData.fcm_tokens : [];
+    const registrato = mio ? (tokens.includes(mio) || (userData && userData.fcm_token === mio)) : !!(userData && userData.fcm_token);
+    const attive = !!(permessoOk && registrato);
     mostraStatoNotifiche(attive);
 
     if (attive) {
